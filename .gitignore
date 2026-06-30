@@ -20,3 +20,9 @@ _minted-*/
 
 # Generated paper PDF. Do not ignore figures/*.pdf.
 /paper.pdf
+
+# Machine-specific Codex/project notes
+/LOCAL_CONTEXT.md
+
+# Claude Code per-session worktrees (keep settings.json, ignore worktrees)
+/.claude/worktrees/
