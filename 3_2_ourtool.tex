@@ -1,0 +1,143 @@
+\subsection{$\ourtool$}\label{sec:ourtool}
+\begin{algorithm}[t] \footnotesize
+  \caption{Query Data Refinement with $\ourtool$}
+  \label{alg:ourtool}
+  \begin{algorithmic}[1]
+    \Require Successive versions of the program ($\programs$) and budget ($\budget$).
+    \Ensure Test cases ($\testcases$)
+    \State $\langle \prevdata, \totaltestcases \rangle \gets \langle \emptyset, \emptyset \rangle$
+    \For{$\pgm$ \textbf{in} $\programs$}
+        \State $\testcases, \newdatas \gets \symb(\pgm, \budget, \prevdata)$
+        \State
+        \State /* Step 1. $\sample$ stage (for satisfiable queries) */
+        \State $\satdata \gets \myset{(\pc, \assignments) \ | \ (\pc, \assignments) \in \newdatas \land \assignments \neq \emptyset}$
+        \State $\satdata \gets \Sample(\satdata)$        \Comment{$(\pc, \assignments') \in \Sample(\satdata)$}
+        \State
+        \State /* Step 2. $\extract$ stage (for unsatisfiable queries) */
+        \State $\unsatdata \gets \myset{(\pc, \assignments) \ | \ (\pc, \assignments) \in \newdatas \land \assignments = \emptyset}$
+        \State $\unsatdata \gets \Extract(\unsatdata)$  \Comment{$(\pc', \assignments) \in \Extract(\unsatdata)$}
+        \State
+        \State /* Step 3. $\generalize$ stage */
+        \State $\data \gets \Generalize(\satdata \cup \unsatdata)$     \Comment{$(\pc', \assignments') \in \Generalize(\data)$}
+        \State $\prevdata \gets \prevdata \cup \data$
+        \State $\totaltestcases \gets \totaltestcases \cup \testcases$
+        
+    \EndFor
+    \State \Return $\totaltestcases$
+\end{algorithmic}
+\end{algorithm}
+
+Algorithm~\ref{alg:ourtool} presents the overall workflow of $\ourtool$. As testing proceeds across successive software releases, $\ourtool$ continuously refines, accumulates, and reuses query data, enabling symbolic execution on each release to leverage all previously accumulated query data. The algorithm takes two inputs: a set of program releases ($\programs$) and the testing budget ($\budget$) for each release. It returns the union of all test cases generated across the releases in $\programs$. At line~3, $\ourtool$ initializes $\prevdata$ and $\totaltestcases$ as empty sets, where $\prevdata$ stores the refined query data accumulated from previous releases and $\totaltestcases$ stores all generated test cases. The algorithm then iteratively performs symbolic execution on each release, refines the newly generated query data through four stages, and accumulates the refined query data for reuse in subsequent releases. 
+
+After symbolic execution (Algorithm~\ref{alg:symbexec}) finishes for a release (line~3), $\ourtool$ refines the newly generated query data according to its satisfiability. Satisfiable query data are processed by the $\sample$ stage (lines~6--7), whereas unsatisfiable query data are processed by the $\extract$ stage (lines~10--11). The refined query data produced by these two stages are then merged and further processed by the $\generalize$ stage (line~14).
+
+
+\myparagraph{\bf Sample stage}
+For each satisfiable query data $(\pc,\assignments)$, the $\sample$ stage generates an alternative satisfying assignment $\assignments'$ for the same path condition without additional SMT solving: $(\pc,\assignments)\rightarrow(\pc,\assignments'),\ \assignments'\neq\assignments$.
+By preserving the previously solved path condition while replacing only its assignment, $\sample$ enables $\ourtool$ to generate diverse test cases without repeatedly solving the same path condition across software releases. To achieve this, Algorithm~\ref{alg:ourtool} first extracts all satisfiable query data from $\newdatas$ (line~6):
+\[
+\satdata \gets \myset{(\pc, \assignments) \mid (\pc, \assignments)\in\newdatas \land \assignments\neq\emptyset}.
+\]
+Each query data in $\satdata$ consists of a satisfiable path condition and its corresponding assignment. For each symbolic variable ($\avariable$) appearing in the path condition $\pc$, the algorithm computes its lower bound ($\lowerbound$), upper bound ($\upperbound$), and the set of unavailable values ($\nouse$):
+\[
+\begin{aligned}
+\scalebox{0.9}{$
+\myset{
+(\avariable_1, \lowerbound_1, \upperbound_1, \nouse_1),
+\cdots,
+(\avariable_k, \lowerbound_k, \upperbound_k, \nouse_k)
+}$} \\
+\text{where } \myset{\avariable_1, \cdots, \avariable_k} \in \pc
+\land (\pc, \assignments) \in \satdata.
+\end{aligned}
+\]
+The lower and upper bounds define the feasible range of each symbolic variable, while $\nouse$ records values excluded by the path condition. For example, given the path condition $\myset{x>3 \land x<10 \land x\neq6}$, it derives ${(x,4,9,\myset{6})}$, indicating that the feasible values of $x$ range from $4$ to $9$ except for $6$. If at least one symbolic variable has multiple feasible candidate values, the path condition admits multiple satisfying assignments.
+
+Once a path condition admits multiple satisfying assignments, $\sample$ preferentially samples values that have not been exercised in previous releases. For each symbolic variable $\avariable$, let $\candidates_{\avariable}$ denote the set of feasible candidate values derived from its lower bound ($\lowerbound$), upper bound ($\upperbound$), and unavailable values ($\nouse$):
+\[
+\candidates_{\avariable}=
+\myset{
+\avalue
+\mid
+\lowerbound \le \avalue \le \upperbound
+\land
+\avalue \notin \nouse
+}.
+\]
+For example, given the path condition $\myset{x>3 \land x<10 \land x\neq6}$, the algorithm derives $\candidates_x=\myset{4,5,7,8,9}$. $\sample$ then maintains a score for each candidate value. Initially, all candidate values are assigned the same score. The score of a candidate value is increased if it has not appeared in previously sampled assignments; otherwise, its score remains unchanged. Finally, $\sample$ selects a candidate value with probability proportional to its score. Consequently, values that have not been exercised in previous releases are more likely to be selected, allowing $\ourtool$ to generate an alternative satisfying assignment while preserving the original path condition without additional SMT solving.
+
+\myparagraph{\bf Extract stage}
+For each unsatisfiable query data $(\pc,\emptyset)$, the $\extract$ stage replaces the original path condition with a minimal infeasible core without additional SMT solving: $(\pc,\emptyset)\rightarrow(\pc',\emptyset), \pc'\subseteq\pc$. By storing only the infeasible core instead of the entire path condition, $\extract$ allows a single query data entry to match multiple unsatisfiable path conditions across software releases. To achieve this, Algorithm~\ref{alg:ourtool} first extracts all unsatisfiable query data from $\newdatas$ (line~10):
+\[
+\unsatdata
+\gets
+\myset{
+(\pc,\assignments)
+\mid
+(\pc,\assignments)\in\newdatas
+\land
+\assignments=\emptyset
+}.
+\]
+To identify an infeasible core, let an unsatisfiable path condition be
+\[
+\pc=\bc_1\land\bc_2\land\cdots\land\bc_n,
+\]
+where the last constraint $\bc_n$ causes the path condition to become unsatisfiable. Since the preceding constraints
+$\myset{\bc_1,\ldots,\bc_{n-1}}$
+must have been satisfiable for symbolic execution to reach the last constraint, $\extract$ first collects only the constraints involving the same symbolic variable(s) as $\bc_n$. 
+
+It then incrementally examines subsets containing $\bc_n$ in increasing order of subset size. For each subset, $\extract$ determines whether it still admits a feasible assignment by computing the feasible ranges of its symbolic variables using their lower bounds, upper bounds, and unavailable values. If the subset admits a feasible assignment, it remains satisfiable; otherwise, it is identified as an infeasible core.
+
+For example, consider the following unsatisfiable query data: $\adata= (\myset{(x<10)\land(x>3)\land(y\le2)\land(x<0)},\emptyset)$. Since the last constraint is $(x<0)$, $\extract$ first considers only the constraints involving the same symbolic variable:
+\[
+\myset{(x<10)\land(x>3)\land(x<0)}.
+\]
+It then incrementally examines subsets containing the last constraint. The subset $\myset{(x<10)\land(x<0)}$ remains satisfiable because the feasible range of $x$ is $(-\infty,0)$. In contrast, the subset $\myset{(x>3)\land(x<0)}$ admits no feasible assignment and is therefore identified as the infeasible core. Consequently, $\extract$ stores the following refined query data instead of the original query data: 
+\[
+(\myset{(x>3)\land(x<0)},\emptyset).
+\]
+During subsequent releases, if a newly generated path condition contains the stored infeasible core as a subset, $\ourtool$ immediately classifies it as unsatisfiable without invoking the SMT solver. For example, the path condition $\myset{(z>50)\land(x>3)\land(x<0)}$ is directly identified as unsatisfiable because it contains the infeasible core: $\myset{(x>3)\land(x<0)}$.
+
+
+\iffalse
+\myparagraph{\bf Extract stage}
+The goal of $\extract$ stage is to extract a minimal constraint set responsible for the infeasibility of each query’s path condition. When a state accumulates an infeasible path condition, exploration terminates at that state because no further forks are generated from it. Therefore, in the naive approach, which skips solver calls only when a data entry exactly matches the query’s path condition, infeasible query results are reused in updated releases only for identical states. $\ourtool$ extracts a core constraint subset from infeasible queries and skips solver invocations if a path condition contains the subset, allowing a single data entry to match multiple infeasible queries.
+
+To this end, $\ourtool$ focuses on the last constraint in the path condition of the infeasible query results. A query result consisting of $\pc=\myset{\bc_{1} \land \bc_{2} \land \cdots \land \bc_{n}}$ implies that the preceding constraints up to $\bc_{n-1}$ were satisfiable, allowing the previous state to fork. Therefore, the $\Extract$ function first extracts the constraint subset $\pc'$ that refers to the same variable as the last constraint in the path-condition set $\pc$. For example, consider an infeasible query as:
+\begin{equation}
+\scalebox{0.9}{$
+\adata = (\myset{(x < 10) \land (x > 3) \land (y \leq 2) \land (x < 0)}, \emptyset).
+$}
+\label{eq:unsat_example}
+\end{equation}
+The $\Extract$ function extracts the constraints that share the variable $x$ with the last constraint $(x < 0)$, as follows:
+{
+\[
+\scalebox{0.9}{$
+\myset{(x < 10) \land (x > 3) \land (x < 0)}.
+$}
+\]
+}Next, using the same $\Bound$ function as in the $\extract$ stage, it defines the tuple of $(\avariable, \lowerbound, \upperbound, \nouse)$ for constraint subsets that include $\bc_{n}$, in increasing order of subset size. If $\upperbound$ is lower than $\lowerbound$, or all values between $\lowerbound$ and $\upperbound$ are included in $\nouse$, $\ourtool$ determines that the subset causes infeasibility. Once such a core subset is found, $\ourtool$ stores it in the query data instead of the original path-condition set. For the example in (\ref{eq:unsat_example}), $\ourtool$ determines infeasibility as:
+\[
+\scalebox{0.9}{$
+\begin{array}{l}
+\tau_{1}: \Bound(\myset{(x, <, 10), (x, <, 0)}) = \myset{(x, -\infty, 0, \emptyset)} \rightarrow \text{SAT} \\
+\tau_{2}: \Bound(\myset{(x, >, 3), (x, <, 0)}) = \myset{(x, 3, 0, \emptyset)} \rightarrow \text{\bf UNSAT}
+\end{array}
+$}
+\]where $\tau_{i}$ denotes the $i$-th trial. Finally, it stores in set $\unsatdata$ a data entry containing the core constraint subset instead of the original path condition as:
+{
+\[
+\scalebox{0.9}{$
+\adata' = (\myset{(x > 3) \land (x < 0)}, \emptyset) \in \unsatdata.
+$}
+\]
+}
+
+Using the extracted infeasible core subset, $\ourtool$ returns unsatisfiability without invoking the SMT solver when testing other releases if a query’s path condition contains that subset. For example, if the path condition $\myset{(z>50) \land (x>3) \land (x<0)}$ is accumulated, we directly return unsatisfiability as it contains the core subset $\myset{(x>3)\land(x<0)}$. Experimentally, the $\extract$ stage saves 15.4\% memory cost on average compared with the naive approach by storing multiple infeasible query results as a single core subset, and matches 16.7\% more infeasible queries on average.
+\fi
+
+
+
+

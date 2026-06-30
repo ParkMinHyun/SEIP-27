@@ -1,0 +1,28 @@
+\subsection{Bug-finding Ability}\label{sec:bug_finding}
+
+\begin{table}[]
+    \centering
+    \caption{Bugs detected by $\ourtool$ and baselines.}
+    \label{tab:bug_main}
+    \resizebox{\columnwidth}{!}{%
+    \setlength{\tabcolsep}{1.7pt}
+    \begin{tabular}{llllccccc}
+    \toprule \midrule
+    \multicolumn{1}{l}{Program}          & \multicolumn{1}{l}{Version}          & \multicolumn{1}{l}{Bug type}          & \multicolumn{1}{l}{Buggy line}          & $\ourtool$     & $\default$    & $\rerun$       & $\seeding$    & $\naive$       \\ \midrule \midrule
+    \multirow{3}{*}{bison}               & 3.6-3.7                              & Seg. fault                              & scan-gram.c:1721                     & $\signO$       & $\signX$      & $\signX$              & $\signX$             & $\signO$              \\
+                                         & 3.6-3.7                              & Abmornal term.                          & obstack.c:98                         & $\signO$              & $\signX$             & $\signX$              & $\signX$             & $\signX$              \\
+                                         & 3.8                                  & Seg. fault                              & quotearg.c:393                       & $\signO$              & $\signX$             & $\signX$              & $\signX$             & $\signX$              \\ \midrule
+    diff                                 & 3.4-3.5                              & Seg. fault                              & hash.c:554                           & $\signO$              & $\signO$             & $\signO$              & $\signO$             & $\signO$              \\ \midrule
+    gawk                                 & 5.0.0-5.3.0                          & Abmornal term.                          & main.c:1315                              & $\signO$              & $\signO$             & $\signO$              & $\signO$             & $\signO$              \\ \midrule
+    ls                                   & 9.6                                  & Seg. fault                              & strlen.c:22                       & $\signO$              & $\signX$             & $\signX$              & $\signO$             & $\signX$              \\ \midrule
+    \multirow{2}{*}{patch}                                                        & 2.6-2.8                              & Abmornal term.                          & pch.c:2377                           & $\signO$              & $\signO$             & $\signO$              & $\signO$             & $\signO$       \\
+                & 2.7                              & Seg. fault                              & pch.c:772                            & $\signO$              & $\signX$             & $\signX$              & $\signX$             & $\signX$              \\ \midrule
+    sqlite                               & 3.42.0                               & Seg. fault                              & strlen.c:22                       & $\signO$              & $\signO$             & $\signO$              & $\signO$             & $\signO$              \\ \midrule \midrule
+    \multicolumn{4}{c}{\textbf{Total crashes}}                                                                                                                        & \textbf{9}     & 4             & 4              & 5             & 5              \\ \midrule \bottomrule
+    \end{tabular}%
+    }
+\end{table}
+
+Table~\ref{tab:bug_main} demonstrates that $\ourtool$ is also effective for bug finding. To identify bug-triggering test cases, during the experiments in Table~\ref{tab:coverage_main} and Figure~\ref{fig:long_coverage}, we first collected all test cases for which KLEE generated an error report as a *.err file within the total testing budget (i.e., 12h $\times$ 5 repeats). Using the collected test cases, we re-executed them on the original binaries to filter out the false positives. For the test cases that triggered actual bugs, we report the program version in which the bug occurred, the type of bug, and the bug-triggering code line. For each bug, ($\signO$) indicates that the corresponding baseline detected the crash. If bugs of the same type occurred at the same code line across consecutive versions, we counted them as a single bug and reported the version as the range from the first observed version to the last observed version.
+
+In total, $\ourtool$ detected nine unique bugs across six programs. This is 125\% more than $\default$ and $\rerun$, which found four bugs, and 80\% more than $\seeding$ and $\naive$, which detected five bugs. Remarkably, $\ourtool$ did not miss any bugs detected by the baselines, while detecting three bugs that none of the baselines found. We reported all bugs found by $\ourtool$ to the program developers. The bugs found in $\diff$, $\gawk$, $\ls$, and $\sqlite$ have been fixed, and the bugs found in $\patch$ have been confirmed.

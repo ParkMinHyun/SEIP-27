@@ -1,0 +1,862 @@
+\newcommand{\signO}{\textcolor{red}{\checkmark}}
+\newcommand{\signX}{\textcolor{gray}{\textendash}}
+
+\newcommand{\mcc}{\mathcal{C}}
+\newcommand{\mcg}{\mathcal{G}}
+\newcommand{\mcp}{\mathcal{P}}
+\newcommand{\mcl}{\mathcal{L}}
+\newcommand{\mcu}{\mathcal{U}}
+\newcommand{\mcv}{\mathcal{V}}
+\newcommand{\mca}{\mathcal{A}}
+\newcommand{\mce}{\mathcal{E}}
+\newcommand{\mct}{\mathcal{T}}
+\newcommand{\mcm}{\mathcal{M}}
+\newcommand{\mco}{\mathcal{O}}
+
+\newcommand{\commentss}[1]{\# here is a comment: #1}
+
+\newcommand{\myland}{\;\land\;}
+\newcommand{\mylor}{\;\vee\;}
+
+\newcommand{\power}[1]{\wp(#1)}
+
+\newcommand{\myset}[1]{\{ #1 \}}
+\newcommand*{\ldblbrace}{ \{\mskip-5mu\{ }
+\newcommand*{\rdblbrace}{\}\mskip-5mu\}}
+\newcommand{\multiset}[1]{\ldblbrace #1 \rdblbrace}
+
+\newcommand{\concat}{\ensuremath{+\!\!\!\!+\,}}
+
+\renewcommand{\lstlistingname}{}
+%\renewcommand{\thelstlisting}{(\arabic{lstlisting})}
+
+
+%ICSE27%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Baselines
+\newcommand{\default}{{\textsc{Klee}}}
+\newcommand{\rerun}{{\textsc{ReRun}}}
+\newcommand{\seeding}{{\textsc{Seed}}}
+\newcommand{\naive}{{\textsc{Naive}}}
+\newcommand{\baseline}{{\textsc{Base}}}
+
+%Stages
+\newcommand{\sample}{{\textsc{Sample}}}
+\newcommand{\extract}{{\textsc{Extract}}}
+\newcommand{\generalize}{{\textsc{Generalize}}}
+\newcommand{\compare}{{\textsc{Compare}}}
+
+%Preliminary
+\newcommand{\ainitstate}{{\it s_{0}}}
+\newcommand{\initstmt}{{\it stmt_{0}}}
+\newcommand{\initmemory}{{\it mem_{0}}}
+\newcommand{\Runtc}{{\textsc{Run}}}
+\newcommand{\newversion}{v_t}
+\newcommand{\prevversion}{v_{t-1}}
+\newcommand{\prevtwoversion}{v_{t-2}}
+
+\newcommand{\assignments}{{\it A}}
+\newcommand{\programs}{{\it P}}
+\newcommand{\data}{{\it D}}
+\newcommand{\satdata}{{\it D_{sat}}}
+\newcommand{\unsatdata}{{\it D_{unsat}}}
+\newcommand{\totaldata}{{\it TotalD}}
+\newcommand{\prevdata}{{\it PrevD}}
+\newcommand{\newdatas}{{\it NewD}}
+\newcommand{\hitdata}{{\it d_{hit}}}
+\newcommand{\totaltestcases}{{\it TotalT}}
+\newcommand{\nouse}{{\it Not}}
+\newcommand{\scores}{{\it Score}}
+\newcommand{\spaces}{{\it Space}}
+\newcommand{\usedvalues}{{\it UsedV}}
+
+\newcommand{\truesat}{{\it sat_{1}}}
+\newcommand{\falsesat}{{\it sat_{2}}}
+\newcommand{\trueassignments}{{\it A_{1}}}
+\newcommand{\falseassignments}{{\it A_{2}}}
+
+\newcommand{\Solve}{{\textsc{Solve}}}
+\newcommand{\Naive}{\sf{Naive}}
+\newcommand{\Generalize}{{\sf Generalize}}
+\newcommand{\Extract}{{\sf Extract}}
+\newcommand{\Sample}{{\sf Sample}}
+\newcommand{\Compare}{{\sf Compare}}
+\newcommand{\Split}{{\sf Split}}
+\newcommand{\Merge}{{\sf Merge}}
+\newcommand{\Bound}{{\sf Bound}}
+
+\newcommand{\avariable}{{\it r}}
+\newcommand{\aconstvalue}{{\it c}}
+\newcommand{\aoperation}{{\it op}}
+\newcommand{\avalue}{{\it v}}
+\newcommand{\aminvalue}{{\it v_{min}}}
+\newcommand{\upperbound}{{\it max}}
+\newcommand{\lowerbound}{{\it min}}
+\newcommand{\ascore}{{\it s}}
+
+\newcommand{\prob}{\mathcal{P}}
+
+%OOPSLA25%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Functions
+\newcommand{\Initialize}{{\sf Initialize}}
+\newcommand{\Cluster}{{\sf Cluster}}
+\newcommand{\Silhouette}{{\sf Silhouette}}
+
+\newcommand{\Selectcluster}{{\sf SelectCluster}}
+
+
+%Sets
+\newcommand{\valuescores}{{\it ValueS}}
+\newcommand{\valuedata}{{\it ValueD}}
+\newcommand{\bestvalues}{{\it BestV}}
+\newcommand{\selectedparams}{{\it SelectP}}
+\newcommand{\selectedclusters}{{\it SelectC}}
+\newcommand{\paramset}{{\it PS}}
+\newcommand{\FuncSample}{{\textsc{Sample}}}
+\newcommand{\Average}{{\sf{Average}}}
+\newcommand{\clusters}{{\it C}}
+
+%Elements
+\newcommand{\defaultavalue}{{\it v}_{\sf d}}
+\newcommand{\abestvalue}{{\it v}_{\sf best}}
+\newcommand{\arandomvalue}{{\it v}_{\sf rand}}
+
+%Hyperparameters
+\newcommand{\hyperclust}{\hyperparam_{\sf clust}}
+\newcommand{\hyperselect}{\hyperparam_{\sf param}}
+
+
+
+
+
+%FSE25%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%Baselines
+\newcommand{\reprandom}{{\sf{Random}_{\sf Rep}}}
+\newcommand{\jaccard}{{\textsc{Jaccard}}}
+\newcommand{\cosine}{{\textsc{Cosine}}}
+\newcommand{\chebyshev}{{\textsc{Chebyshev}}}
+\newcommand{\euclidean}{{\textsc{Euclidean}}}
+\newcommand{\levenshtein}{{\textsc{Levenshtein}}}
+\newcommand{\hamming}{{\textsc{Hamming}}}
+\newcommand{\jarowinkler}{{\textsc{Jaro-winkler}}}
+
+\newcommand{\kleeone}{{\textsc{Klee}_{\sf 24h}}}
+\newcommand{\klee}{{\textsc{KLEE}}}
+\newcommand{\kleedouble}{{\textsc{KLEE}_{\sf 48h}}}
+
+\newcommand{\kleefive}{{\textsc{KLEE}_{\sf 5h}}}
+\newcommand{\kleeadaptive}{{\textsc{Klee}_{\sf new}}}
+\newcommand{\kleeagnostic}{{\textsc{KLEE}_{\sf Agnostic}}}
+
+
+\newcommand{\initpvalues}{{\it PV}_{\sf init}}
+
+
+
+
+%ICSE25%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\paramsymtuner}{\symtuner_{\sf p}}
+\newcommand{\bayesian}{{\textsc{Bayesian}}}
+\newcommand{\genetic}{{\textsc{Genetic}}}
+\newcommand{\tpe}{{\textsc{TPE}}}
+\newcommand{\suchal}{{\textsc{SucHal}}}
+\newcommand{\cma}{{\textsc{CMA-ES}}}
+\newcommand{\roundrobin}{{\textsc{RoundRobin}}}
+\newcommand{\samplesymtuner}{{\textsc{SymV}}}
+\newcommand{\samplerandom}{{\textsc{RandV}}}
+\newcommand{\sampleall}{{\textsc{AllV}}}
+
+\newcommand{\selectsymtuner}{{\textsc{SymP}}}
+\newcommand{\selectrandom}{{\textsc{RandP}}}
+\newcommand{\selectall}{{\textsc{AllP}}}
+
+\newcommand{\Update}{{\textsc{Update}}}
+\newcommand{\Collect}{{\textsc{Collect}}}
+\newcommand{\Estimate}{{\textsc{Estimate}}}
+\newcommand{\Group}{{\textsc{Group}}}
+\newcommand{\Construct}{{\textsc{Construct}}}
+
+%tool 
+\newcommand{\ourtool}{{\textsc{ReuSE}}}
+
+%function
+\newcommand{\Sum}{{\sf sum}}
+\newcommand{\Mean}{{\sf mean}}
+\newcommand{\Max}{{\sf max}}
+\newcommand{\Min}{{\sf min}}
+\newcommand{\Frequency}{{\sf Frequency}}
+\newcommand{\Execute}{{\sf Run}}
+
+\newcommand{\ProbSample}{{\sf ProbSample}}
+\newcommand{\randomsample}{{\sf RandomV}}
+
+\newcommand{\Save}{{\sf Save}}
+\newcommand{\Weight}{{\sf Weight}}
+\newcommand{\symb}{{\textsc{Execute}}}
+\newcommand{\tuneP}{{\textsc{Select}}}
+\newcommand{\tunePV}{{\sf{tunePV}}}
+\newcommand{\ExtractFix}{{\sf{Minimize}}}
+\newcommand{\Grouping}{{\sf{Grouping}}}
+\newcommand{\Selrange}{{\sf{SelectRange}}}
+\algnewcommand{\IfThenElse}[3]{% \IfThenElse{<if>}{<then>}{<else>}
+  \State \algorithmicif\ #1\ \algorithmicthen\ #2\ \algorithmicelse\ #3}
+%set
+\newcommand{\InitParam}{{\it P}_{\sf init}}
+\newcommand{\fixparams}{\sf fix \params}
+\newcommand{\basedata}{{\it BaseD}}
+\newcommand{\basescores}{{\it BaseS}}
+\newcommand{\subdata}{{\it SD}}
+\newcommand{\ranges}{{\it R}}
+\newcommand{\states}{S}
+\newcommand{\pc}{\Phi}
+\newcommand{\prevpc}{\Phi_{prev}}
+\newcommand{\values}{{\it V}}
+\newcommand{\sobolindex}{{\it I}_{\sf p}}
+\newcommand{\tunescores}{{\it S}}
+\newcommand{\rangesscores}{{\it S}_{\sf range}}
+\newcommand{\defaultscores}{{\it S}_{\sf base}}
+\newcommand{\pickranges}{{\it R}_{\sf pick}}
+\newcommand{\paramvalues}{{\it PV}}
+\newcommand{\newparamvalues}{\paramvalues_{\sf n}}
+\newcommand{\lparamvalues}{\paramvalues_{\it l}}
+\newcommand{\hparamvalues}{\paramvalues_{\it h}}
+\newcommand{\tuneparams}{\params}
+\newcommand{\groupparams}{\it G\params}
+\newcommand{\fixvalues}{\paramvalues_{\sf min}}
+\newcommand{\params}{{\it P}}
+\newcommand{\allparams}{\it{All}\params}
+\newcommand{\totalbranches}{{\it TotalB}}
+\newcommand{\unionbranches}{{\it UnionB}}
+\newcommand{\branches}{{\it B}}
+\newcommand{\groups}{{\it G}}
+\newcommand{\represents}{{\it Rep}}
+\newcommand{\hbranches}{{\it B}_{\it h}}
+\newcommand{\lbranches}{{\it B}_{\it l}}
+\newcommand{\weights}{{\it W}}
+% \newcommand{\pspace}{{\ranges}_{\aparam}}
+\newcommand{\pspace}{{\ranges}}
+
+%An element
+\newcommand{\abranch}{{\it b}}
+\newcommand{\ahscore}{{\it s}_{\it h}}
+\newcommand{\alscore}{{\it s}_{\it l}}
+\newcommand{\agroupidx}{{\it g}_{\sf id}}
+\newcommand{\agoodparam}{{\it p}_{\sf id}}
+\newcommand{\aparam}{{\it p}}
+\newcommand{\anewparam}{{\it p}^{\prime}}
+\newcommand{\minvalue}{{\it lv}}
+\newcommand{\maxvalue}{{\it hv}}
+\newcommand{\aweight}{{\it w}}
+\newcommand{\anewvalue}{{\it v'}}
+\newcommand{\stmt}{{\it stmt}}
+\newcommand{\store}{{\it store}}
+\newcommand{\acount}{{\it cnt}}
+\newcommand{\astate}{{\it s}}
+\newcommand{\budget}{{\it time}}
+\newcommand{\threshold}{{\it \theta}}
+\newcommand{\valueerror}{{\it ValueError}}
+\newcommand{\smallbudget}{{\budget}_{\sf s}}
+\newcommand{\bc}{\varphi}
+\newcommand{\prevbc}{\varphi_{prev}}
+\newcommand{\newstmt}{\it{stmt}^\prime}
+\newcommand{\randval}{{\it r}}
+
+
+%hyper
+\newcommand{\hyperparam}{\eta}
+\newcommand{\hypertime}{\hyperparam_{\sf time}}
+\newcommand{\hyperiter}{\hyperparam_{\sf iter}}
+\newcommand{\hyperthreshold}{\hyperparam_{\sf group}}
+
+%Benchmarks
+\newcommand{\xorriso}{\sf{xorriso}}
+\newcommand{\gcal}{\sf{gcal}}
+\newcommand{\grep}{\sf{grep}}
+\newcommand{\gawk}{\sf{gawk}}
+\newcommand{\enscript}{\sf{enscript}}
+\newcommand{\sed}{\sf{sed}}
+\newcommand{\diff}{\sf{diff}}
+\newcommand{\combine}{\sf{combine}}
+\newcommand{\trueprint}{\sf{trueprint}}
+\newcommand{\ls}{\sf{ls}}
+\newcommand{\du}{\sf{du}}
+\newcommand{\nano}{\sf{nano}}
+\newcommand{\vim}{\sf{vim}}
+\newcommand{\patch}{\sf{patch}}
+\newcommand{\sqlite}{\sf{sqlite}}
+
+
+%baselines
+\newcommand{\manual}{{\textsc{Klee}_{\sf fix}}}
+\newcommand{\moreP}{{\textsc{Symtuner}_{\sf AllP}}}
+\newcommand{\symtuner}{{\textsc{Symtuner}}}
+\newcommand{\symtunermore}{{\textsc{Symtuner}_{\sf 32h}}}
+\newcommand{\randsuit}{{\textsc{RandSuit}}}
+
+\newcommand{\newmanual}{{\textsc{KLEE}_{\sf new}}}
+
+%etc
+\newcommand{\gcov}{\texttt{gcov}}
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\newcommand{\rdata}{{\it RD}}
+\newcommand{\rd}{{\it rd}}
+
+\newcommand{\newdata}{{\it D}^\prime}
+\newcommand{\testcases}{\it T}
+\newcommand{\newtestcases}{{\it T}^\prime}
+\newcommand{\featvectors}{\it FV}
+\newcommand{\allfeatvectors}{\mbv}
+\newcommand{\fv}{\it fv}
+\newcommand{\feat}{{\sf feat}}
+\newcommand{\realvalues}{\mbr}
+\newcommand{\allstates}{\mbs}
+\newcommand{\coverage}{{\textsc{Cov}}}
+\newcommand{\grade}{\it grade}
+
+%hyper---------------------------------
+\newcommand{\hyperratio}{\sf rate}
+
+%set---------------------------------
+
+\newcommand{\newbranches}{{\it NewB}}
+\newcommand{\prevbranches}{{\it PrevB}}
+\newcommand{\goodwvs}{{\it TopW}}
+\newcommand{\midwvs}{{\it MidW}}
+\newcommand{\ithgoodwvs}{{\it T}_{i}}
+\newcommand{\badwvs}{{\it BotW}}
+\newcommand{\ithbadwvs}{{\it B}_{i}}
+\newcommand{\gradeset}{\it G}
+\newcommand{\mappedwvs}{{\it MappedW}}
+
+%function----------------------------
+\newcommand{\Normalize}{{\textsc{Normalize}}}
+\newcommand{\Forall}{$\mathtt\forall$}
+\newcommand{\Exists}{$\mathtt\exists$}
+\newcommand{\Classify}{{\textsc{Classify}}}
+\newcommand{\Refine}{{\textsc{Refine}}}
+
+
+
+
+
+
+\newcommand{\Convert}{{\textsc{Convert}}}
+\newcommand{\SetCover}{{\textsc{SetCover}}}
+\newcommand{\strategy}{{\textsc{SearchStrategy}}}
+\newcommand{\Learn}{{\textsc{Learn}}}
+\newcommand{\ProbUpdate}{{\textsc{ProbUpdate}}}
+\newcommand{\Similar}{{\textsc{Similar}}}
+\newcommand{\Dissimilar}{{\textsc{NotSimilar}}}
+\newcommand{\Generate}{{\textsc{Generate}}}
+
+%Baseline
+
+\newcommand{\paradyse}{{\textsc{ParaDySE}}}
+\newcommand{\learch}{{\textsc{Learch}}}
+\newcommand{\sgs}{{\textsc{SGS}}}
+\newcommand{\md}{{\textsc{Md2u}}}
+
+
+%function----------------------------
+\newcommand{\fvextract}{{\sf featvec}}
+
+
+\newcommand{\evaluate}{{\sf Evaluate}}
+
+\newcommand{\abstraction}{{\sf Abstract}}
+
+%element-----------------------------
+
+\newcommand{\atestcase}{{\it tc}}
+\newcommand{\memory}{{\it mem}}
+\newcommand{\nmemory}{\it {mem}^\prime}
+
+\newcommand{\wvector}{{\it w}}
+\newcommand{\ithwvector}{\wvector_{i}}
+\newcommand{\ithprob}{\prob_{i}}
+\newcommand{\ithfeature}{\bc_{i}}
+\newcommand{\wvectors}{{\it W}}
+
+%set---------------------------------
+
+\newcommand{\learningdata}{\it{WD}}
+\newcommand{\features}{{\it F}}
+\newcommand{\newfeatures}{{\it NewF}}
+\newcommand{\wvfeatures}{{\it F}_{\wvector}}
+\newcommand{\wvbranches}{\branches_{\wvector}}
+\newcommand{\prevfeatures}{{\it PrevF}}
+\newcommand{\prevwvectors}{{\it PrevW}}
+\newcommand{\totalfeatures}{{\it TotalF}}
+\newcommand{\subfeatures}{{\it F}_{\sf sub}}
+
+
+\newcommand{\cl}{{\it C}}
+\newcommand{\samplespace}{\mbs}
+
+%ICSE21
+%A single element
+\newcommand{\pgm}{{\it pgm}}
+
+
+\newcommand{\testcase}{{\it t}}
+\newcommand{\noseed}{{\it t}_{\emptyset}}
+\newcommand{\val}{{\it v}}
+\newcommand{\maxval}{{\it mv}}
+\newcommand{\pval}{{\it pv}}
+\newcommand{\sval}{{\it sv}}
+
+\newcommand{\randpval}{{\it pv}^\prime}
+\newcommand{\randsval}{{\it sv}^\prime}
+\newcommand{\samplenum}{{\it n}_{\it s}}
+\newcommand{\stgy}{{\it s}}
+\newcommand{\seednum}{{\it m}}
+
+\newcommand{\adata}{{\it d}}
+\newcommand{\policy}{{\it policy}}
+\newcommand{\samplemaxnum}{{\it n}_{\it max}}
+\newcommand{\newstate}{{\astate}^\prime}
+
+\newcommand{\flag}{{\it flag}}
+\newcommand{\rflag}{{\it f}_{\sf rand}}
+\newcommand{\lflag}{{\it f}_{\sf learn}}
+\newcommand{\paramnum}{\it k}
+\newcommand{\branch}{\it b}
+
+%parameter in Algorithm 1
+\newcommand{\paramstore}{{\store}_{\sf v}}
+\newcommand{\parammemory}{{\memory}_{\sf v}}
+%\newcommand{\paramChoose}{{\Choose}_{\sf v}}
+
+\newcommand{\paramSolve}{{\Solve}_{\sf v}}
+\newcommand{\parambudget}{{\budget}_{\sf v}}
+\newcommand{\paramPrune}{{\Prune}_{\sf v}}
+
+%hyper-parameters
+\newcommand{\hypersample}{\hyperparam^{\sf max}}
+\newcommand{\hypermax}{\hyperparam_{\sf max}}
+\newcommand{\hyperitv}{\hyperparam_{\sf itv}}
+
+%Probability
+
+\newcommand{\ithscore}{{\it score}_{\it i}}
+\newcommand{\ithcntscore}{{\it score}_{\it i}^{\it c}}
+\newcommand{\cntscore}{{\it score}^{\it c}}
+\newcommand{\cntprob}{\mathcal{P}^{\it c}}
+\newcommand{\ithcntprob}{\mathcal{P}_{\it i}^{\it c}}
+
+%Procedure
+\newcommand{\dse}{{\textsc{SymExecute}}}
+
+\newcommand{\ltuner}{{\ourtool}_{\sf Spaces}}
+\newcommand{\mtuner}{{\ourtool}_{\sf Params}}
+\newcommand{\chameleon}{{\textsc{Chameleon}}}
+\newcommand{\crest}{{\textsc{Crest}}}
+\newcommand{\chameleontuner}{\textsc{Chameleon}$+${\ourtool}}
+\newcommand{\randtuner}{{\textsc{RandTuner}}}
+
+%Function
+\newcommand{\exploit}{{\sf Exploit}}
+
+
+\newcommand{\Choose}{{\sf Select}}
+\newcommand{\Prune}{{\sf PruneState}}
+
+\newcommand{\seedextract}{{\sf SeedExtract}}
+\newcommand{\filter}{{\sf Filter}}
+\newcommand{\calculate}{{\sf Calculate}}
+\newcommand{\norelation}{{\it NoRelation}}
+\newcommand{\relation}{{\it Relation}}
+\newcommand{\explorepolicy}{{\it Explore}}
+\newcommand{\exploitpolicy}{{\it Exploit}}
+\newcommand{\policyratio}{\alpha}
+
+%Set
+
+\newcommand{\svalues}{{\it SV}}
+\newcommand{\newvalues}{\values^\prime}
+\newcommand{\covseed}{\testcases_{\it cov}}
+\newcommand{\bugseed}{\testcases_{\it bug}}
+
+%step
+\newcommand{\evalstep}{{\sf Evaluate}}
+\newcommand{\extractstep}{{\sf Extract}}
+\newcommand{\updatestep}{{\sf Update}}
+
+\newcommand{\ithspace}{{\it S}_{\it i}}
+\newcommand{\ithvalue}{{\it V}_{\it i}}
+\newcommand{\pvalues}{{\it PV}}
+
+\newcommand{\newpvalues}{\pvalues^\prime}
+
+\newcommand{\sspace}{{\it S}}
+\newcommand{\spaceval}{{\it SV}}
+\newcommand{\ithspaceval}{{\it SV}_{\it i}}
+\newcommand{\stgyspace}{{\sspace}_{\it search}}
+\newcommand{\seedspace}{{\sspace}_{\it seed}}
+\newcommand{\argspace}{{\sspace}_{\it args}}
+\newcommand{\filespace}{{\sspace}_{\it files}}
+\newcommand{\stdinspace}{{\sspace}_{\it stdin}}
+\newcommand{\memspace}{{\sspace}_{\it mem}}
+\newcommand{\batchspace}{{\sspace}_{\it batch}}
+\newcommand{\instrspace}{{\sspace}_{\it instr\_time}}
+\newcommand{\arrayspace}{{\sspace}_{\it array\_size}}
+\newcommand{\swithspace}{{\sspace}_{\it switch}}
+\newcommand{\externalspace}{{\sspace}_{\it external}}
+\newcommand{\maxforkspace}{{\sspace}_{\it fork}}
+\newcommand{\maxcpforkspace}{{\sspace}_{\it cpfork}}
+\newcommand{\maxsolvespace}{{\sspace}_{\it solve}}
+\newcommand{\executionspace}{{\sspace}_{\it execution}}
+
+
+%\newcommand{\branches}{{\it B}_{r}}
+%\newcommand{\bugs}{{\it B}_{u}}
+
+
+\newcommand{\bugs}{{\it Bu}}
+
+\newcommand{\totalval}{{\it TotalV}}
+\newcommand{\newval}{{\it V}^\prime}
+\newcommand{\gval}{{\it CoreV}}
+
+\newcommand{\covdata}{{\it CovD}}
+\newcommand{\bugdata}{{\it BugD}}
+\newcommand{\gdata}{{\it CoreD}}
+\newcommand{\datatc}{{\it D}_{\it t}}
+\newcommand{\datavalues}{{\it D}_{\it V}}
+
+%Heuristics
+\newcommand{\RandomState}{{\sf RandomState}}
+\newcommand{\CovNew}{{\sf CovNew}}
+\newcommand{\MinDistance}{{\sf MinDistance}}
+\newcommand{\InstrCount}{{\sf InstrCount}}
+\newcommand{\Depth}{{\sf Depth}}
+\newcommand{\QueryCost}{{\sf QueryCost}}
+\newcommand{\RandomPath}{{\sf RandomPath}}
+\newcommand{\cpicnt}{{\texttt{nurs:cpicnt}}}
+\newcommand{\dfs}{{\texttt{dfs}}}
+\newcommand{\BFS}{{\sf BFS}}
+
+\newcommand{\RoundRobin}{{\sf RoundRobin}}
+%\DeclareInputText{1}{\SOH}% ^^A
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%FSE20
+%method
+
+\newcommand{\Rprune}{{\textsc{RandomPrune}}}
+\newcommand{\Checker}{{\textsc{Prune}}_{\sf{M}}}
+
+\newcommand{\datagen}{{\sf Extract}}
+\newcommand{\featgen}{\sf FGenenator}
+\newcommand{\probgen}{\sf PGenerator}
+\newcommand{\Rundse}{{\sf Run\_DSE}}
+
+\newcommand{\SAT}{{\textsc{Sat}}}
+
+\newcommand{\getBranches}{{\sf Branches}}
+
+\newcommand{\Exploitsample}{{\sf Sample}_{\sf exploit}}
+\newcommand{\Reversesample}{{\sf Sample}_{\sf reverse}}
+
+
+%set
+
+\newcommand{\tspace}{{\it S}_{\it time}}
+\newcommand{\rspace}{{\it S}_{\it ratio}}
+\newcommand{\pstates}{S_{\sf P}}
+
+
+\newcommand{\goodpcs}{{\it PC}}
+
+
+
+\newcommand{\nfeatures}{{\it NewF}}
+\newcommand{\gfeatures}{{\it GoodF}}
+\newcommand{\gtestcases}{{\it GoodT}}
+\newcommand{\clanguage}{{\it L}}
+\newcommand{\uset}{{\it U}}
+
+%A singleton notation
+\newcommand{\dimension}{{\it n}}
+
+\newcommand{\newtimebudget}{{\it N}^\prime}
+\newcommand{\memorybudget}{\it M}
+
+
+\newcommand{\true}{{\it true}}
+
+
+\newcommand{\nstore}{\it {store}^\prime}
+\newcommand{\npc}{\Phi^\prime}
+
+\newcommand{\ratio}{{\it r}}
+\newcommand{\cycle}{{\it cycle}}
+\newcommand{\kleetuner}{\textsc{Klee}$+${\ourtool}}
+\newcommand{\kleerandtuner}{\textsc{Klee}$+${\randtuner}}
+\newcommand{\handklee}{\textsc{Klee}_{\sf hand}}
+\newcommand{\defaultklee}{\textsc{Klee}_{\sf default}}
+\newcommand{\longtime}{\textsc{Long}}
+\newcommand{\shorttime}{\textsc{Short}}
+\newcommand{\sbaseline}{\textsc{Klee}_{\sf Short}}
+\newcommand{\lbaseline}{\textsc{Klee}_{\sf Long}}
+\newcommand{\cond}{{\it cond}}
+\newcommand{\lval}{\it lv}
+\newcommand{\maxtime}{{\it max}}
+
+\newcommand{\rstgy}{{\theta}_{\it r}}
+\newcommand{\ustgy}{{\theta}_{\it u}}
+
+\newcommand{\cbc}{\bc}
+\newcommand{\nbc}{\bc^{\it new}}
+\newcommand{\pmax}{\it max}
+\newcommand{\pinterval}{\it interval}
+\newcommand{\param}{\it param}
+\newcommand{\stgyprob}{\mathcal{P}_{\it stgy}}
+\newcommand{\timeprob}{\mathcal{P}_{\it time}}
+
+
+%Hyper-parameter
+\newcommand{\hyperparamStore}{\eta_{\it store}}
+\newcommand{\hyperparamSearch}{\eta_{\it search}}
+\newcommand{\hyperparamTime}{\eta_{\it time}}
+\newcommand{\hyperparamSeed}{\eta_{\it seed}}
+
+%etc
+\newcommand{\uniform}{\mathcal{U}}
+\newcommand{\tnormal}{\mathcal{N}}
+\newcommand{\sizeof}[1]{|#1|}
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%% Octagon
+\newcommand{\Oct}{\mbo}
+\newcommand{\pre}{\sharp}
+\newcommand{\OctPre}{\mbo^{\pre}}
+\newcommand{\aoct}{m^{\pre}}
+\newcommand{\Var}{\mathit{Var}}
+\newcommand{\VPair}{\mathcal{S}}
+\newcommand{\pack}{\pi}
+\newcommand{\pconf}{\Pi}
+\newcommand{\PODom}{\mbo_{\Pi}}
+
+\newcommand{\db}[1]{\llbracket #1 \rrbracket}
+\newcommand{\pdb}[1]{\llbracket #1 \rrbracket_{\pconf}}
+\newcommand{\ppdb}[1]{\llbracket #1 \rrbracket^{\pre}}
+\newcommand{\po}{{po}}
+
+
+%% Learning
+\newcommand{\Classifier}{\mathcal{C}}
+%\newcommand{\argmax}[1]{\underset{#1}{\mathrm{argmax}}}
+\newcommand{\argmax}{\operatornamewithlimits{argmax}}
+\newcommand{\argmin}{\operatornamewithlimits{argmin}}
+%% Comment
+\newcommand{\todoc}[2]{{\textcolor{#1} {\textbf{[[#2]]}}}}
+
+\newcommand{\todored}[1]{\todoc{red}{#1}}
+\newcommand{\todoblue}[1]{\todoc{blue}{#1}}
+\newcommand{\todogreen}[1]{\todoc{green}{#1}}
+
+\newcommand*{\TODO}[1]{\todored{#1}}
+\newcommand*{\CHECK}[1]{{\bf \color{blue}{#1}}}
+
+\newcommand*{\hakjoo}[1]{\todoblue{Hakjoo: #1}}
+\newcommand*{\sooyoung}[1]{\todoblue{Sooyoung: #1}}
+\newcommand{\commentout}[1]{}
+
+\newcommand{\abst}{}
+\newcommand{\aF}{\abst{F}}
+\newcommand{\oracle}{{\mathcal{O}}}
+\newcommand{\floor}[1]{\lfloor #1 \rfloor}
+%% Program
+\newcommand{\mba}{\mathbb{A}}
+\newcommand{\mbb}{\mathbb{B}}
+\newcommand{\mbc}{\mathbb{C}}
+\newcommand{\mbd}{\mathbb{D}}
+\newcommand{\mbe}{\mathbb{E}}
+\newcommand{\mbf}{\mathbb{F}}
+\newcommand{\mbg}{\mathbb{G}}
+\newcommand{\mbh}{\mathbb{H}}
+\newcommand{\mbi}{\mathbb{I}}
+\newcommand{\mbj}{\mathbb{J}}
+\newcommand{\mbk}{\mathbb{K}}
+\newcommand{\mbl}{\mathbb{L}}
+\newcommand{\mbm}{\mathbb{M}}
+\newcommand{\mbn}{\mathbb{N}}
+\newcommand{\mbo}{\mathbb{O}}
+\newcommand{\mbp}{\mathbb{P}}
+\newcommand{\mbq}{\mathbb{Q}}
+\newcommand{\mbr}{\mathbb{R}}
+\newcommand{\mbs}{\mathbb{S}}
+\newcommand{\mbt}{\mathbb{T}}
+\newcommand{\mbu}{\mathbb{U}}
+\newcommand{\mbv}{\mathbb{V}}
+\newcommand{\mbw}{\mathbb{W}}
+\newcommand{\mbx}{\mathbb{X}}
+\newcommand{\mby}{\mathbb{Y}}
+\newcommand{\mbz}{\mathbb{Z}}
+\newcommand{\cfgto}{\hookrightarrow}
+
+\newcommand*{\cD}{\mathcal{D}}
+\newcommand*{\cF}{\mathcal{F}}
+\newcommand*{\cP}{\mathcal{P}}
+\newcommand*{\cV}{\mathcal{V}}
+
+\newcommand{\mcs}{\mathcal{S}}
+\newcommand{\wv}{\mathbf{w}}
+
+
+\newcommand{\compo}{\mbj}
+\newcommand{\importance}{\mbr}
+
+
+
+\newcommand{\mse}{E}
+
+\let\oldvec\vec
+\renewcommand{\vec}[1]{\mathbf{#1}}
+
+
+\newcommand{\obj}{{\it obj}}
+\newcommand{\model}{\mathcal{M}}
+\newcommand{\counter}{\mathcal{C}}
+\newcommand{\lfp}{{\sf lfp}}
+\newcommand{\widenop}{\triangledown}
+\newcommand{\lub}{{\it lub}}
+\newcommand{\glb}{{\it glb}}
+
+
+
+\newcommand{\epath}{{\sf path}}
+\newcommand{\symvec}{\vec{M_0}}
+\newcommand{\ivec}{\vec{i}}
+\newcommand{\RunProgram}{{\sf Execute}}
+\newcommand{\NegateAndSolve}{{\sf NegateAndSolve}}
+\newcommand{\UNSAT}{{\sf UNSAT}}
+
+
+\newcommand{\heuristic}{{\sf Heuristic}}
+
+\newcommand{\gr}{\textgreater{}}
+\newcommand{\sm}{\textasciicircum{}}
+\newcommand{\bs}{\textbackslash{}}
+\newcommand{\xm}{\textcolor{black!80!black}{\ding{53}}}
+\newcommand{\cm}{\textcolor{red!80!black}{\ding{52}}}
+\newcommand{\multisetminus}{\setminus\setminus}
+\newcommand{\Ktop}{K_{\sf Top}}
+\newcommand{\Kprev}{K_{\sf Prev}}
+\newcommand{\Kchild}{K_{\sf Child}}
+\newcommand{\prevset}{{\it PrevS}}
+\newcommand{\curset}{{\it ChildS}}
+\newcommand{\sampleset}{{\it S}} %{\Pat_{\sf good}}
+\newcommand{\good}{{\it Good}}%{\Pat_{\sf cand}}
+\newcommand{\bad}{{\it Bad}}%{\Pat_{\sf cand}}
+\newcommand{\randomsampling}{{\sf RandomSampling}}
+\newcommand{\pop}{{\sf pop}}
+\newcommand{\concolic}{{\sf Concolic}}
+\newcommand{\runconcolic}{{\sf Run}}
+
+\newcommand{\switch}{\textsc{Switch}}
+\newcommand{\knowledge}{K}
+\newcommand{\totalbranch}{{\it T}}
+\newcommand{\toph}{h_{\sf top}}
+\newcommand{\both}{h_{\sf bot}}
+\newcommand{\childh}{h_{\sf child}}
+\newcommand{\total}{{\sf total}}
+\newcommand{\badfeatures}{F}
+\newcommand{\topheuristics}{\Know_1}
+\newcommand{\botheuristics}{\Know_2}
+\algnewcommand\algorithmicforeach{\textbf{for each}}
+\algdef{S}[FOR]{ForEach}[1]{\algorithmicforeach\ #1\ \algorithmicdo}
+\newcommand{\idx}{{\it i}}
+\newcommand{\diffset}{\setminus\!\!\!\setminus}
+
+\newcommand{\myvec}[1]{\vec{#1}}
+\newcommand{\Pattern}{{\it Pattern}}
+\newcommand{\PatternSet}{{\it Patterns}}
+\newcommand{\Program}{{\it Program}}
+\newcommand{\SearchHeuristic}{{\it SearchHeuristic}}
+\newcommand{\Template}{{\it Template}}
+\newcommand{\ExecutionTree}{{\it ExecutionTree}}
+\newcommand{\Branches}{{\it Branches}}
+\newcommand{\PathCondition}{{\it PathCond}}
+
+\newcommand{\CFDS}{\texttt{CFDS}}
+\newcommand{\CGS}{\texttt{CGS}}
+\newcommand{\Random}{\texttt{Random}}
+\newcommand{\Param}{\texttt{Param}}
+\newcommand{\Generational}{\texttt{Gen}}
+\newcommand{\candidates}{\mathcal{C}}
+
+\newcommand{\family}{\mathcal{H}}
+\newcommand{\comments}[1]{{\color{red}{{\bf #1}}}}
+
+\newcommand{\PureBr}{{\it B}}
+\newcommand{\TemBr}{{\it TB}}
+
+\newcommand{\hpo}{\eta_1}
+\newcommand{\hpt}{\eta_2}
+\newcommand{\hpr}{\eta_3}
+
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+\newcommand{\tq}{\textquotesingle}
+
+
+
+\newcommand{\Hspace}{\mbh}
+
+\newcommand{\KGen}{{\sf KGen}}
+\newcommand{\HGen}{{\sf HGen}}
+\newcommand{\Eval}{{\sf Eval}}
+\newcommand{\Concolic}{{\sf Concolic}}
+\newcommand{\switchsub}{{\sf Offspring}}
+\newcommand{\hc}{h_{\sf c}}
+\newcommand{\hp}{h_{\sf p}}
+\newcommand{\nil}{\epsilon}
+\newcommand{\getsample}{\sim}
+\newcommand{\Know}{K}
+\newcommand{\myparagraph}[1]{{\setlength{\parindent}{15pt}\setlength{\parskip}{5pt}{\textit{\textbf{{#1.}}}}}}
+\newcommand{\Gen}{G}
+\newcommand{\Kill}{{\it Kill}}
+
+
+\newcommand{\similarfeatures}{{\sf similar}}
+
+\newcommand{\erate}{\epsilon}
+\newcommand{\Exploit}{{\sf Exploit}}
+\newcommand{\Explore}{{\sf Explore}}
+
+\newcommand{\PP}[1]{
+\medskip
+\noindent{\textbf{\IfEndWith{#1}{.}{#1}{#1.}}}}
+
+\newcommand{\myIfElse}[3]{%
+    \ifnum#1=1
+        #2
+    \else
+        #3
+    \fi
+}
+
+
+%%% Local Variables:
+%%% mode: plain-tex
+%%% TeX-master: "paper"
+%%% End:
