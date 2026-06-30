@@ -1,0 +1,22 @@
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.lof
+*.log
+*.lot
+*.out
+*.run.xml
+*.synctex.gz
+*.toc
+*.xdv
+
+# minted output
+_minted-*/
+*.pygtex
+
+# Generated paper PDF. Do not ignore figures/*.pdf.
+/paper.pdf

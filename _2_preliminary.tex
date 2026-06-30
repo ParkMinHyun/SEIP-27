@@ -1,2 +1,204 @@
+% SeqPAW -- Chapter 2: Preliminaries
+% Self-contained: local notation macros are defined here with \providecommand so this
+% file does not clash with the ReuSE macros.tex kept for format reference.
+
+\providecommand{\seqpaw}{{\textsc{SeqPaw}}}
+\providecommand{\wset}{\ensuremath{\mathcal{W}}}        % universe of workloads
+\providecommand{\wl}{\ensuremath{w}}                    % a workload
+\providecommand{\wseq}{\ensuremath{s}}                  % a workload sequence (suffix)
+\providecommand{\tail}{\ensuremath{\tau}}               % mandatory tail of a sequence
+\providecommand{\deadline}{\ensuremath{D}}              % capture deadline (watchdog)
+\providecommand{\bgt}{\ensuremath{b}}                   % remaining time budget at a decision
+\providecommand{\dur}{\ensuremath{T}}                   % actual execution time
+\providecommand{\pdur}{\ensuremath{\widehat{T}}}        % point prediction of execution time
+\providecommand{\ub}{\ensuremath{U}}                    % predicted upper bound
+\providecommand{\resid}{\ensuremath{r}}                 % log-residual ln(T/\pdur)
+
 \section{Preliminaries}\label{sec:preliminaries}
-asdasdasd ddd
+
+\subsection{Draft Sequence Execution}\label{sec:dse}
+
+After the shutter fires, a smartphone camera does not save the captured frame
+directly. The frame is handed to a post-processing pipeline---which we call a
+\emph{draft sequence}---that runs a chain of image-enhancement stages (e.g.,
+depth-based bokeh, filters, dynamic effects, and watermarking) before a final
+\emph{encoding} stage compresses the result and writes it to storage. We model a
+draft sequence as an ordered chain of nodes $\langle n_1, n_2, \dots, n_k\rangle$,
+where each node $n_i$ realizes one \emph{workload} $\wl \in \wset$. A workload is the
+stable unit of computation whose running time we want to reason about; it is
+identified by its operation type and the resolution tier of the frame (a
+megapixel bucket), and, for the encoding stage, additionally by the output image
+format. Grouping by these attributes keeps the workload key stable across
+captures so that timing samples for ``the same work'' accumulate together.
+
+\myparagraph{Deadline and budget}
+A capture must finish within a hard real-time \emph{deadline} $\deadline$, enforced
+by a capture watchdog. If the pipeline has not produced and saved an image by
+$\deadline$, the framework forcibly tears the chain down: the capture is lost or
+degraded, a user-visible failure. At any decision point during the sequence, the
+relevant quantity is therefore the \emph{remaining budget}
+$\bgt = \deadline - t_{\text{now}}$---the wall-clock time still available before the
+deadline.
+
+\myparagraph{Workload policies}
+Stages are not equally essential, and this asymmetry drives every decision in the
+pipeline. We partition workloads into three policies:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Mandatory} ($\tail$): the encoding-and-save stage. It must always
+        run for the capture to yield any output, and it forms the tail of every
+        sequence.
+  \item \textbf{Optional}: expensive enhancements (e.g., bokeh, filter) that
+        improve the image but may be \emph{skipped} when there is not enough budget
+        left to run them without endangering the mandatory tail.
+  \item \textbf{Observed}: lightweight stages (e.g., dynamic effects, watermark)
+        that always run but whose cost must still be predicted and accounted for,
+        since they consume part of the budget the mandatory tail relies on.
+\end{itemize}
+
+\myparagraph{Sequences and decisions}
+When execution reaches node $n_i$, the work that still remains is the
+\emph{suffix} of the chain from $n_i$ onward. We write this as a \emph{workload
+sequence} $\wseq = \langle \wl_1, \dots, \wl_m\rangle$, an ordered list of the
+remaining workloads, and denote its actual execution time on a given capture by
+$\dur(\wseq) = \sum_{j} \dur(\wl_j)$. Crucially, $\dur(\wseq)$ is not fixed: the same
+workload runs faster or slower from one capture to the next depending on device
+state---thermal throttling as the phone heats up, memory pressure, garbage
+collection, and CPU contention---so the pipeline cannot rely on a static cost
+table.
+
+At each optional node, two coupled decisions must be made online, \emph{before}
+the work runs:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Admission.} Decide whether the remaining suffix $\wseq$ (the optional
+        workload plus everything mandatory that follows it) will fit within the
+        budget. The stage is admitted only if a predicted upper bound on its
+        running time, $\ub(\wseq)$, satisfies $\ub(\wseq) \le \bgt$; otherwise it is
+        skipped to protect the mandatory tail and meet the deadline.
+  \item \textbf{Watchdog timeout.} An admitted optional workload is run under a
+        per-workload timeout so a single overrun cannot starve the tail. The
+        timeout reserves enough budget for the mandatory tail $\tail$ and grants the
+        rest to the optional workload: $\bgt - \ub(\tail)$. If the workload exceeds
+        this, it is detached and cancelled so that encoding still completes within
+        $\deadline$.
+\end{enumerate}
+
+Algorithm~\ref{alg:decision} summarizes the per-node decision. After the capture
+completes, the \emph{actual} per-workload durations become available and are fed
+back to refine the predictor (line~9). Learning is thus online, on-device, and
+per-device: the model that decides admission for the next capture is exactly the
+one updated by the previous ones, with no offline training phase.
+
+\begin{algorithm}[t] \footnotesize
+  \caption{Per-node admission and watchdog decision}
+  \label{alg:decision}
+  \begin{algorithmic}[1]
+    \Require remaining suffix $\wseq$, budget $\bgt$, predictor $P$
+    \Ensure admit flag, watchdog timeout $\theta$
+    \Procedure{Decide}{$\wseq, \bgt, P$}
+      \State $\langle \pdur(\wseq),\, \ub(\wseq) \rangle \gets P.\Call{Predict}{\wseq}$
+      \If{$\wseq$ has no learned model yet} \Comment{cold start}
+        \State $\textit{admit} \gets \textsc{true}$
+      \Else
+        \State $\textit{admit} \gets (\ub(\wseq) \le \bgt)$
+      \EndIf
+      \State $\tail \gets$ mandatory tail of $\wseq$
+      \State $\theta \gets \max(0,\; \bgt - \ub(\tail))$
+      \State \textbf{run} $\wseq$'s head under timeout $\theta$ \textbf{if} \textit{admit}, \textbf{else skip}
+      \State \textbf{on capture end:} $P.\Call{Update}{\text{observed } \dur(\wl_j)}$
+      \State \Return $\textit{admit},\ \theta$
+    \EndProcedure
+  \end{algorithmic}
+\end{algorithm}
+
+\subsection{Problem Definition}\label{sec:problem}
+
+The pipeline of Section~\ref{sec:dse} reduces to a single learning problem:
+predict, online and on-device, an \emph{execution-time upper bound} for a workload
+sequence. Captures arrive as a stream $t = 1, 2, \dots$. At a decision point in
+capture $t$ we observe a sequence $\wseq_t$ and budget $\bgt_t$ and must emit a point
+prediction $\pdur(\wseq_t)$ and an upper bound $\ub(\wseq_t)$ \emph{before} execution;
+only afterward do we observe the realized time $\dur(\wseq_t)$. The objective is to
+choose $\ub(\cdot)$ that balances two competing goals:
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Safety.} Under-prediction is the dangerous error: if
+        $\dur(\wseq_t) > \ub(\wseq_t)$, an admitted stage can overrun the budget and
+        cause a deadline miss or a mandatory-tail watchdog timeout. We therefore
+        want $\Pr[\dur(\wseq_t) > \ub(\wseq_t)]$ to stay below a small target. The
+        bound is intentionally one-sided.
+  \item \textbf{Utility.} An inflated bound is also costly: every millisecond of
+        slack $\ub(\wseq_t) - \dur(\wseq_t)$ makes the admission test reject optional
+        stages that would in fact have fit, lowering the \emph{admit rate} and
+        degrading image quality. A good bound is as tight as safety allows.
+\end{itemize}
+
+What makes this hard is the setting in which $\ub(\cdot)$ must be learned. The
+predictor runs inside the camera hot path, so it is bound by four constraints
+that rule out a conventional offline model:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Streaming, bounded cost.} The model updates once per capture in
+        near-constant time and bounded memory; there is no batch-retraining loop.
+  \item \textbf{Cold start.} It must emit a usable bound from very few---even
+        zero---samples for a given sequence, as new devices, new workload variants,
+        and rarely seen sequences appear continually.
+  \item \textbf{Non-stationarity.} The distribution of $\dur(\wseq_t)$ drifts within a
+        session as the device throttles and memory fills. The safety margin cannot
+        be a fixed constant; it must self-calibrate to each device's throttling
+        magnitude and track drift.
+  \item \textbf{Compositionality.} Sequences are nested suffixes that share
+        workloads, so their bounds must be mutually consistent (a longer sequence's
+        bound should not fall below that of its own suffix), and evidence should be
+        shared across sequences that share work.
+\end{itemize}
+
+It is convenient to separate the bound into a point estimate and a multiplicative
+safety factor, $\ub(\wseq) = \pdur(\wseq)\cdot \exp\!\big(q(\wseq)\big)$, where
+$\exp(q(\wseq)) \ge 1$ is driven by the distribution of past \emph{log-residuals}
+$\resid = \ln\!\big(\dur / \pdur\big)$. The log-residual is scale-free---it
+measures relative over- and under-shoot---so it pools naturally across workloads
+of different absolute cost. Section~\ref{sec:naive} shows why the obvious ways of
+choosing $\pdur$ and $q$ fail the constraints above, motivating \seqpaw.
+
+\subsection{Limitations of Naive Approaches}\label{sec:naive}
+
+\myparagraph{Static worst-case bounds}
+The safest-looking option is to reserve a fixed, offline-profiled worst-case time
+for each stage. This trivially satisfies safety but is badly over-conservative:
+it assumes a throttled device on every capture, so it skips optional stages even
+when the phone is cool and idle. The admit rate collapses, and image quality
+suffers, in exactly the common case where the budget was ample. A static table
+also cannot follow per-device variation or within-session drift.
+
+\myparagraph{Running mean or last value}
+At the other extreme, predicting $\dur(\wseq)$ by a simple average or the last
+observed value (with no margin, or a fixed percentage margin) is tight but
+unsafe. Such estimators track the \emph{center} of the distribution, not its tail;
+under thermal throttling the realized time routinely exceeds them, causing
+deadline misses. A fixed percentage margin cannot help, because the right margin
+is precisely what differs across devices and thermal states---the quantity that
+must be learned.
+
+\myparagraph{Independent per-workload quantiles}
+One could bound each workload by its own high quantile and sum them over the
+sequence. But summing per-workload tail estimates compounds the margin---each
+term already pays for a worst case, and their sum assumes all workloads hit their
+worst case simultaneously---yielding a loose, low-utility bound. It also offers no
+principled answer for a sequence whose workloads have few or no joint samples
+(cold start).
+
+\myparagraph{Offline-trained models}
+A model trained offline on logged traces can be accurate at deployment time but
+cannot adapt on-device to drift or to a particular handset's throttling profile
+without a retraining pipeline, and it still has nothing to say for workload
+variants unseen during training. Its cost and its dependence on a training loop
+violate the streaming, bounded, cold-start setting of Section~\ref{sec:problem}.
+
+\medskip
+\noindent
+These failures share a root cause: each fixes one axis---margin, recency,
+composition, or adaptivity---while the problem demands all four at once. A usable
+bound must be \emph{online} (updated per capture), \emph{self-calibrating} (its
+margin learned from observed residuals rather than fixed), \emph{sequence-aware}
+(composed consistently over shared workloads, with a cold-start fallback), and
+\emph{drift-tracking}. \seqpaw, presented next, is built around these four
+requirements.
