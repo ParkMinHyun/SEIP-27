@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"Write-Host '[session-start] Offer to sync shared context before substantive work (run ./sync-context.ps1, ff-only). Repo status:'; & ./sync-context.ps1 -CheckOnly\"",
+            "timeout": 30,
+            "statusMessage": "Checking shared-context sync status..."
+          }
+        ]
+      }
+    ]
+  }
+}

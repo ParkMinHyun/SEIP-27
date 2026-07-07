@@ -93,32 +93,36 @@ the \emph{remaining budget} $\bgt = \deadline - t_{\text{elapsed}}$.
 \begin{table}[t]
   \centering
   \caption{First shot index (out of 30) at which Capture Timeout occurs
-  during a continuous portrait burst on a flagship device, per device state
-  and draft-stage configuration (B = bokeh, F = filter; None skips both).
-  ``--'' means no timeout within the burst; $h$ is the thermal headroom,
-  with higher $h$ indicating operation nearer the throttling limit.}
+  during a continuous portrait burst on a flagship device, by overheat
+  level, image-size tier, memory condition, and draft-stage configuration
+  (B = bokeh, F = filter). ``--'' means no timeout within the burst;
+  boldface marks failures within the first ten shots. At Lv5 and above,
+  24MP capture falls back to 12MP mode, so the 24MP cells report the
+  corresponding 12MP-mode measurements.}
   \label{tab:timeout_index}
   \resizebox{\columnwidth}{!}{%
-  \begin{tabular}{ll||cccc|cccc}
+  \begin{tabular}{c||cc|cc||cc|cc}
   \toprule \midrule
-  \multicolumn{2}{c||}{\textbf{Device state}} &
-  \multicolumn{4}{c|}{\textbf{Normal}} &
-  \multicolumn{4}{c}{\textbf{Memory pressure}} \\ \cmidrule(l){3-10}
-  \textbf{Level} & \textbf{Thermal status} &
-  \textbf{B{+}F} & \textbf{B} & \textbf{F} & \textbf{None} &
-  \textbf{B{+}F} & \textbf{B} & \textbf{F} & \textbf{None} \\
+  \multirow{3}{*}{\makecell{\textbf{Overheat}\\\textbf{level}}} &
+  \multicolumn{4}{c||}{\textbf{Normal capture}} &
+  \multicolumn{4}{c}{\textbf{Memory-pressure capture}} \\ \cmidrule(lr){2-5}\cmidrule(l){6-9}
+  &
+  \multicolumn{2}{c|}{\textbf{12MP}} &
+  \multicolumn{2}{c||}{\textbf{24MP}} &
+  \multicolumn{2}{c|}{\textbf{12MP}} &
+  \multicolumn{2}{c}{\textbf{24MP}} \\ \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(l){8-9}
+  & \textbf{B{+}F} & \textbf{B} &
+  \textbf{B{+}F} & \textbf{B} &
+  \textbf{B{+}F} & \textbf{B} &
+  \textbf{B{+}F} & \textbf{B} \\
   \midrule \midrule
-  Lv0 & None                        & -- & -- & -- & -- & -- & -- & -- & -- \\
-  Lv1 & None                        & 29 & -- & -- & -- & 30 & -- & -- & -- \\
-  Lv2 & None                        & 28 & -- & -- & -- & 25 & -- & -- & -- \\
-  Lv2 & Light                       & 24 & -- & -- & -- & 26 & -- & -- & -- \\
-  Lv3 & Light                       & 17 & -- & -- & -- & 11 & 29 & -- & -- \\
-  Lv3 & Moderate                    & 13 & 28 & -- & -- &  8 & 25 & -- & -- \\
-  Lv4 & Moderate ($h$ lower)        & 14 & 27 & -- & -- &  8 & 16 & -- & -- \\
-  Lv4 & Moderate ($h$ higher)       & 10 & 16 & -- & -- &  6 & 13 & -- & -- \\
-  Lv5 & Severe                      &  7 & 14 & -- & -- &  4 &  9 & 29 & -- \\
-  Lv6 & Severe                      &  8 & 15 & -- & -- &  5 &  6 & 30 & -- \\
-  Lv6 & Critical                    &  7 & 14 & -- & -- &  4 &  6 & 28 & -- \\
+  Lv0 & -- & -- & 29 & -- & -- & -- & 26 & -- \\
+  Lv1 & -- & -- & 29 & -- & 24 & -- & 19 & -- \\
+  Lv2 & 24 & -- & 18 & -- & 15 & 29 & 14 & 25 \\
+  Lv3 & 13 & 21 & 12 & 20 & \textbf{8} & 19 & \textbf{5} & 15 \\
+  Lv4 & \textbf{10} & 16 & \textbf{8} & 13 & \textbf{6} & 13 & \textbf{4} & \textbf{7} \\
+  Lv5 & \textbf{8} & 12 & \textbf{8} & 12 & \textbf{4} & \textbf{9} & \textbf{4} & \textbf{9} \\
+  Lv6 & \textbf{7} & 11 & \textbf{7} & 11 & \textbf{4} & \textbf{6} & \textbf{4} & \textbf{6} \\
   \midrule \bottomrule
   \end{tabular}%
   }
@@ -151,18 +155,25 @@ states.
 \myparagraph{Measured timeout behavior}
 Table~\ref{tab:timeout_index} illustrates this behavior in a 30-shot
 continuous portrait burst on a current-generation flagship device. We swept
-the device state and enabled the two most expensive draft stages, bokeh and
-filter, together, individually, and not at all, with and without induced
-memory pressure; each entry reports the first shot index at which Capture
-Timeout occurred. Timeouts are cumulative: no configuration fails on the
-first shot, and failures move earlier as the device heats---from shot~29 at
-level~1 down to shot~7 at level~5 with both stages---consistent with the
-budget erosion illustrated in Figure~\ref{fig:overlap}. Risk is also
-configuration-dependent: at level~3 (Moderate), skipping only bokeh moves
-the first timeout from shot~13 to shot~28, and filter-only does not time out
-in the measured normal condition. Thermal level alone does not determine
-risk either: under memory pressure the same levels fail far earlier, and
-even filter-only begins to fail at severe levels.
+the overheat level, image-size tier, memory condition, and the two
+expensive draft-stage configurations that matter most for portrait
+admission, bokeh with filter and bokeh alone; each entry reports the first
+shot index at which Capture Timeout occurred. Timeouts are cumulative: no
+configuration fails on the first shot, but failures move earlier as the
+device heats and the queued draft work erodes the remaining budget. With
+bokeh and filter enabled, the 12MP normal case first fails at level~2 on
+shot~24 and reaches shot~7 by level~6; the 24MP case is already fragile at
+level~0, timing out on shot~29 under normal capture and shot~26 under memory
+pressure. Memory pressure shifts the same workload much closer to the
+deadline: 24MP bokeh with filter fails by shot~5 at level~3 and by shot~4
+at level~4. At level~5 and above, the camera no longer executes the draft
+path in 24MP mode and instead falls back to 12MP mode; the 24MP columns
+therefore repeat the corresponding 12MP-mode measurements rather than
+representing independent 24MP measurements. Risk is also
+configuration-dependent. Bokeh alone
+usually survives longer than bokeh with filter, but it still times out under
+higher heat or pressure, showing that the admission decision must reason
+about the remaining sequence, image-size tier, and runtime state together.
 
 Meanwhile, the pressure to enrich the draft sequence keeps growing. As the
 draft--final gap widened, lightweight multi-frame composition in the draft
@@ -193,14 +204,17 @@ Introduced after timeouts were found to cluster above a thermal threshold
 and later tightened when failures appeared on a lower-tier device, the
 guard applies fleet-wide because the framework ships as common code without
 per-model branching. Table~\ref{tab:timeout_index} shows why this is
-inadequate on both sides: with both stages enabled, timeouts already occur
-at lower thermal levels, below the guard threshold (false negatives), while
-filter-only does not time out in the measured normal condition even at the
-critical level, yet the guard skips optional draft-stage processing once the
-threshold is reached (false positives). Both errors are user-visible: a
-skipped effect that later appears in the final image yields a draft--final
-inconsistency, and independent per-shot decisions cause shot-to-shot jitter
-in continuous capture.
+inadequate: with both stages enabled, timeouts already occur at low
+overheat levels below a fixed guard threshold, especially for 24MP images
+and memory-pressure captures. Tightening the threshold enough to cover
+those worst cases would also suppress less risky cases at the same overheat
+level, such as normal 12MP captures that still complete the measured burst.
+The guard therefore cannot express the real decision boundary, which varies
+with workload sequence, image-size tier, memory pressure, and accumulated
+queueing delay. Both errors are user-visible: a skipped effect that later
+appears in the final image yields a draft--final inconsistency, and
+independent per-shot decisions cause shot-to-shot jitter in continuous
+capture.
 
 \myparagraph{Simple predictors}
 Replacing the guard with a straightforward latency predictor does not fare
