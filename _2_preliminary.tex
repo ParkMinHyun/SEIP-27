@@ -79,16 +79,17 @@ the \emph{remaining budget} $\bgt = \deadline - t_{\text{elapsed}}$.
 \begin{figure}[t]
   \centering
   \resizebox{\columnwidth}{!}{\input{figures/fig_draft_overlap}}
-  \caption{Two draft sequences overlapping under parallel capture, with
-  identical stage durations in both captures. Blue stages are the optional
-  enhancements (bokeh, filter), short gray stages ``A'' and ``B'' are the
-  remaining (anonymized) draft stages, and the dark stage is the
-  mandatory encoding. Capture $i$
-  finishes well before its deadline, but because draft sequences execute on
-  a single thread, the draft sequence of capture $i{+}1$ is queued behind
-  its predecessor and starts with part of its deadline budget already
-  consumed; the same workload then overruns deadline $i{+}1$ during the
-  mandatory encoding, causing a Capture Timeout.}
+  \caption{Draft sequences piling up under parallel continuous capture.
+  Every capture runs the identical stage sequence: blue optional
+  enhancements (bokeh, filter), short gray anonymized stages ``A'' and
+  ``B'', and the dark mandatory encoding. While the draft sequence of
+  capture $i$ is still running, the HAL reports \texttt{captureAvailable},
+  so the application can immediately take the next shot. Because draft
+  sequences execute on a single thread, each subsequent draft sequence
+  queues behind its predecessors and starts with more of its deadline
+  budget already consumed: captures $i$ and $i{+}1$ still finish in time,
+  but capture $i{+}2$ overruns its deadline during the mandatory encoding,
+  causing a Capture Timeout.}
   \label{fig:overlap}
 \end{figure}
 
@@ -153,9 +154,11 @@ Two developments turned the draft sequence into a timeout hotspot. First,
 parallel capture changed when the next shot can begin. Before parallel
 capture, the next capture was effectively serialized until the previous
 capture had collected its frames and completed the draft sequence. On
-parallel-capture devices, the next capture can be accepted once the HAL is
-ready for a new request, even if the previous draft sequence has not
-completed. Draft sequences still execute on a single thread, so a new draft
+parallel-capture devices, the HAL reports readiness for the next request as
+a partial result (\texttt{captureAvailable}), which the framework forwards
+to the application; the next capture can therefore begin even if the
+previous draft sequence has not completed. Draft sequences still execute on
+a single thread, so a new draft
 sequence can queue behind an older one and start with part of its timeout
 budget already consumed (Figure~\ref{fig:overlap}). Timeout risk therefore
 depends on recent capture history, not only on the current capture's own

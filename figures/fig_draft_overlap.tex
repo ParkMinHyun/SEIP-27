@@ -1,103 +1,148 @@
-% Timeline of two draft sequences overlapping under parallel capture.
+% Draft sequences piling up under parallel continuous capture (three shots).
 % Included from _2_preliminary.tex (Figure~\ref{fig:overlap}).
-% Requires: tikz with libraries `patterns' and `decorations.pathreplacing';
-% pifont for the check mark.
+% Requires: tikz with libraries `patterns', `decorations.pathreplacing',
+% `positioning'; pifont for the check mark.
 %
-% Design: both captures run the identical stage sequence
-% [Bokeh][other][Filter][other][Encode]. Capture i meets its deadline with
-% slack; capture i+1 inherits queueing delay from the single draft thread,
-% so the same workload overruns its deadline during the mandatory encode.
-% Only Bokeh, Filter, and Encode are named; the two remaining draft stages
-% are anonymized as short gray "other" stages marked `A' and `B' (their
-% durations are small).
+% Design: a cascade of three captures. While capture i's draft sequence is
+% still running, the HAL reports captureAvailable (partial result); the
+% framework forwards it to the app, which immediately takes the next shot.
+% Draft sequences execute on a single thread, so each subsequent draft
+% sequence queues behind its predecessors: the queueing delay grows shot by
+% shot, captures i and i+1 still meet their deadlines, and capture i+2
+% overruns its deadline during the mandatory encode. Only Bokeh, Filter,
+% and Encode are named; the two remaining draft stages are anonymized as
+% short gray "other" stages marked `A' and `B'.
+%
+% Vertical layout: row band height 0.45; row centers at 3.925 (i), 2.425
+% (i+1), 0.925 (i+2); pitch 1.5. Horizontal: shot interval 0.5, HAL
+% lead-in 0.45, draft sequence width 2.75, deadline D = 7.3.
 \begin{tikzpicture}[font=\small,
   optstage/.style={draw=blue!45!black, fill=blue!14},
   othstage/.style={draw=black!55, fill=gray!22},
   encstage/.style={draw=black!80, fill=black!72},
   queued/.style={pattern=north east lines, pattern color=red!45, draw=red!35},
-  ddl/.style={red, dashed, thick}]
+  swatch/.style={draw, minimum width=8pt, minimum height=6pt, inner sep=0pt},
+  ddl/.style={red, dashed, thick},
+  sig/.style={->, black!60}]
 
   % ---------- legend (top) ----------
-  \draw[optstage] (0, 3.2) rectangle (0.3, 3.4);
-  \node[anchor=west] at (0.34, 3.3) {\footnotesize optional stage};
-  \draw[othstage] (2.45, 3.2) rectangle (2.75, 3.4);
-  \node[anchor=west] at (2.79, 3.3) {\footnotesize other stage};
-  \draw[encstage] (4.75, 3.2) rectangle (5.05, 3.4);
-  \node[anchor=west] at (5.09, 3.3) {\footnotesize mandatory stage};
-  \draw[queued] (7.25, 3.2) rectangle (7.55, 3.4);
-  \node[anchor=west] at (7.59, 3.3) {\footnotesize queueing delay};
+  % Entries chained with `right=of' so the gap between successive entries is
+  % identical regardless of label width.
+  \node[swatch, optstage] (lg1) at (0, 5.0) {};
+  \node[anchor=west, inner sep=2pt] (lt1) at (lg1.east) {\footnotesize optional stage};
+  \node[swatch, othstage, right=5mm of lt1] (lg2) {};
+  \node[anchor=west, inner sep=2pt] (lt2) at (lg2.east) {\footnotesize other stage};
+  \node[swatch, encstage, right=5mm of lt2] (lg3) {};
+  \node[anchor=west, inner sep=2pt] (lt3) at (lg3.east) {\footnotesize mandatory stage};
+  \node[swatch, queued, right=5mm of lt3] (lg4) {};
+  \node[anchor=west, inner sep=2pt] (lt4) at (lg4.east) {\footnotesize queueing delay};
 
-  % ---------- capture i (top row) ----------
-  \node[anchor=east] at (-0.2, 2.225) {capture $i$};
-  % shutter marker
-  \draw[very thick] (0, 1.85) -- (0, 2.6);
-  \node[anchor=south] at (0, 2.62) {shutter $i$};
-  % lead-in until the draft frame is available
-  \draw[densely dotted] (0, 2.225) -- (0.3, 2.225);
-  % draft sequence i
-  \draw[optstage] (0.3, 2.0) rectangle (1.5, 2.45);
-  \node at (0.9, 2.225) {\footnotesize Bokeh};
-  \draw[othstage] (1.5, 2.0) rectangle (2.0, 2.45);
-  \node at (1.75, 2.225) {\scriptsize\textcolor{black!65}{A}};
-  \draw[optstage] (2.0, 2.0) rectangle (2.85, 2.45);
-  \node at (2.425, 2.225) {\footnotesize Filter};
-  \draw[othstage] (2.85, 2.0) rectangle (3.3, 2.45);
-  \node at (3.075, 2.225) {\scriptsize\textcolor{black!65}{B}};
-  \draw[encstage] (3.3, 2.0) rectangle (4.15, 2.45);
-  \node at (3.725, 2.225) {\footnotesize\textcolor{white}{Encode}};
+  % ---------- capture i (top row, band 3.70--4.15) ----------
+  \node[anchor=east] at (-0.2, 3.925) {capture $i$};
+  \draw[very thick] (0, 3.55) -- (0, 4.30);
+  \node[anchor=south] at (0, 4.32) {shutter $i$};
+  % HAL lead-in until the draft frame is available
+  \draw[densely dotted] (0, 3.925) -- (0.45, 3.925);
+  % draft sequence i (starts as soon as the frame is ready: thread is idle)
+  \draw[optstage] (0.45, 3.70) rectangle (1.2, 4.15);
+  \node at (0.825, 3.925) {\scriptsize Bokeh};
+  \draw[othstage] (1.2, 3.70) rectangle (1.5, 4.15);
+  \node at (1.35, 3.925) {\scriptsize\textcolor{black!65}{A}};
+  \draw[optstage] (1.5, 3.70) rectangle (2.15, 4.15);
+  \node at (1.825, 3.925) {\scriptsize Filter};
+  \draw[othstage] (2.15, 3.70) rectangle (2.45, 4.15);
+  \node at (2.3, 3.925) {\scriptsize\textcolor{black!65}{B}};
+  \draw[encstage] (2.45, 3.70) rectangle (3.2, 4.15);
+  \node at (2.825, 3.925) {\scriptsize\textcolor{white}{Encode}};
   % slack before deadline i
-  \draw[densely dotted, gray] (4.15, 2.225) -- (6.3, 2.225);
-  \node[fill=white, inner sep=1.5pt] at (5.2, 2.225)
+  \draw[densely dotted, gray] (3.2, 3.925) -- (7.3, 3.925);
+  \node[fill=white, inner sep=1.5pt] at (5.25, 3.925)
     {\footnotesize\textcolor{green!45!black}{\ding{51} in time}};
-  % deadline of capture i
-  \draw[ddl] (6.3, 1.85) -- (6.3, 2.6);
-  \node[red, anchor=south] at (6.3, 2.62) {deadline $i$};
+  \draw[ddl] (7.3, 3.55) -- (7.3, 4.30);
+  \node[red, anchor=south] at (7.3, 4.32) {deadline $i$};
 
-  % ---------- capture i+1 (bottom row) ----------
-  \node[anchor=east] at (-0.2, 0.925) {capture $i{+}1$};
-  % shutter marker (accepted while draft sequence i is still running)
-  \draw[very thick] (1.5, 0.55) -- (1.5, 1.3);
-  \node[anchor=south] at (1.5, 1.32) {shutter $i{+}1$};
-  % queueing behind draft sequence i
-  \draw[queued] (1.5, 0.7) rectangle (4.15, 1.15);
-  \node[fill=white, inner sep=1.5pt] at (2.825, 0.925)
+  % captureAvailable: HAL is ready for the next request while capture i is
+  % still being processed -> the app takes shot i+1 immediately.
+  \fill[black!60] (0.35, 3.925) circle (1.3pt);
+  \draw[sig] (0.35, 3.86) -- (0.5, 2.87);
+  \node[anchor=west, black!60] at (0.45, 3.35)
+    {\scriptsize\texttt{captureAvailable}};
+
+  % ---------- capture i+1 (middle row, band 2.20--2.65) ----------
+  \node[anchor=east] at (-0.2, 2.425) {capture $i{+}1$};
+  \draw[very thick] (0.5, 2.05) -- (0.5, 2.80);
+  \node[anchor=west] at (0.62, 2.82) {shutter $i{+}1$};
+  \draw[densely dotted] (0.5, 2.425) -- (0.95, 2.425);
+  % frame is ready at 0.95, but the single draft thread is busy until 3.2
+  \draw[queued] (0.95, 2.20) rectangle (3.2, 2.65);
+  \node[fill=white, inner sep=1.5pt] at (2.075, 2.425)
     {\footnotesize\textcolor{red!60!black}{queued}};
   % draft sequence i+1 (identical stage durations)
-  \draw[optstage] (4.15, 0.7) rectangle (5.35, 1.15);
-  \node at (4.75, 0.925) {\footnotesize Bokeh};
-  \draw[othstage] (5.35, 0.7) rectangle (5.85, 1.15);
-  \node at (5.6, 0.925) {\scriptsize\textcolor{black!65}{A}};
-  \draw[optstage] (5.85, 0.7) rectangle (6.7, 1.15);
-  \node at (6.275, 0.925) {\footnotesize Filter};
-  \draw[othstage] (6.7, 0.7) rectangle (7.15, 1.15);
-  \node at (6.925, 0.925) {\scriptsize\textcolor{black!65}{B}};
-  \draw[encstage] (7.15, 0.7) rectangle (8.0, 1.15);
-  % overrun beyond deadline i+1 (drawn before the label so the text stays visible)
-  \draw[draw=red!80!black, fill=red!75] (7.8, 0.7) rectangle (8.0, 1.15);
-  \node at (7.575, 0.925) {\footnotesize\textcolor{white}{Encode}};
-  % deadline of capture i+1 (crosses the mandatory encode)
-  \draw[ddl] (7.8, 0.55) -- (7.8, 1.3);
-  \node[red, anchor=south] at (7.8, 1.32) {deadline $i{+}1$};
+  \draw[optstage] (3.2, 2.20) rectangle (3.95, 2.65);
+  \node at (3.575, 2.425) {\scriptsize Bokeh};
+  \draw[othstage] (3.95, 2.20) rectangle (4.25, 2.65);
+  \node at (4.1, 2.425) {\scriptsize\textcolor{black!65}{A}};
+  \draw[optstage] (4.25, 2.20) rectangle (4.9, 2.65);
+  \node at (4.575, 2.425) {\scriptsize Filter};
+  \draw[othstage] (4.9, 2.20) rectangle (5.2, 2.65);
+  \node at (5.05, 2.425) {\scriptsize\textcolor{black!65}{B}};
+  \draw[encstage] (5.2, 2.20) rectangle (5.95, 2.65);
+  \node at (5.575, 2.425) {\scriptsize\textcolor{white}{Encode}};
+  % slack before deadline i+1 (smaller than for capture i)
+  \draw[densely dotted, gray] (5.95, 2.425) -- (7.8, 2.425);
+  \node[fill=white, inner sep=1.5pt] at (6.87, 2.425)
+    {\footnotesize\textcolor{green!45!black}{\ding{51} in time}};
+  \draw[ddl] (7.8, 2.05) -- (7.8, 2.80);
+  \node[red, anchor=south] at (7.8, 2.82) {deadline $i{+}1$};
+
+  % captureAvailable again (unlabeled: same signal as above)
+  \fill[black!60] (0.85, 2.425) circle (1.3pt);
+  \draw[sig] (0.85, 2.36) -- (1.0, 1.37);
+
+  % ---------- capture i+2 (bottom row, band 0.70--1.15) ----------
+  \node[anchor=east] at (-0.2, 0.925) {capture $i{+}2$};
+  \draw[very thick] (1.0, 0.55) -- (1.0, 1.3);
+  \node[anchor=west] at (1.12, 1.32) {shutter $i{+}2$};
+  \draw[densely dotted] (1.0, 0.925) -- (1.45, 0.925);
+  % the backlog has grown: the thread is busy until 5.95
+  \draw[queued] (1.45, 0.7) rectangle (5.95, 1.15);
+  \node[fill=white, inner sep=1.5pt] at (3.7, 0.925)
+    {\footnotesize\textcolor{red!60!black}{queued}};
+  % draft sequence i+2 (identical stage durations)
+  \draw[optstage] (5.95, 0.7) rectangle (6.7, 1.15);
+  \node at (6.325, 0.925) {\scriptsize Bokeh};
+  \draw[othstage] (6.7, 0.7) rectangle (7.0, 1.15);
+  \node at (6.85, 0.925) {\scriptsize\textcolor{black!65}{A}};
+  \draw[optstage] (7.0, 0.7) rectangle (7.65, 1.15);
+  \node at (7.325, 0.925) {\scriptsize Filter};
+  \draw[othstage] (7.65, 0.7) rectangle (7.95, 1.15);
+  \node at (7.8, 0.925) {\scriptsize\textcolor{black!65}{B}};
+  \draw[encstage] (7.95, 0.7) rectangle (8.7, 1.15);
+  % overrun beyond deadline i+2 (drawn before the label so the text stays visible)
+  \draw[draw=red!80!black, fill=red!75] (8.3, 0.7) rectangle (8.7, 1.15);
+  \node at (8.325, 0.925) {\scriptsize\textcolor{white}{Encode}};
+  % deadline of capture i+2 (crosses the mandatory encode)
+  \draw[ddl] (8.3, 0.55) -- (8.3, 1.3);
+  \node[red, anchor=south] at (8.3, 1.32) {deadline $i{+}2$};
   % timeout callout
-  \node[red!70!black, anchor=west, align=left] at (8.12, 0.925)
+  \node[red!70!black, anchor=west, align=left] at (8.78, 0.925)
     {\footnotesize\bfseries Capture\\[-2pt]\footnotesize\bfseries Timeout};
 
-  % ---------- single-thread handoff ----------
-  % Drawn after both rows so the arrowhead is not overpainted by the box
-  % borders; the label sits to the right of the arrow.
-  \draw[dashed, gray, ->] (4.15, 1.97) -- (4.15, 1.19);
-  \node[anchor=west] at (4.27, 1.5)
-    {\footnotesize\textcolor{gray}{}};
+  % ---------- single-thread handoffs ----------
+  % Drawn after the rows so the arrowheads are not overpainted by the boxes;
+  % the caption explains the single draft thread.
+  \draw[dashed, gray, ->] (3.2, 3.67) -- (3.2, 2.68);
+  \draw[dashed, gray, ->] (5.95, 2.17) -- (5.95, 1.18);
 
-  % ---------- budget braces ----------
+  % ---------- budget braces (for the failing capture) ----------
   \draw[decorate, decoration={brace, mirror, amplitude=4pt}]
-    (1.5, 0.6) -- (4.15, 0.6);
-  \node[anchor=north] at (2.825, 0.38) {\footnotesize budget consumed};
+    (1.0, 0.5) -- (5.95, 0.5);
+  \node[anchor=north] at (3.47, 0.28) {\footnotesize budget consumed};
   \draw[decorate, decoration={brace, mirror, amplitude=4pt}]
-    (4.15, 0.6) -- (7.8, 0.6);
-  \node[anchor=north] at (5.975, 0.38) {\footnotesize remaining budget $b_{i+1}$};
+    (5.95, 0.5) -- (8.3, 0.5);
+  \node[anchor=north] at (7.12, 0.28) {\footnotesize remaining budget $b_{i+2}$};
 
   % ---------- time axis ----------
-  \draw[->] (0, -0.4) -- (9.2, -0.4) node[anchor=north east] {time};
+  \draw[->] (0, -0.4) -- (9.6, -0.4) node[anchor=north east] {time};
 
 \end{tikzpicture}
