@@ -40,7 +40,6 @@
   % ---------- capture i (top row, band 3.70--4.15) ----------
   \node[anchor=east] at (-0.2, 3.925) {capture $i$};
   \draw[very thick] (0, 3.55) -- (0, 4.30);
-  \node[anchor=south] at (0, 4.32) {shutter $i$};
   % HAL lead-in until the draft frame is available
   \draw[densely dotted] (0, 3.925) -- (0.45, 3.925);
   % draft sequence i (starts as soon as the frame is ready: thread is idle)
@@ -65,13 +64,12 @@
   % still being processed -> the app takes shot i+1 immediately.
   \fill[black!60] (0.35, 3.925) circle (1.3pt);
   \draw[sig] (0.35, 3.86) -- (0.5, 2.87);
-  \node[anchor=west, black!60] at (0.45, 3.35)
+  \node[anchor=west, black!60] at (0.4, 3.35)
     {\scriptsize\texttt{captureAvailable}};
 
   % ---------- capture i+1 (middle row, band 2.20--2.65) ----------
-  \node[anchor=east] at (-0.2, 2.425) {capture $i{+}1$};
+  \node[anchor=east] at (0.3, 2.425) {capture $i{+}1$};
   \draw[very thick] (0.5, 2.05) -- (0.5, 2.80);
-  \node[anchor=west] at (0.62, 2.82) {shutter $i{+}1$};
   \draw[densely dotted] (0.5, 2.425) -- (0.95, 2.425);
   % frame is ready at 0.95, but the single draft thread is busy until 3.2
   \draw[queued] (0.95, 2.20) rectangle (3.2, 2.65);
@@ -100,9 +98,8 @@
   \draw[sig] (0.85, 2.36) -- (1.0, 1.37);
 
   % ---------- capture i+2 (bottom row, band 0.70--1.15) ----------
-  \node[anchor=east] at (-0.2, 0.925) {capture $i{+}2$};
+  \node[anchor=east] at (0.8, 0.925) {capture $i{+}2$};
   \draw[very thick] (1.0, 0.55) -- (1.0, 1.3);
-  \node[anchor=west] at (1.12, 1.32) {shutter $i{+}2$};
   \draw[densely dotted] (1.0, 0.925) -- (1.45, 0.925);
   % the backlog has grown: the thread is busy until 5.95
   \draw[queued] (1.45, 0.7) rectangle (5.95, 1.15);
@@ -143,6 +140,6 @@
   \node[anchor=north] at (7.12, 0.28) {\footnotesize remaining budget $b_{i+2}$};
 
   % ---------- time axis ----------
-  \draw[->] (0, -0.4) -- (9.6, -0.4) node[anchor=north east] {time};
+  \draw[->] (-1.3, -0.4) -- (9.6, -0.4) node[anchor=north east] {time};
 
 \end{tikzpicture}
