@@ -93,61 +93,7 @@ the \emph{remaining budget} $\bgt = \deadline - t_{\text{elapsed}}$.
   \label{fig:overlap}
 \end{figure}
 
-% Table data source: internal portrait-mode 30-shot continuous-capture
-% measurements; the device is anonymized in the text as a
-% current-generation flagship.
-% Severity shading (first failing shot index): white = no timeout;
-% single-hue blush-to-brick ramp, lightness-monotone (grayscale-safe),
-% darkens as the first failure moves earlier.
-\definecolor{tmoS1}{RGB}{252,227,220}   % first failure at shot >= 20
-\definecolor{tmoS2}{RGB}{239,160,140}   % 10--19
-\definecolor{tmoS3}{RGB}{201,80,63}     % 6--9 (white text)
-\definecolor{tmoS4}{RGB}{143,36,32}     % <= 5 (white text)
-% Equal-width centered data columns so B+F and B cells align across groups.
-\newcolumntype{Y}{>{\centering\arraybackslash}p{0.7cm}}
-\begin{table}[t]
-  \centering
-  \caption{First shot index (out of 30) at which Capture Timeout occurs
-  during a continuous portrait burst on a flagship device, by overheat
-  level, image-size tier, memory condition, and draft-stage configuration
-  (B = bokeh, F = filter). ``--'' means no timeout within the burst.
-  Shading darkens as the first failure occurs earlier in the burst, and
-  boldface marks failures within the first ten shots. Cells marked
-  $^{\dagger}$ report the corresponding 12MP-mode measurements because
-  24MP capture falls back to 12MP mode at Lv5 and above.}
-  \label{tab:timeout_index}
-  \resizebox{\columnwidth}{!}{%
-  \begin{tabular}{c||YY|YY||YY|YY}
-  \toprule \midrule
-  \multirow{3}{*}{\makecell{\textbf{Overheat}\\\textbf{level}}} &
-  \multicolumn{4}{c||}{\textbf{Normal capture}} &
-  \multicolumn{4}{c}{\textbf{Memory-pressure capture}} \\ \cmidrule(lr){2-5}\cmidrule(l){6-9}
-  &
-  \multicolumn{2}{c|}{\textbf{12MP}} &
-  \multicolumn{2}{c||}{\textbf{24MP}} &
-  \multicolumn{2}{c|}{\textbf{12MP}} &
-  \multicolumn{2}{c}{\textbf{24MP}} \\ \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(l){8-9}
-  & \textbf{B{+}F} & \textbf{B} &
-  \textbf{B{+}F} & \textbf{B} &
-  \textbf{B{+}F} & \textbf{B} &
-  \textbf{B{+}F} & \textbf{B} \\
-  \midrule \midrule
-  Lv0 & -- & -- & \cellcolor{tmoS1}29 & -- & -- & -- & \cellcolor{tmoS1}26 & -- \\
-  Lv1 & -- & -- & \cellcolor{tmoS1}29 & -- & \cellcolor{tmoS1}24 & -- & \cellcolor{tmoS2}19 & -- \\
-  Lv2 & \cellcolor{tmoS1}24 & -- & \cellcolor{tmoS2}18 & -- & \cellcolor{tmoS2}15 & \cellcolor{tmoS1}29 & \cellcolor{tmoS2}14 & \cellcolor{tmoS1}25 \\
-  Lv3 & \cellcolor{tmoS2}13 & \cellcolor{tmoS1}21 & \cellcolor{tmoS2}12 & \cellcolor{tmoS1}20 & \cellcolor{tmoS3}\textcolor{white}{\textbf{8}} & \cellcolor{tmoS2}19 & \cellcolor{tmoS4}\textcolor{white}{\textbf{5}} & \cellcolor{tmoS2}15 \\
-  Lv4 & \cellcolor{tmoS2}10 & \cellcolor{tmoS2}16 & \cellcolor{tmoS3}\textcolor{white}{\textbf{8}} & \cellcolor{tmoS2}13 & \cellcolor{tmoS3}\textcolor{white}{\textbf{6}} & \cellcolor{tmoS2}13 & \cellcolor{tmoS4}\textcolor{white}{\textbf{4}} & \cellcolor{tmoS3}\textcolor{white}{\textbf{7}} \\
-  Lv5 & \cellcolor{tmoS3}\textcolor{white}{\textbf{8}} & \cellcolor{tmoS2}12 & \cellcolor{tmoS3}\textcolor{white}{\textbf{8}$^{\dagger}$} & \cellcolor{tmoS2}12$^{\dagger}$ & \cellcolor{tmoS4}\textcolor{white}{\textbf{4}} & \cellcolor{tmoS3}\textcolor{white}{\textbf{9}} & \cellcolor{tmoS4}\textcolor{white}{\textbf{4}$^{\dagger}$} & \cellcolor{tmoS3}\textcolor{white}{\textbf{9}$^{\dagger}$} \\
-  Lv6 & \cellcolor{tmoS3}\textcolor{white}{\textbf{7}} & \cellcolor{tmoS2}11 & \cellcolor{tmoS3}\textcolor{white}{\textbf{7}$^{\dagger}$} & \cellcolor{tmoS2}11$^{\dagger}$ & \cellcolor{tmoS4}\textcolor{white}{\textbf{4}} & \cellcolor{tmoS3}\textcolor{white}{\textbf{6}} & \cellcolor{tmoS4}\textcolor{white}{\textbf{4}$^{\dagger}$} & \cellcolor{tmoS3}\textcolor{white}{\textbf{6}$^{\dagger}$} \\
-  \midrule \bottomrule
-  \end{tabular}%
-  }
-  \par\vspace{3pt}
-  {\scriptsize\setlength{\fboxsep}{1.8pt}%
-  --~no timeout\hfill
-  first failing shot:~%
-  \colorbox{tmoS1}{\strut\,${\geq}\,20$\,}\colorbox{tmoS2}{\strut\,10--19\,}\colorbox{tmoS3}{\strut\,\textcolor{white}{6--9}\,}\colorbox{tmoS4}{\strut\,\textcolor{white}{${\leq}\,5$}\,}\par}
-\end{table}
+\input{tables/tab_timeout_index}
 
 \myparagraph{Why the draft sequence times out}
 Two developments turned the draft sequence into a timeout hotspot. First,
@@ -288,3 +234,6 @@ produce usable decisions from few or no samples, track drift as the device
 heats and throttles, and remain consistent across sequences that share
 workloads. The next section presents our context-aware admission controller
 for the draft sequence, built around these requirements.
+
+\input{tables/tab_eval_admission}
+\input{tables/tab_eval_data_entry}
