@@ -15,21 +15,21 @@
 
 \begin{table*}[t]
   \centering
-  \caption{Per-burst draft-sequence measurements under our admission controller (12MP tier), with normal and memory-pressure capture side by side. All optional stages are admitted with zero Capture Timeouts (stability 100\%). Run rate is the cumulative number of captures in which the stage was admitted over the burst length. Under \emph{Upper bound}, margin is the median headroom of the predicted upper bound over the observed sequence duration (predicted minus actual, in milliseconds; smaller is tighter) and cover is the percentage of stage executions whose observed duration stayed within the predicted upper bound (bound coverage; the rare misses are recovered by the watchdog so no capture times out). Pacing is the added delay of the \texttt{captureAvailable} callback.}
+  \caption{Per-burst draft-sequence measurements under our admission controller (12MP tier), with normal and memory-pressure capture side by side. All optional stages are admitted with zero Capture Timeouts (stability 100\%). Run rate is the cumulative number of captures in which the stage was admitted over the shot sequence. Under \emph{Upper bound}, margin is the median headroom of the predicted upper bound over the observed sequence duration (predicted minus actual, in milliseconds; smaller is tighter) and cover is the percentage of stage executions whose observed duration stayed within the predicted upper bound (bound coverage; the rare misses are recovered by the watchdog so no capture times out). Pacing is the added delay of the \texttt{captureAvailable} callback.}
   \label{tab:eval_data_12mp}
   \resizebox{\textwidth}{!}{%
   \begin{tabular}{c|c||cc|cc|rr||cc|cc|rr}
   \toprule \midrule
-  \multirow{3}{*}{\makecell{\textbf{Overheat}\\\textbf{level}}} &
-  \multirow{3}{*}{\makecell{\textbf{Burst}\\\textbf{(shots)}}} &
+  \multirow{3}{*}[-12pt]{\makecell{\textbf{Overheat}\\\textbf{level}}} &
+  \multirow{3}{*}[-12pt]{\makecell{\textbf{Shots}}} &
   \multicolumn{6}{c||}{\textbf{Normal capture}} &
   \multicolumn{6}{c}{\textbf{Memory-pressure capture}} \\
   \cmidrule(lr){3-8}\cmidrule(l){9-14}
   & & \multicolumn{2}{c|}{\textbf{Run rate}} & \multicolumn{2}{c|}{\textbf{Upper bound}} & \multicolumn{2}{c||}{\textbf{Pacing (ms)}}
     & \multicolumn{2}{c|}{\textbf{Run rate}} & \multicolumn{2}{c|}{\textbf{Upper bound}} & \multicolumn{2}{c}{\textbf{Pacing (ms)}} \\
   \cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(lr){7-8}\cmidrule(lr){9-10}\cmidrule(lr){11-12}\cmidrule(l){13-14}
-  & & \textbf{Bokeh} & \textbf{Filter} & \makecell{\textbf{margin}\\{\textbf {(ms)}}} & \makecell{\textbf{cover}\\{\textbf {(\%)}}} & \textbf{Avg} & \textbf{Max}
-    & \textbf{Bokeh} & \textbf{Filter} & \makecell{\textbf{margin}\\{\textbf {(ms)}}} & \makecell{\textbf{cover}\\{\textbf {(\%)}}} & \textbf{Avg} & \textbf{Max} \\
+  & & \textbf{Bokeh} & \textbf{Filter} & \makecell{\textbf{margin}\\{\scriptsize ms}} & \makecell{\textbf{cover}\\{\scriptsize \%}} & \textbf{Avg} & \textbf{Max}
+    & \textbf{Bokeh} & \textbf{Filter} & \makecell{\textbf{margin}\\{\scriptsize ms}} & \makecell{\textbf{cover}\\{\scriptsize \%}} & \textbf{Avg} & \textbf{Max} \\
   \midrule \midrule
   \multirow{3}{*}{Lv0} & 5 & 5/5 & 5/5 & 115 & 99.9 & 8 & 19 & 5/5 & 5/5 & 103 & 99.4 & 15 & 36 \\
   & 10 & 10/10 & 10/10 & 110 & 99.9 & 12 & 29 & 10/10 & 10/10 & 98 & 99.3 & 21 & 50 \\
@@ -65,21 +65,21 @@
 
 \begin{table*}[t]
   \centering
-  \caption{Per-burst draft-sequence measurements under our admission controller (24MP tier), with normal and memory-pressure capture side by side. All optional stages are admitted with zero Capture Timeouts (stability 100\%). Run rate is the cumulative number of captures in which the stage was admitted over the burst length. Under \emph{Upper bound}, margin is the median headroom of the predicted upper bound over the observed sequence duration (predicted minus actual, in milliseconds; smaller is tighter) and cover is the percentage of stage executions whose observed duration stayed within the predicted upper bound (bound coverage; the rare misses are recovered by the watchdog so no capture times out). Pacing is the added delay of the \texttt{captureAvailable} callback. Rows marked $^{\dagger}$ report 12MP-mode measurements because 24MP capture falls back to 12MP mode at Lv5 and above.}
+  \caption{Per-burst draft-sequence measurements under our admission controller (24MP tier), with normal and memory-pressure capture side by side. All optional stages are admitted with zero Capture Timeouts (stability 100\%). Run rate is the cumulative number of captures in which the stage was admitted over the shot sequence. Under \emph{Upper bound}, margin is the median headroom of the predicted upper bound over the observed sequence duration (predicted minus actual, in milliseconds; smaller is tighter) and cover is the percentage of stage executions whose observed duration stayed within the predicted upper bound (bound coverage; the rare misses are recovered by the watchdog so no capture times out). Pacing is the added delay of the \texttt{captureAvailable} callback. Rows marked $^{\dagger}$ report 12MP-mode measurements because 24MP capture falls back to 12MP mode at Lv5 and above.}
   \label{tab:eval_data_24mp}
   \resizebox{\textwidth}{!}{%
   \begin{tabular}{c|c||cc|cc|rr||cc|cc|rr}
   \toprule \midrule
-  \multirow{3}{*}{\makecell{\textbf{Overheat}\\\textbf{level}}} &
-  \multirow{3}{*}{\makecell{\textbf{Burst}\\\textbf{(shots)}}} &
+  \multirow{3}{*}[-12pt]{\makecell{\textbf{Overheat}\\\textbf{level}}} &
+  \multirow{3}{*}[-12pt]{\makecell{\textbf{Shots}}} &
   \multicolumn{6}{c||}{\textbf{Normal capture}} &
   \multicolumn{6}{c}{\textbf{Memory-pressure capture}} \\
   \cmidrule(lr){3-8}\cmidrule(l){9-14}
   & & \multicolumn{2}{c|}{\textbf{Run rate}} & \multicolumn{2}{c|}{\textbf{Upper bound}} & \multicolumn{2}{c||}{\textbf{Pacing (ms)}}
     & \multicolumn{2}{c|}{\textbf{Run rate}} & \multicolumn{2}{c|}{\textbf{Upper bound}} & \multicolumn{2}{c}{\textbf{Pacing (ms)}} \\
   \cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(lr){7-8}\cmidrule(lr){9-10}\cmidrule(lr){11-12}\cmidrule(l){13-14}
-  & & \textbf{Bokeh} & \textbf{Filter} & \makecell{\textbf{margin}\\{\textbf {(ms)}}} & \makecell{\textbf{cover}\\{\textbf {(\%)}}} & \textbf{Avg} & \textbf{Max}
-    & \textbf{Bokeh} & \textbf{Filter} & \makecell{\textbf{margin}\\{\textbf {(ms)}}} & \makecell{\textbf{cover}\\{\textbf {(\%)}}} & \textbf{Avg} & \textbf{Max} \\
+  & & \textbf{Bokeh} & \textbf{Filter} & \makecell{\textbf{margin}\\{\scriptsize ms}} & \makecell{\textbf{cover}\\{\scriptsize \%}} & \textbf{Avg} & \textbf{Max}
+    & \textbf{Bokeh} & \textbf{Filter} & \makecell{\textbf{margin}\\{\scriptsize ms}} & \makecell{\textbf{cover}\\{\scriptsize \%}} & \textbf{Avg} & \textbf{Max} \\
   \midrule \midrule
   \multirow{3}{*}{Lv0} & 5 & 5/5 & 5/5 & 107 & 99.6 & 13 & 31 & 5/5 & 5/5 & 95 & 99.0 & 19 & 46 \\
   & 10 & 10/10 & 10/10 & 102 & 99.5 & 18 & 43 & 10/10 & 10/10 & 90 & 98.9 & 28 & 67 \\
