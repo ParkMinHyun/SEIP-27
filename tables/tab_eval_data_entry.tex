@@ -1,12 +1,12 @@
 % Combined per-burst measurement tables (Data Entry mirror). One table per
 % image-size tier, placing Normal and Memory-pressure capture side by side.
-% Replaces the earlier four single-condition tables.
 %
-% NOTE: ALL numeric values are PLACEHOLDERS to be replaced with measured
-% data (see docs/evaluation-table.xlsx, sheet "Data Entry").
+% GENERATED FILE -- do not edit values by hand. Fill measured numbers in
+% docs/evaluation-table.xlsx (sheet "Data Entry") and regenerate with
+% tables/build_eval_data_entry.ps1.
 %
 % Column meanings:
-%   Run rate    : cumulative admits/shots for the stage over the burst.
+%   Run rate    : cumulative admits/shots for the stage over the shot sequence.
 %   Upper bound : margin = median headroom of the predicted upper bound
 %                 over the actual sequence duration (ms; smaller = tighter);
 %                 cover = %% of executions whose actual stayed within the
@@ -20,7 +20,7 @@
   \resizebox{\textwidth}{!}{%
   \begin{tabular}{c|c||cc|cc|rr||cc|cc|rr}
   \toprule \midrule
-  \multirow{3}{*}[-12pt]{\makecell{\textbf{Overheat}\\\textbf{level}}} &
+  \multirow{3}{*}[-12pt]{\makecell{\textbf{Overheat}\\\textbf{Level}}} &
   \multirow{3}{*}[-12pt]{\makecell{\textbf{Shots}}} &
   \multicolumn{6}{c||}{\textbf{Normal capture}} &
   \multicolumn{6}{c}{\textbf{Memory-pressure capture}} \\
@@ -70,7 +70,7 @@
   \resizebox{\textwidth}{!}{%
   \begin{tabular}{c|c||cc|cc|rr||cc|cc|rr}
   \toprule \midrule
-  \multirow{3}{*}[-12pt]{\makecell{\textbf{Overheat}\\\textbf{level}}} &
+  \multirow{3}{*}[-12pt]{\makecell{\textbf{Overheat}\\\textbf{Level}}} &
   \multirow{3}{*}[-12pt]{\makecell{\textbf{Shots}}} &
   \multicolumn{6}{c||}{\textbf{Normal capture}} &
   \multicolumn{6}{c}{\textbf{Memory-pressure capture}} \\
