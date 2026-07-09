@@ -1,72 +1,64 @@
-% Full per-burst measurement tables (Data Entry mirror) -- one table per
-% capture condition, matching docs/evaluation-table.xlsx "Data Entry".
-% Intended as appendix / full-results material behind
-% Table~\ref{tab:admission_results}.
+% Combined per-burst measurement tables (Data Entry mirror). One table per
+% image-size tier, placing Normal and Memory-pressure capture side by side.
+% Replaces the earlier four single-condition tables.
 %
 % NOTE: ALL numeric values are PLACEHOLDERS to be replaced with measured
-% data. Generated together with the Excel sheet so both stay in sync.
+% data (see docs/evaluation-table.xlsx, sheet "Data Entry").
 %
 % Column meanings:
-%   Timeouts   : Capture Timeouts in the burst (0 = none; stability = 100%).
-%   Run rate   : cumulative %% of captures in which the stage was admitted.
-%   UB slack   : median headroom of the predicted upper bound over the
-%                actual duration (predictedUB - actual); smaller = tighter.
-%   UB viol.   : %% of stage executions whose actual duration exceeded the
-%                predicted upper bound (bound safety; watchdog is the
-%                second line of defense here).
-%   Pacing     : added delay of the captureAvailable callback.
+%   Run rate  : cumulative admits/shots for the stage over the burst.
+%   UB margin : predictedUB - actual sequence duration (ms), shown as
+%               median (worst-case min). median = typical tightness;
+%               a positive min means the bound was never violated in
+%               the cell; a negative min is a bound violation of that
+%               magnitude, recovered by the watchdog (still no timeout).
+%   Pacing    : added delay of the captureAvailable callback (Avg / Max).
 
 \begin{table*}[t]
   \centering
-  \caption{Per-burst draft-sequence measurements under our admission controller --- normal capture, 12MP tier. All optional stages are admitted with zero Capture Timeouts (stability 100\%). Run rate is the cumulative percentage of captures in which the stage was admitted; UB slack is the median headroom of the predicted upper bound over the observed duration (smaller is tighter); UB viol.\ is the percentage of stage executions whose duration exceeded the predicted upper bound; pacing delay is the added delay of the \texttt{captureAvailable} callback.}
-  \label{tab:eval_data_n12}
+  \caption{Per-burst draft-sequence measurements under our admission controller (12MP tier), with normal and memory-pressure capture side by side. All optional stages are admitted with zero Capture Timeouts (stability 100\%). Run rate is the cumulative number of captures in which the stage was admitted over the burst length. UB margin is the predicted upper bound minus the observed sequence duration in milliseconds, reported as median~(worst-case minimum): a smaller median means a tighter bound, a positive minimum means the bound was never violated, and a negative minimum is a bound violation of that magnitude that the watchdog recovers so no capture times out. Pacing is the added delay of the \texttt{captureAvailable} callback.}
+  \label{tab:eval_data_12mp}
   \resizebox{\textwidth}{!}{%
-  \begin{tabular}{c|c||c||ccc||ccc||c||cc}
+  \begin{tabular}{c|c||cc|c|rr||cc|c|rr}
   \toprule \midrule
-  \multirow{2}{*}{\makecell{\textbf{Overheat}\\\textbf{level}}} &
-  \multirow{2}{*}{\makecell{\textbf{Burst}\\\textbf{(shots)}}} &
-  \multirow{2}{*}{\makecell{\textbf{Time-}\\\textbf{outs}}} &
-  \multicolumn{3}{c||}{\textbf{Run rate (\%)}} &
-  \multicolumn{3}{c||}{\textbf{UB slack (ms)}} &
-  \multirow{2}{*}{\makecell{\textbf{UB viol.}\\\textbf{(\%)}}} &
-  \multicolumn{2}{c}{\textbf{Pacing delay (ms)}} \\
-  \cmidrule(lr){4-6}\cmidrule(lr){7-9}\cmidrule(l){11-12}
-  & & & \textbf{Bokeh} & \textbf{Filter} & \textbf{Full} & \textbf{Bokeh} & \textbf{Filter} & \textbf{Enc.} & & \textbf{Avg} & \textbf{Max} \\
+  \multirow{3}{*}{\makecell{\textbf{Overheat}\\\textbf{level}}} &
+  \multirow{3}{*}{\makecell{\textbf{Burst}\\\textbf{(shots)}}} &
+  \multicolumn{5}{c||}{\textbf{Normal capture}} &
+  \multicolumn{5}{c}{\textbf{Memory-pressure capture}} \\
+  \cmidrule(lr){3-7}\cmidrule(l){8-12}
+  & & \multicolumn{2}{c|}{\textbf{Run rate}} & \textbf{UB margin (ms)} & \multicolumn{2}{c||}{\textbf{Pacing (ms)}}
+    & \multicolumn{2}{c|}{\textbf{Run rate}} & \textbf{UB margin (ms)} & \multicolumn{2}{c}{\textbf{Pacing (ms)}} \\
+  \cmidrule(lr){3-4}\cmidrule(lr){5-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}\cmidrule(lr){10-10}\cmidrule(l){11-12}
+  & & \textbf{Bokeh} & \textbf{Filter} & {\scriptsize med (min)} & \textbf{Avg} & \textbf{Max}
+    & \textbf{Bokeh} & \textbf{Filter} & {\scriptsize med (min)} & \textbf{Avg} & \textbf{Max} \\
   \midrule \midrule
-  \multirow{4}{*}{Lv0} & 5 & 0 & 100 & 100 & 100 & 50 & 36 & 27 & 0 & 8 & 19 \\
-  & 10 & 0 & 100 & 100 & 100 & 48 & 35 & 26 & 0 & 12 & 29 \\
-  & 20 & 0 & 100 & 100 & 100 & 44 & 32 & 23 & 1 & 15 & 36 \\
-  & 30 & 0 & 100 & 100 & 100 & 40 & 29 & 21 & 2 & 18 & 43 \\
+  \multirow{3}{*}{Lv0} & 5 & 5/5 & 5/5 & 115 (46) & 8 & 19 & 5/5 & 5/5 & 103 (35) & 15 & 36 \\
+  & 10 & 10/10 & 10/10 & 110 (44) & 12 & 29 & 10/10 & 10/10 & 98 (33) & 21 & 50 \\
+  & 30 & 30/30 & 30/30 & 90 (36) & 18 & 43 & 30/30 & 29/30 & 78 (25) & 33 & 79 \\
   \midrule
-  \multirow{4}{*}{Lv1} & 5 & 0 & 100 & 100 & 100 & 48 & 34 & 25 & 0 & 14 & 34 \\
-  & 10 & 0 & 100 & 100 & 100 & 46 & 33 & 24 & 0 & 20 & 48 \\
-  & 20 & 0 & 100 & 100 & 100 & 42 & 30 & 22 & 1 & 26 & 62 \\
-  & 30 & 0 & 100 & 100 & 100 & 38 & 27 & 20 & 2 & 30 & 72 \\
+  \multirow{3}{*}{Lv1} & 5 & 5/5 & 5/5 & 108 (40) & 14 & 34 & 5/5 & 5/5 & 96 (29) & 20 & 48 \\
+  & 10 & 10/10 & 10/10 & 103 (38) & 20 & 48 & 10/10 & 10/10 & 91 (27) & 29 & 70 \\
+  & 30 & 30/30 & 30/30 & 83 (30) & 30 & 72 & 29/30 & 28/30 & 71 (19) & 45 & 108 \\
   \midrule
-  \multirow{4}{*}{Lv2} & 5 & 0 & 100 & 100 & 100 & 45 & 32 & 24 & 0 & 19 & 46 \\
-  & 10 & 0 & 100 & 99 & 99 & 43 & 31 & 23 & 1 & 27 & 65 \\
-  & 20 & 0 & 100 & 98 & 98 & 39 & 28 & 20 & 1 & 36 & 86 \\
-  & 30 & 0 & 100 & 97 & 97 & 35 & 25 & 18 & 2 & 42 & 101 \\
+  \multirow{3}{*}{Lv2} & 5 & 5/5 & 5/5 & 101 (34) & 19 & 46 & 5/5 & 5/5 & 89 (24) & 26 & 62 \\
+  & 10 & 10/10 & 10/10 & 96 (32) & 27 & 65 & 10/10 & 10/10 & 84 (22) & 37 & 89 \\
+  & 30 & 30/30 & 29/30 & 76 (24) & 42 & 101 & 29/30 & 27/30 & 64 (14) & 57 & 137 \\
   \midrule
-  \multirow{4}{*}{Lv3} & 5 & 0 & 100 & 99 & 99 & 42 & 30 & 22 & 1 & 24 & 58 \\
-  & 10 & 0 & 100 & 97 & 97 & 40 & 29 & 21 & 1 & 35 & 84 \\
-  & 20 & 0 & 100 & 95 & 95 & 36 & 26 & 19 & 2 & 46 & 110 \\
-  & 30 & 0 & 100 & 93 & 93 & 32 & 23 & 16 & 2 & 54 & 130 \\
+  \multirow{3}{*}{Lv3} & 5 & 5/5 & 5/5 & 94 (29) & 24 & 58 & 5/5 & 5/5 & 82 (18) & 31 & 74 \\
+  & 10 & 10/10 & 10/10 & 89 (27) & 35 & 84 & 10/10 & 9/10 & 77 (16) & 45 & 108 \\
+  & 30 & 30/30 & 28/30 & 69 (19) & 54 & 130 & 28/30 & 25/30 & 57 (8) & 69 & 166 \\
   \midrule
-  \multirow{4}{*}{Lv4} & 5 & 0 & 100 & 98 & 98 & 40 & 28 & 21 & 1 & 30 & 72 \\
-  & 10 & 0 & 99 & 96 & 95 & 38 & 27 & 20 & 1 & 43 & 103 \\
-  & 20 & 0 & 98 & 92 & 90 & 34 & 24 & 17 & 2 & 56 & 134 \\
-  & 30 & 0 & 97 & 90 & 87 & 30 & 21 & 15 & 3 & 66 & 158 \\
+  \multirow{3}{*}{Lv4} & 5 & 5/5 & 5/5 & 87 (23) & 30 & 72 & 5/5 & 5/5 & 75 (12) & 36 & 86 \\
+  & 10 & 10/10 & 10/10 & 82 (21) & 43 & 103 & 9/10 & 9/10 & 70 (10) & 53 & 127 \\
+  & 30 & 29/30 & 27/30 & 62 (13) & 66 & 158 & 26/30 & 22/30 & 50 (2) & 81 & 194 \\
   \midrule
-  \multirow{4}{*}{Lv5} & 5 & 0 & 99 & 98 & 97 & 38 & 26 & 19 & 1 & 35 & 84 \\
-  & 10 & 0 & 97 & 94 & 91 & 36 & 25 & 18 & 2 & 51 & 122 \\
-  & 20 & 0 & 95 & 89 & 85 & 32 & 22 & 16 & 2 & 66 & 158 \\
-  & 30 & 0 & 93 & 85 & 79 & 28 & 19 & 14 & 3 & 78 & 187 \\
+  \multirow{3}{*}{Lv5} & 5 & 5/5 & 5/5 & 80 (17) & 35 & 84 & 5/5 & 5/5 & 68 (6) & 42 & 101 \\
+  & 10 & 10/10 & 9/10 & 75 (15) & 51 & 122 & 9/10 & 9/10 & 63 (4) & 60 & 144 \\
+  & 30 & 28/30 & 26/30 & 55 (7) & 78 & 187 & 25/30 & 20/30 & 43 ($-$4) & 93 & 223 \\
   \midrule
-  \multirow{4}{*}{Lv6} & 5 & 0 & 98 & 97 & 95 & 35 & 24 & 18 & 2 & 40 & 96 \\
-  & 10 & 0 & 96 & 92 & 88 & 33 & 23 & 17 & 2 & 58 & 139 \\
-  & 20 & 0 & 92 & 85 & 78 & 29 & 20 & 14 & 3 & 76 & 182 \\
-  & 30 & 0 & 90 & 80 & 72 & 25 & 17 & 12 & 3 & 90 & 216 \\
+  \multirow{3}{*}{Lv6} & 5 & 5/5 & 5/5 & 73 (11) & 40 & 96 & 5/5 & 5/5 & 61 (0) & 47 & 113 \\
+  & 10 & 10/10 & 9/10 & 68 (9) & 58 & 139 & 9/10 & 8/10 & 56 ($-$2) & 68 & 163 \\
+  & 30 & 27/30 & 24/30 & 48 (1) & 90 & 216 & 23/30 & 18/30 & 36 ($-$10) & 105 & 252 \\
   \midrule \bottomrule
   \end{tabular}%
   }
@@ -74,167 +66,49 @@
 
 \begin{table*}[t]
   \centering
-  \caption{Per-burst draft-sequence measurements under our admission controller --- normal capture, 24MP tier. All optional stages are admitted with zero Capture Timeouts (stability 100\%). Run rate is the cumulative percentage of captures in which the stage was admitted; UB slack is the median headroom of the predicted upper bound over the observed duration (smaller is tighter); UB viol.\ is the percentage of stage executions whose duration exceeded the predicted upper bound; pacing delay is the added delay of the \texttt{captureAvailable} callback. Rows marked $^{\dagger}$ report 12MP-mode measurements because 24MP capture falls back to 12MP mode at Lv5 and above.}
-  \label{tab:eval_data_n24}
+  \caption{Per-burst draft-sequence measurements under our admission controller (24MP tier), with normal and memory-pressure capture side by side. All optional stages are admitted with zero Capture Timeouts (stability 100\%). Run rate is the cumulative number of captures in which the stage was admitted over the burst length. UB margin is the predicted upper bound minus the observed sequence duration in milliseconds, reported as median~(worst-case minimum): a smaller median means a tighter bound, a positive minimum means the bound was never violated, and a negative minimum is a bound violation of that magnitude that the watchdog recovers so no capture times out. Pacing is the added delay of the \texttt{captureAvailable} callback. Rows marked $^{\dagger}$ report 12MP-mode measurements because 24MP capture falls back to 12MP mode at Lv5 and above.}
+  \label{tab:eval_data_24mp}
   \resizebox{\textwidth}{!}{%
-  \begin{tabular}{c|c||c||ccc||ccc||c||cc}
+  \begin{tabular}{c|c||cc|c|rr||cc|c|rr}
   \toprule \midrule
-  \multirow{2}{*}{\makecell{\textbf{Overheat}\\\textbf{level}}} &
-  \multirow{2}{*}{\makecell{\textbf{Burst}\\\textbf{(shots)}}} &
-  \multirow{2}{*}{\makecell{\textbf{Time-}\\\textbf{outs}}} &
-  \multicolumn{3}{c||}{\textbf{Run rate (\%)}} &
-  \multicolumn{3}{c||}{\textbf{UB slack (ms)}} &
-  \multirow{2}{*}{\makecell{\textbf{UB viol.}\\\textbf{(\%)}}} &
-  \multicolumn{2}{c}{\textbf{Pacing delay (ms)}} \\
-  \cmidrule(lr){4-6}\cmidrule(lr){7-9}\cmidrule(l){11-12}
-  & & & \textbf{Bokeh} & \textbf{Filter} & \textbf{Full} & \textbf{Bokeh} & \textbf{Filter} & \textbf{Enc.} & & \textbf{Avg} & \textbf{Max} \\
+  \multirow{3}{*}{\makecell{\textbf{Overheat}\\\textbf{level}}} &
+  \multirow{3}{*}{\makecell{\textbf{Burst}\\\textbf{(shots)}}} &
+  \multicolumn{5}{c||}{\textbf{Normal capture}} &
+  \multicolumn{5}{c}{\textbf{Memory-pressure capture}} \\
+  \cmidrule(lr){3-7}\cmidrule(l){8-12}
+  & & \multicolumn{2}{c|}{\textbf{Run rate}} & \textbf{UB margin (ms)} & \multicolumn{2}{c||}{\textbf{Pacing (ms)}}
+    & \multicolumn{2}{c|}{\textbf{Run rate}} & \textbf{UB margin (ms)} & \multicolumn{2}{c}{\textbf{Pacing (ms)}} \\
+  \cmidrule(lr){3-4}\cmidrule(lr){5-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}\cmidrule(lr){10-10}\cmidrule(l){11-12}
+  & & \textbf{Bokeh} & \textbf{Filter} & {\scriptsize med (min)} & \textbf{Avg} & \textbf{Max}
+    & \textbf{Bokeh} & \textbf{Filter} & {\scriptsize med (min)} & \textbf{Avg} & \textbf{Max} \\
   \midrule \midrule
-  \multirow{4}{*}{Lv0} & 5 & 0 & 100 & 100 & 100 & 47 & 34 & 25 & 1 & 13 & 31 \\
-  & 10 & 0 & 100 & 99 & 99 & 45 & 33 & 24 & 1 & 18 & 43 \\
-  & 20 & 0 & 100 & 98 & 98 & 41 & 30 & 21 & 2 & 24 & 58 \\
-  & 30 & 0 & 100 & 97 & 97 & 37 & 27 & 19 & 2 & 28 & 67 \\
+  \multirow{3}{*}{Lv0} & 5 & 5/5 & 5/5 & 107 (43) & 13 & 31 & 5/5 & 5/5 & 95 (32) & 19 & 46 \\
+  & 10 & 10/10 & 10/10 & 102 (41) & 18 & 43 & 10/10 & 10/10 & 90 (30) & 28 & 67 \\
+  & 30 & 30/30 & 29/30 & 82 (33) & 28 & 67 & 30/30 & 28/30 & 70 (22) & 43 & 103 \\
   \midrule
-  \multirow{4}{*}{Lv1} & 5 & 0 & 100 & 99 & 99 & 44 & 32 & 23 & 1 & 18 & 43 \\
-  & 10 & 0 & 100 & 98 & 98 & 42 & 31 & 22 & 1 & 26 & 62 \\
-  & 20 & 0 & 100 & 96 & 96 & 38 & 28 & 20 & 2 & 34 & 82 \\
-  & 30 & 0 & 100 & 95 & 95 & 34 & 25 & 18 & 3 & 40 & 96 \\
+  \multirow{3}{*}{Lv1} & 5 & 5/5 & 5/5 & 100 (37) & 18 & 43 & 5/5 & 5/5 & 88 (26) & 25 & 60 \\
+  & 10 & 10/10 & 10/10 & 95 (35) & 26 & 62 & 10/10 & 10/10 & 83 (24) & 36 & 86 \\
+  & 30 & 30/30 & 28/30 & 75 (27) & 40 & 96 & 29/30 & 27/30 & 63 (16) & 55 & 132 \\
   \midrule
-  \multirow{4}{*}{Lv2} & 5 & 0 & 100 & 99 & 99 & 42 & 30 & 22 & 1 & 23 & 55 \\
-  & 10 & 0 & 99 & 96 & 95 & 40 & 29 & 21 & 2 & 34 & 82 \\
-  & 20 & 0 & 98 & 93 & 91 & 36 & 26 & 18 & 2 & 44 & 106 \\
-  & 30 & 0 & 97 & 91 & 88 & 32 & 23 & 16 & 3 & 52 & 125 \\
+  \multirow{3}{*}{Lv2} & 5 & 5/5 & 5/5 & 93 (31) & 23 & 55 & 5/5 & 5/5 & 81 (20) & 30 & 72 \\
+  & 10 & 10/10 & 10/10 & 88 (29) & 34 & 82 & 10/10 & 9/10 & 76 (18) & 44 & 106 \\
+  & 30 & 29/30 & 27/30 & 68 (21) & 52 & 125 & 28/30 & 25/30 & 56 (10) & 67 & 161 \\
   \midrule
-  \multirow{4}{*}{Lv3} & 5 & 0 & 99 & 98 & 97 & 40 & 28 & 20 & 2 & 29 & 70 \\
-  & 10 & 0 & 98 & 94 & 92 & 38 & 27 & 19 & 2 & 42 & 101 \\
-  & 20 & 0 & 96 & 90 & 86 & 34 & 24 & 17 & 3 & 54 & 130 \\
-  & 30 & 0 & 94 & 86 & 81 & 30 & 21 & 14 & 3 & 64 & 154 \\
+  \multirow{3}{*}{Lv3} & 5 & 5/5 & 5/5 & 86 (25) & 29 & 70 & 5/5 & 5/5 & 74 (15) & 36 & 86 \\
+  & 10 & 10/10 & 9/10 & 81 (23) & 42 & 101 & 9/10 & 9/10 & 69 (13) & 51 & 122 \\
+  & 30 & 28/30 & 26/30 & 61 (15) & 64 & 154 & 26/30 & 22/30 & 49 (5) & 79 & 190 \\
   \midrule
-  \multirow{4}{*}{Lv4} & 5 & 0 & 98 & 97 & 95 & 37 & 26 & 19 & 2 & 34 & 82 \\
-  & 10 & 0 & 96 & 91 & 87 & 35 & 25 & 18 & 2 & 49 & 118 \\
-  & 20 & 0 & 92 & 84 & 77 & 31 & 22 & 15 & 3 & 65 & 156 \\
-  & 30 & 0 & 90 & 78 & 70 & 27 & 19 & 13 & 4 & 76 & 182 \\
+  \multirow{3}{*}{Lv4} & 5 & 5/5 & 5/5 & 79 (20) & 34 & 82 & 5/5 & 5/5 & 67 (9) & 41 & 98 \\
+  & 10 & 10/10 & 9/10 & 74 (18) & 49 & 118 & 9/10 & 9/10 & 62 (7) & 59 & 142 \\
+  & 30 & 27/30 & 23/30 & 54 (10) & 76 & 182 & 24/30 & 19/30 & 42 ($-$1) & 91 & 218 \\
   \midrule
-  \multirow{4}{*}{Lv5$^{\dagger}$} & 5 & 0 & 99 & 98 & 97 & 38 & 26 & 19 & 1 & 35 & 84 \\
-  & 10 & 0 & 97 & 94 & 91 & 36 & 25 & 18 & 2 & 51 & 122 \\
-  & 20 & 0 & 95 & 89 & 85 & 32 & 22 & 16 & 2 & 66 & 158 \\
-  & 30 & 0 & 93 & 85 & 79 & 28 & 19 & 14 & 3 & 78 & 187 \\
+  \multirow{3}{*}{Lv5$^{\dagger}$} & 5 & 5/5 & 5/5 & 80 (17) & 35 & 84 & 5/5 & 5/5 & 68 (6) & 42 & 101 \\
+  & 10 & 10/10 & 9/10 & 75 (15) & 51 & 122 & 9/10 & 9/10 & 63 (4) & 60 & 144 \\
+  & 30 & 28/30 & 26/30 & 55 (7) & 78 & 187 & 25/30 & 20/30 & 43 ($-$4) & 93 & 223 \\
   \midrule
-  \multirow{4}{*}{Lv6$^{\dagger}$} & 5 & 0 & 98 & 97 & 95 & 35 & 24 & 18 & 2 & 40 & 96 \\
-  & 10 & 0 & 96 & 92 & 88 & 33 & 23 & 17 & 2 & 58 & 139 \\
-  & 20 & 0 & 92 & 85 & 78 & 29 & 20 & 14 & 3 & 76 & 182 \\
-  & 30 & 0 & 90 & 80 & 72 & 25 & 17 & 12 & 3 & 90 & 216 \\
-  \midrule \bottomrule
-  \end{tabular}%
-  }
-\end{table*}
-
-\begin{table*}[t]
-  \centering
-  \caption{Per-burst draft-sequence measurements under our admission controller --- memory-pressure capture, 12MP tier. All optional stages are admitted with zero Capture Timeouts (stability 100\%). Run rate is the cumulative percentage of captures in which the stage was admitted; UB slack is the median headroom of the predicted upper bound over the observed duration (smaller is tighter); UB viol.\ is the percentage of stage executions whose duration exceeded the predicted upper bound; pacing delay is the added delay of the \texttt{captureAvailable} callback.}
-  \label{tab:eval_data_p12}
-  \resizebox{\textwidth}{!}{%
-  \begin{tabular}{c|c||c||ccc||ccc||c||cc}
-  \toprule \midrule
-  \multirow{2}{*}{\makecell{\textbf{Overheat}\\\textbf{level}}} &
-  \multirow{2}{*}{\makecell{\textbf{Burst}\\\textbf{(shots)}}} &
-  \multirow{2}{*}{\makecell{\textbf{Time-}\\\textbf{outs}}} &
-  \multicolumn{3}{c||}{\textbf{Run rate (\%)}} &
-  \multicolumn{3}{c||}{\textbf{UB slack (ms)}} &
-  \multirow{2}{*}{\makecell{\textbf{UB viol.}\\\textbf{(\%)}}} &
-  \multicolumn{2}{c}{\textbf{Pacing delay (ms)}} \\
-  \cmidrule(lr){4-6}\cmidrule(lr){7-9}\cmidrule(l){11-12}
-  & & & \textbf{Bokeh} & \textbf{Filter} & \textbf{Full} & \textbf{Bokeh} & \textbf{Filter} & \textbf{Enc.} & & \textbf{Avg} & \textbf{Max} \\
-  \midrule \midrule
-  \multirow{4}{*}{Lv0} & 5 & 0 & 100 & 100 & 100 & 46 & 34 & 25 & 1 & 15 & 36 \\
-  & 10 & 0 & 100 & 99 & 99 & 44 & 32 & 24 & 2 & 21 & 50 \\
-  & 20 & 0 & 100 & 98 & 98 & 40 & 29 & 21 & 2 & 28 & 67 \\
-  & 30 & 0 & 100 & 98 & 98 & 36 & 26 & 19 & 3 & 33 & 79 \\
-  \midrule
-  \multirow{4}{*}{Lv1} & 5 & 0 & 100 & 99 & 99 & 44 & 32 & 23 & 2 & 20 & 48 \\
-  & 10 & 0 & 99 & 98 & 97 & 42 & 30 & 22 & 2 & 29 & 70 \\
-  & 20 & 0 & 98 & 96 & 94 & 38 & 27 & 20 & 3 & 38 & 91 \\
-  & 30 & 0 & 98 & 94 & 92 & 34 & 24 & 18 & 3 & 45 & 108 \\
-  \midrule
-  \multirow{4}{*}{Lv2} & 5 & 0 & 99 & 98 & 97 & 41 & 30 & 22 & 2 & 26 & 62 \\
-  & 10 & 0 & 98 & 96 & 94 & 39 & 28 & 21 & 2 & 37 & 89 \\
-  & 20 & 0 & 97 & 92 & 89 & 35 & 25 & 18 & 3 & 48 & 115 \\
-  & 30 & 0 & 96 & 89 & 85 & 31 & 22 & 16 & 4 & 57 & 137 \\
-  \midrule
-  \multirow{4}{*}{Lv3} & 5 & 0 & 99 & 97 & 96 & 38 & 28 & 20 & 2 & 31 & 74 \\
-  & 10 & 0 & 97 & 93 & 90 & 36 & 26 & 19 & 3 & 45 & 108 \\
-  & 20 & 0 & 94 & 86 & 81 & 32 & 23 & 17 & 3 & 59 & 142 \\
-  & 30 & 0 & 92 & 82 & 75 & 28 & 20 & 14 & 4 & 69 & 166 \\
-  \midrule
-  \multirow{4}{*}{Lv4} & 5 & 0 & 98 & 96 & 94 & 36 & 26 & 19 & 3 & 36 & 86 \\
-  & 10 & 0 & 95 & 90 & 86 & 34 & 24 & 18 & 3 & 53 & 127 \\
-  & 20 & 0 & 90 & 80 & 72 & 30 & 21 & 15 & 4 & 69 & 166 \\
-  & 30 & 0 & 87 & 74 & 64 & 26 & 18 & 13 & 4 & 81 & 194 \\
-  \midrule
-  \multirow{4}{*}{Lv5} & 5 & 0 & 97 & 95 & 92 & 34 & 24 & 17 & 3 & 42 & 101 \\
-  & 10 & 0 & 93 & 86 & 80 & 32 & 22 & 16 & 3 & 60 & 144 \\
-  & 20 & 0 & 86 & 74 & 64 & 28 & 19 & 14 & 4 & 79 & 190 \\
-  & 30 & 0 & 82 & 66 & 54 & 24 & 16 & 12 & 4 & 93 & 223 \\
-  \midrule
-  \multirow{4}{*}{Lv6} & 5 & 0 & 97 & 94 & 91 & 31 & 22 & 16 & 3 & 47 & 113 \\
-  & 10 & 0 & 91 & 84 & 76 & 29 & 20 & 15 & 3 & 68 & 163 \\
-  & 20 & 0 & 84 & 70 & 59 & 25 & 17 & 12 & 4 & 89 & 214 \\
-  & 30 & 0 & 78 & 60 & 47 & 21 & 14 & 10 & 5 & 105 & 252 \\
-  \midrule \bottomrule
-  \end{tabular}%
-  }
-\end{table*}
-
-\begin{table*}[t]
-  \centering
-  \caption{Per-burst draft-sequence measurements under our admission controller --- memory-pressure capture, 24MP tier. All optional stages are admitted with zero Capture Timeouts (stability 100\%). Run rate is the cumulative percentage of captures in which the stage was admitted; UB slack is the median headroom of the predicted upper bound over the observed duration (smaller is tighter); UB viol.\ is the percentage of stage executions whose duration exceeded the predicted upper bound; pacing delay is the added delay of the \texttt{captureAvailable} callback. Rows marked $^{\dagger}$ report 12MP-mode measurements because 24MP capture falls back to 12MP mode at Lv5 and above.}
-  \label{tab:eval_data_p24}
-  \resizebox{\textwidth}{!}{%
-  \begin{tabular}{c|c||c||ccc||ccc||c||cc}
-  \toprule \midrule
-  \multirow{2}{*}{\makecell{\textbf{Overheat}\\\textbf{level}}} &
-  \multirow{2}{*}{\makecell{\textbf{Burst}\\\textbf{(shots)}}} &
-  \multirow{2}{*}{\makecell{\textbf{Time-}\\\textbf{outs}}} &
-  \multicolumn{3}{c||}{\textbf{Run rate (\%)}} &
-  \multicolumn{3}{c||}{\textbf{UB slack (ms)}} &
-  \multirow{2}{*}{\makecell{\textbf{UB viol.}\\\textbf{(\%)}}} &
-  \multicolumn{2}{c}{\textbf{Pacing delay (ms)}} \\
-  \cmidrule(lr){4-6}\cmidrule(lr){7-9}\cmidrule(l){11-12}
-  & & & \textbf{Bokeh} & \textbf{Filter} & \textbf{Full} & \textbf{Bokeh} & \textbf{Filter} & \textbf{Enc.} & & \textbf{Avg} & \textbf{Max} \\
-  \midrule \midrule
-  \multirow{4}{*}{Lv0} & 5 & 0 & 100 & 99 & 99 & 43 & 32 & 23 & 2 & 19 & 46 \\
-  & 10 & 0 & 100 & 98 & 98 & 41 & 30 & 22 & 3 & 28 & 67 \\
-  & 20 & 0 & 99 & 96 & 95 & 37 & 27 & 19 & 3 & 37 & 89 \\
-  & 30 & 0 & 99 & 95 & 94 & 33 & 24 & 17 & 4 & 43 & 103 \\
-  \midrule
-  \multirow{4}{*}{Lv1} & 5 & 0 & 99 & 98 & 97 & 40 & 30 & 21 & 3 & 25 & 60 \\
-  & 10 & 0 & 98 & 96 & 94 & 38 & 28 & 20 & 3 & 36 & 86 \\
-  & 20 & 0 & 97 & 92 & 89 & 34 & 25 & 18 & 4 & 47 & 113 \\
-  & 30 & 0 & 96 & 90 & 86 & 30 & 22 & 16 & 4 & 55 & 132 \\
-  \midrule
-  \multirow{4}{*}{Lv2} & 5 & 0 & 99 & 97 & 96 & 38 & 28 & 20 & 3 & 30 & 72 \\
-  & 10 & 0 & 97 & 93 & 90 & 36 & 26 & 19 & 3 & 44 & 106 \\
-  & 20 & 0 & 94 & 87 & 82 & 32 & 23 & 16 & 4 & 57 & 137 \\
-  & 30 & 0 & 92 & 83 & 76 & 28 & 20 & 14 & 5 & 67 & 161 \\
-  \midrule
-  \multirow{4}{*}{Lv3} & 5 & 0 & 98 & 96 & 94 & 36 & 26 & 18 & 3 & 36 & 86 \\
-  & 10 & 0 & 95 & 90 & 86 & 34 & 24 & 17 & 4 & 51 & 122 \\
-  & 20 & 0 & 90 & 80 & 72 & 30 & 21 & 15 & 4 & 67 & 161 \\
-  & 30 & 0 & 87 & 74 & 64 & 26 & 18 & 12 & 5 & 79 & 190 \\
-  \midrule
-  \multirow{4}{*}{Lv4} & 5 & 0 & 97 & 95 & 92 & 33 & 24 & 17 & 4 & 41 & 98 \\
-  & 10 & 0 & 92 & 86 & 79 & 31 & 22 & 16 & 4 & 59 & 142 \\
-  & 20 & 0 & 86 & 73 & 63 & 27 & 19 & 13 & 5 & 77 & 185 \\
-  & 30 & 0 & 81 & 64 & 52 & 23 & 16 & 11 & 5 & 91 & 218 \\
-  \midrule
-  \multirow{4}{*}{Lv5$^{\dagger}$} & 5 & 0 & 97 & 95 & 92 & 34 & 24 & 17 & 3 & 42 & 101 \\
-  & 10 & 0 & 93 & 86 & 80 & 32 & 22 & 16 & 3 & 60 & 144 \\
-  & 20 & 0 & 86 & 74 & 64 & 28 & 19 & 14 & 4 & 79 & 190 \\
-  & 30 & 0 & 82 & 66 & 54 & 24 & 16 & 12 & 4 & 93 & 223 \\
-  \midrule
-  \multirow{4}{*}{Lv6$^{\dagger}$} & 5 & 0 & 97 & 94 & 91 & 31 & 22 & 16 & 3 & 47 & 113 \\
-  & 10 & 0 & 91 & 84 & 76 & 29 & 20 & 15 & 3 & 68 & 163 \\
-  & 20 & 0 & 84 & 70 & 59 & 25 & 17 & 12 & 4 & 89 & 214 \\
-  & 30 & 0 & 78 & 60 & 47 & 21 & 14 & 10 & 5 & 105 & 252 \\
+  \multirow{3}{*}{Lv6$^{\dagger}$} & 5 & 5/5 & 5/5 & 73 (11) & 40 & 96 & 5/5 & 5/5 & 61 (0) & 47 & 113 \\
+  & 10 & 10/10 & 9/10 & 68 (9) & 58 & 139 & 9/10 & 8/10 & 56 ($-$2) & 68 & 163 \\
+  & 30 & 27/30 & 24/30 & 48 (1) & 90 & 216 & 23/30 & 18/30 & 36 ($-$10) & 105 & 252 \\
   \midrule \bottomrule
   \end{tabular}%
   }
