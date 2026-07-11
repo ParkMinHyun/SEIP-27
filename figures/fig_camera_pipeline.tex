@@ -1,54 +1,81 @@
-% Companion draft and final paths in the camera post-processing pipeline.
-% Included from _2_preliminary.tex.
+% Before/after timeline for portrait composition and Draft Bokeh.
+% Included from _2_preliminary.tex (Figure~\ref{fig:draft-pipeline}).
 \begin{tikzpicture}[
+  x=0.90cm,
+  y=0.82cm,
   font=\scriptsize,
   >=latex,
-  box/.style={draw=black!65, rounded corners=1.5pt, align=center,
-    minimum width=1.72cm, minimum height=0.72cm, inner sep=2pt},
-  draft/.style={box, draw=blue!55!black, fill=blue!10},
-  final/.style={box, draw=black!65, fill=gray!14},
-  gate/.style={box, draw=orange!65!black, fill=orange!12},
-  flow/.style={->, thick, black!70},
-  split/.style={circle, fill=black!60, inner sep=1.5pt}
+  draft/.style={draw=blue!60!black, fill=blue!9, rounded corners=1pt,
+    align=center, minimum height=0.52cm, inner sep=1.5pt},
+  foreground/.style={draw=orange!75!black, fill=orange!13,
+    rounded corners=1pt, align=center, minimum height=0.52cm, inner sep=1.5pt},
+  final/.style={draw=black!65, fill=gray!14, rounded corners=1pt,
+    align=center, minimum height=0.52cm, inner sep=1.5pt},
+  flow/.style={->, thick, black!65},
+  wait/.style={->, dashed, thick, orange!75!black},
+  deadline/.style={red!75!black, dashed, thick}
 ]
 
-  \node[box, fill=black!6, minimum width=2.15cm] (capture) at (3.85,3.55)
-    {Multi-frame\\capture};
-  \node[split] (fork) at (3.85,3.02) {};
-  \draw[flow] (capture) -- (fork);
+  % (a) Before Draft Bokeh: heavy portrait composition remains foreground work.
+  \node[anchor=west, font=\scriptsize\bfseries] at (0.15,6.28)
+    {(a) Before Draft Bokeh};
+  \fill[orange!8] (0.15,5.72) rectangle (8.75,6.08);
+  \draw[black!30] (0.15,5.72) rectangle (8.75,6.08);
+  \node at (4.45,5.90) {camera foreground};
 
-  % Draft lane.
-  \node[anchor=east, font=\scriptsize\bfseries, text=blue!55!black]
-    at (-0.05,2.35) {Draft};
-  \node[draft] (dinput) at (1.00,2.35) {Selected\\input(s)};
-  \node[draft] (deffect) at (3.15,2.35) {Light draft\\processing};
-  \node[draft] (dsave) at (5.30,2.35) {Encode and\\save};
-  \node[draft] (dvisible) at (7.45,2.35) {Draft visible\\to user};
+  \node[anchor=east, text=blue!60!black, font=\scriptsize\bfseries]
+    at (0.05,5.05) {Draft};
+  \node[draft, minimum width=1.55cm] (oldDraft) at (1.18,5.05)
+    {single-frame Draft\\delivery};
+  \node[draft, minimum width=4.55cm] (oldVisible) at (5.35,5.05)
+    {portrait Draft without Bokeh};
+  \draw[flow] (oldDraft) -- (oldVisible);
+  \draw[deadline] (2.18,4.67) -- (2.18,5.48);
+  \node[red!75!black, anchor=north west] at (2.24,4.68) {$D$};
 
-  \draw[flow] (fork) -| (dinput.north);
-  \draw[flow] (dinput) -- (deffect);
-  \draw[flow] (deffect) -- (dsave);
-  \draw[flow] (dsave) -- (dvisible);
+  \node[anchor=east, font=\scriptsize\bfseries] at (0.05,4.05) {Final};
+  \node[foreground, minimum width=4.55cm] (oldFinal) at (2.75,4.05)
+    {heavy portrait composition in foreground};
+  \node[final, minimum width=1.22cm] (oldUpdate) at (7.35,4.05)
+    {final\\update};
+  \draw[flow] (oldFinal) -- (oldUpdate);
+  \draw[flow, dashed] (oldUpdate.north) -- (7.35,4.75)
+    node[midway, right, text=black!55] {replace};
+  \node[orange!80!black, anchor=north] at (2.75,3.67)
+    {foreground compute/memory contention};
 
-  % Final lane.
-  \node[anchor=east, font=\scriptsize\bfseries] at (-0.05,0.90) {Final};
-  \node[final] (finput) at (1.00,0.90) {Required\\frames};
-  \node[gate] (fgate) at (3.15,0.90) {For deferred modes:\\wait for app background};
-  \node[final] (fprocess) at (5.30,0.90) {Full fusion and\\post-processing};
-  \node[final] (fupdate) at (7.45,0.90) {Final image and\\DB update};
+  % (b) With Draft Bokeh: lightweight work is deadline-critical; heavy work moves out.
+  \node[anchor=west, font=\scriptsize\bfseries] at (0.15,3.18)
+    {(b) With Draft Bokeh};
+  \fill[blue!4] (0.15,2.61) rectangle (4.15,2.97);
+  \fill[gray!12] (4.15,2.61) rectangle (8.75,2.97);
+  \draw[black!30] (0.15,2.61) rectangle (8.75,2.97);
+  \draw[dashed, black!45] (4.15,0.48) -- (4.15,2.97);
+  \node at (2.15,2.79) {camera foreground};
+  \node at (6.45,2.79) {application background};
 
-  \draw[flow] (fork) -| (finput.north);
-  \draw[flow] (finput) -- (fgate);
-  \draw[flow] (fgate) -- (fprocess);
-  \draw[flow] (fprocess) -- (fupdate);
+  \node[anchor=east, text=blue!60!black, font=\scriptsize\bfseries]
+    at (0.05,2.02) {Draft};
+  \node[draft, minimum width=2.15cm] (newDraft) at (1.43,2.02)
+    {Draft Bokeh\\and delivery};
+  \node[draft, minimum width=4.25cm] (newVisible) at (5.55,2.02)
+    {approximate portrait remains visible};
+  \draw[flow] (newDraft) -- (newVisible);
+  \draw[deadline] (2.72,1.64) -- (2.72,2.45);
+  \node[red!75!black, anchor=north west] at (2.78,1.65) {$D$};
 
-  % The final result replaces the published draft entry.
-  \draw[flow, dashed, black!50] (fupdate.north) -- (dvisible.south)
-    node[midway, right, align=left, text=black!65] {replace\\draft};
+  \node[anchor=east, font=\scriptsize\bfseries] at (0.05,1.02) {Final};
+  \draw[wait] (0.50,1.02) -- (4.10,1.02)
+    node[midway, above, text=orange!75!black] {deferred};
+  \node[final, minimum width=2.25cm] (newFinal) at (5.50,1.02)
+    {heavy portrait\\composition};
+  \node[final, minimum width=1.22cm] (newUpdate) at (7.58,1.02)
+    {final\\update};
+  \draw[flow] (newFinal) -- (newUpdate);
+  \draw[flow, dashed] (newUpdate.north) -- (7.58,1.72)
+    node[midway, right, text=black!55] {replace};
 
-  \draw[decorate, decoration={brace, mirror, amplitude=3pt}, blue!55!black]
-    (0.10,1.83) -- (7.95,1.83);
-  \node[anchor=north, text=blue!55!black] at (4.03,1.72)
-    {capture-critical path};
+  \draw[->, black!55] (0.15,0.38) -- (8.78,0.38)
+    node[anchor=north east] {time};
 
 \end{tikzpicture}

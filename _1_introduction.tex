@@ -1,131 +1,80 @@
 \section{Introduction}\label{sec:introduction}
 
-Commercial mobile cameras increasingly rely on multi-frame capture and
-computationally intensive post-processing to produce a single high-quality
-photograph. In the camera framework studied in this paper, the full
-post-processing path has been paired from its introduction with a
-\emph{draft sequence}. While the full path collects and processes the captured
-frames, the draft sequence saves selected input early and publishes a draft
-image through the media database. The user can therefore inspect the capture
-before final processing finishes, and the framework retains a recovery image
-if that processing fails. Once the final result is ready, it replaces the
-draft through a database update. The draft sequence is thus a first-class
-part of the post-processing architecture, rather than a later workaround for
-slow processing.
+Commercial mobile cameras combine multiple captured frames through
+compute- and memory-intensive post-processing. In the framework studied in
+this paper, post-processing was introduced together with a \emph{Draft
+Sequence}: the full path collects and fuses the required frames, while the
+Draft path publishes an early image and preserves a recovery result. As final
+processing grew heavier, selected shot modes began postponing composition
+until the camera application entered the background to protect foreground
+responsiveness. This deferral leaves the Draft visible for longer. Portrait
+capture was a particularly important next target: its final composition was
+long running, memory intensive, and visually far from an untreated input.
+Lightweight multi-frame Draft Bokeh was therefore designed to provide an
+approximate early portrait and enable the heavier final composition to move to
+the background.
 
-This architecture has faced a growing tension between image fidelity and
-foreground camera responsiveness. As imaging pipelines incorporated more
-compute- and memory-intensive processing, executing every full composition
-immediately after the shutter began to interfere with interactive camera use,
-for example by consuming resources needed by the preview and subsequent
-captures. The framework consequently defers full processing for selected
-expensive shot modes until the camera application enters the background.
-Deferral protects foreground responsiveness, but it also extends the period
-during which the draft is the only capture result visible to the user.
+Draft processing had already exposed a release risk. The initial Draft applied
+no effect; single-frame Filter and Watermark were later added to reduce its
+visible difference from the final image. On the framework's Lv0--Lv6 overheat
+scale, where higher values indicate greater thermal stress, an initial
+safeguard disabled optional Draft work at Lv5. A subsequent lower-tier Filter
+timeout at Lv4 caused the common threshold to be lowered to Lv4, restricting
+flagship devices as well. Yet this guard could not enable the new workload:
+Draft Bokeh still timed out below Lv4 and consequently missed two consecutive
+flagship generations.
+Capture Timeout is release blocking in this product context, so an unsafe
+feature must be fixed, restricted, or removed.
 
-The processing performed by the draft sequence therefore evolved together
-with the full pipeline. The initial draft path performed no imaging effect;
-it encoded and saved an input frame. When effects such as filters and
-watermarks made this draft visibly inconsistent with the final result,
-lightweight single-frame versions of those effects were added to the draft
-sequence. This change exposed a deadline risk. After timeouts clustered at
-high overheat levels, an initial production safeguard disabled optional draft
-processing at level~5 and above. A later lower-tier device encountered
-\emph{Capture Timeout} while applying a draft Filter at level~4, causing the
-common threshold to be lowered to~4. The safeguard was a practical response
-to a release-blocking failure, but it encoded incidents from earlier devices
-and workloads as a fleet-wide threshold. Flagship devices inherited the same
-restriction even when they retained enough execution capacity for the
-optional work.
+Parallel capture makes the problem cumulative. The hardware abstraction layer
+can report readiness for another shot before the preceding Draft finishes, but
+Draft Sequences execute on one worker. A new Draft can therefore consume much
+of its fixed deadline while queued behind older captures. Thermal throttling,
+memory pressure, scheduling, and I/O variation can lengthen one sequence and
+propagate its delay through the burst. The relevant risk is thus the tail
+latency of the \emph{queued and remaining sequence}, not the average latency
+of an isolated image operation.
 
-The next evolution of portrait processing exposed that this legacy safeguard
-could not serve as an enablement policy for a new workload.
-Portrait composition was originally performed while the camera application
-remained in the foreground, but it was both memory intensive and long
-running. Meanwhile, increasingly sophisticated final processing made an
-untreated single-frame draft a poor stand-in for the portrait result, in a
-shot mode with a particularly visible before--after difference. The framework
-therefore attempted to add lightweight multi-frame bokeh to the draft. A
-bokeh-bearing draft would provide an approximate portrait result early and,
-in turn, allow the heavier final portrait composition to be deferred until
-the application enters the background. Despite this architectural change and
-the use of lightweight imaging components, Draft Bokeh could not be enabled
-in two consecutive flagship generations because Capture Timeout continued to
-recur.
+A fixed overheat boundary cannot represent that risk. Below level~4, it admits
+Bokeh even when a costly sequence and accumulated backlog make the capture
+unsafe. At level~4 and above, it rejects every optional stage even when the
+pipeline is empty and sufficient budget remains. Lowering the threshold
+removes more useful Draft processing; raising it accepts more timeout risk.
+The historical guard did not cause the Bokeh failures, but its opposite errors
+show that it is not a viable enablement policy for the new workload.
 
-Parallel capture is what turns this added draft work into a cumulative
-deadline problem. The hardware abstraction layer can report readiness for a
-new capture before all frames and draft processing from the preceding capture
-have completed. The application may therefore initiate another shot while an
-older draft sequence is still running. Draft sequences, however, execute on a
-single worker. New sequences queue behind old ones and consume part of their
-fixed Capture Timeout budget before their own processing starts. Variability
-from thermal throttling, scheduling, memory pressure, and storage can lengthen
-one sequence and propagate its delay to the captures behind it. The relevant
-risk is consequently the tail latency of the queued and remaining draft work,
-not the average latency of an isolated image operation.
-
-The historical guard did not cause this enablement failure: Draft Bokeh also
-timed out at levels~1--3, where the guard admits optional work, because the
-decision ignores the workload sequence and accumulated queue. Conversely, at
-level~4 and above, the guard rejects every optional stage even for early
-captures or lighter executions with sufficient budget. Its under-protection
-below the threshold and blanket rejection above it show that the guard cannot
-serve as an enablement policy for Draft Bokeh. Lowering the threshold improves
-safety only by disabling the feature more broadly; raising it improves
-availability only by accepting additional timeout risk.
-
-We present a context-aware runtime controller that manages the two quantities
-governing a draft deadline. First, a remaining-sequence admission controller
-compares the learned upper bound of the current optional stage and all work
-after it, including mandatory encoding, with the current capture's remaining
-budget. It protects a capture that is already at risk by omitting optional
-work whose bound does not fit. Second, a capture-availability pacer delays the
-callback that enables a subsequent shot when either the last observed
-draft-start budget or the backlog of callback-admitted captures predicts a
-deficit. It prevents the same deficit from propagating through a burst. Both
-mechanisms consume an online, tail-calibrated upper bound learned from observed
-workload execution, rather than a fixed thermal threshold.
-
-Pacing makes the design trade-off explicit. Delaying capture availability can
-slow shot-to-shot shooting, whereas admitting too quickly either forces later
-stages to be skipped or risks a timeout. Our controller treats deadline safety
-as the hard constraint, preserves Draft Bokeh and other optional effects when
-the learned budget permits, and applies pacing only for the predicted budget
-deficit. We report Capture Timeout, optional-stage availability, and the
-applied capture-availability delay separately; observed inter-shot behavior
-is an end-to-end effect rather than assumed to equal that delay.
+We present a context-aware controller with two complementary control points.
+\emph{Remaining-sequence admission} omits optional work when its learned upper
+bound, including the mandatory tail, does not fit the current capture's
+remaining budget. This reduces demand after queueing has already consumed part
+of the deadline. \emph{Capture-availability pacing} delays the next-shot
+opportunity by a predicted budget deficit, allowing queued work to drain
+before another deadline begins. Both decisions reuse an online,
+tail-calibrated model of observed workload execution. Pacing is not free: it
+can increase inter-shot latency. We therefore prioritize deadline safety and
+report Draft availability and applied callback delay separately; observed
+shot-to-shot timing is an end-to-end outcome.
 
 % Evaluation source: tables/tab_eval_data_entry_overrun.tex, normal-capture
 % 12MP 30-shot Lv4--Lv6 rows. Reconfirm after the Chapter 4 dataset is frozen.
-In the normal 12MP, 30-shot bursts at overheat levels~4--6, where the deployed
-guard would disable all optional draft work, the controller completed all 90
-captures without a timeout and retained the full preferred draft path for 63
-captures (70.0\%). This recovery of Draft functionality incurred a measurable
-responsiveness cost: mean applied pacing delay across the three bursts ranged
-from 0.85 to 1.15 seconds, with a maximum of 1.50 seconds. These results
-demonstrate why safety, draft fidelity, and pacing cost must be considered
-together.
+Across three normal 12MP, 30-shot bursts---one at each of levels~4--6, where
+the deployed guard would disable optional Draft work---our controller completed all 90
+tested captures without a timeout and ran both Draft Bokeh and Filter on 63
+captures (70.0\%). Mean applied callback delay in each burst ranged from 0.85
+to 1.15 seconds, with a maximum of 1.50 seconds, quantifying the callback-level
+control cost of retaining Draft functionality.
 
 \smallskip
 \noindent
 \myparagraph{Contributions}
 We make the following contributions:
 \begin{itemize}[leftmargin=*]
-  \item \textbf{Industrial problem characterization.} We characterize how a
-  fleet-wide guard introduced after a lower-tier Filter failure is
-  under-protective and over-restrictive for flagship Draft Bokeh under
-  parallel capture.
-
-  \item \textbf{Coordinated runtime control.} We present a controller that
-  reuses learned upper bounds at two complementary control points:
-  remaining-sequence admission protects the current capture, while
-  capture-availability pacing protects subsequent captures from accumulated
-  backlog.
-
-  \item \textbf{Industrial prototype evaluation.} We evaluate an
-  implementation integrated into a commercial Android camera framework across
-  continuous-capture, image-size, memory-pressure, and overheat conditions,
-  reporting deadline safety, Draft feature availability, prediction quality,
-  and capture-availability pacing cost.
+  \item \textbf{Industrial problem characterization.} We show how parallel
+  capture and evolving Draft workloads make a fleet-wide overheat guard both
+  under-protective and over-restrictive.
+  \item \textbf{Coordinated runtime control.} We reuse learned tail bounds for
+  current-capture workload admission and subsequent-capture pacing.
+  \item \textbf{Industrial prototype evaluation.} In a commercial Android
+  camera framework, we evaluate deadline safety, Draft feature availability,
+  prediction quality, and pacing cost across runtime conditions.
 \end{itemize}

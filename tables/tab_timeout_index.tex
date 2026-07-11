@@ -15,18 +15,12 @@
 \providecolor{tmoS4}{RGB}{143,36,32}     % <= 5 (white text)
 % Equal-width centered data columns so B+F and B cells align across groups.
 \newcolumntype{Y}{>{\centering\arraybackslash}p{0.7cm}}
-\begin{table}[H]
+\begin{table}[t]
   \centering
-  \caption{First shot index (out of 30) at which Capture Timeout occurs
-  during a continuous portrait burst on a flagship device, by overheat
-  level, image-size tier, memory condition, and draft-stage configuration
-  (B = bokeh, F = filter). The indicated work is executed at every level to
-  expose behavior normally hidden by the deployed Lv4 guard; the thick rule
-  marks that guard boundary. ``--'' means no timeout within the burst.
-  Shading darkens as the first failure occurs earlier, and boldface marks
-  failures within the first ten shots. Cells marked $^{\dagger}$ report the
-  corresponding 12MP-mode measurements because 24MP capture falls back to
-  12MP mode at Lv5 and above.}
+  \caption{First Capture Timeout in a 30-shot portrait burst when Bokeh (B)
+  and Filter (F) are forced on. The thick rule marks the deployed Lv4 guard;
+  ``--'' means no timeout. At Lv5 and above, $^{\dagger}$ cells report 12MP
+  fallback measurements.}
   \label{tab:timeout_index}
   \resizebox{\columnwidth}{!}{%
   \begin{tabular}{c||YY|YY||YY|YY}
