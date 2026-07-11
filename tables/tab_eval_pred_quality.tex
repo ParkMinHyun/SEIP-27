@@ -1,0 +1,60 @@
+% Per-stage prediction and decision quality of the admission controller
+% (12MP tier, normal capture; observed online). Companion to
+% tab_eval_data_entry_overrun.tex.
+%
+% GENERATED FILE -- do not edit values by hand. Sources:
+%   8U_metrics_12MP_normal_0710.xlsx
+%     sheet "DecisionQuality"  -> Admitted, Admit success
+%     sheets "SecDualBokehNode"/"SecFilterNode" -> skip check: for each skip,
+%       compare budgetMs at the decision against the most recent observed
+%       sequenceActualDurationMs of the same stage within the same session
+%       (session starts #1,33,74,120,162,201,241,291,331,378,424,462).
+%       Confirmed = last observed duration > budget. Est. overrun = last
+%       observed duration - budget (median over all skips).
+%   evaluation-table_8U_12MP_normal_SEIP-review-metrics.xlsx,
+%     sheet "Admission Stage Metrics" -> UB coverage, UB slack p50,
+%     duration bias/MAE, miss size p95.
+% All metrics use only online-observed executions under the deployed policy.
+% Full counterfactual correctness of skips (offline replay) is not claimed.
+%
+% Column meanings:
+%   Admitted        : admit decisions / all decisions for the stage.
+%   Admit success   : % of fully observed admitted stages that completed
+%                     within the capture budget (Bokeh 349/350, Filter
+%                     469/470; the complement is the single watchdog-recovered
+%                     unsafe admit).
+%   UB coverage     : % of evaluated executions whose observed duration
+%                     stayed within the predicted upper bound.
+%   UB slack p50    : median (predicted UB - observed duration).
+%   Dur. bias / MAE : predicted duration minus observed duration, mean signed
+%                     error and mean absolute error.
+%   Miss size p95   : 95th percentile of (observed - UB) among misses.
+%   Skipped         : skip decisions / all decisions.
+%   Confirmed       : % of skips where the most recent observed duration of
+%                     the same stage already exceeded the budget (Bokeh
+%                     101/137, Filter 12/27) -- a model-free check.
+%   Est. overrun p50: median (last observed duration - budget) over skips;
+%                     negative means the last observation would have fit.
+
+\begin{table*}[t]
+  \centering
+  \caption{Prediction and decision quality of the admission controller for the two optional stages (12MP tier, normal capture; all values observed online). Under \emph{Admit decisions}, admit success is the percentage of admitted stages, among those whose execution was fully observed (350 Bokeh, 470 Filter), that completed within the capture budget; the 0.3\,\%/0.2\,\% complement is one single capture whose admitted stages overran and were recovered by the watchdog, so no capture timed out. Under \emph{Upper-bound prediction}, coverage is the percentage of evaluated executions whose observed duration stayed within the predicted upper bound, slack p50 is the median headroom of that bound (predicted minus observed; smaller is tighter), bias and MAE compare predicted against observed durations (observed means 830\,ms for Bokeh, 474\,ms for Filter), and miss size p95 is the 95th percentile of the overshoot among bound misses, all absorbed by the watchdog margin. Under \emph{Skip decisions}, each skip is checked against the most recent observed duration of the same stage within the same burst---a model-free estimate that uses only past observations, avoiding circular justification by our own predictor: confirmed means that duration already exceeded the budget at the skip decision, and est.\ overrun p50 is the median of (last observed duration minus budget). The unconfirmed skips are near-boundary cases (Filter median $-8$\,ms): the controller decides against a variance-aware upper bound rather than a single past sample, trading a skipped optional stage against the strictly worse capture timeout. Counterfactual correctness of skips beyond this check would require offline replay and is not claimed.}
+  \label{tab:eval_pred_quality}
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{l||c|c||c|r|r|r|r||c|c|r}
+  \toprule \midrule
+  \multirow{2}{*}{\textbf{Stage}} &
+  \multicolumn{2}{c||}{\textbf{Admit decisions}} &
+  \multicolumn{5}{c||}{\textbf{Upper-bound prediction}} &
+  \multicolumn{3}{c}{\textbf{Skip decisions (vs.\ last observation)}} \\
+  \cmidrule(lr){2-3}\cmidrule(lr){4-8}\cmidrule(l){9-11}
+  & \textbf{Admitted} & \makecell{\textbf{Success}\\{\scriptsize \%}}
+  & \makecell{\textbf{Coverage}\\{\scriptsize \%}} & \makecell{\textbf{Slack p50}\\{\scriptsize ms}} & \makecell{\textbf{Bias}\\{\scriptsize ms}} & \makecell{\textbf{MAE}\\{\scriptsize ms}} & \makecell{\textbf{Miss p95}\\{\scriptsize ms}}
+  & \textbf{Skipped} & \makecell{\textbf{Confirmed}\\{\scriptsize \%}} & \makecell{\textbf{Est.\ overrun p50}\\{\scriptsize ms}} \\
+  \midrule \midrule
+  Bokeh  & 366/503 & 99.7 & 91.1 & 145 & $+0.9$ & 64 & 228 & 137/503 & 73.7 & $+148$ \\
+  Filter & 476/503 & 99.8 & 94.0 &  60 & $-3.4$ & 26 &  96 &  27/503 & 44.4 & $-8$   \\
+  \midrule \bottomrule
+  \end{tabular}%
+  }
+\end{table*}
