@@ -4,6 +4,8 @@
 % Table data source: internal portrait-mode 30-shot continuous-capture
 % measurements; the device is anonymized in the text as a
 % current-generation flagship.
+% Evidence TODO before submission: record the raw trace/session mapping and
+% the procedure used to execute Bokeh/Filter above the deployed guard.
 % Severity shading (first failing shot index): white = no timeout;
 % single-hue blush-to-brick ramp, lightness-monotone (grayscale-safe),
 % darkens as the first failure moves earlier.
@@ -13,16 +15,18 @@
 \providecolor{tmoS4}{RGB}{143,36,32}     % <= 5 (white text)
 % Equal-width centered data columns so B+F and B cells align across groups.
 \newcolumntype{Y}{>{\centering\arraybackslash}p{0.7cm}}
-\begin{table}[t]
+\begin{table}[H]
   \centering
   \caption{First shot index (out of 30) at which Capture Timeout occurs
   during a continuous portrait burst on a flagship device, by overheat
   level, image-size tier, memory condition, and draft-stage configuration
-  (B = bokeh, F = filter). ``--'' means no timeout within the burst.
-  Shading darkens as the first failure occurs earlier in the burst, and
-  boldface marks failures within the first ten shots. Cells marked
-  $^{\dagger}$ report the corresponding 12MP-mode measurements because
-  24MP capture falls back to 12MP mode at Lv5 and above.}
+  (B = bokeh, F = filter). The indicated work is executed at every level to
+  expose behavior normally hidden by the deployed Lv4 guard; the thick rule
+  marks that guard boundary. ``--'' means no timeout within the burst.
+  Shading darkens as the first failure occurs earlier, and boldface marks
+  failures within the first ten shots. Cells marked $^{\dagger}$ report the
+  corresponding 12MP-mode measurements because 24MP capture falls back to
+  12MP mode at Lv5 and above.}
   \label{tab:timeout_index}
   \resizebox{\columnwidth}{!}{%
   \begin{tabular}{c||YY|YY||YY|YY}
@@ -44,6 +48,7 @@
   Lv1 & -- & -- & \cellcolor{tmoS1}29 & -- & \cellcolor{tmoS1}24 & -- & \cellcolor{tmoS2}19 & -- \\
   Lv2 & \cellcolor{tmoS1}24 & -- & \cellcolor{tmoS2}18 & -- & \cellcolor{tmoS2}15 & \cellcolor{tmoS1}29 & \cellcolor{tmoS2}14 & \cellcolor{tmoS1}25 \\
   Lv3 & \cellcolor{tmoS2}13 & \cellcolor{tmoS1}21 & \cellcolor{tmoS2}12 & \cellcolor{tmoS1}20 & \cellcolor{tmoS3}\textcolor{white}{\textbf{8}} & \cellcolor{tmoS2}19 & \cellcolor{tmoS4}\textcolor{white}{\textbf{5}} & \cellcolor{tmoS2}15 \\
+  \specialrule{1.0pt}{1.0pt}{1.0pt}
   Lv4 & \cellcolor{tmoS2}10 & \cellcolor{tmoS2}16 & \cellcolor{tmoS3}\textcolor{white}{\textbf{8}} & \cellcolor{tmoS2}13 & \cellcolor{tmoS3}\textcolor{white}{\textbf{6}} & \cellcolor{tmoS2}13 & \cellcolor{tmoS4}\textcolor{white}{\textbf{4}} & \cellcolor{tmoS3}\textcolor{white}{\textbf{7}} \\
   Lv5 & \cellcolor{tmoS3}\textcolor{white}{\textbf{8}} & \cellcolor{tmoS2}12 & \cellcolor{tmoS3}\textcolor{white}{\textbf{8}$^{\dagger}$} & \cellcolor{tmoS2}12$^{\dagger}$ & \cellcolor{tmoS4}\textcolor{white}{\textbf{4}} & \cellcolor{tmoS3}\textcolor{white}{\textbf{9}} & \cellcolor{tmoS4}\textcolor{white}{\textbf{4}$^{\dagger}$} & \cellcolor{tmoS3}\textcolor{white}{\textbf{9}$^{\dagger}$} \\
   Lv6 & \cellcolor{tmoS3}\textcolor{white}{\textbf{7}} & \cellcolor{tmoS2}11 & \cellcolor{tmoS3}\textcolor{white}{\textbf{7}$^{\dagger}$} & \cellcolor{tmoS2}11$^{\dagger}$ & \cellcolor{tmoS4}\textcolor{white}{\textbf{4}} & \cellcolor{tmoS3}\textcolor{white}{\textbf{6}} & \cellcolor{tmoS4}\textcolor{white}{\textbf{4}$^{\dagger}$} & \cellcolor{tmoS3}\textcolor{white}{\textbf{6}$^{\dagger}$} \\

@@ -19,9 +19,10 @@ This repository is a LaTeX paper project for SEIP 2027.
 ## Paper Goal
 
 - Current manuscript topic: preventing Capture Timeout in the Android Camera Framework.
-- The work targets the portrait-mode Draft Sequence, where a draft image is generated before final post-processing completes.
-- The proposed system is currently named the Context-Aware Draft Sequence Admission Controller.
-- The paper studies admission-level control for tail-latency-based Capture Timeout, not average-latency optimization for a single image-processing stage.
+- The Draft Sequence was introduced together with the post-processing pipeline; it publishes an early image and provides recovery while final processing continues.
+- The work targets enabling lightweight multi-frame Draft Bokeh on flagship portrait capture, whose heavy final composition can then be deferred until the camera app enters the background.
+- The proposed system is currently framed as the Context-Aware Draft Sequence Controller, comprising remaining-sequence admission and capture-availability pacing.
+- The paper studies coordinated workload and arrival control for tail-latency-based Capture Timeout, not average-latency optimization for a single image-processing stage.
 - Preserve the core research framing unless the user explicitly asks to change the problem statement, contribution, or terminology.
 
 ## Research Context Documents

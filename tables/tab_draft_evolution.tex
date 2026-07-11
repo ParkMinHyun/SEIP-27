@@ -1,0 +1,29 @@
+% Evolution of user-visible processing in the Draft Sequence.
+\begin{table}[H]
+  \centering
+  \caption{Evolution of Draft processing and the production constraint
+  exposed at each step.}
+  \label{tab:draft-evolution}
+  {\footnotesize
+  \setlength{\tabcolsep}{3pt}
+  \begin{tabular}{>{\raggedright\arraybackslash}p{1.75cm}|
+    >{\raggedright\arraybackslash}p{2.80cm}|
+    >{\raggedright\arraybackslash}p{2.90cm}}
+    \toprule \midrule
+    \textbf{Generation} & \textbf{Draft work and purpose} &
+      \textbf{Exposed constraint} \\
+    \midrule \midrule
+    Initial & Encode and save selected frame; early access and recovery &
+      Visible difference from final images with effects \\
+    \midrule
+    \makecell[l]{Single-frame\\effects} & Filter and Watermark; reduce
+      immediate draft--final mismatch & Lv5 guard later tightened to Lv4
+      after lower-tier Filter timeout \\
+    \midrule
+    \makecell[l]{Lightweight\\multi-frame} & Bokeh and existing effects;
+      approximate deferred portrait result & Timeout below Lv4; backlog
+      under parallel capture \\
+    \midrule \bottomrule
+  \end{tabular}
+  }
+\end{table}

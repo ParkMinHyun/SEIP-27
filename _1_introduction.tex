@@ -1,21 +1,131 @@
 \section{Introduction}\label{sec:introduction}
-Symbolic execution~\cite{Cadar2008,Godefroid2005,crest,angr} is a representative white-box testing technique that automatically generates test cases to achieve high code coverage and detect hidden bugs. Its key idea is to replace program inputs with symbolic variables and systematically explore program paths by reasoning about symbolic path conditions using an SMT solver~\cite{Ganesh07,z32008,brummayer2009boolector,barbosa2022cvc5}. During execution, symbolic execution repeatedly selects and executes symbolic program states, and whenever a state reaches a program exit, it invokes the SMT solver to determine whether the accumulated path condition is satisfiable and, if so, obtains a corresponding test case. Although symbolic execution has demonstrated remarkable effectiveness in automated software testing, its practical applicability is still hindered by two long-standing challenges: the high cost of SMT solving and the state-explosion problem. To address these challenges, existing techniques have proposed a wide range of optimizations, including SMT-solving optimizations~\cite{shuai2024partial,trabish2021address,shuai2021type,Kapus2020}, search heuristics~\cite{yao2025empc,lee2025topseed,featmaker,learch}, and state-pruning techniques~\cite{du2026fense,yi2024compatible,homi,Yi2018}.
 
-Despite these advances, existing symbolic execution techniques are not designed to effectively test successive releases of the same software, even though adjacent releases typically share most of their code. As we show in Section~\ref{sec:limitation}, 89.8\% of the path conditions explored in a later release have already been solved while testing earlier releases. Re-solving these path conditions consumes approximately 70\% of the total testing budget, and the overhead accumulates as software continues to evolve.
+Commercial mobile cameras increasingly rely on multi-frame capture and
+computationally intensive post-processing to produce a single high-quality
+photograph. In the camera framework studied in this paper, the full
+post-processing path has been paired from its introduction with a
+\emph{draft sequence}. While the full path collects and processes the captured
+frames, the draft sequence saves selected input early and publishes a draft
+image through the media database. The user can therefore inspect the capture
+before final processing finishes, and the framework retains a recovery image
+if that processing fails. Once the final result is ready, it replaces the
+draft through a database update. The draft sequence is thus a first-class
+part of the post-processing architecture, rather than a later workaround for
+slow processing.
 
-A straightforward solution is to store the results of solved path conditions from earlier releases and reuse them during symbolic execution of later releases. Whenever a newly generated path condition matches a stored result, symbolic execution can immediately reuse it instead of invoking the SMT solver. However, such a naive query-reuse approach suffers from three fundamental limitations. First, storing every solved path condition and its corresponding result incurs substantial storage overhead. Second, searching through a large collection of stored results introduces considerable matching overhead. Finally, even when a matching result is found, it often reconstructs test cases that have already been generated in previous releases, reducing testing diversity and limiting the exploration of new program behaviors.
+This architecture has faced a growing tension between image fidelity and
+foreground camera responsiveness. As imaging pipelines incorporated more
+compute- and memory-intensive processing, executing every full composition
+immediately after the shutter began to interfere with interactive camera use,
+for example by consuming resources needed by the preview and subsequent
+captures. The framework consequently defers full processing for selected
+expensive shot modes until the camera application enters the background.
+Deferral protects foreground responsiveness, but it also extends the period
+during which the draft is the only capture result visible to the user.
 
-We present $\ourtool$, a practical technique that refines previously solved query results into reusable query data, enabling symbolic execution to effectively test successive releases of the same software. To this end, $\ourtool$ first processes satisfiable and unsatisfiable query data separately. For satisfiable query data, it resamples satisfying assignments without additional SMT solving, avoiding regenerating the same test cases across releases. For unsatisfiable query data, it extracts minimal infeasible cores so that later path conditions containing the same core can be classified as unsatisfiable without invoking the SMT solver. The refined query data are then generalized by abstracting symbolic variables and normalizing concrete values, allowing multiple semantically equivalent query data entries to be represented by a single reusable entry. During symbolic execution of successive releases, $\ourtool$ prioritizes the most promising query data according to their similarity to newly generated path conditions and reuses matched query-data entries through a more general matching criterion than exact path-condition equality. Consequently, as reusable query data accumulate across software releases, $\ourtool$ progressively reduces SMT solver invocations by reusing previously refined query-data entries to determine satisfiability and reconstruct satisfying assignments.
+The processing performed by the draft sequence therefore evolved together
+with the full pipeline. The initial draft path performed no imaging effect;
+it encoded and saved an input frame. When effects such as filters and
+watermarks made this draft visibly inconsistent with the final result,
+lightweight single-frame versions of those effects were added to the draft
+sequence. This change exposed a deadline risk. After timeouts clustered at
+high overheat levels, an initial production safeguard disabled optional draft
+processing at level~5 and above. A later lower-tier device encountered
+\emph{Capture Timeout} while applying a draft Filter at level~4, causing the
+common threshold to be lowered to~4. The safeguard was a practical response
+to a release-blocking failure, but it encoded incidents from earlier devices
+and workloads as a fleet-wide threshold. Flagship devices inherited the same
+restriction even when they retained enough execution capacity for the
+optional work.
 
-Our experimental evaluation demonstrates that $\ourtool$ improves symbolic execution across successive software releases in terms of both branch coverage and bug-finding ability. We implemented $\ourtool$ on top of KLEE~\cite{Cadar2008} and evaluated it on consecutive releases of 15 open-source C programs. We compared $\ourtool$ against four baselines: original KLEE, the naive query-reuse baseline, a rerun baseline that re-executes test cases generated from previous releases, and a seed-based baseline that uses those test cases as seeds for testing later releases. For branch coverage, $\ourtool$ covered 28.5\% more branches than the baselines on the second release and 30.9\% more branches on the third release, showing that its benefits grow as reusable query data accumulate across releases. In terms of bug finding, $\ourtool$ detected eight crashes across three consecutive releases, including three missed by all baselines. We further demonstrate that $\ourtool$ is complementary to existing techniques by integrating it with three state-of-the-art symbolic execution techniques~\cite{yao2025empc,lee2025topseed,klee_aaqc}, improving their effectiveness. Moreover, we demonstrate the generality of $\ourtool$ by applying it to two concolic testing tools~\cite{poeplau2020symbolic,chameleon}, confirming that its design is independent of the underlying symbolic execution engine.
+The next evolution of portrait processing exposed that this legacy safeguard
+could not serve as an enablement policy for a new workload.
+Portrait composition was originally performed while the camera application
+remained in the foreground, but it was both memory intensive and long
+running. Meanwhile, increasingly sophisticated final processing made an
+untreated single-frame draft a poor stand-in for the portrait result, in a
+shot mode with a particularly visible before--after difference. The framework
+therefore attempted to add lightweight multi-frame bokeh to the draft. A
+bokeh-bearing draft would provide an approximate portrait result early and,
+in turn, allow the heavier final portrait composition to be deferred until
+the application enters the background. Despite this architectural change and
+the use of lightweight imaging components, Draft Bokeh could not be enabled
+in two consecutive flagship generations because Capture Timeout continued to
+recur.
 
+Parallel capture is what turns this added draft work into a cumulative
+deadline problem. The hardware abstraction layer can report readiness for a
+new capture before all frames and draft processing from the preceding capture
+have completed. The application may therefore initiate another shot while an
+older draft sequence is still running. Draft sequences, however, execute on a
+single worker. New sequences queue behind old ones and consume part of their
+fixed Capture Timeout budget before their own processing starts. Variability
+from thermal throttling, scheduling, memory pressure, and storage can lengthen
+one sequence and propagate its delay to the captures behind it. The relevant
+risk is consequently the tail latency of the queued and remaining draft work,
+not the average latency of an isolated image operation.
+
+The historical guard did not cause this enablement failure: Draft Bokeh also
+timed out at levels~1--3, where the guard admits optional work, because the
+decision ignores the workload sequence and accumulated queue. Conversely, at
+level~4 and above, the guard rejects every optional stage even for early
+captures or lighter executions with sufficient budget. Its under-protection
+below the threshold and blanket rejection above it show that the guard cannot
+serve as an enablement policy for Draft Bokeh. Lowering the threshold improves
+safety only by disabling the feature more broadly; raising it improves
+availability only by accepting additional timeout risk.
+
+We present a context-aware runtime controller that manages the two quantities
+governing a draft deadline. First, a remaining-sequence admission controller
+compares the learned upper bound of the current optional stage and all work
+after it, including mandatory encoding, with the current capture's remaining
+budget. It protects a capture that is already at risk by omitting optional
+work whose bound does not fit. Second, a capture-availability pacer delays the
+callback that enables a subsequent shot when either the last observed
+draft-start budget or the backlog of callback-admitted captures predicts a
+deficit. It prevents the same deficit from propagating through a burst. Both
+mechanisms consume an online, tail-calibrated upper bound learned from observed
+workload execution, rather than a fixed thermal threshold.
+
+Pacing makes the design trade-off explicit. Delaying capture availability can
+slow shot-to-shot shooting, whereas admitting too quickly either forces later
+stages to be skipped or risks a timeout. Our controller treats deadline safety
+as the hard constraint, preserves Draft Bokeh and other optional effects when
+the learned budget permits, and applies pacing only for the predicted budget
+deficit. We report Capture Timeout, optional-stage availability, and the
+applied capture-availability delay separately; observed inter-shot behavior
+is an end-to-end effect rather than assumed to equal that delay.
+
+% Evaluation source: tables/tab_eval_data_entry_overrun.tex, normal-capture
+% 12MP 30-shot Lv4--Lv6 rows. Reconfirm after the Chapter 4 dataset is frozen.
+In the normal 12MP, 30-shot bursts at overheat levels~4--6, where the deployed
+guard would disable all optional draft work, the controller completed all 90
+captures without a timeout and retained the full preferred draft path for 63
+captures (70.0\%). This recovery of Draft functionality incurred a measurable
+responsiveness cost: mean applied pacing delay across the three bursts ranged
+from 0.85 to 1.15 seconds, with a maximum of 1.50 seconds. These results
+demonstrate why safety, draft fidelity, and pacing cost must be considered
+together.
 
 \smallskip
 \noindent
-\myparagraph{\bf{Contributions}}
+\myparagraph{Contributions}
 We make the following contributions:
 \begin{itemize}[leftmargin=*]
-\item {\bf New problem.} We show that symbolic execution repeatedly re-solves path conditions across successive software releases, wasting substantial SMT-solving time despite the high code similarity between adjacent releases.
-\item {\bf Practical technique.} We present $\ourtool$, a practical technique that progressively refines previously solved query results into reusable query data, enabling symbolic execution to reduce redundant SMT solver invocations while avoiding regenerating the same test cases across successive releases.
-\item {\bf Comprehensive evaluation.} We evaluate $\ourtool$ on consecutive releases of 15 open-source C programs against four baselines. We further demonstrate that $\ourtool$ complements existing symbolic execution techniques and generalizes to concolic testing tools. Our implementation is publicly available at: \url{https://github.com/unknownicse27/reuse}.
+  \item \textbf{Industrial problem characterization.} We characterize how a
+  fleet-wide guard introduced after a lower-tier Filter failure is
+  under-protective and over-restrictive for flagship Draft Bokeh under
+  parallel capture.
+
+  \item \textbf{Coordinated runtime control.} We present a controller that
+  reuses learned upper bounds at two complementary control points:
+  remaining-sequence admission protects the current capture, while
+  capture-availability pacing protects subsequent captures from accumulated
+  backlog.
+
+  \item \textbf{Industrial prototype evaluation.} We evaluate an
+  implementation integrated into a commercial Android camera framework across
+  continuous-capture, image-size, memory-pressure, and overheat conditions,
+  reporting deadline safety, Draft feature availability, prediction quality,
+  and capture-availability pacing cost.
 \end{itemize}

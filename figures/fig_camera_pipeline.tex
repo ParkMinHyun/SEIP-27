@@ -1,0 +1,54 @@
+% Companion draft and final paths in the camera post-processing pipeline.
+% Included from _2_preliminary.tex.
+\begin{tikzpicture}[
+  font=\scriptsize,
+  >=latex,
+  box/.style={draw=black!65, rounded corners=1.5pt, align=center,
+    minimum width=1.72cm, minimum height=0.72cm, inner sep=2pt},
+  draft/.style={box, draw=blue!55!black, fill=blue!10},
+  final/.style={box, draw=black!65, fill=gray!14},
+  gate/.style={box, draw=orange!65!black, fill=orange!12},
+  flow/.style={->, thick, black!70},
+  split/.style={circle, fill=black!60, inner sep=1.5pt}
+]
+
+  \node[box, fill=black!6, minimum width=2.15cm] (capture) at (3.85,3.55)
+    {Multi-frame\\capture};
+  \node[split] (fork) at (3.85,3.02) {};
+  \draw[flow] (capture) -- (fork);
+
+  % Draft lane.
+  \node[anchor=east, font=\scriptsize\bfseries, text=blue!55!black]
+    at (-0.05,2.35) {Draft};
+  \node[draft] (dinput) at (1.00,2.35) {Selected\\input(s)};
+  \node[draft] (deffect) at (3.15,2.35) {Light draft\\processing};
+  \node[draft] (dsave) at (5.30,2.35) {Encode and\\save};
+  \node[draft] (dvisible) at (7.45,2.35) {Draft visible\\to user};
+
+  \draw[flow] (fork) -| (dinput.north);
+  \draw[flow] (dinput) -- (deffect);
+  \draw[flow] (deffect) -- (dsave);
+  \draw[flow] (dsave) -- (dvisible);
+
+  % Final lane.
+  \node[anchor=east, font=\scriptsize\bfseries] at (-0.05,0.90) {Final};
+  \node[final] (finput) at (1.00,0.90) {Required\\frames};
+  \node[gate] (fgate) at (3.15,0.90) {For deferred modes:\\wait for app background};
+  \node[final] (fprocess) at (5.30,0.90) {Full fusion and\\post-processing};
+  \node[final] (fupdate) at (7.45,0.90) {Final image and\\DB update};
+
+  \draw[flow] (fork) -| (finput.north);
+  \draw[flow] (finput) -- (fgate);
+  \draw[flow] (fgate) -- (fprocess);
+  \draw[flow] (fprocess) -- (fupdate);
+
+  % The final result replaces the published draft entry.
+  \draw[flow, dashed, black!50] (fupdate.north) -- (dvisible.south)
+    node[midway, right, align=left, text=black!65] {replace\\draft};
+
+  \draw[decorate, decoration={brace, mirror, amplitude=3pt}, blue!55!black]
+    (0.10,1.83) -- (7.95,1.83);
+  \node[anchor=north, text=blue!55!black] at (4.03,1.72)
+    {capture-critical path};
+
+\end{tikzpicture}

@@ -1,239 +1,234 @@
-% Chapter 2: Preliminaries
-% Sources: docs/Motivation.txt and docs/research-context.md (canonical research context).
-% Self-contained: local notation macros are defined with \providecommand so this file
-% does not clash with the ReuSE macros.tex kept for format reference.
+% Chapter 2: Background and problem characterization.
+% Sources: docs/Motivation.txt and docs/research-context.md.
 
-\providecommand{\wset}{\ensuremath{\mathcal{W}}}        % universe of workloads
-\providecommand{\wl}{\ensuremath{w}}                    % a workload
-\providecommand{\wseq}{\ensuremath{s}}                  % a (remaining) workload sequence
-\providecommand{\tail}{\ensuremath{\tau}}               % mandatory tail of a sequence
-\providecommand{\deadline}{\ensuremath{D}}              % capture deadline
-\providecommand{\bgt}{\ensuremath{b}}                   % remaining time budget at a decision
-\providecommand{\dur}{\ensuremath{T}}                   % actual execution time
-\providecommand{\ub}{\ensuremath{U}}                    % predicted upper bound
+\providecommand{\deadline}{\ensuremath{D}}
+\providecommand{\queuewait}{\ensuremath{q}}
+\providecommand{\dur}{\ensuremath{T}}
+\providecommand{\admitted}{\ensuremath{A}}
+\providecommand{\bgt}{\ensuremath{b}}
 
-\section{Preliminaries}\label{sec:preliminaries}
+\section{Background and Problem Characterization}\label{sec:background}
 
-\subsection{Multi-Frame Capture}\label{sec:multi-frame}
+\subsection{Post-Processing and Draft Delivery}\label{sec:draft-background}
 
-Samsung Galaxy Camera uses multi-frame capture to improve the quality of
-the final image. Rather than producing the result from a single sensor
-frame, the camera framework expands the selected shooting scenario into a
-burst of capture requests that specify the required streams, controls, and
-frame sequence. The hardware abstraction layer (HAL) executes this burst on
-the camera pipeline and asynchronously returns the captured image buffers
-and metadata. These frames are then inserted into the post-processing
-pipeline, which performs scenario-specific processing, multi-frame fusion,
-encoding, and saving to produce the final image.
+The camera framework expands one shutter event into a multi-frame capture.
+The hardware abstraction layer (HAL) returns image buffers and metadata as
+they become available, and the post-processing pipeline collects the required
+frames, applies shot-specific processing and fusion, encodes the result, and
+saves one final photograph. The amount of work depends on the shooting mode,
+but recent pipelines may combine several compute- and memory-intensive imaging
+components.
 
-As Galaxy camera models have evolved, the post-processing pipeline has incorporated 
-an increasing number of AI-based imaging solutions. These
-solutions improve capture quality, but they also increase memory pressure
-and consume substantial compute resources. Running such heavy processing
-immediately after capture can degrade the foreground camera experience, for
-example by causing preview drops or reducing UI responsiveness. Therefore,
-some expensive shot modes defer full fusion and post-processing until the
-camera application switches to the background. This design protects the
-interactive shooting experience, but it also means that the final processed
-image may be generated long after the shutter event.
+The post-processing architecture has included the draft path from its initial
+design. As Figure~\ref{fig:draft-pipeline} shows, the draft and final paths
+consume data from the same capture but serve different purposes. The
+\emph{draft sequence} selects its input early, performs the configured light
+processing, and writes a draft image and media-database entry. This early
+entry lets the application expose the capture before the final path finishes
+and provides a recovery result if final processing fails. When the fully
+processed image becomes available, the framework replaces the draft and
+updates the existing entry.
 
-\subsection{Draft Sequence}\label{sec:draft}
+\begin{figure}[t]
+  \centering
+  \resizebox{\columnwidth}{!}{\input{figures/fig_camera_pipeline}}
+  \caption{Draft and final processing are companion paths of the capture
+  pipeline. The capture-critical draft path publishes an early image. The
+  final path collects the full input and may defer expensive composition
+  until the camera application enters the background; it later replaces the
+  draft through a media-database update.}
+  \label{fig:draft-pipeline}
+\end{figure}
 
-The \emph{draft sequence} reduces this user-visible delay by decoupling
-early image delivery from completion of full post-processing. After capture,
-one frame from the multi-frame burst can be saved as a \emph{draft image}
-and inserted into the media database before final post-processing finishes;
-the database entry is updated when the final processed result becomes
-available. The user can therefore check the captured photo quickly without
-waiting for full post-processing to complete. The draft image can also serve
-as a recovery image if post-processing fails.
+Executing every final composition immediately is undesirable for expensive
+shot modes. Heavy processing competes with preview rendering, capture
+preparation, and other foreground work for compute and memory. The framework
+therefore allows selected modes to postpone final composition until the
+camera application enters the background. This policy protects interactive
+camera use, but the draft then remains visible for the entire deferral and
+processing interval. The quality of the draft is consequently part of the
+user-visible capture experience, not merely an internal recovery detail.
 
-The draft sequence has evolved in stages. The first generation performed no
-image processing in the draft sequence; it saved an unprocessed frame so
-that the capture could be exposed quickly. This became visually awkward for
-features whose effects appear immediately in the user interface, such as
-filters and watermarks. A second generation therefore applied these
-single-frame effects inside the draft sequence, reducing obvious
-draft--final mismatches without running the full post-processing pipeline.
-As post-processing has continued to evolve, however, the gap has become too
-large for single-frame effects alone. A third-generation draft sequence was
-therefore implemented to support lightweight multi-frame composition,
-starting with portrait shooting, the shot mode in which a single-frame
-draft diverges most from the final fused result. Yet this design could not be
-enabled in production across two successive product generations because the
-additional draft-stage computation repeatedly violated the Capture Timeout
-constraint described next.
+\subsection{Evolution of Draft Processing}\label{sec:draft-evolution}
 
-\subsection{Capture Timeout in the Draft Sequence}\label{sec:timeout}
+Draft processing evolved in three steps, summarized in
+Table~\ref{tab:draft-evolution}. The initial sequence applied no imaging
+effect. It encoded and saved an input frame as quickly as possible while the
+full path produced the final result. Effects subsequently added to the final
+path made the untreated draft visibly different from that result.
 
-\emph{Capture Timeout} is the failure in which a capture request, including
-draft-image delivery, does not complete within a hard, framework-enforced
-deadline $\deadline$. It surfaces as a shooting failure, a frozen or
-crashing camera, or missing capture results, and it is treated as a release
-criterion rather than a performance metric: even a single reproducible
-timeout can block product release, and a feature that cannot meet the
-deadline may be dropped or restricted. Because the draft sequence lies
-inside the measured interval, the quantity that governs every decision is
-the \emph{remaining budget} $\bgt = \deadline - t_{\text{elapsed}}$.
+\input{tables/tab_draft_evolution}
+
+The first extension added lightweight, single-frame versions of effects such
+as Filter and Watermark. Without them, an effect visible in the camera user
+interface disappeared in the draft and then reappeared in the final image.
+Applying the effect in both paths reduced this obvious inconsistency, but it
+also placed optional computation inside the Capture Timeout interval. After
+timeouts clustered at high overheat levels, an initial guard disabled
+optional draft processing at level~5 and above. A lower-tier device later
+timed out while executing a draft Filter at level~4, so the common camera
+framework lowered the threshold to~4. Because the same framework code serves
+multiple device classes, flagship devices inherited the tightened restriction.
+
+The second extension targeted portrait capture. Other expensive modes had
+already demonstrated the foreground-usability benefit of background-deferred
+composition. Portrait final composition, however, was still executed while
+the camera remained in the foreground, even though it was both memory
+intensive and long running. As that foreground processing became more
+sophisticated and slower, the untreated single-frame draft remained visible
+for more of the capture interval and differed substantially from the final
+bokeh result. Portrait was therefore selected as the first mode to receive
+lightweight multi-frame processing in the draft sequence: Draft Bokeh
+approximates the final depth effect in the early image. Providing this richer
+draft then made it possible to defer the heavier final portrait composition
+until the application enters the background. The draft path thereby assumed
+more work precisely when its result became more important and longer lived.
+
+Despite the use of lightweight components, Draft Bokeh could not be enabled
+in two consecutive flagship generations because the added draft work
+repeatedly triggered Capture Timeout. The historical overheat guard did not
+resolve these failures: they also occurred at levels below~4, where the guard
+allows optional work to run. This deployment history motivates the need for a
+policy based on actual execution feasibility rather than a threshold inherited
+from an earlier device and workload generation.
+
+\subsection{Capture Timeout under Parallel Capture}\label{sec:timeout}
+
+\emph{Capture Timeout} occurs when capture processing, including draft-image
+delivery, fails to complete within a hard framework deadline \deadline. It can
+surface as a failed shot, an unresponsive or terminated camera, a missing
+result, or failure of subsequent captures. In the product process considered
+here, a reproducible Capture Timeout is a release-blocking failure: an unsafe
+feature must be fixed, restricted, or removed. The objective is therefore not
+to reduce average latency, but to prevent rare deadline violations while
+retaining useful draft processing.
+
+Parallel capture changed the mechanism by which this deadline is consumed.
+Before parallel capture, the next shot was effectively serialized behind
+frame collection and draft completion. On parallel-capable devices, the HAL
+can report \texttt{captureAvailable} as soon as the lower capture pipeline is
+ready for a new request, even if all frames and draft work from the previous
+shot have not completed. The framework forwards this signal to the
+application, which can initiate the next capture immediately.
+
+Draft sequences nevertheless execute on a single worker. As illustrated in
+Figure~\ref{fig:overlap}, a newly captured draft may therefore wait behind an
+older sequence. Its deadline begins with the capture, not when the draft
+worker becomes available, so queueing consumes budget without completing any
+work for that capture. If one draft is extended by thermal throttling,
+scheduling delay, memory pressure, garbage collection, encoding, storage, or
+database latency, the delay propagates to every queued capture behind it.
 
 \begin{figure}[t]
   \centering
   \resizebox{\columnwidth}{!}{\input{figures/fig_draft_overlap}}
   \caption{Draft sequences piling up under parallel continuous capture.
-  Every capture runs the identical stage sequence: blue optional
-  enhancements (bokeh, filter), short gray anonymized stages ``A'' and
-  ``B'', and the dark mandatory encoding. While the draft sequence of
-  capture $i$ is still running, the HAL reports \texttt{captureAvailable},
-  so the application can immediately take the next shot. Because draft
-  sequences execute on a single thread, each subsequent draft sequence
-  queues behind its predecessors and starts with more of its deadline
-  budget already consumed: captures $i$ and $i{+}1$ still finish in time,
-  but capture $i{+}2$ overruns its deadline during the mandatory encoding,
-  causing a Capture Timeout.}
+  Every capture runs the same sequence of optional enhancements (blue),
+  required stages (gray), and mandatory encoding (dark). The HAL reports
+  \texttt{captureAvailable} before the preceding draft completes. Because
+  drafts share one worker, queueing delay grows across captures until capture
+  $i{+}2$ reaches its deadline during mandatory encoding.}
   \label{fig:overlap}
 \end{figure}
 
-\input{tables/tab_timeout_index}
+This behavior explains why average per-stage optimization is insufficient.
+Even an operation that is normally fast can exhibit a tail spike, and even an
+unchanged operation can become unsafe when it begins behind a longer queue.
+The decision must account for both the work remaining in the current draft
+and work accumulated across recent captures.
 
-\myparagraph{Why the draft sequence times out}
-Two developments turned the draft sequence into a timeout hotspot. First,
-parallel capture changed when the next shot can begin. Before parallel
-capture, the next capture was effectively serialized until the previous
-capture had collected its frames and completed the draft sequence. On
-parallel-capture devices, the HAL reports readiness for the next request as
-a partial result (\texttt{captureAvailable}), which the framework forwards
-to the application; the next capture can therefore begin even if the
-previous draft sequence has not completed. Draft sequences still execute on
-a single thread, so a new draft
-sequence can queue behind an older one and start with part of its timeout
-budget already consumed (Figure~\ref{fig:overlap}). Timeout risk therefore
-depends on recent capture history, not only on the current capture's own
-workloads.
+\subsection{Limits of the Overheat Guard}\label{sec:guard-limit}
 
-Second, the remaining failures are tail events rather than average-case
-inefficiencies. Many obvious optimizations can already be applied in a
-production pipeline, including avoiding duplicated work, simplifying logic,
-or deferring expensive processing. The failures that remain are often caused
-by state-dependent factors---thermal throttling, frequency scaling,
-scheduling delay, memory pressure and garbage collection, storage and
-database latency---under which a normally fast stage occasionally spikes.
-What matters is not whether each stage is fast on average, but whether the
-whole remaining sequence finishes before the deadline in unfavorable device
-states.
-
-\myparagraph{Measured timeout behavior}
-Table~\ref{tab:timeout_index} illustrates this behavior in a 30-shot
-continuous portrait burst on a current-generation flagship device. We swept
-the overheat level, image-size tier, memory condition, and the two
-expensive draft-stage configurations that matter most for portrait
-admission, bokeh with filter and bokeh alone; each entry reports the first
-shot index at which Capture Timeout occurred. Timeouts are cumulative: no
-configuration fails on the first shot, but failures move earlier as the
-device heats and the queued draft work erodes the remaining budget. With
-bokeh and filter enabled, the 12MP normal case first fails at level~2 on
-shot~24 and reaches shot~7 by level~6; the 24MP case is already fragile at
-level~0, timing out on shot~29 under normal capture and shot~26 under memory
-pressure. Memory pressure shifts the same workload much closer to the
-deadline: 24MP bokeh with filter fails by shot~5 at level~3 and by shot~4
-at level~4. At level~5 and above, the camera no longer executes the draft
-path in 24MP mode and instead falls back to 12MP mode; the 24MP columns
-therefore repeat the corresponding 12MP-mode measurements rather than
-representing independent 24MP measurements. Risk is also
-configuration-dependent. Bokeh alone
-usually survives longer than bokeh with filter, but it still times out under
-higher heat or pressure, showing that the admission decision must reason
-about the remaining sequence, image-size tier, and runtime state together.
-
-Meanwhile, the pressure to enrich the draft sequence keeps growing. As the
-draft--final gap widened, lightweight multi-frame composition in the draft
-path became a product requirement. Yet even deliberately light imaging
-solutions could not be enabled across multiple product generations because
-timeout regressions kept recurring. This experience motivates the question
-this paper studies: how can optional draft-stage processing be admitted
-aggressively when it is safe, without ever committing the sequence to work
-it cannot finish in time?
-
-\subsection{Naive Approaches}\label{sec:naive}
-
-\myparagraph{Deployed practice: thermal-level guards}
-The defense accumulated in practice is a set of scattered guards keyed on
-device state, most prominently the thermal level:
+The deployed safeguard uses the overheat level as a proxy for this changing
+risk. Its policy can be represented schematically as:
 
 \noindent
 \begin{minipage}{\columnwidth}
 \begin{lstlisting}[numbers=none]
-if (thermalLevel >= THERMAL_GUARD_LEVEL) {
-    return  // skip optional work
+if (overheatLevel >= 4) {
+    return  // skip optional Draft work
 }
 \end{lstlisting}
 \end{minipage}
 
 \noindent
-Introduced after timeouts were found to cluster above a thermal threshold
-and later tightened when failures appeared on a lower-tier device, the
-guard applies fleet-wide because the framework ships as common code without
-per-model branching. Table~\ref{tab:timeout_index} shows why this is
-inadequate: with both stages enabled, timeouts already occur at low
-overheat levels below a fixed guard threshold, especially for 24MP images
-and memory-pressure captures. Tightening the threshold enough to cover
-those worst cases would also suppress less risky cases at the same overheat
-level, such as normal 12MP captures that still complete the measured burst.
-The guard therefore cannot express the real decision boundary, which varies
-with workload sequence, image-size tier, memory pressure, and accumulated
-queueing delay. Both errors are user-visible: a skipped effect that later
-appears in the final image yields a draft--final inconsistency, and
-independent per-shot decisions cause shot-to-shot jitter in continuous
-capture.
+The guard was appropriate as a conservative release response to the observed
+lower-tier Filter failure. It is inexpensive, deterministic, and requires no
+runtime history. Its limitation is not that overheat is irrelevant, but that
+one device-state value cannot represent workload demand, execution
+variability, or accumulated queueing. The same level can correspond to
+different risks for Bokeh and Filter, 12MP and 24MP inputs, normal and
+memory-pressure captures, and early and late positions in a burst.
 
-\myparagraph{Simple predictors}
-Replacing the guard with a straightforward latency predictor does not fare
-better. A statically profiled worst-case reservation is safe but assumes a
-throttled device on every capture, collapsing the admission rate exactly
-when the budget is ample. A running mean or last observed value tracks the
-center of the latency distribution rather than its tail, and a fixed
-percentage margin cannot repair it, because the right margin is precisely
-what differs across devices and thermal states. And deciding each stage in
-isolation ignores the structure of the pipeline: admitting a stage because
-it alone fits the budget can still starve the mandatory encoding tail
-behind it.
+Table~\ref{tab:timeout_index} illustrates this mismatch in our motivating
+characterization on a current-generation flagship. To expose behavior
+normally hidden by the
+guard, the indicated Bokeh and Filter configurations are executed at every
+level. Each cell reports the first timeout in a 30-shot continuous portrait
+burst. Below the guard boundary, Bokeh with Filter already times out in the
+24MP normal case at level~0 and in the 12MP normal case at level~2. The guard
+therefore provides \emph{under-protection}: a level below~4 does not imply
+that the configured draft sequence is safe.
 
-\myparagraph{Optional and mandatory draft work}
-The discussion above implies a role distinction among operations in the
-draft sequence. Some operations are optional enhancements: skipping them
-preserves the ability to save and deliver a draft image, but it may make the
-draft visibly inconsistent with the final processed result. Other configured
-operations run as part of the sequence but are not admission points in the
-current system. The encoding operation is mandatory because the draft image
-cannot be delivered without saving it. A timeout-prevention policy may
-therefore skip optional enhancement work, but it must still leave enough
-time for all non-skipped work and the mandatory save.
+\input{tables/tab_timeout_index}
 
-\myparagraph{Workloads and sequences}
-We model each draft operation as a \emph{workload} $\wl \in \wset$
-identified by its operation type and image-size tier, plus output format and
-pending-request state for encoding. These keys let timing samples for
-comparable work accumulate across captures without modeling every exact
-resolution separately. Workloads play three roles: \emph{admission-gated}
-workloads require a decision before execution; \emph{observed} workloads run
-and are measured; and the \emph{complete} workload is the mandatory encoding
-tail $\tail$. At any decision point, the remaining draft work is the ordered
-suffix $\wseq = \langle \wl_1, \dots, \wl_m\rangle$. Its actual execution
-time is the sum of the workload durations in the suffix. Because this
-duration varies with device state and runtime interference, the framework
-cannot rely on a static cost table.
+The same table also shows \emph{over-restriction}. At level~4, for example,
+the first 12MP normal capture with Bokeh and Filter does not time out until
+shot~10, and Bokeh alone survives until shot~16. The deployed guard would
+instead skip optional work from the first shot because it cannot distinguish
+the initial empty pipeline from the accumulated backlog later in the burst.
+The problem is not solved by moving the threshold: lowering it suppresses
+more safe executions, while raising it exposes more unsafe ones. Nor does a
+separate threshold per device or effect address runtime queueing and tail
+variation within that configuration.
 
-\smallskip
-\noindent
-These observations motivate treating Capture Timeout prevention as an
-\emph{admission} problem over the ordered remaining workload sequence:
-before an optional stage runs, it is admitted only if a conservative upper
-bound on the remaining sequence---the stage plus all work after it,
-including the mandatory tail $\tail$---satisfies $\ub(\wseq) \le \bgt$.
-The bound must be learned online and on-device from observed durations,
-produce usable decisions from few or no samples, track drift as the device
-heats and throttles, and remain consistent across sequences that share
-workloads. The next section presents our context-aware admission controller
-for the draft sequence, built around these requirements.
+\subsection{A Two-Control-Point Problem}\label{sec:control-problem}
 
-\input{tables/tab_eval_admission}
-\input{tables/tab_eval_data_entry}
+Let capture $i$ start at time $a_i$ and its draft execution start at $s_i$.
+Its queueing delay is $\queuewait_i=s_i-a_i$. Let $\admitted_i$ denote the
+optional work selected for that capture, and let
+$\dur_i(\admitted_i)$ be the execution time of the resulting draft sequence,
+including non-optional work and mandatory encoding. Meeting the deadline
+requires
+
+\begin{equation}
+  \queuewait_i + \dur_i(\admitted_i) \leq \deadline.
+  \label{eq:draft-deadline}
+\end{equation}
+
+The framework can influence the two terms at different control points.
+\emph{Workload admission} changes $\admitted_i$ and hence the execution demand
+$\dur_i(\admitted_i)$ of the current capture. It is the last opportunity to
+protect a capture after queueing has already consumed part of its budget, but
+it cannot recover that lost time. Repeatedly relying on admission alone can
+therefore preserve safety by removing Bokeh from later shots, recreating the
+draft--final inconsistency that motivated the feature.
+
+\emph{Capture pacing} acts earlier on the next capture. By delaying
+\texttt{captureAvailable}, the framework gives draft work associated with
+already released captures time to drain before the application can begin
+another shot, reducing the future queueing term $\queuewait_{i+1}$. Pacing
+preserves execution budget and can therefore retain more optional work, but
+its cost is directly user-visible: a nonzero pacing delay postpones the
+earliest next-shot opportunity and can increase the observed inter-shot
+interval. Pacing alone is also insufficient because a tail spike can still
+occur after a capture has been released.
+
+We consequently formulate Draft Bokeh enablement as runtime control with
+three explicit objectives:
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Deadline safety:} prevent Capture Timeout, including during
+  long continuous-capture bursts and runtime slowdowns;
+  \item \textbf{Draft fidelity:} retain Bokeh, Filter, and the complete
+  preferred draft path whenever their remaining work is feasible; and
+  \item \textbf{Capture responsiveness:} minimize pacing delay and the
+  resulting shot-to-shot slowdown.
+\end{enumerate}
+
+These objectives expose a trade-off that the binary overheat guard hides.
+The controller must decide both how much work the current draft can safely
+execute and how soon the next capture can safely enter, using a conservative
+estimate of tail execution time rather than an average or fixed state
+threshold. The next section presents the model and the coordinated admission
+and pacing mechanisms used to make these decisions.
