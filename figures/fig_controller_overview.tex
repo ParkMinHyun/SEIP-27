@@ -1,0 +1,204 @@
+% Layered architecture of the Context-Aware Draft Sequence Controller
+% (Figure~\ref{fig:controller}). Included from 3_1_overview.tex.
+%
+% Implementation evidence: private ML repository, commit 5480cd5
+% (DraftSequenceExecutionProfiler / DraftSequenceExecutionPredictor /
+% CaptureAvailablePacer / CaptureAvailableApmPolicy).
+%
+% Layout: three horizontal layer bands (Application / Camera framework /
+% HAL). The framework band hosts (left) the single Draft worker running
+% one capture's stage chain top-down, and (right) the controller with its
+% modules: Execution Profiler (interface to the chain), Remaining-Sequence
+% Admission, the shared Tail-Calibrated Execution-Time Model, and
+% Capture-Availability Pacing. Flows: next-shot request App->HAL (far
+% left), capture buffers HAL->Draft queue (left), captureAvailable
+% HAL->policy->pacing->App (right edge, released after the pacing delay).
+% Stage colors follow fig_draft_overlap (blue optional, gray required,
+% dark reserved); orange marks controller components. Circled numbers
+% match Section 3.1: (1) pacing, (2) admission, (3) watchdog,
+% (4) learning.
+% Requires: tikz library positioning; pifont.
+\begin{figure}[t]
+  \centering
+  \resizebox{\columnwidth}{!}{%
+  \begin{tikzpicture}[
+    font=\scriptsize,
+    >=latex,
+    layer/.style={draw=black!30, fill=gray!5, rounded corners=2pt},
+    layerlabel/.style={anchor=north west, font=\scriptsize\bfseries,
+      text=black!60},
+    appbox/.style={draw=black!65, fill=gray!12, rounded corners=1pt,
+      align=center},
+    optstage/.style={draw=blue!45!black, fill=blue!14, align=center},
+    othstage/.style={draw=black!55, fill=gray!22, align=center},
+    encstage/.style={draw=black!80, fill=black!72, align=center},
+    ctrl/.style={draw=orange!75!black, fill=orange!12, rounded corners=1pt,
+      align=center},
+    ctrlmod/.style={draw=orange!75!black, fill=white, rounded corners=1pt,
+      align=center},
+    flow/.style={->, thick, black!65, rounded corners=2pt},
+    gated/.style={<->, thick, orange!75!black},
+    ctrlflow/.style={->, thick, orange!75!black, rounded corners=2pt},
+    note/.style={text=black!55, align=center}
+  ]
+
+    % ===================== layer bands =====================
+    \draw[layer] (0.15,9.25) rectangle (9.05,10.55);
+    \node[layerlabel] at (0.22,10.50) {Application};
+    \draw[layer, fill=white] (0.15,1.55) rectangle (9.05,8.95);
+    \node[layerlabel] at (0.22,8.91) {Camera framework};
+    \draw[layer] (0.15,0.00) rectangle (9.05,1.25);
+    \node[layerlabel] at (0.22,1.20) {Hardware abstraction layer (HAL)};
+
+    % ===================== application / HAL ================
+    \draw[appbox] (0.40,9.40) rectangle (8.30,10.08);
+    \node at (4.35,9.74) {camera application};
+    \draw[appbox] (0.40,0.18) rectangle (8.30,0.76);
+    \node at (4.35,0.47) {camera HAL (sensor \& capture pipeline)};
+
+    % next-shot request: application -> HAL (far left)
+    \draw[flow] (0.55,9.40) -- (0.55,0.76);
+    \node[note, rotate=90] at (0.40,6.90) {next-shot request};
+
+    % capture buffers: HAL -> draft queue (left)
+    \draw[flow] (0.85,0.76) -- (0.85,7.72) -- (1.30,7.72);
+    \node[note, rotate=90] at (0.70,4.60) {capture buffers};
+
+    % ===================== single draft worker ==============
+    \draw[fill=gray!6, draw=black!40, dashed, rounded corners=2pt]
+      (1.10,2.30) rectangle (3.95,8.45);
+    \node[anchor=north, font=\scriptsize] at (2.525,8.42)
+      {single Draft worker};
+
+    \draw[appbox] (1.30,7.42) rectangle (3.80,8.02);
+    \node at (2.55,7.72) {Draft queue (FIFO)};
+    \draw[flow] (2.55,7.42) -- (2.55,7.20);
+
+    \draw[optstage] (1.30,6.65) rectangle (3.80,7.20);
+    \node at (2.55,6.925) {Bokeh};
+    \draw[flow] (2.55,6.65) -- (2.55,6.30);
+    \draw[othstage] (1.30,5.75) rectangle (3.80,6.30);
+    \node at (2.55,6.025) {Dynamic Function};
+    \draw[flow] (2.55,5.75) -- (2.55,5.40);
+    \draw[optstage] (1.30,4.85) rectangle (3.80,5.40);
+    \node at (2.55,5.125) {Filter};
+    \draw[flow] (2.55,4.85) -- (2.55,4.50);
+    \draw[othstage] (1.30,3.95) rectangle (3.80,4.50);
+    \node at (2.55,4.225) {Watermark};
+    \draw[flow] (2.55,3.95) -- (2.55,3.60);
+    \draw[encstage] (1.30,3.05) rectangle (3.80,3.60);
+    \node at (2.55,3.325) {\textcolor{white}{Encode \& save}};
+
+    % draft image produced at capture end
+    \draw[flow] (2.55,3.05) -- (2.55,2.72);
+    \draw[draw=black!60, fill=white] (2.25,2.38) rectangle (2.85,2.72);
+    \fill[gray!50] (2.29,2.42) -- (2.42,2.62) -- (2.55,2.42) -- cycle;
+    \fill[gray!50] (2.52,2.42) -- (2.66,2.66) -- (2.80,2.42) -- cycle;
+    \node[note, anchor=west, font=\tiny] at (2.93,2.55) {Draft image};
+
+    % ===================== controller ========================
+    \draw[ctrl] (4.40,2.55) rectangle (8.50,8.45);
+    \node[anchor=north, font=\scriptsize\bfseries] at (6.45,8.42)
+      {Context-Aware Draft Sequence Controller};
+
+    % execution profiler: tall, thin interface to the node chain
+    \draw[ctrlmod] (4.60,3.00) rectangle (5.75,8.00);
+    \node[rotate=90, font=\scriptsize\bfseries, text=orange!60!black]
+      at (5.05,5.50) {Execution Profiler};
+    \node[rotate=90, font=\tiny, text=black!60] at (5.45,5.50)
+      {classifies nodes into workload keys; reads live budget $b$};
+
+    % per-stage links: double-headed = admission-gated optional stage,
+    % single-headed = measured-only work
+    \draw[gated] (3.80,6.925) -- (4.60,6.925);
+    \draw[flow]  (3.80,6.025) -- (4.60,6.025);
+    \draw[gated] (3.80,5.125) -- (4.60,5.125);
+    \draw[gated] (3.80,4.225) -- (4.60,4.225);
+    \draw[flow]  (3.80,3.325) -- (4.60,3.325);
+
+    % remaining-sequence admission
+    \draw[ctrlmod] (6.00,6.30) rectangle (8.35,8.00);
+    \node[font=\scriptsize\bfseries] at (7.175,7.74)
+      {Remaining-Sequence};
+    \node[font=\scriptsize\bfseries] at (7.175,7.47) {Admission};
+    \node[font=\tiny] at (7.175,7.10)
+      {\ding{183} admit iff $U(\sigma)\le b$, else skip};
+    \node[font=\tiny] at (7.175,6.78)
+      {\ding{184} watchdog $\tau = b - U(\sigma^{\mathrm{rsv}})$};
+    \node[font=\tiny, text=black!60] at (7.175,6.50)
+      {cold start $\Rightarrow$ admit};
+
+    % shared model
+    \draw[ctrlmod] (6.00,4.55) rectangle (8.35,6.05);
+    \node[font=\scriptsize\bfseries] at (7.175,5.80) {Tail-Calibrated};
+    \node[font=\scriptsize\bfseries] at (7.175,5.53)
+      {Execution-Time Model};
+    \node[font=\tiny] at (7.175,5.17)
+      {per-workload EWMA $\hat{T}(w)$};
+    \node[font=\tiny] at (7.175,4.92)
+      {$\times$ sequence residual quantile $e^{\hat{s}_q(\sigma)}$};
+    \node[font=\tiny, text=black!60] at (7.175,4.67)
+      {\ding{185} learned at capture end, shared};
+
+    % capture-availability pacing
+    \draw[ctrlmod] (6.00,2.80) rectangle (8.35,4.30);
+    \node[font=\scriptsize\bfseries] at (7.175,4.04)
+      {Capture-Availability};
+    \node[font=\scriptsize\bfseries] at (7.175,3.77) {Pacing};
+    \node[font=\tiny] at (7.175,3.39)
+      {\ding{182} $\delta=\max(\delta_{\mathrm{lvl}},\,\delta_{\mathrm{bkl}})$};
+    \node[font=\tiny, text=black!60] at (7.175,3.08)
+      {backlog clock $B(t)$};
+
+    % profiler <-> modules
+    \draw[gated] (5.75,7.10) -- (6.00,7.10);
+    \draw[ctrlflow] (5.75,5.35) -- (6.00,5.35);
+    \draw[ctrlflow] (5.75,3.55) -- (6.00,3.55);
+
+    % model -> admission / pacing (shared estimates)
+    \draw[ctrlflow] (6.45,6.05) -- (6.45,6.30);
+    \node[font=\tiny, anchor=west, text=black!60] at (6.57,6.17)
+      {$U(\sigma)$};
+    \draw[ctrlflow] (6.45,4.55) -- (6.45,4.30);
+    \node[font=\tiny, anchor=west, text=black!60] at (6.57,4.42)
+      {$P^{\mathrm{pref}}\!, U^{\mathrm{pref}}$};
+
+    % ===================== arrival-side path =================
+    % existing framework policy layer that delivers captureAvailable
+    \draw[appbox] (4.60,1.80) rectangle (8.35,2.30);
+    \node[font=\tiny, align=center] at (6.475,2.05)
+      {existing performance-policy layer (callback delivery)};
+
+    \draw[flow] (6.00,0.76) -- (6.00,1.80);
+    \node[font=\tiny\ttfamily, anchor=west, text=black!55] at (6.12,1.30)
+      {captureAvailable};
+
+    \draw[gated] (7.175,2.30) -- (7.175,2.80);
+    \node[font=\tiny, anchor=west, text=black!60] at (7.28,2.55)
+      {delay $\delta$};
+
+    % release to the application, delayed by delta
+    \draw[ctrlflow] (8.35,2.05) -- (8.75,2.05) -- (8.75,9.74)
+      -- (8.30,9.74);
+    \node[note, rotate=90, text=orange!75!black] at (8.93,5.90)
+      {\ding{182} release delayed by $\delta$};
+
+  \end{tikzpicture}%
+  }
+  \caption{Architecture of the Context-Aware Draft Sequence Controller
+  inside the camera framework, between the application and the HAL. Draft
+  stages (colors as in Figure~\ref{fig:overlap}) execute top-down on the
+  single Draft worker; double-headed arrows mark admission-gated optional
+  stages, single-headed arrows measured-only work. The Execution Profiler
+  classifies each node into a workload key and mediates between the
+  pipeline and the controller: \ding{183}~an optional stage runs only if
+  the calibrated bound $U(\sigma)$ of its remaining suffix fits the live
+  budget $b$; \ding{184}~admitted stages run under a watchdog that
+  reserves the mandatory tail; \ding{185}~observed durations and sequence
+  residuals train the shared model at capture end. On the arrival side,
+  the framework's performance-policy layer consults Capture-Availability
+  Pacing before delivering each \texttt{captureAvailable} callback,
+  \ding{182}~releasing it to the application only after the model-derived
+  delay $\delta$, which gates when the next shot can start.}
+  \label{fig:controller}
+\end{figure}

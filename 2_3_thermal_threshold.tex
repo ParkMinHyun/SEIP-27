@@ -1,13 +1,10 @@
 \subsection{A Thermal Threshold Cannot Separate Safe and Unsafe Captures}
 \label{sec:guard-limit}
 
-Parallel capture predated the current thermal safeguard. The safeguard was
-introduced later, after a Filter-related Capture Timeout on a lower-tier
-model at thermal level~4. Because the camera framework shares the policy across
-models, the resulting rule disables optional Draft stages at level~4 and above
-on flagship devices as well. This static rule is appropriate for containing a
-known release incident, but it neither observes the active workload nor the
-queue that determines the remaining deadline.
+The safeguard initially disabled optional Draft stages at thermal level~5 and
+above. It was later tightened to level~4 after a Filter-related Capture Timeout
+on a lower-tier model. Because the camera framework shares this policy across
+models, the stricter threshold applies to flagship devices as well.
 
 Table~\ref{tab:timeout_index} characterizes the limitation on a
 current-generation flagship. For this experiment, we bypassed the deployed

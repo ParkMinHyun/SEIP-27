@@ -6,8 +6,8 @@ framework, it became a release-blocking systems problem. Modern mobile cameras f
 final photograph from multiple frames using compute- and memory-intensive
 processing. To preserve preview responsiveness, selected capture modes defer
 this full composition until the camera application moves to the background.
-In the meantime, a deadline-critical \emph{Draft Sequence} writes an early
-JPEG so that the user can inspect the new capture and the system retains a
+In the meantime, a deadline-critical \emph{Draft Sequence} produces an early
+image so that the user can inspect the new capture and the system retains a
 recovery image. As final processing has become more sophisticated, however,
 the Draft remains visible for longer and can differ sharply from the final
 result. The mismatch is particularly conspicuous in portrait mode: the early
@@ -18,9 +18,10 @@ processing acceptable to users.
 
 Placing these effects on the Draft path is difficult because the path is part
 of a fixed \emph{Capture Timeout} deadline that also includes mandatory
-encoding and result publication. Meeting this deadline is a mandatory
-pre-release key performance indicator (KPI) in this product line: a reproducible
-violation requires the responsible feature to be fixed, restricted, or removed.
+encoding and result publication. Capture Timeout compliance is one of this
+product line's highest-priority camera reliability KPIs and a hard release gate:
+any reproducible violation blocks launch until the responsible feature is fixed,
+restricted, or removed.
 Moreover, the deadline is not an isolated per-image compute budget. Parallel
 capture allows the hardware
 abstraction layer (HAL) to become ready for another shot before the preceding

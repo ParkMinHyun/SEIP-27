@@ -1,9 +1,17 @@
-\section{Methodology}\label{sec:methodology}
+% Chapter 3: the Context-Aware Draft Sequence Controller.
+%
+% Implementation evidence: private ML repository
+% (https://github.com/ParkMinhyun/ML), commit 5480cd5
+% "Add db data to replay pacing policy 2". Key sources:
+% DraftSequenceExecutionPredictor.kt (model, admission, watchdog),
+% CaptureAvailablePacer.kt (pacing), DraftSequenceExecutionProfiler.kt
+% (node classification, integration), WorkloadKey.kt /
+% WorkloadSequenceKey.kt (taxonomy), CaptureMetrics.kt (observability).
 
-\input{3_1_overview}
+\section{The Context-Aware Draft Sequence Controller}\label{sec:approach}
 
-\input{3_2_ourtool}
-
-\input{3_3_generalize_stage}
-
-\input{3_4_compare_stage}
+\input{3_1_overview.tex}
+\input{3_2_workload_model.tex}
+\input{3_3_admission.tex}
+\input{3_4_pacing.tex}
+\input{3_5_implementation.tex}

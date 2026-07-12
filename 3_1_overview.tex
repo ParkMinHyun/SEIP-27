@@ -1,16 +1,57 @@
-\subsection{Overview}\label{sec:overview}
+\subsection{Overview}
+\label{sec:overview}
 
-\begin{figure}
-    \centering
-    \includegraphics[width=\columnwidth]{figures/overview3.pdf}
-    \caption{The overview of $\ourtool$.}
-    \label{fig:overview}
-\end{figure}
-Figure~\ref{fig:overview} presents an overview of $\ourtool$. During symbolic execution, $\ourtool$ accumulates query data and refines it for reuse across subsequent software releases. To achieve this, $\ourtool$ first refines query data through three stages: $\sample$, $\extract$, and $\generalize$. After symbolic execution completes, satisfiable and unsatisfiable query data are processed separately. For satisfiable query data, the $\sample$ stage resamples satisfying assignments to generate diverse test cases from the same path condition. For unsatisfiable query data, the $\extract$ stage identifies a minimal infeasible core from the path condition, allowing later path conditions containing the same core to be classified as unsatisfiable without invoking the SMT solver.
-The $\generalize$ stage then abstracts both satisfiable and unsatisfiable query data into generalized representations, allowing multiple related query data entries to be merged into a single reusable entry. 
+Figure~\ref{fig:controller} shows where the Context-Aware Draft Sequence
+Controller sits in the camera stack: inside the camera framework, between
+the application and the HAL. The controller leaves the pipeline structure
+of Section~\ref{sec:background} unchanged: captures still arrive in parallel,
+and Draft Sequences still execute serially on the single Draft worker. What
+changes is that every optional Draft stage must now be admitted against the
+capture's remaining deadline budget, and every \texttt{captureAvailable}
+callback may be briefly held back when the model predicts that starting
+another capture would exhaust that budget. Both decisions are driven by one
+shared execution-time model.
 
-The refined query data are subsequently accumulated and reused during symbolic execution of later software releases. For each newly generated path condition, $\ourtool$ prioritizes the most promising query data for reuse and determines whether they can be safely reused without invoking the SMT solver. This iterative process progressively accumulates refined query data, reducing redundant SMT solving and improving the efficiency of symbolic execution across software releases.
+\input{figures/fig_controller_overview.tex}
 
-%Figure~\ref{fig:overview} illustrates the process by which $\ourtool$ refines symbolic execution results and delivers them to subsequent executions. Given query-solving results from a previous execution, $\ourtool$ refines them through four stages---$\sample$, $\extract$, $\generalize$, and $\compare$---for efficient reuse. Once symbolic execution completes and returns query results, $\ourtool$ processes unsatisfiable and satisfiable query data separately, each through an independent stage. In the $\sample$ stage, $\ourtool$ constructs new assignments for satisfiable query path conditions that can be satisfied by more than one assignment. The re-sampled assignments allow $\ourtool$ to generate diverse test cases from a single path condition. For unsatisfiable query data, the $\extract$ stage identifies a minimal set of conditions that makes each query’s path condition unsatisfiable. Using the extracted core condition set, any path condition containing this set is directly calculated as unsatisfiable.  
+The controller reasons about \emph{workloads} rather than nodes: each node
+execution on the Draft worker is classified into a workload key that
+captures its stage type and cost-relevant context, and each admission
+decision concerns an ordered \emph{sequence} of workloads---the planned
+suffix from the decision point through the mandatory encode-and-save tail
+(Section~\ref{sec:model}). For any such sequence, the model combines
+per-workload duration levels with a sequence-level record of past
+underprediction to produce a calibrated upper bound on execution time.
 
-%After refining the query results, in the $\generalize$ stage, $\ourtool$ transforms path conditions in the results by abstracting their variables and values. This allows multiple queries to be represented by a single data entry. Lastly, with the well-structured dataset, $\ourtool$ loads them to effectively reduce constraint-solving costs when testing new releases. In the $\compare$ stage, $\ourtool$ computes the path-condition-based similarity for each loaded data entry and tries highly similar entries first when checking the feasibility of a query. This four-stage process repeats for each execution on a new release, gradually accumulating data and making testing increasingly efficient for subsequent releases. 
+A capture proceeds through the controller as follows. When the HAL reports
+readiness for the next shot, the pacer decides how long to hold the
+callback before the application may capture again (\ding{182},
+Section~\ref{sec:pacing}). When the capture's Draft Sequence obtains the
+worker, the controller snapshots the capture's remaining budget and
+refreshes the pacing state from the model. Before each optional stage
+executes, the remaining suffix of the sequence is admitted only if its
+upper bound fits the live budget (\ding{183},
+Section~\ref{sec:admission}); an admitted optional stage then runs under a
+watchdog that reserves budget for the mandatory tail (\ding{184}). At
+capture end, the observed stage durations and the resulting sequence
+residuals update the model (\ding{185}), closing the loop for subsequent
+captures.
+
+Three design decisions shape this architecture. First, \emph{the primary
+prediction signal is observed execution history, not device state}. The
+framework ships across many device models, where the same thermal level
+implies different risk, throttling and frequency scaling are nonlinear, and
+a snapshot taken before a stage cannot reflect events during it. Slowdowns
+from any of these causes surface directly in observed durations, which the
+model tracks; device-state snapshots are still recorded with every
+decision, but only for offline analysis
+(Section~\ref{sec:implementation}). Second, \emph{one model serves both
+control points}. Admission and pacing consume the same per-sequence
+estimates, so the work that admission agrees to run is exactly the work
+that pacing paces arrivals against, and the two decisions cannot act on
+inconsistent views of the pipeline. Third, \emph{the controller introduces
+no hand-tuned latency thresholds}. Every decision compares a learned bound
+against the existing product deadline \deadline{}; the only fixed
+constants are two smoothing parameters of the model itself
+(Section~\ref{sec:model}), and no thermal threshold appears anywhere in
+the decision path.

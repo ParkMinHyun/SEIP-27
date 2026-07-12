@@ -1,43 +1,55 @@
-\subsection{Parallel Capture Creates Cross-Shot Interference}
+\subsection{Deadline Contention under Parallel Capture}
 \label{sec:timeout}
 
-Parallel capture substantially shortens the shot-to-shot interval. The HAL can
-report capture availability before all buffers and Draft processing from the
-preceding shot have completed. The framework then notifies the camera
-application, allowing the next capture to begin while the preceding pipeline is
-still running. This overlap markedly improves responsiveness during repeated
-shooting.
+Parallel capture is a modern production optimization that substantially reduces
+the shot-to-shot interval. The HAL can report capture availability before all
+buffers and Draft processing from the preceding shot have completed. The camera
+application can therefore start the next capture while the preceding pipeline
+is still running, markedly improving responsiveness during repeated shooting.
 
-The overlap can nevertheless enqueue Draft work faster than it completes.
-Although each capture uses independent processing-node instances, the production
-framework schedules Draft Sequences on a single worker. Running several
-high-resolution image-processing pipelines concurrently would increase peak
-compute and memory contention and degrade foreground camera usability. Serial
-execution bounds this contention and also preserves capture order. Parallel
-captures can therefore begin in quick succession, while their Draft Sequences
-execute one by one.
+Despite this overlap, the framework serializes Draft Sequences on a single
+worker to preserve the order in which results are shown and stored and to bound
+their compute and memory demand while preview and ongoing capture remain active.
+Parallel capture can therefore enqueue Draft work faster than the worker
+completes it, causing later Drafts to wait and begin with less of their Capture
+Timeout budget remaining.
 
-Meeting the Capture Timeout deadline is a mandatory pre-release KPI: the first
-capture result must be produced within a fixed product deadline. The Draft
-Sequence is subject to this KPI because it produces the image first shown to the
-user and retained for recovery while final composition may be deferred. Its
-timeout budget starts at the capture event, not when its Draft Sequence obtains
-the worker. As Figure~\ref{fig:overlap} illustrates, later captures can thus
-consume part of their budgets waiting behind earlier Draft work. Even with
-identical execution times, the remaining budget shrinks across a burst until a
-later capture incurs a \emph{Capture Timeout} during mandatory processing.
+Within the product line studied here, Capture Timeout compliance is one of the
+highest-priority camera reliability KPIs and is enforced as a hard release gate:
+a reproducible violation blocks launch until the responsible feature is fixed,
+restricted, or removed. The Draft Sequence falls within this
+deadline because it produces the first user-visible result, which also serves
+as the recovery image. A timeout on this path is therefore treated as a capture
+failure, not as a delay in optional post-processing. Let capture $i$ start at
+$a_i$ and obtain the Draft worker at $s_i$. Let
+$T_i^{\mathrm{effects}}$ denote the time spent on enabled effects, such as
+Bokeh, Filter, and Watermark, and let $T_i^{\mathrm{tail}}$ denote the remaining
+required work, including encoding and saving. Capture $i$ meets the fixed
+deadline \deadline{} only if
+
+\begin{equation}
+  T_i^{\mathrm{effects}} + T_i^{\mathrm{tail}}
+  \leq \underbrace{\deadline - (s_i-a_i)}_{b_i}.
+  \label{eq:draft-budget}
+\end{equation}
+
+Here, $b_i$ is the budget remaining when Draft processing begins. As queueing
+increases $s_i-a_i$, later captures have less time for their own Draft work.
+
+Figure~\ref{fig:overlap} illustrates this cumulative budget loss. Even with
+identical Draft execution times, later captures spend progressively more of
+their budgets waiting, until the remaining budget no longer covers the
+mandatory tail.
 
 \begin{figure}[t]
   \centering
   \resizebox{\columnwidth}{!}{\input{figures/fig_draft_overlap}}
-  \caption{Cross-shot deadline interference under parallel capture. Draft
-  Sequences queue on one worker, while each timeout budget starts at the
-  corresponding capture. Waiting therefore consumes progressively more budget
-  until capture $i{+}2$ times out during mandatory encoding.}
+  \caption{Deadline contention under parallel capture. Captures arrive before
+  preceding Draft work completes, but Draft Sequences queue on one worker. Each
+  timeout budget starts at capture time, so later captures retain progressively
+  less budget for their own Draft processing.}
   \label{fig:overlap}
 \end{figure}
 
-A single reproducible violation can require the affected feature to be fixed,
-restricted, or removed before launch. Because queueing varies with the active
-workload and burst history, the next section examines why a thermal-only
-threshold cannot reliably distinguish safe from unsafe captures.
+The deployed safeguard, however, considers only thermal level and observes
+neither the enabled Draft workload nor the accumulated queueing delay.

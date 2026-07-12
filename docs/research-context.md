@@ -88,7 +88,7 @@ elapsedMs = currentTime - captureStartTime
 remainingBudgetMs = deadlineMs - elapsedMs
 ```
 
-The numeric Capture Timeout deadline is an internal product policy and must not be disclosed in the manuscript. Refer to it as a fixed product deadline and describe Capture Timeout as a mandatory pre-release KPI.
+The numeric Capture Timeout deadline is an internal product policy and must not be disclosed in the manuscript. Refer to it as a fixed product deadline. Describe Capture Timeout compliance as one of the product line's highest-priority camera reliability KPIs and a hard release gate: a reproducible violation blocks launch until the affected feature is fixed, restricted, or removed.
 
 Draft Image is the intermediate image generated before the final post-processing result. It is not merely a preview; it is close to the first capture result the user sees.
 
@@ -152,7 +152,7 @@ Remaining Budget is the time left until the Capture Timeout deadline. Admission 
 
 Queueing Delay is the time between the start of a capture's timeout clock and the start of its Draft Sequence on the single Draft worker. Under parallel capture, queueing delay can consume substantial budget before the capture's own draft work begins.
 
-Draft processing nodes are not shared across captures. The single-worker design is a production scheduling choice: concurrently running multiple independent, high-resolution Draft pipelines would increase peak compute and memory contention and degrade foreground camera usability. Serial execution bounds that contention and also preserves capture order. Do not claim that Draft Sequences are serialized because they share node instances or because the nodes are inherently not thread-safe.
+Draft processing nodes are not shared across captures. The single-worker design is a production backpressure choice. To preserve the user-visible shooting order, Draft completion and storage must follow capture order. Concurrent Draft execution would require a reorder layer: later results that finish processing first would remain buffered until earlier Draft Sequences completed. It would therefore move waiting into a memory-resident reorder queue while making multiple Draft workloads compete with preview and capture. Serial execution preserves order and bounds active Draft compute and memory to one sequence. Do not claim that Draft Sequences are serialized because they share node instances, because the nodes are inherently not thread-safe, or because parallel execution is theoretically impossible.
 
 Capture-Availability Pacing delays the `captureAvailable` callback that enables a subsequent shot. It uses the larger of two predicted deficits: the preferred-path shortage observed at the most recent Draft start and the shortage created by the backlog of callback-admitted captures. This lets already released capture work drain before the next capture starts. The delay is model-derived and zero when sufficient budget exists, but any nonzero delay postpones the earliest next-shot opportunity and can increase shot-to-shot latency. Applied callback delay and observed inter-shot timing must be evaluated separately.
 

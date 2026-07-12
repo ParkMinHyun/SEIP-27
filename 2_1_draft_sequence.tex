@@ -4,33 +4,32 @@
 A shutter event produces multiple image buffers. The full post-processing path
 collects the required buffers, performs multi-frame composition and image
 enhancement, encodes the result, and stores the final image file. The Draft
-Sequence was introduced together with this pipeline to provide a capture result
-quickly while final processing continues. It also retains the Draft image as a
-recovery result if final processing fails. The Draft is therefore both a
+Sequence was introduced together with this pipeline to produce the first image
+shown to the user while full post-processing continues. The Draft image is also
+retained as a recovery result if final processing fails. It is therefore both a
 user-visible capture result and a reliability mechanism, rather than an
-internal preview artifact. Showing the captured image to the user quickly and
-keeping the Draft visually consistent with the final image are consequently
-important to camera usability.
+internal preview artifact.
 
-As final post-processing became more sophisticated, it required greater compute
-and memory resources and produced larger visual changes, widening the gap
-between untreated Draft and final images. Executing this processing immediately
-after capture can also interfere with foreground camera operation, causing
-dropped preview frames and less responsive interaction. Selected capture modes
-therefore defer full composition until the camera application switches to the
-background. This deferral keeps the Draft image visible to the user for longer,
-making missing effects more noticeable and increasing the need for Draft--final
-consistency. Figure~\ref{fig:draft-pipeline} illustrates this structure.
+As post-processing became more sophisticated, its greater compute and memory
+demand made foreground execution increasingly disruptive to camera usability.
+Selected capture modes therefore defer full composition until the camera
+application switches to the background. At the same time, advanced processing
+produces larger visual changes, widening the gap between untreated Draft and
+final images. Because deferral leaves the Draft visible for longer, this
+mismatch becomes more apparent. The initial Draft applied no image effects;
+single-frame Filter and Watermark were later added to improve consistency.
+AI-based post-processing has since widened the gap beyond what these
+single-frame stages can reproduce. The mismatch is particularly conspicuous in
+portrait capture because the presence or absence of background blur is
+immediately recognizable. Figure~\ref{fig:draft-pipeline} illustrates the Draft
+and deferred final-processing paths.
 
-Initially, the Draft was produced by encoding the selected input without
-applying image effects. Filter and Watermark were the first effects added to the
-Draft Sequence, using single-frame processing to narrow the visible difference
-between Draft and final images. As post-processing increasingly adopts AI-based
-algorithms, the resulting visual changes can no longer be reproduced adequately
-by the Draft Sequence's existing single-frame stages. Portrait capture has the
-largest Draft--final visual gap because its final processing combines
-multi-frame composition with Bokeh. Its Draft Sequence therefore requires
-lightweight multi-frame Draft Bokeh to make the user-visible Draft more
-representative of the final portrait.
+Reducing this mismatch requires the portrait Draft Sequence to perform
+lightweight multi-frame composition that approximates the final Bokeh effect.
+The Draft Sequence, however, must still produce this image quickly because it
+serves as both the first user-visible result and the recovery result. Thus,
+adding even a lightweight visual effect to the Draft Sequence is not merely a
+quality enhancement; it introduces additional computation into a
+latency-critical path.
 
 \input{figures/fig_camera_pipeline.tex}
