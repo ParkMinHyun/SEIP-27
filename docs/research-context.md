@@ -58,7 +58,7 @@ When turning the motivation above into manuscript text:
 
 - Present the motivation as an academic problem, not as a personal anecdote.
 - State accurately that Draft and final post-processing were introduced together.
-- Preserve the guard chronology: an initial level-5 safeguard was later lowered to level 4 after a lower-tier Filter timeout. Present it as a legacy policy that does not scale to flagship Draft Bokeh; do not claim that the guard caused the Bokeh enablement failure.
+- Treat the level-5-to-level-4 guard chronology as internal context only; do not include it in the manuscript. Describe the deployed level-4 guard as a pragmatic release safeguard that does not scale to flagship Draft Bokeh, and do not claim that the guard caused the Bokeh enablement failure.
 - Connect the motivation to limitations of average-latency optimization, single-stage decisions, thermal-only guards, and admission-only control under accumulated backlog.
 - Treat pacing delay and the resulting shot-to-shot slowdown as an explicit cost, not as a free stability improvement.
 - Make the gap concrete before introducing the proposed technique.
