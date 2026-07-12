@@ -16,18 +16,19 @@ portrait. Lightweight multi-frame Draft Bokeh and Filter are therefore not
 merely cosmetic additions; they are the mechanism that makes deferred portrait
 processing acceptable to users.
 
-% FACT CHECK: confirm the 7-second product deadline before submission.
 Placing these effects on the Draft path is difficult because the path is part
-of a fixed 7-second \emph{Capture Timeout} deadline that also includes
-mandatory encoding and delivery. In this product line, an unresolved Capture
-Timeout is release blocking: the responsible feature must be fixed,
-restricted, or removed. Moreover, the deadline is not an isolated per-image
-compute budget. Parallel capture allows the hardware abstraction layer (HAL)
-to become ready for another shot before the preceding Draft Sequence has
-finished, whereas all Draft Sequences execute on a single worker. A later
-capture can thus spend much of its deadline waiting behind earlier work. One
-tail-latency spike propagates through the burst, and an operation that is safe
-in isolation can time out after several consecutive shots.
+of a fixed \emph{Capture Timeout} deadline that also includes mandatory
+encoding and result publication. Meeting this deadline is a mandatory
+pre-release key performance indicator (KPI) in this product line: a reproducible
+violation requires the responsible feature to be fixed, restricted, or removed.
+Moreover, the deadline is not an isolated per-image compute budget. Parallel
+capture allows the hardware
+abstraction layer (HAL) to become ready for another shot before the preceding
+Draft Sequence has finished, whereas all Draft Sequences execute on a single
+worker. A later capture can thus spend much of its deadline waiting behind
+earlier work. One tail-latency spike propagates through the burst, and an
+operation that is safe in isolation can time out after several consecutive
+shots.
 % FACT CHECK: retain the two-generation claim only if internally documentable.
 This cross-shot interference prevented Draft Bokeh from shipping in two
 consecutive flagship generations.

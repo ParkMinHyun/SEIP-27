@@ -26,3 +26,6 @@ _minted-*/
 
 # Claude Code per-session worktrees (keep settings.json, ignore worktrees)
 /.claude/worktrees/
+
+# Codex
+/.codex

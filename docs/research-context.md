@@ -83,10 +83,12 @@ For this reason, device state is important for logging and offline analysis, but
 Capture Timeout is the situation where a capture request or draft result delivery fails to complete within a deadline.
 
 ```text
-deadlineMs = 7000ms
+deadlineMs = internal product deadline
 elapsedMs = currentTime - captureStartTime
 remainingBudgetMs = deadlineMs - elapsedMs
 ```
+
+The numeric Capture Timeout deadline is an internal product policy and must not be disclosed in the manuscript. Refer to it as a fixed product deadline and describe Capture Timeout as a mandatory pre-release KPI.
 
 Draft Image is the intermediate image generated before the final post-processing result. It is not merely a preview; it is close to the first capture result the user sees.
 
@@ -149,6 +151,8 @@ Filter(MP12)
 Remaining Budget is the time left until the Capture Timeout deadline. Admission should compare the predicted upper bound of the remaining workload sequence against this budget.
 
 Queueing Delay is the time between the start of a capture's timeout clock and the start of its Draft Sequence on the single Draft worker. Under parallel capture, queueing delay can consume substantial budget before the capture's own draft work begins.
+
+Draft processing nodes are not shared across captures. The single-worker design is a production scheduling choice: concurrently running multiple independent, high-resolution Draft pipelines would increase peak compute and memory contention and degrade foreground camera usability. Serial execution bounds that contention and also preserves capture order. Do not claim that Draft Sequences are serialized because they share node instances or because the nodes are inherently not thread-safe.
 
 Capture-Availability Pacing delays the `captureAvailable` callback that enables a subsequent shot. It uses the larger of two predicted deficits: the preferred-path shortage observed at the most recent Draft start and the shortage created by the backlog of callback-admitted captures. This lets already released capture work drain before the next capture starts. The delay is model-derived and zero when sufficient budget exists, but any nonzero delay postpones the earliest next-shot opportunity and can increase shot-to-shot latency. Applied callback delay and observed inter-shot timing must be evaluated separately.
 

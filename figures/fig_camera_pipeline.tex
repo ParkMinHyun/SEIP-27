@@ -1,81 +1,110 @@
-% Before/after timeline for portrait composition and Draft Bokeh.
-% Included from _2_preliminary.tex (Figure~\ref{fig:draft-pipeline}).
-\begin{tikzpicture}[
-  x=0.90cm,
-  y=0.82cm,
-  font=\scriptsize,
-  >=latex,
-  draft/.style={draw=blue!60!black, fill=blue!9, rounded corners=1pt,
-    align=center, minimum height=0.52cm, inner sep=1.5pt},
-  foreground/.style={draw=orange!75!black, fill=orange!13,
-    rounded corners=1pt, align=center, minimum height=0.52cm, inner sep=1.5pt},
-  final/.style={draw=black!65, fill=gray!14, rounded corners=1pt,
-    align=center, minimum height=0.52cm, inner sep=1.5pt},
-  flow/.style={->, thick, black!65},
-  wait/.style={->, dashed, thick, orange!75!black},
-  deadline/.style={red!75!black, dashed, thick}
-]
+% Draft processing alongside deferred final post-processing (portrait).
+% Input directly from 2_1_draft_sequence.tex; contains the full figure
+% environment (Figure~\ref{fig:draft-pipeline}).
+%
+% Dataflow view (no time axis): a shutter event first collects frames and
+% metadata; the result feeds two paths. The Draft Sequence publishes the
+% Draft image (flat, untreated thumbnail) as the user-visible capture
+% result, while heavy post-processing is deferred until the camera
+% application switches to the background and replaces the Draft with the
+% final portrait (bokeh thumbnail: sharp subject, blurred background).
+\begin{figure}[t]
+  \centering
+  \begin{tikzpicture}[
+    font=\scriptsize,
+    >=latex,
+    draftbox/.style={draw=blue!45!black, fill=blue!14, rounded corners=1pt,
+      align=center},
+    finalbox/.style={draw=black!65, fill=gray!14, rounded corners=1pt,
+      align=center},
+    sharedbox/.style={draw=black!55, fill=gray!10, rounded corners=1pt,
+      align=center},
+    flow/.style={->, thick, black!65, rounded corners=2pt},
+    defer/.style={->, dashed, thick, black!55, rounded corners=2pt},
+    note/.style={text=black!55, align=left}
+  ]
 
-  % (a) Before Draft Bokeh: heavy portrait composition remains foreground work.
-  \node[anchor=west, font=\scriptsize\bfseries] at (0.15,6.28)
-    {(a) Before Draft Bokeh};
-  \fill[orange!8] (0.15,5.72) rectangle (8.75,6.08);
-  \draw[black!30] (0.15,5.72) rectangle (8.75,6.08);
-  \node at (4.45,5.90) {camera foreground};
+    % ---- shutter event (camera glyph) ----
+    \draw[fill=gray!15, draw=black!70] (0.36,2.26) rectangle (0.62,2.40);
+    \draw[fill=gray!15, draw=black!70, rounded corners=2pt]
+      (0.13,1.72) rectangle (0.97,2.28);
+    \draw[fill=white, draw=black!70] (0.55,2.00) circle (0.17);
+    \draw[fill=gray!45, draw=black!70] (0.55,2.00) circle (0.085);
+    \node[anchor=north, font=\scriptsize\bfseries] at (0.55,1.62) {shutter};
 
-  \node[anchor=east, text=blue!60!black, font=\scriptsize\bfseries]
-    at (0.05,5.05) {Draft};
-  \node[draft, minimum width=1.55cm] (oldDraft) at (1.18,5.05)
-    {single-frame Draft\\delivery};
-  \node[draft, minimum width=4.55cm] (oldVisible) at (5.35,5.05)
-    {portrait Draft without Bokeh};
-  \draw[flow] (oldDraft) -- (oldVisible);
-  \draw[deadline] (2.18,4.67) -- (2.18,5.48);
-  \node[red!75!black, anchor=north west] at (2.24,4.68) {$D$};
+    % ---- shared collection stage ----
+    \draw[flow] (1.00,2.00) -- (1.28,2.00);
+    \draw[sharedbox] (1.30,1.52) rectangle (2.60,2.48);
+    \node[align=center] at (1.95,2.00) {collect\\frames \&\\metadata};
 
-  \node[anchor=east, font=\scriptsize\bfseries] at (0.05,4.05) {Final};
-  \node[foreground, minimum width=4.55cm] (oldFinal) at (2.75,4.05)
-    {heavy portrait composition in foreground};
-  \node[final, minimum width=1.22cm] (oldUpdate) at (7.35,4.05)
-    {final\\update};
-  \draw[flow] (oldFinal) -- (oldUpdate);
-  \draw[flow, dashed] (oldUpdate.north) -- (7.35,4.75)
-    node[midway, right, text=black!55] {replace};
-  \node[orange!80!black, anchor=north] at (2.75,3.67)
-    {foreground compute/memory contention};
+    % ---- fork into the two processing paths ----
+    \draw[thick, black!65] (2.60,2.00) -- (2.82,2.00);
+    \draw[flow]  (2.82,2.00) |- (3.10,2.95);
+    \draw[defer] (2.82,2.00) |- (3.10,1.05);
 
-  % (b) With Draft Bokeh: lightweight work is deadline-critical; heavy work moves out.
-  \node[anchor=west, font=\scriptsize\bfseries] at (0.15,3.18)
-    {(b) With Draft Bokeh};
-  \fill[blue!4] (0.15,2.61) rectangle (4.15,2.97);
-  \fill[gray!12] (4.15,2.61) rectangle (8.75,2.97);
-  \draw[black!30] (0.15,2.61) rectangle (8.75,2.97);
-  \draw[dashed, black!45] (4.15,0.48) -- (4.15,2.97);
-  \node at (2.15,2.79) {camera foreground};
-  \node at (6.45,2.79) {application background};
+    % ---- Draft path (capture-critical) ----
+    \draw[draftbox] (3.12,2.67) rectangle (5.02,3.23);
+    \node at (4.07,2.95) {Draft Sequence};
+    \draw[black!65, thick] (5.02,2.95) -- (5.53,2.95);
 
-  \node[anchor=east, text=blue!60!black, font=\scriptsize\bfseries]
-    at (0.05,2.02) {Draft};
-  \node[draft, minimum width=2.15cm] (newDraft) at (1.43,2.02)
-    {Draft Bokeh\\and delivery};
-  \node[draft, minimum width=4.25cm] (newVisible) at (5.55,2.02)
-    {approximate portrait remains visible};
-  \draw[flow] (newDraft) -- (newVisible);
-  \draw[deadline] (2.72,1.64) -- (2.72,2.45);
-  \node[red!75!black, anchor=north west] at (2.78,1.65) {$D$};
+    % Draft image thumbnail: untreated and flat (subject and background
+    % share the same tone; no depth separation)
+    \fill[white] (5.55,2.69) rectangle (6.17,3.21);
+    \fill[gray!50] (5.57,2.71) -- (5.72,2.99) -- (5.87,2.71) -- cycle;
+    \fill[gray!50] (5.84,2.71) -- (6.00,3.03) -- (6.15,2.71) -- cycle;
+    \draw[fill=gray!65, draw=white, line width=0.4pt]
+      (5.70,2.69) .. controls (5.70,2.86) and (6.02,2.86) .. (6.02,2.69)
+      -- cycle;
+    \draw[fill=gray!65, draw=white, line width=0.4pt]
+      (5.86,2.93) circle (0.065);
+    \draw[black!60] (5.55,2.69) rectangle (6.17,3.21);
+    \node[anchor=north, text=black!70] at (5.86,2.62) {Draft image};
 
-  \node[anchor=east, font=\scriptsize\bfseries] at (0.05,1.02) {Final};
-  \draw[wait] (0.50,1.02) -- (4.10,1.02)
-    node[midway, above, text=orange!75!black] {deferred};
-  \node[final, minimum width=2.25cm] (newFinal) at (5.50,1.02)
-    {heavy portrait\\composition};
-  \node[final, minimum width=1.22cm] (newUpdate) at (7.58,1.02)
-    {final\\update};
-  \draw[flow] (newFinal) -- (newUpdate);
-  \draw[flow, dashed] (newUpdate.north) -- (7.58,1.72)
-    node[midway, right, text=black!55] {replace};
+    \draw[flow] (6.19,2.95) -- (6.76,2.95);
 
-  \draw[->, black!55] (0.15,0.38) -- (8.78,0.38)
-    node[anchor=north east] {time};
+    % ---- user-visible result ----
+    \draw[draw=black!60, fill=blue!4, rounded corners=3pt]
+      (6.78,2.60) rectangle (8.48,3.28);
+    \node at (7.63,2.94) {shown to user};
 
-\end{tikzpicture}
+    % ---- final path (deferred heavy post-processing) ----
+    \draw[finalbox] (3.12,0.73) rectangle (6.30,1.37);
+    \node at (4.71,1.05) {Post-Processing};
+    \draw[black!55] (3.10,0.42) circle (0.12);
+    \draw[black!55] (3.10,0.42) -- (3.10,0.51);
+    \draw[black!55] (3.10,0.42) -- (3.17,0.39);
+    \node[note, anchor=west] at (3.30,0.42)
+      {deferred until the app\\switches to background};
+
+    \draw[black!65, thick] (6.30,1.05) -- (6.53,1.05);
+
+    % final image thumbnail: portrait bokeh (sharp dark subject in front
+    % of a blurred background rendered as soft circles)
+    \fill[white] (6.55,0.79) rectangle (7.17,1.31);
+    \fill[blue!22] (6.66,1.16) circle (0.075);
+    \fill[blue!14] (6.85,1.22) circle (0.055);
+    \fill[blue!22] (7.02,1.10) circle (0.085);
+    \fill[blue!14] (6.72,0.97) circle (0.05);
+    \fill[blue!14] (7.08,1.24) circle (0.045);
+    \draw[fill=black!75, draw=white, line width=0.4pt]
+      (6.70,0.79) .. controls (6.70,0.96) and (7.02,0.96) .. (7.02,0.79)
+      -- cycle;
+    \draw[fill=black!75, draw=white, line width=0.4pt]
+      (6.86,1.03) circle (0.065);
+    \draw[black!60] (6.55,0.79) rectangle (7.17,1.31);
+    \node[anchor=north, text=black!70] at (6.86,0.72) {final image};
+
+    % replacement happens when final post-processing completes
+    \draw[flow] (7.19,1.05) -- (7.60,1.05) -- (7.60,2.58);
+    \node[anchor=west, text=black!55] at (7.68,1.90) {replace};
+
+  \end{tikzpicture}
+  \caption{Draft processing in portrait capture. A shutter event first
+  collects the captured frames and metadata, which feed two paths: the
+  Draft Sequence quickly publishes the Draft image as the user-visible
+  capture result, while heavy final post-processing is deferred until the
+  camera application switches to the background and replaces the Draft
+  image upon completion. The Draft image is also retained as the recovery
+  result if final processing fails.}
+  \label{fig:draft-pipeline}
+\end{figure}
