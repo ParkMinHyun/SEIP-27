@@ -1,0 +1,35 @@
+\subsection{A Thermal Threshold Cannot Separate Safe and Unsafe Captures}
+\label{sec:guard-limit}
+
+Parallel capture predated the current thermal safeguard. The safeguard was
+introduced later, after a Filter-related Capture Timeout on a lower-tier
+model at thermal level~4. Because the camera framework shares the policy across
+models, the resulting rule disables optional Draft stages at level~4 and above
+on flagship devices as well. This static rule is appropriate for containing a
+known release incident, but it neither observes the active workload nor the
+queue that determines the remaining deadline.
+
+Table~\ref{tab:timeout_index} characterizes the limitation on a
+current-generation flagship. For this experiment, we bypassed the deployed
+guard and forced either Bokeh alone or Bokeh with Filter throughout 30-shot
+portrait bursts. We varied thermal level, output resolution, and memory
+pressure, and recorded the first capture that timed out.
+
+\input{tables/tab_timeout_index}
+
+The boundary fails in both directions. It is \emph{under-protective} below
+level~4: Bokeh with Filter first times out at capture 29 under normal 24MP
+capture even at level~0, and at capture 24 under normal 12MP capture at
+level~2. Memory pressure moves failures earlier; for example, at level~3 the
+first 24MP Bokeh-plus-Filter timeout moves from capture 12 to capture 5. It is
+also \emph{over-restrictive} at and above the boundary. At level~4, the normal
+12MP traces complete the first nine captures with Bokeh and Filter and the
+first 15 with Bokeh alone, yet the deployed rule disables those stages from
+the first capture.
+
+These measurements do not imply that the early captures at level~4 are always
+safe. Rather, they show that thermal level is not a sufficient decision
+variable: the outcome at one level changes with resolution, memory pressure,
+selected stages, and the backlog inherited from previous shots. Thermal state
+is useful context for estimating execution time, but no nontrivial scalar
+threshold in Table~\ref{tab:timeout_index} separates safe and unsafe captures.

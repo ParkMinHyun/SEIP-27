@@ -1,0 +1,40 @@
+\subsection{Problem Formulation and Design Requirements}
+\label{sec:control-problem}
+
+Let capture $i$ start at time $a_i$, let its Draft Sequence obtain the worker
+at time $s_i$, and let \deadline{} be the fixed deadline measured from
+$a_i$. The budget remaining when Draft execution starts is
+
+\begin{equation}
+  \budget_i = \deadline - (s_i-a_i).
+  \label{eq:remaining-budget}
+\end{equation}
+
+Let $\admitted_i$ denote the optional stages selected for capture $i$, and let
+$\dur_i(\admitted_i)$ be the execution time from Draft start through delivery,
+including the required stages and mandatory tail. The capture is deadline-safe
+only if
+
+\begin{equation}
+  \dur_i(\admitted_i) \leq \budget_i.
+  \label{eq:draft-deadline}
+\end{equation}
+
+Equation~\ref{eq:draft-deadline} exposes two different control needs.
+Admission can reduce $\dur_i(\admitted_i)$ by omitting Bokeh or Filter for
+the current capture, but it cannot restore budget already consumed before
+$s_i$. Furthermore, if captures arrive faster than the single worker can
+complete them, repeated admission decisions alone cannot stop $\budget_i$
+from collapsing across the burst. The framework must also control when the next
+capture may begin. Delaying the application-facing \texttt{captureAvailable}
+callback does not extend the current capture's deadline; it starts the next
+capture later, after queued Draft work has progressed, and thereby preserves
+more budget for that future capture.
+
+The industrial objective is consequently lexicographic: (1) prevent every
+Capture Timeout, because deadline misses are release blocking; (2) retain the
+preferred Draft effects on as many captures as the runtime state safely
+allows; and (3) minimize added callback delay and its effect on shot-to-shot
+responsiveness. Section~\ref{sec:approach} presents the shared tail model and
+the coordinated admission and pacing decisions that address these
+requirements.

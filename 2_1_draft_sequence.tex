@@ -1,0 +1,40 @@
+\subsection{Draft Delivery on the Capture-Critical Path}
+\label{sec:draft-background}
+
+A shutter event produces multiple image buffers. The full post-processing path
+collects the required buffers, performs multi-frame composition and image
+enhancement, encodes the result, and stores the final JPEG. As these operations
+have become more compute- and memory-intensive, selected capture modes defer
+full composition until the camera application enters the background, thereby
+avoiding contention with preview rendering and preparation for the next shot.
+
+Deferral creates a delivery gap, which the framework bridges with the Draft
+Sequence. The Draft path selects its input before full composition completes,
+performs a bounded amount of processing, writes a JPEG and its media-database
+entry, and retains the image as a recovery result. The gallery thumbnail can
+therefore expose the capture early; when full post-processing finishes, the
+framework replaces the Draft with the final image. The Draft is consequently
+both a user-visible intermediate result and a reliability mechanism, not an
+internal preview artifact.
+
+The growing difference between the two paths motivated richer Draft
+processing. The original Draft applied no image effect, and later versions
+added single-frame Filter and Watermark stages. Portrait mode raised the next
+requirement. Its final result applies multi-frame processing and Bokeh, and its
+full composition is sufficiently expensive to benefit from background
+deferral. An untreated Draft, however, can look qualitatively different from
+the final portrait. Lightweight multi-frame Draft Bokeh was developed to
+provide an approximate early portrait while preserving background execution
+for the heavier final composition. Figure~\ref{fig:draft-pipeline} summarizes
+this intended transition.
+
+\begin{figure}[t]
+  \centering
+  \input{figures/fig_camera_pipeline}
+  \caption{Draft and final delivery in portrait capture. The Draft Sequence
+  writes an early JPEG on the capture-critical path; lightweight Draft Bokeh
+  reduces its visual gap from the final portrait while allowing heavy final
+  composition to be deferred. The final result later replaces the Draft
+  entry. $D$ denotes the Capture Timeout deadline.}
+  \label{fig:draft-pipeline}
+\end{figure}

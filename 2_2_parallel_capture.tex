@@ -1,0 +1,37 @@
+\subsection{Parallel Capture Creates Cross-Shot Interference}
+\label{sec:timeout}
+
+% FACT CHECK: confirm the 7-second product deadline before submission.
+The framework raises a \emph{Capture Timeout} when the Draft result is not
+delivered within the fixed 7-second deadline \deadline. Parallel capture
+changes how this deadline is consumed. Once the HAL is ready to accept another
+request, it can report capture availability before all buffers from the
+preceding shot have arrived and before that shot's Draft Sequence has
+finished. The framework can then notify the camera application, which may
+start the next capture immediately. Draft Sequences, however, share a single
+worker and therefore execute in order.
+
+Figure~\ref{fig:overlap} illustrates the resulting interference. Capture $i$
+starts its Draft as soon as its input is ready. Capture $i{+}1$ begins while
+that Draft is still running and must wait for the same worker; capture $i{+}2$
+waits behind both predecessors. Crucially, each deadline starts at its own
+capture event rather than at the time its Draft obtains the worker. Queueing
+therefore consumes a later capture's budget before any of its Draft stages can
+run. Even with identical stage durations, the remaining budget shrinks across
+the burst until a mandatory stage crosses the deadline.
+
+\begin{figure}[t]
+  \centering
+  \resizebox{\columnwidth}{!}{\input{figures/fig_draft_overlap}}
+  \caption{Cross-shot deadline interference under parallel capture. Draft
+  Sequences queue on one worker, but each deadline starts at the corresponding
+  capture. The hatched waiting interval therefore consumes progressively more
+  budget, until capture $i{+}2$ times out during mandatory encoding.}
+  \label{fig:overlap}
+\end{figure}
+
+This behavior makes tail latency more important than average operation time.
+A slowdown caused by thermal throttling, memory pressure, scheduling, or I/O
+can lengthen one Draft Sequence and transfer its delay to every capture behind
+it. The relevant unit of risk is therefore the \emph{queued and remaining
+sequence}, not Bokeh or Filter measured in isolation.
