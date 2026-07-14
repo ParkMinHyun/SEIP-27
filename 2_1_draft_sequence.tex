@@ -8,7 +8,9 @@ Sequence was introduced together with this pipeline to produce the first image
 shown to the user while full post-processing continues. The Draft image is also
 retained as a recovery result if final processing fails. It is therefore both a
 user-visible capture result and a reliability mechanism, rather than an
-internal preview artifact.
+internal preview artifact. Figure~\ref{fig:draft-arch} shows where the Draft
+Sequence and post-processing run in the camera stack and how the Draft and
+final images reach the user through the media database.
 
 As post-processing became more sophisticated, its greater compute and memory
 demand made foreground execution increasingly disruptive to camera usability.

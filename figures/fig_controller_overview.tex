@@ -48,7 +48,7 @@
     \draw[layer, fill=white] (0.15,1.55) rectangle (9.05,8.95);
     \node[layerlabel] at (0.22,8.91) {Camera framework};
     \draw[layer] (0.15,0.00) rectangle (9.05,1.25);
-    \node[layerlabel] at (0.22,1.20) {Hardware abstraction layer (HAL)};
+    \node[layerlabel] at (1.05,1.20) {Hardware abstraction layer (HAL)};
 
     % ===================== application / HAL ================
     \draw[appbox] (0.40,9.40) rectangle (8.30,10.08);
@@ -136,7 +136,7 @@
     \node[font=\tiny] at (7.175,5.17)
       {per-workload EWMA $\hat{T}(w)$};
     \node[font=\tiny] at (7.175,4.92)
-      {$\times$ sequence residual quantile $e^{\hat{s}_q(\sigma)}$};
+      {$\times$ residual quantile $e^{\hat{s}_q(\sigma)}$};
     \node[font=\tiny, text=black!60] at (7.175,4.67)
       {\ding{185} learned at capture end, shared};
 
