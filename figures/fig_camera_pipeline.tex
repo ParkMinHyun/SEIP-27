@@ -100,11 +100,9 @@
 
   \end{tikzpicture}
   \caption{Draft processing in portrait capture. A shutter event first
-  collects the captured frames and metadata, which feed two paths: the
-  Draft Sequence quickly publishes the Draft image as the user-visible
-  capture result, while heavy final post-processing is deferred until the
-  camera application switches to the background and replaces the Draft
-  image upon completion. The Draft image is also retained as the recovery
-  result if final processing fails.}
+  collects the captured frames and metadata, which feed two paths. The
+  Draft Sequence quickly publishes an early image. The heavier post-processing
+  pipeline is deferred until the camera application switches to the background;
+  upon completion, its final image replaces the Draft.}
   \label{fig:draft-pipeline}
 \end{figure}
