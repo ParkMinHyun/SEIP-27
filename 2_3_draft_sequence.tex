@@ -1,0 +1,25 @@
+\subsection{The Draft Sequence as a Deadline-Critical Path}
+\label{sec:draft-background}
+
+A shutter event requests multiple image buffers and their metadata. As Figure~\ref{fig:draft-pipeline} shows, the camera framework uses these inputs for two complementary purposes. Full post-processing performs compute- and memory-intensive multi-frame processing and eventually stores the final photograph. In parallel, the Draft Sequence selects a representative frame, encodes and stores it, and registers it in the media database. The user can therefore inspect a durable capture result before full post-processing finishes. The Draft image also serves as a recovery artifact when final processing fails or is interrupted. It is thus different from the transient preview stream: the Draft Sequence improves both responsiveness and capture reliability.
+
+\input{figures/fig_camera_pipeline.tex}
+
+\smallskip\noindent\textbf{Increasing Draft workload.}
+As AI-based post-processing has advanced, the visual difference between the untreated Draft image and the final result has increased. In addition, selected shot modes postpone expensive post-processing until the camera application moves to the background in order to protect preview continuity, peak memory, and foreground responsiveness. These modes expose the Draft image for a longer period. To reduce the resulting quality gap, the production pipeline first introduced lightweight single-frame effects into the Draft Sequence. A subsequent requirement was to support a lightweight multi-frame Draft enhancement for effects whose appearance cannot be approximated sufficiently from one frame. This enhancement improves the early result, but it adds work directly to the Capture Timeout path.
+
+\smallskip\noindent\textbf{Ordered single-worker execution.}
+Draft Sequences execute on one worker. This design preserves capture order and bounds the number of simultaneously active image-processing pipelines. Running several Draft Sequences concurrently would require result reordering and would increase peak memory, compute bursts, and interference with preview and ongoing capture. The single worker is therefore a deliberate production constraint, not an accidental lack of parallelism. Under parallel capture, however, requests can arrive faster than this worker completes them.
+
+Let $a_i$ be the time at which capture $i$ is accepted and $s_i$ the time at which its Draft Sequence obtains the worker. The queueing delay is $q_i=s_i-a_i$. Let $T_i^{\mathrm{opt}}$ be the execution time of enabled optional Draft processing and $T_i^{\mathrm{tail}}$ the remaining mandatory work, including encoding, file write, and media-database publication. Capture $i$ can meet the deadline only if
+\begin{equation}
+T_i^{\mathrm{opt}} + T_i^{\mathrm{tail}}
+\leq
+\underbrace{\deadline-(s_i-a_i)}_{b_i},
+\label{eq:draft-budget}
+\end{equation}
+where $b_i$ is the budget that remains when Draft execution begins. The inequality shows that the optional stage cannot be considered in isolation: it must leave sufficient time for the mandatory tail.
+
+Figure~\ref{fig:overlap} illustrates the resulting cross-shot effect. A latency increase in one Draft Sequence delays the start of every queued Draft Sequence. A later capture can therefore violate the deadline even when its own stage times are unchanged. The main difficulty is not only the latency of one enhancement, but also the backlog that this latency creates for captures whose deadlines have already started.
+
+\input{figures/fig_draft_overlap.tex}

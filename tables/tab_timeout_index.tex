@@ -1,117 +1,46 @@
-% Tables: first Capture Timeout shot index in a 30-shot continuous portrait
-% burst, plus the per-level median shot-to-shot interval (Chapter 2
-% motivation). This single table presents both devices consecutively:
-% S942B (parallel capture disabled), followed by S948U (enabled).
-%
-% Data sources: internal portrait-mode 30-shot continuous-capture
-% measurements (timeout indices) and shot_to_shot_comparison.xlsx
-% "Comparison" sheet (Shot-to-Shot column: per-level median of the normal
-% 24MP-request trace, rounded to integer ms).
-% Evidence TODO before submission: record the raw trace/session mapping and
-% the procedure used to execute Bokeh/Filter above the deployed guard.
-% Severity shading (first failing shot index): white = no timeout;
-% single-hue blush-to-brick ramp, lightness-monotone (grayscale-safe),
-% darkens as the first failure moves earlier.
-\providecolor{tmoS1}{RGB}{252,227,220}   % first failure at shot >= 20
-\providecolor{tmoS2}{RGB}{239,160,140}   % 10--19
-\providecolor{tmoS3}{RGB}{201,80,63}     % 6--9 (white text)
-\providecolor{tmoS4}{RGB}{143,36,32}     % <= 5 (white text)
-\providecolor{s2sBg}{RGB}{232,241,250}   % global shot-to-shot column
-% Right-aligned numeric columns, including the shot-to-shot data column.
-\newcolumntype{D}{>{\centering\arraybackslash}p{0.90cm}}
-\newcolumntype{H}{>{\centering\arraybackslash}p{1.15cm}}
-\newcolumntype{C}{>{\centering\arraybackslash}p{0.52cm}}
-\newcolumntype{R}{>{\raggedleft\arraybackslash}p{0.52cm}}
-\newcolumntype{Z}{>{\raggedleft\arraybackslash}p{1.10cm}}
-% Shot-to-shot median cell.
-\providecommand{\sts}[1]{\cellcolor{s2sBg}#1}
-% Colored cells use their exact column bounds; no adjacent cell may
-% overpaint its neighbor.
+% Anonymized characterization table for Chapter 2.
+% K: deployed thermal boundary.
+% M: optional multi-frame Draft enhancement.
+% S: optional single-frame Draft effect.
+% Data retained from the anonymized parallel-capture device at five levels around K.
+\providecolor{tmoS1}{RGB}{252,227,220} % first failure at shot >= 20
+\providecolor{tmoS2}{RGB}{239,160,140} % 10--19
+\providecolor{tmoS3}{RGB}{201,80,63}   % 6--9
+\providecolor{tmoS4}{RGB}{143,36,32}   % <= 5
+\providecolor{s2sBg}{RGB}{232,241,250}
 \providecommand{\tmoCell}[2]{\cellcolor{#1}#2}
-\providecommand{\tmoCellEnd}[2]{\cellcolor{#1}#2}
-% "No timeout" dashes stay centered (not right-aligned); the suffix picks
-% the right border of the underlying column: none / single / double.
-\providecommand{\noTO}{\multicolumn{1}{c}{--}}
-\providecommand{\noTOs}{\multicolumn{1}{c|}{--}}
-\providecommand{\noTOd}{\multicolumn{1}{c||}{--}}
-\providecommand{\noTOe}{\multicolumn{1}{c@{}}{--}}
+\providecommand{\noTO}{--}
 
-% ---------------------------------------------------------------------------
-% S948U and S942B, presented as one continuous table
-% ---------------------------------------------------------------------------
 \begin{table}[t]
   \centering
-  \caption{First Capture Timeout in 30-shot portrait bursts on S942B and
-  S948U when Bokeh (B) and Filter (F) are forced on. S948U uses parallel
-  capture, whereas S942B does not. The thick rule separates the two device
-  results; ``--'' means no timeout within the burst. No timeout was observed
-  on S942B at any tested configuration. The Shot-to-Shot column reports
-  the median interval of the normal 24MP-request trace at each level.}
+  \caption{First Capture Timeout in a 30-shot repeated-capture workload on an anonymized flagship device with parallel capture. $K$ is the deployed thermal boundary. M and S denote the optional multi-frame Draft enhancement and a single-frame Draft effect, respectively. The guard was bypassed for characterization; ``--'' means no timeout within 30 shots. Shot-to-shot is the median interval of the normal 24MP trace.}
   \label{tab:timeout_index}
-  \label{tab:timeout_index_s942b}
-  {\scriptsize\setlength{\tabcolsep}{1.0pt}%
-  \begin{tabular}{@{}D|H|Z||RR|RR||RR|RR@{}}
-  \toprule \midrule
-  \multirow{3}{*}{\textbf{Device}} &
-  \multirow{3}{*}{\makecell{\textbf{Overheat}\\\textbf{level}}} &
-  \multicolumn{1}{>{\centering\arraybackslash}p{1.10cm}||}{%
-  \multirow{3}{*}{\makecell{{\textbf{Shot-to-}}\\{\textbf{Shot}}\\\textbf{(ms)}}}} &
-  \multicolumn{4}{c||}{\textbf{Normal capture}} &
-  \multicolumn{4}{c@{}}{\makecell{\textbf{Memory-pressure}\\\textbf{capture}}} \\ \cmidrule(lr){4-7}\cmidrule(l){8-11}
-  & & &
-  \multicolumn{2}{c|}{\textbf{12MP}} &
-  \multicolumn{2}{c||}{\textbf{24MP}} &
-  \multicolumn{2}{c|}{\textbf{12MP}} &
-  \multicolumn{2}{c@{}}{\textbf{24MP}} \\ \cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}\cmidrule(l){10-11}
-  & & & \multicolumn{1}{C}{\textbf{B{+}F}} & \multicolumn{1}{C|}{\textbf{B}} &
-  \multicolumn{1}{C}{\textbf{B{+}F}} & \multicolumn{1}{C||}{\textbf{B}} &
-  \multicolumn{1}{C}{\textbf{B{+}F}} & \multicolumn{1}{C|}{\textbf{B}} &
-  \multicolumn{1}{C}{\textbf{B{+}F}} & \multicolumn{1}{C@{}}{\textbf{B}} \\
-  \midrule \midrule
-  \multirow{7}{*}{\textbf{S942B}} & Lv0 & 923 & \noTO & \noTOs & \noTO & \noTOd & \noTO & \noTOs & \noTO & \noTOe \\
-  & Lv1 & 926  & \noTO & \noTOs & \noTO & \noTOd & \noTO & \noTOs & \noTO & \noTOe \\
-  & Lv2 & 932  & \noTO & \noTOs & \noTO & \noTOd & \noTO & \noTOs & \noTO & \noTOe \\
-  & Lv3 & 1195 & \noTO & \noTOs & \noTO & \noTOd & \noTO & \noTOs & \noTO & \noTOe \\
-  & Lv4 & 1219 & \noTO & \noTOs & \noTO & \noTOd & \noTO & \noTOs & \noTO & \noTOe \\
-  & Lv5 & 1460 & \noTO & \noTOs & \noTO & \noTOd & \noTO & \noTOs & \noTO & \noTOe \\
-  & Lv6 & 1457 & \noTO & \noTOs & \noTO & \noTOd & \noTO & \noTOs & \noTO & \noTOe \\
-  \specialrule{1.0pt}{1.0pt}{1.0pt}
-  \multirow{7}{*}{\textbf{S948U}} & Lv0 & 367 &
-    \noTO & \noTOs & \tmoCell{tmoS1}{29} & \noTOd &
-    \noTO & \noTOs & \tmoCell{tmoS1}{26} & \noTOe \\
-  & Lv1 & 373 &
-    \noTO & \noTOs & \tmoCell{tmoS1}{29} & \noTOd &
-    \tmoCell{tmoS1}{24} & \noTOs & \tmoCell{tmoS2}{19} & \noTOe \\
-  & Lv2 & 372 &
-    \tmoCell{tmoS1}{24} & \noTOs & \tmoCell{tmoS2}{18} & \noTOd &
-    \tmoCell{tmoS2}{15} & \tmoCell{tmoS1}{29} & \tmoCell{tmoS2}{14} & \tmoCellEnd{tmoS1}{25} \\
-  & Lv3 & 376 &
-    \tmoCell{tmoS2}{13} & \tmoCell{tmoS1}{21} & \tmoCell{tmoS2}{12} & \tmoCell{tmoS1}{20} &
-    \tmoCell{tmoS3}{\textcolor{white}{\textbf{8}}} & \tmoCell{tmoS2}{19} &
-    \tmoCell{tmoS3}{\textcolor{white}{\textbf{7}}} & \tmoCellEnd{tmoS2}{15} \\
-  & Lv4 & 416 &
-    \tmoCell{tmoS2}{10} & \tmoCell{tmoS2}{16} &
-    \tmoCell{tmoS3}{\textcolor{white}{\textbf{8}}} & \tmoCell{tmoS2}{13} &
-    \tmoCell{tmoS3}{\textcolor{white}{\textbf{6}}} & \tmoCell{tmoS2}{13} &
-    \tmoCell{tmoS4}{\textcolor{white}{\textbf{4}}} & \tmoCellEnd{tmoS3}{\textcolor{white}{\textbf{7}}} \\
-  & Lv5 & 625 &
-    \tmoCell{tmoS3}{\textcolor{white}{\textbf{8}}} & \tmoCell{tmoS2}{12} &
-    \tmoCell{tmoS3}{\textcolor{white}{\textbf{8}}} & \tmoCell{tmoS2}{12} &
-    \tmoCell{tmoS4}{\textcolor{white}{\textbf{4}}} & \tmoCell{tmoS3}{\textcolor{white}{\textbf{9}}} &
-    \tmoCell{tmoS4}{\textcolor{white}{\textbf{4}}} & \tmoCellEnd{tmoS3}{\textcolor{white}{\textbf{9}}} \\
-  & Lv6 & 702 &
-    \tmoCell{tmoS3}{\textcolor{white}{\textbf{7}}} & \tmoCell{tmoS2}{11} &
-    \tmoCell{tmoS3}{\textcolor{white}{\textbf{7}}} & \tmoCell{tmoS2}{11} &
-    \tmoCell{tmoS4}{\textcolor{white}{\textbf{4}}} & \tmoCell{tmoS3}{\textcolor{white}{\textbf{6}}} &
-    \tmoCell{tmoS4}{\textcolor{white}{\textbf{4}}} & \tmoCellEnd{tmoS3}{\textcolor{white}{\textbf{6}}} \\
-  \midrule \bottomrule
+  \resizebox{\columnwidth}{!}{%
+  \begin{tabular}{@{}c|c||cc|cc||cc|cc@{}}
+    \toprule
+    \multirow{3}{*}{\textbf{Thermal}} &
+    \multirow{3}{*}{\makecell{\textbf{Shot-to-}\\\textbf{shot (ms)}}} &
+    \multicolumn{4}{c||}{\textbf{Normal capture}} &
+    \multicolumn{4}{c}{\textbf{Memory-pressure capture}} \\
+    \cmidrule(lr){3-6}\cmidrule(l){7-10}
+    & & \multicolumn{2}{c|}{\textbf{12MP}} & \multicolumn{2}{c||}{\textbf{24MP}} &
+        \multicolumn{2}{c|}{\textbf{12MP}} & \multicolumn{2}{c}{\textbf{24MP}} \\
+    \cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(lr){7-8}\cmidrule(l){9-10}
+    & & \textbf{M+S} & \textbf{M} & \textbf{M+S} & \textbf{M} &
+        \textbf{M+S} & \textbf{M} & \textbf{M+S} & \textbf{M} \\
+    \midrule
+    $K-2$ & \cellcolor{s2sBg}372 & \tmoCell{tmoS1}{24} & \noTO & \tmoCell{tmoS2}{18} & \noTO & \tmoCell{tmoS2}{15} & \tmoCell{tmoS1}{29} & \tmoCell{tmoS2}{14} & \tmoCell{tmoS1}{25} \\
+    $K-1$ & \cellcolor{s2sBg}376 & \tmoCell{tmoS2}{13} & \tmoCell{tmoS1}{21} & \tmoCell{tmoS2}{12} & \tmoCell{tmoS1}{20} & \tmoCell{tmoS3}{\textcolor{white}{\textbf{8}}} & \tmoCell{tmoS2}{19} & \tmoCell{tmoS3}{\textcolor{white}{\textbf{7}}} & \tmoCell{tmoS2}{15} \\
+    $K$   & \cellcolor{s2sBg}416 & \tmoCell{tmoS2}{10} & \tmoCell{tmoS2}{16} & \tmoCell{tmoS3}{\textcolor{white}{\textbf{8}}} & \tmoCell{tmoS2}{13} & \tmoCell{tmoS3}{\textcolor{white}{\textbf{6}}} & \tmoCell{tmoS2}{13} & \tmoCell{tmoS4}{\textcolor{white}{\textbf{4}}} & \tmoCell{tmoS3}{\textcolor{white}{\textbf{7}}} \\
+    $K+1$ & \cellcolor{s2sBg}625 & \tmoCell{tmoS3}{\textcolor{white}{\textbf{8}}} & \tmoCell{tmoS2}{12} & \tmoCell{tmoS3}{\textcolor{white}{\textbf{8}}} & \tmoCell{tmoS2}{12} & \tmoCell{tmoS4}{\textcolor{white}{\textbf{4}}} & \tmoCell{tmoS3}{\textcolor{white}{\textbf{9}}} & \tmoCell{tmoS4}{\textcolor{white}{\textbf{4}}} & \tmoCell{tmoS3}{\textcolor{white}{\textbf{9}}} \\
+    $K+2$ & \cellcolor{s2sBg}702 & \tmoCell{tmoS3}{\textcolor{white}{\textbf{7}}} & \tmoCell{tmoS2}{11} & \tmoCell{tmoS3}{\textcolor{white}{\textbf{7}}} & \tmoCell{tmoS2}{11} & \tmoCell{tmoS4}{\textcolor{white}{\textbf{4}}} & \tmoCell{tmoS3}{\textcolor{white}{\textbf{6}}} & \tmoCell{tmoS4}{\textcolor{white}{\textbf{4}}} & \tmoCell{tmoS3}{\textcolor{white}{\textbf{6}}} \\
+    \bottomrule
   \end{tabular}%
   }
-  \par\vspace{3pt}
-  {\scriptsize\begin{minipage}{0.933\columnwidth}
-  \raggedright\setlength{\fboxsep}{1.8pt}%
-  --~no timeout\hfill
-  first failing shot:~%
-  \colorbox{tmoS1}{\strut\,${\geq}\,20$\,}\colorbox{tmoS2}{\strut\,10--19\,}\colorbox{tmoS3}{\strut\,\textcolor{white}{6--9}\,}\colorbox{tmoS4}{\strut\,\textcolor{white}{${\leq}\,5$}\,}\par
-  \end{minipage}}
+  \vspace{2pt}
+  {\scriptsize\raggedright
+   first failing capture:~\colorbox{tmoS1}{\strut\,$\geq 20$\,}\;
+   \colorbox{tmoS2}{\strut\,10--19\,}\;
+   \colorbox{tmoS3}{\strut\,\textcolor{white}{6--9}\,}\;
+   \colorbox{tmoS4}{\strut\,\textcolor{white}{$\leq 5$}\,}\par}
 \end{table}
