@@ -1,46 +1,89 @@
-% Anonymized characterization table for Chapter 2.
+% Anonymized characterization table using the original fixed-width layout.
 % K: deployed thermal boundary.
 % M: optional multi-frame Draft enhancement.
 % S: optional single-frame Draft effect.
-% Data retained from the anonymized parallel-capture device at five levels around K.
-\providecolor{tmoS1}{RGB}{252,227,220} % first failure at shot >= 20
-\providecolor{tmoS2}{RGB}{239,160,140} % 10--19
-\providecolor{tmoS3}{RGB}{201,80,63}   % 6--9
-\providecolor{tmoS4}{RGB}{143,36,32}   % <= 5
+\providecolor{tmoS1}{RGB}{252,227,220} % first failure at captures 10--20
+\providecolor{tmoS2}{RGB}{239,160,140} % 6--9
+\providecolor{tmoS3}{RGB}{201,80,63}   % <= 5
 \providecolor{s2sBg}{RGB}{232,241,250}
+
+\newcolumntype{D}{>{\centering\arraybackslash}p{1.00cm}}
+\newcolumntype{H}{>{\raggedleft\arraybackslash}p{1.45cm}}
+\newcolumntype{R}{>{\raggedleft\arraybackslash}p{0.69cm}}
+\providecommand{\sts}[1]{\cellcolor{s2sBg}#1}
 \providecommand{\tmoCell}[2]{\cellcolor{#1}#2}
-\providecommand{\noTO}{--}
+\providecommand{\tmoCellEnd}[2]{\cellcolor{#1}#2}
+\providecommand{\noTO}{\multicolumn{1}{c}{--}}
+\providecommand{\noTOs}{\multicolumn{1}{c|}{--}}
+\providecommand{\noTOd}{\multicolumn{1}{c||}{--}}
 
 \begin{table}[t]
   \centering
-  \caption{First Capture Timeout in a 30-shot repeated-capture workload on an anonymized flagship device with parallel capture. $K$ is the deployed thermal boundary. M and S denote the optional multi-frame Draft enhancement and a single-frame Draft effect, respectively. The guard was bypassed for characterization; ``--'' means no timeout within 30 shots. Shot-to-shot is the median interval of the normal 24MP trace.}
+  \caption{First Capture Timeout within a 20-capture reporting window on an
+  anonymized flagship device with parallel capture. $K$ is the deployed
+  thermal boundary. M and S denote the optional multi-frame Draft enhancement
+  and a single-frame Draft effect, respectively. The guard was bypassed for
+  characterization; ``--'' means no timeout within this window. Shot-to-shot
+  is the median interval of the normal 24MP trace.}
   \label{tab:timeout_index}
-  \resizebox{\columnwidth}{!}{%
-  \begin{tabular}{@{}c|c||cc|cc||cc|cc@{}}
+  {\scriptsize\setlength{\tabcolsep}{1.0pt}%
+  \begin{tabular}{@{}D|H||RR|RR||RR|RR@{}}
     \toprule
-    \multirow{3}{*}{\textbf{Thermal}} &
-    \multirow{3}{*}{\makecell{\textbf{Shot-to-}\\\textbf{shot (ms)}}} &
+    \multirow{3}{*}{\makecell{\textbf{Overheat}\\\textbf{Level}}} &
+    \multirow{3}{*}{\makebox[1.45cm][c]{%
+      \makecell{\textbf{Shot-to-Shot}\\\textbf{(ms)}}}} &
     \multicolumn{4}{c||}{\textbf{Normal capture}} &
-    \multicolumn{4}{c}{\textbf{Memory-pressure capture}} \\
+    \multicolumn{4}{c@{}}{\makecell{\textbf{Memory-pressure capture}}} \\
     \cmidrule(lr){3-6}\cmidrule(l){7-10}
-    & & \multicolumn{2}{c|}{\textbf{12MP}} & \multicolumn{2}{c||}{\textbf{24MP}} &
-        \multicolumn{2}{c|}{\textbf{12MP}} & \multicolumn{2}{c}{\textbf{24MP}} \\
+    & & \multicolumn{2}{c|}{\textbf{12MP}} &
+        \multicolumn{2}{c||}{\textbf{24MP}} &
+        \multicolumn{2}{c|}{\textbf{12MP}} &
+        \multicolumn{2}{c@{}}{\textbf{24MP}} \\
     \cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(lr){7-8}\cmidrule(l){9-10}
-    & & \textbf{M+S} & \textbf{M} & \textbf{M+S} & \textbf{M} &
-        \textbf{M+S} & \textbf{M} & \textbf{M+S} & \textbf{M} \\
+    & & \multicolumn{1}{c}{\textbf{M{+}S}} &
+        \multicolumn{1}{c|}{\textbf{M}} &
+        \multicolumn{1}{c}{\textbf{M{+}S}} &
+        \multicolumn{1}{c||}{\textbf{M}} &
+        \multicolumn{1}{c}{\textbf{M{+}S}} &
+        \multicolumn{1}{c|}{\textbf{M}} &
+        \multicolumn{1}{c}{\textbf{M{+}S}} &
+        \multicolumn{1}{c@{}}{\textbf{M}} \\
     \midrule
-    $K-2$ & \cellcolor{s2sBg}372 & \tmoCell{tmoS1}{24} & \noTO & \tmoCell{tmoS2}{18} & \noTO & \tmoCell{tmoS2}{15} & \tmoCell{tmoS1}{29} & \tmoCell{tmoS2}{14} & \tmoCell{tmoS1}{25} \\
-    $K-1$ & \cellcolor{s2sBg}376 & \tmoCell{tmoS2}{13} & \tmoCell{tmoS1}{21} & \tmoCell{tmoS2}{12} & \tmoCell{tmoS1}{20} & \tmoCell{tmoS3}{\textcolor{white}{\textbf{8}}} & \tmoCell{tmoS2}{19} & \tmoCell{tmoS3}{\textcolor{white}{\textbf{7}}} & \tmoCell{tmoS2}{15} \\
-    $K$   & \cellcolor{s2sBg}416 & \tmoCell{tmoS2}{10} & \tmoCell{tmoS2}{16} & \tmoCell{tmoS3}{\textcolor{white}{\textbf{8}}} & \tmoCell{tmoS2}{13} & \tmoCell{tmoS3}{\textcolor{white}{\textbf{6}}} & \tmoCell{tmoS2}{13} & \tmoCell{tmoS4}{\textcolor{white}{\textbf{4}}} & \tmoCell{tmoS3}{\textcolor{white}{\textbf{7}}} \\
-    $K+1$ & \cellcolor{s2sBg}625 & \tmoCell{tmoS3}{\textcolor{white}{\textbf{8}}} & \tmoCell{tmoS2}{12} & \tmoCell{tmoS3}{\textcolor{white}{\textbf{8}}} & \tmoCell{tmoS2}{12} & \tmoCell{tmoS4}{\textcolor{white}{\textbf{4}}} & \tmoCell{tmoS3}{\textcolor{white}{\textbf{9}}} & \tmoCell{tmoS4}{\textcolor{white}{\textbf{4}}} & \tmoCell{tmoS3}{\textcolor{white}{\textbf{9}}} \\
-    $K+2$ & \cellcolor{s2sBg}702 & \tmoCell{tmoS3}{\textcolor{white}{\textbf{7}}} & \tmoCell{tmoS2}{11} & \tmoCell{tmoS3}{\textcolor{white}{\textbf{7}}} & \tmoCell{tmoS2}{11} & \tmoCell{tmoS4}{\textcolor{white}{\textbf{4}}} & \tmoCell{tmoS3}{\textcolor{white}{\textbf{6}}} & \tmoCell{tmoS4}{\textcolor{white}{\textbf{4}}} & \tmoCell{tmoS3}{\textcolor{white}{\textbf{6}}} \\
+    $K-2$ & {372} &
+      \noTO & \noTOs &
+      \tmoCell{tmoS1}{18} & \noTOd &
+      \tmoCell{tmoS1}{15} & \noTOs &
+      \tmoCell{tmoS1}{14} & \noTO \\
+    $K-1$ & {376} &
+      \tmoCell{tmoS1}{13} & \noTOs &
+      \tmoCell{tmoS1}{12} & \tmoCell{tmoS1}{20} &
+      \tmoCell{tmoS2}{8} & \tmoCell{tmoS1}{19} &
+      \tmoCell{tmoS2}{7} & \tmoCellEnd{tmoS1}{15} \\
+    $K$ & {416} &
+      \tmoCell{tmoS1}{10} & \tmoCell{tmoS1}{16} &
+      \tmoCell{tmoS2}{8} & \tmoCell{tmoS1}{13} &
+      \tmoCell{tmoS2}{6} & \tmoCell{tmoS1}{13} &
+      \tmoCell{tmoS3}{5} & \tmoCellEnd{tmoS2}{7} \\
+    $K+1$ & {625} &
+      \tmoCell{tmoS2}{8} & \tmoCell{tmoS1}{12} &
+      \tmoCell{tmoS2}{8} & \tmoCell{tmoS1}{12} &
+      \tmoCell{tmoS3}{4} & \tmoCell{tmoS2}{9} &
+      \tmoCell{tmoS3}{4} & \tmoCellEnd{tmoS2}{9} \\
+    $K+2$ & {702} &
+      \tmoCell{tmoS2}{7} & \tmoCell{tmoS1}{11} &
+      \tmoCell{tmoS2}{7} & \tmoCell{tmoS1}{11} &
+      \tmoCell{tmoS3}{4} & \tmoCell{tmoS2}{6} &
+      \tmoCell{tmoS3}{4} & \tmoCellEnd{tmoS2}{6} \\
     \bottomrule
   \end{tabular}%
   }
-  \vspace{2pt}
-  {\scriptsize\raggedright
-   first failing capture:~\colorbox{tmoS1}{\strut\,$\geq 20$\,}\;
-   \colorbox{tmoS2}{\strut\,10--19\,}\;
-   \colorbox{tmoS3}{\strut\,\textcolor{white}{6--9}\,}\;
-   \colorbox{tmoS4}{\strut\,\textcolor{white}{$\leq 5$}\,}\par}
+  \par\vspace{3pt}
+  {\scriptsize\begin{minipage}{1\columnwidth}
+  \raggedright\setlength{\fboxsep}{1.8pt}%
+  --~no timeout within 20 captures\hfill
+  first failing capture:~%
+  \colorbox{tmoS1}{\strut\,10--20\,}%
+  \colorbox{tmoS2}{\strut\,6--9\,}%
+  \colorbox{tmoS3}{\strut\,{${\leq}\,5$}\,}\par
+  \end{minipage}}
 \end{table}

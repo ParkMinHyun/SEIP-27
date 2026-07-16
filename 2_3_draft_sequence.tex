@@ -11,15 +11,14 @@ As AI-based post-processing has advanced, the visual difference between the untr
 \smallskip\noindent\textbf{Ordered single-worker execution.}
 Draft Sequences execute on one worker. This design preserves capture order and bounds the number of simultaneously active image-processing pipelines. Running several Draft Sequences concurrently would require result reordering and would increase peak memory, compute bursts, and interference with preview and ongoing capture. The single worker is therefore a deliberate production constraint, not an accidental lack of parallelism. Under parallel capture, however, requests can arrive faster than this worker completes them.
 
-Let $a_i$ be the time at which capture $i$ is accepted and $s_i$ the time at which its Draft Sequence obtains the worker. The queueing delay is $q_i=s_i-a_i$. Let $T_i^{\mathrm{opt}}$ be the execution time of enabled optional Draft processing and $T_i^{\mathrm{tail}}$ the remaining mandatory work, including encoding, file write, and media-database publication. Capture $i$ can meet the deadline only if
-\begin{equation}
-T_i^{\mathrm{opt}} + T_i^{\mathrm{tail}}
-\leq
-\underbrace{\deadline-(s_i-a_i)}_{b_i},
-\label{eq:draft-budget}
-\end{equation}
-where $b_i$ is the budget that remains when Draft execution begins. The inequality shows that the optional stage cannot be considered in isolation: it must leave sufficient time for the mandatory tail.
-
 Figure~\ref{fig:overlap} illustrates the resulting cross-shot effect. A latency increase in one Draft Sequence delays the start of every queued Draft Sequence. A later capture can therefore violate the deadline even when its own stage times are unchanged. The main difficulty is not only the latency of one enhancement, but also the backlog that this latency creates for captures whose deadlines have already started.
 
-\input{figures/fig_draft_overlap.tex}
+\begin{figure}[t]
+  \centering
+  \resizebox{\columnwidth}{!}{\input{figures/fig_draft_overlap.tex}}
+  \caption{Cross-shot deadline contention under parallel capture. Each
+  request starts a fixed deadline at acceptance. Because Draft Sequences
+  execute in order, later captures lose an increasing portion of the budget
+  to queueing and can enter the mandatory tail after their deadline.}
+  \label{fig:overlap}
+\end{figure}
