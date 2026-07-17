@@ -2,22 +2,45 @@
 \label{sec:guard-limit}
 
 \smallskip\noindent\textbf{Static thermal gating and capture pacing.}
-To contain Capture Timeouts without an online cost model, the production framework uses two forms of static control. First, it disables optional Draft processing at and above a fixed thermal boundary. Second, selected device configurations stop exposing \texttt{captureAvailable} when the thermal state or the number of in-flight captures crosses a fixed condition. These policies are inexpensive, deterministic, and practical for incident containment. Moreover, the Draft control path is shared across products and is maintained primarily through feature-level policy; proliferating model-specific branches would increase implementation and validation cost.
+To contain Capture Timeouts without an online cost model, the production framework uses two forms of static control.
+First, it disables optional Draft processing at and above a fixed thermal boundary.
+Second, selected device configurations stop exposing \texttt{captureAvailable} when the thermal state or the number of in-flight captures crosses a fixed condition.
+These policies are inexpensive, deterministic, and practical for incident containment.
+Moreover, the Draft control path is shared across products and is maintained primarily through feature-level policy; proliferating model-specific branches would increase implementation and validation cost.
 
-However, these proxies do not describe the work that remains for an individual capture. Thermal state does not encode the queueing delay already consumed, image resolution, enabled effect combination, memory pressure, storage-service delay, device capability, or position within a burst. An in-flight-capture count similarly treats all captures as having the same service demand. A fixed rule can therefore reject a feasible execution in one context and admit an unsafe execution in another.
+However, these proxies do not describe the work that remains for an individual capture.
+Thermal state does not encode the queueing delay already consumed, image resolution, enabled effect combination, memory pressure, storage-service delay, device capability, or position within a burst.
+An in-flight-capture count similarly treats all captures as having the same service demand.
+A fixed rule can therefore reject a feasible execution in one context and admit an unsafe execution in another.
 
 \input{tables/tab_timeout_index.tex}
 
-Table~\ref{tab:timeout_index} demonstrates this limitation on an anonymized flagship device that supports parallel capture. The deployed thermal boundary is normalized as $K$, and the guard was bypassed only for characterization. Deadline violations occur below $K$: for example, under memory pressure the first miss occurs between the 7th and 19th captures at $K-1$, depending on resolution and workload. Thus, a policy that admits every optional execution below $K$ is not sufficient for reliability.
+Table~\ref{tab:timeout_index} demonstrates this limitation on an anonymized flagship device that supports parallel capture.
+The deployed thermal boundary is normalized as $K$, and the guard was bypassed only for characterization.
+Deadline violations occur below $K$: for example, under memory pressure the first miss occurs between the 7th and 19th captures at $K-1$, depending on resolution and workload.
+Thus, a policy that admits every optional execution below $K$ is not sufficient for reliability.
 
-The observed failure regime already appears with 12 overlapping Draft Sequences, so the table reports first misses only within the first 20 captures. Entries marked ``--'' indicate that no timeout occurred within this reporting window, including configurations whose first miss occurred later in the longer characterization run.
+The observed failure regime already appears with 12 overlapping Draft Sequences, so the table reports first misses only within the first 20 captures.
+Entries marked ``--'' indicate that no timeout occurred within this reporting window, including configurations whose first miss occurred later in the longer characterization run.
 
-The same table also shows over-restriction at and above $K$. At $K$, the normal 12MP workload with only the multi-frame enhancement completes 15 captures before the first miss. At $K+2$, the corresponding M-only normal workloads still complete ten captures before the first miss. Nevertheless, a static guard at $K$ disables the optional stage from the first capture in all of these contexts. Even within one thermal row, the first-miss index varies widely: at $K$, it ranges from 5 to 16 as resolution, memory pressure, and workload composition change. No single thermal boundary separates safe and unsafe executions.
+The same table also shows over-restriction at and above $K$.
+At $K$, the normal 12MP workload with only the multi-frame enhancement completes 15 captures before the first miss.
+At $K+2$, the corresponding M-only normal workloads still complete ten captures before the first miss.
+Nevertheless, a static guard at $K$ disables the optional stage from the first capture in all of these contexts.
+Even within one thermal row, the first-miss index varies widely: at $K$, it ranges from 5 to 16 as resolution, memory pressure, and workload composition change.
+No single thermal boundary separates safe and unsafe executions.
 
-Fixed capture pacing has the same limitation. A count threshold measures how many requests are active, but not how much ordered Draft work they contain or how much budget each request has already lost. Lowering the count protects constrained cases at the cost of shot-to-shot responsiveness on capable devices; raising it exposes slow contexts to accumulated backlog.
+Fixed capture pacing has the same limitation.
+A count threshold measures how many requests are active, but not how much ordered Draft work they contain or how much budget each request has already lost.
+Lowering the count protects constrained cases at the cost of shot-to-shot responsiveness on capable devices; raising it exposes slow contexts to accumulated backlog.
 
 \smallskip\noindent\textbf{Consequence for feature release.}
-The lightweight multi-frame Draft enhancement exposes a fundamental trade-off in the existing architecture. A conservative guard protects reliability but suppresses executions that have sufficient budget. Relaxing the guard improves feature availability but permits deadline violations in constrained contexts. Retuning a global threshold only moves the boundary among reliability, feature availability, and shot-to-shot performance. Under the existing architecture, the enhancement could not be enabled for release. A viable solution must instead estimate the remaining per-capture work and coordinate both optional-work admission and the rate at which subsequent captures enter the system.
+The lightweight multi-frame Draft enhancement exposes a fundamental trade-off in the existing architecture.
+A conservative guard protects reliability but suppresses executions that have sufficient budget.
+Relaxing the guard improves feature availability but permits deadline violations in constrained contexts.
+Retuning a global threshold only moves the boundary among reliability, feature availability, and shot-to-shot performance.
+Under the existing architecture, the enhancement could not be enabled for release.
+A viable solution must instead estimate the remaining per-capture work and coordinate both optional-work admission and the rate at which subsequent captures enter the system.
 
 % Optional sentence, subject to internal disclosure approval:
 % Despite repeated performance optimization across two product cycles, the

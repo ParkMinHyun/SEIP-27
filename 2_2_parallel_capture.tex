@@ -1,8 +1,19 @@
 \subsection{Parallel Capture and Cross-Shot Deadline Contention}
 \label{sec:parallel-capture}
 
-Without parallel capture, the application accepts the next shutter input only after the preceding capture has collected its required frames and metadata and completed the Draft Sequence. Parallel capture removes this serialization at the capture interface. The lower camera stack can report \texttt{captureAvailable} as soon as it is ready to accept another request, even when buffers and Draft work from an earlier capture remain outstanding. The application can therefore initiate the next capture earlier, which substantially improves shot-to-shot responsiveness on flagship devices.
+Without parallel capture, the application accepts the next shutter input only after the preceding capture has collected its required frames and metadata and completed the Draft Sequence.
+Parallel capture removes this serialization at the capture interface.
+The lower camera stack can report \texttt{captureAvailable} as soon as it is ready to accept another request, even when buffers and Draft work from an earlier capture remain outstanding.
+The application can therefore initiate the next capture earlier, which substantially improves shot-to-shot responsiveness on flagship devices.
 
-However, parallel capture changes one sequential deadline into several overlapping deadlines. Every accepted request starts an independent Capture Timeout clock. The overlapping requests contend for CPU time, memory bandwidth, executors, and image buffers. More importantly, accepting captures in parallel does not make every downstream stage parallel. If a later capture waits for a serialized stage owned by an earlier capture, the waiting time is charged to the later capture's own deadline. The remaining budget therefore decreases across a burst even when the later capture's local processing time does not increase.
+However, parallel capture changes one sequential deadline into several overlapping deadlines.
+Every accepted request starts an independent Capture Timeout clock.
+The overlapping requests contend for CPU time, memory bandwidth, executors, and image buffers.
+More importantly, accepting captures in parallel does not make every downstream stage parallel.
+If a later capture waits for a serialized stage owned by an earlier capture, the waiting time is charged to the later capture's own deadline.
+The remaining budget therefore decreases across a burst even when the later capture's local processing time does not increase.
 
-Production systems have contained this risk by restricting parallel capture under selected fixed conditions, such as a thermal state or an in-flight-capture count. Such restrictions reduce the arrival rate but also sacrifice part of the shot-to-shot benefit. Incident analysis identified the Draft Sequence as the relevant serialized path in this work: capture requests can overlap, whereas their first durable results must be produced in capture order by a single worker. The next section explains why this serialization is necessary and why additional Draft processing amplifies cross-shot deadline contention.
+Production systems have contained this risk by restricting parallel capture under selected fixed conditions, such as a thermal state or an in-flight-capture count.
+Such restrictions reduce the arrival rate but also sacrifice part of the shot-to-shot benefit.
+Incident analysis identified the Draft Sequence as the relevant serialized path in this work: capture requests can overlap, whereas their first durable results must be produced in capture order by a single worker.
+The next section explains why this serialization is necessary and why additional Draft processing amplifies cross-shot deadline contention.

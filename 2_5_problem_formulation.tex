@@ -1,17 +1,30 @@
 \subsection{Problem Formulation and Design Requirements}
 \label{sec:control-problem}
 
-For each capture $i$, let $\mathbf{z}_i$ denote the runtime context available to the controller, including device capability, thermal state, memory pressure, resolution, enabled processing, and queue state. Let $u_i$ select the optional Draft stages for that capture, and let $T_i(u_i\mid\mathbf{z}_i)$ be the execution time from the start of Draft processing through all mandatory completion work. With queueing delay $q_i=s_i-a_i$, the deadline condition is
+Let \deadline{} denote the fixed Capture Timeout deadline.
+For each capture $i$, let $\mathbf{z}_i$ denote the runtime context available to the controller, including device capability, thermal state, memory pressure, resolution, enabled processing, and queue state.
+Let $u_i$ select the optional Draft stages for that capture, and let $T_i(u_i\mid\mathbf{z}_i)$ be the execution time from the start of Draft processing through all mandatory completion work.
+With queueing delay $q_i=s_i-a_i$, the deadline condition is
 \begin{equation}
 q_i + T_i(u_i\mid\mathbf{z}_i) \leq \deadline.
 \label{eq:control-objective}
 \end{equation}
 
-This condition exposes two distinct control points. \emph{Per-capture admission} chooses which optional stages the capture currently owning the Draft worker may execute. The decision must account for the complete remaining sequence, not only the next optional stage. Admission can reduce current service demand, but it cannot recover $q_i$, the budget already lost before the worker became available.
+This condition exposes two distinct control points.
+\emph{Per-capture admission} chooses which optional stages the capture currently owning the Draft worker may execute.
+The decision must account for the complete remaining sequence, not only the next optional stage.
+Admission can reduce current service demand, but it cannot recover $q_i$, the budget already lost before the worker became available.
 
-\emph{Capture pacing} controls when the application is informed that another capture can start. Delaying \texttt{captureAvailable} prevents a new deadline from starting when predicted backlog would make the subsequent capture unsafe. Pacing can prevent future queueing, but it cannot extend the deadline of a capture that is already active. Admission and pacing are therefore complementary: the former controls current work, whereas the latter controls future arrivals.
+\emph{Capture pacing} controls when the application is informed that another capture can start.
+Delaying \texttt{captureAvailable} prevents a new deadline from starting when predicted backlog would make the subsequent capture unsafe.
+Pacing can prevent future queueing, but it cannot extend the deadline of a capture that is already active.
+Admission and pacing are therefore complementary: the former controls current work, whereas the latter controls future arrivals.
 
-The production objective is lexicographic. First, every admitted capture should satisfy the Capture Timeout contract. Second, optional Draft enhancement should be retained whenever the observed runtime context provides sufficient budget. Third, any pacing delay and the resulting shot-to-shot penalty should be minimized. These goals lead to five design requirements:
+The production objective is lexicographic.
+First, every admitted capture should satisfy the Capture Timeout contract.
+Second, optional Draft enhancement should be retained whenever the observed runtime context provides sufficient budget.
+Third, any pacing delay and the resulting shot-to-shot penalty should be minimized.
+These goals lead to five design requirements:
 
 \begin{enumerate}\setlength{\itemsep}{1pt}\setlength{\parskip}{0pt}\setlength{\parsep}{0pt}
   \item \textbf{Per-capture budget awareness:} reason from the deadline budget that remains after actual queueing, rather than from an absolute thermal state.
