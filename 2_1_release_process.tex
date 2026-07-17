@@ -2,9 +2,9 @@
 \label{sec:release-process}
 
 The Samsung camera software studied in this work is a privileged, preloaded system application that interacts with Samsung-specific Android framework extensions, system services, vendor components, and companion applications.
-Capture in particular is a cross-layer workflow, so a failure discovered late in development can require a coordinated firmware update rather than an application-only fix.
+Capture in particular is a cross-layer workflow, so a failure discovered late in development can require a firmware update rather than an application-only fix.
 Because such an update requires cross-component coordination and broad revalidation, daily development builds undergo automated testing across supported device models and OS versions.
-Validation intensifies near release through stress testing designed to expose timing failures and memory-pressure issues.
+Near release, a specialized camera-validation team collaborates with development engineers to stress-test these builds, diagnose timing and memory-pressure failures, and verify the resulting fixes.
 
 \smallskip\noindent\textbf{Capture Timeout.}
 Capture Timeout is one of the product's highest-priority camera reliability KPIs.
