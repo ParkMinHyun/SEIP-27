@@ -1,21 +1,16 @@
 \subsection{Parallel Capture and Cross-Shot Deadline Contention}
 \label{sec:parallel-capture}
 
-Without parallel capture, the application accepts the next shutter input only after the preceding capture has collected its required frames and metadata and completed the Draft Sequence.
-Parallel capture removes this interface-level serialization.
-The hardware abstraction layer (HAL) can report \texttt{captureAvailable} while buffers and Draft work from an earlier capture remain outstanding, allowing the application to initiate the next capture sooner and improving shot-to-shot responsiveness.
+Without parallel capture, the application accepts the next shutter input only after the preceding capture's intermediate image becomes available.
+Parallel capture removes this interface-level serialization: the hardware abstraction layer (HAL) can signal \texttt{captureAvailable} while buffers and Draft work from the preceding capture remain outstanding, thereby substantially shortening the shot-to-shot interval.
 
-However, every accepted request starts an independent Capture Timeout clock, so parallel capture creates multiple overlapping deadlines.
-The requests can overlap, but their Draft Sequences still run one at a time in capture order.
-A later capture may therefore wait behind earlier Draft work while its own timeout clock continues to run.
-This queueing delay can cause a timeout even when the later capture's own processing time is unchanged, as illustrated in Figure~\ref{fig:overlap}.
+However, each accepted request starts an independent Capture Timeout clock, so parallel capture creates overlapping deadlines.
+Frame and metadata collection can overlap across requests, but their Draft Sequences still run one at a time in capture order.
+A later capture may therefore consume part of its timeout budget while waiting behind earlier Draft work and time out even when its own processing time is unchanged, as illustrated in Figure~\ref{fig:overlap}.
 
 \begin{figure}[t]
   \centering
   \resizebox{\columnwidth}{!}{\input{figures/fig_draft_overlap.tex}}
-  \caption{Cross-shot deadline contention under parallel capture.
-  Each accepted request starts an independent deadline clock.
-  Frame and metadata collection can overlap, whereas Draft Sequences run one at a time in capture order.
-  Queueing therefore consumes an increasing share of later captures' budgets, causing capture $i{+}2$ to time out despite the same Draft Sequence duration.}
+  \caption{Cross-shot deadline contention under parallel capture.}
   \label{fig:overlap}
 \end{figure}

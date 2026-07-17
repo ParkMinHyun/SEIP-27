@@ -5,7 +5,7 @@ A shutter event requests multiple image buffers and their metadata.
 As Figure~\ref{fig:draft-pipeline} shows, the camera framework uses these inputs for two complementary purposes.
 Full post-processing performs compute- and memory-intensive multi-frame processing and eventually stores the final photograph.
 In parallel, the Draft Sequence selects a representative frame, encodes and stores it, and registers it in the media database.
-The user can therefore inspect a durable capture result before full post-processing finishes.
+The user can therefore inspect the intermediate image before full post-processing finishes, after which the final image replaces it.
 The Draft image also serves as a recovery artifact when final processing fails or is interrupted.
 It is thus different from the transient preview stream: the Draft Sequence improves both responsiveness and capture reliability.
 

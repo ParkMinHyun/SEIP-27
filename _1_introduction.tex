@@ -1,6 +1,6 @@
 \section{Introduction}\label{sec:introduction}
 
-Applying lightweight Bokeh to the temporary image shown after a portrait
+Applying lightweight Bokeh to the intermediate image shown after a portrait
 capture appears to be a local enhancement. In a commercial mobile-camera
 framework, it became a release-blocking systems problem. Modern mobile cameras form a
 final photograph from multiple frames using compute- and memory-intensive
@@ -36,7 +36,7 @@ consecutive flagship generations.
 
 The deployed safeguard does not address this failure mechanism. After parallel
 capture was already in production, a Filter-related timeout on a lower-tier
-device led the shared framework to disable optional Draft processing at
+device led the shared camera code to disable optional Draft processing at
 thermal level~4 and above. The rule was effective as an incident-containment
 measure, but it is a poor feature-enablement policy. Below level~4, it admits
 Bokeh even when accumulated queueing has exhausted the remaining deadline. At

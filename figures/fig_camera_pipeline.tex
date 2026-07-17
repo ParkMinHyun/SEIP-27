@@ -8,7 +8,7 @@
 % result, while heavy post-processing is deferred until the camera
 % application switches to the background and replaces the Draft with the
 % final portrait (bokeh thumbnail: sharp subject, blurred background).
-\begin{figure}[t]
+\begin{figure}[b]
   \centering
   \begin{tikzpicture}[
     font=\scriptsize,
@@ -100,10 +100,6 @@
     \node[anchor=west, text=black!55] at (7.68,1.90) {replace};
 
   \end{tikzpicture}
-  \caption{Draft processing in portrait capture. A shutter event first
-  collects the captured frames and metadata, which feed two paths. The
-  Draft Sequence quickly publishes an early image. The heavier post-processing
-  pipeline is deferred until the camera application switches to the background;
-  upon completion, its final image replaces the Draft.}
+  \caption{Draft processing in portrait capture.}
   \label{fig:draft-pipeline}
 \end{figure}
