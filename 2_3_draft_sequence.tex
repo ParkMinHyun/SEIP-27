@@ -25,17 +25,3 @@ This design preserves capture order and bounds the number of simultaneously acti
 Running several Draft Sequences concurrently would require result reordering and would increase peak memory, compute bursts, and interference with preview and ongoing capture.
 The single worker is therefore a deliberate production constraint, not an accidental lack of parallelism.
 Under parallel capture, however, requests can arrive faster than this worker completes them.
-
-Figure~\ref{fig:overlap} illustrates the resulting cross-shot effect.
-A latency increase in one Draft Sequence delays the start of every queued Draft Sequence.
-A later capture can therefore violate the deadline even when its own stage times are unchanged.
-The main difficulty is not only the latency of one enhancement, but also the backlog that this latency creates for captures whose deadlines have already started.
-
-\begin{figure}[t]
-  \centering
-  \resizebox{\columnwidth}{!}{\input{figures/fig_draft_overlap.tex}}
-  \caption{Cross-shot deadline contention under parallel capture.
-  Each request starts a fixed deadline at acceptance.
-  Because Draft Sequences execute in order, later captures lose an increasing portion of the budget to queueing and can enter the mandatory tail after their deadline.}
-  \label{fig:overlap}
-\end{figure}

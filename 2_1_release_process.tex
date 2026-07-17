@@ -11,10 +11,7 @@ Reproducible failures are tracked through a diagnose--fix--retest loop before th
 The product monitors internal performance and reliability KPIs throughout this validation process.
 One of its highest-priority capture KPIs is \emph{Capture Timeout}.
 For each capture, the timeout clock starts when the request is accepted and stops only after the required frames and metadata have been collected and an intermediate image has been stored and made available to the user.
+In this system, the \emph{Draft Sequence} stores and publishes this intermediate image before full post-processing completes and therefore lies on the Capture Timeout path.
 The product enforces a fixed deadline; its exact value is omitted because it is an internal product parameter.
 In development builds, a deadline violation triggers a fail-fast diagnostic event, ensuring that it is registered and investigated rather than remaining as unbounded user-visible latency.
 A reproducible violation blocks release until the failure is fixed, the affected behavior is restricted, or the feature is removed.
-
-In this system, the \emph{Draft Sequence} stores and publishes this intermediate image before full post-processing completes and therefore lies on the Capture Timeout path.
-Section~\ref{sec:draft-background} explains this path in detail.
-Parallel capture improves shot-to-shot responsiveness by allowing requests to overlap, but it also makes this ordered path contend with multiple active deadlines.
