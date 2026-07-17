@@ -19,7 +19,7 @@
 
   % ---------- legend ----------
   \node[anchor=east, inner sep=2pt] (lt2) at (9.70, 5.40)
-    {\footnotesize queueing delay};
+    {\footnotesize Draft queueing delay};
   \node[swatch, queued, left=0mm of lt2] (lg2) {};
   \node[anchor=east, inner sep=2pt, left=7mm of lg2] (lt1)
     {\footnotesize frames \& metadata};
@@ -53,7 +53,7 @@
   \node at (0.975, 2.425) {\scriptsize collect};
   \draw[queued] (1.40, 2.20) rectangle (3.50, 2.65);
   \node[fill=white, inner sep=1.5pt] at (2.45, 2.425)
-    {\footnotesize\textcolor{red!60!black}{queued}};
+    {\footnotesize\textcolor{red!60!black}{waiting}};
   \draw[draftstage] (3.50, 2.20) rectangle (6.10, 2.65);
   \node at (4.80, 2.425) {\scriptsize Draft Sequence};
 
@@ -73,7 +73,7 @@
   \node at (1.475, 0.925) {\scriptsize collect};
   \draw[queued] (1.90, 0.70) rectangle (6.10, 1.15);
   \node[fill=white, inner sep=1.5pt] at (4.00, 0.925)
-    {\footnotesize\textcolor{red!60!black}{queued}};
+    {\footnotesize\textcolor{red!60!black}{waiting}};
   \draw[draftstage] (6.10, 0.70) rectangle (8.70, 1.15);
 
   % The same Draft duration now extends beyond capture i+2's deadline.
