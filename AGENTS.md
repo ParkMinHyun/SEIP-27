@@ -20,7 +20,7 @@ This repository is a LaTeX paper project for SEIP 2027.
 
 - Current manuscript topic: preventing Capture Timeout in the Android Camera Framework.
 - The Draft Sequence was introduced together with the post-processing pipeline; it publishes an early image and provides recovery while final processing continues.
-- The work targets enabling lightweight multi-frame Draft Bokeh on flagship portrait capture, whose heavy final composition can then be deferred until the camera app enters the background.
+- The work targets enabling an anonymized lightweight multi-frame Draft workload in a high-end capture mode, whose heavy final composition can then be deferred until the camera app enters the background.
 - The proposed system is currently framed as the Context-Aware Draft Sequence Controller, comprising remaining-sequence admission and capture-availability pacing.
 - The paper studies coordinated workload and arrival control for tail-latency-based Capture Timeout, not average-latency optimization for a single image-processing stage.
 - Preserve the core research framing unless the user explicitly asks to change the problem statement, contribution, or terminology.
@@ -84,6 +84,7 @@ Do not copy text, claims, or citations from the reference papers unless the user
 ## Writing Rules
 
 - Prefer concise, direct academic prose.
+- In manuscript-facing text, figures, tables, captions, and source comments, do not disclose confidential shot-mode or effect-stage names (including Bokeh, Portrait, and Filter) or state that a specific feature was dropped, did not ship, or failed release enablement. Use anonymized terms such as multi-frame stage M, single-frame stage S, richer Draft workload, and continuous capture. Internal research-context and evidence files may retain the mapping but must not be included in the submission package.
 - Keep terminology consistent across files. If introducing or renaming a term, check nearby section files and `macros.tex`.
 - Avoid unsupported claims. If a claim needs evidence, add a citation placeholder or ask for the intended source.
 - Preserve LaTeX commands, labels, citations, and macros unless the requested edit requires changing them.
