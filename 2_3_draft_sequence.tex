@@ -3,22 +3,21 @@
 
 A shutter event requests multiple image buffers and their metadata.
 As Figure~\ref{fig:draft-pipeline} shows, the camera framework uses these inputs for two complementary purposes.
-The post-processing pipeline performs multi-frame compositing, applies single-frame processing to the composited image, and stores the result as the final photograph.
-In parallel, the Draft Sequence selects and stores a representative frame for early display to the user.
-Upon successful completion of post-processing, the final photograph replaces this frame; if post-processing fails or is interrupted, the stored frame remains available for recovery.
+The post-processing pipeline performs multi-frame compositing, applies single-frame processing to the composited image, and stores the result as the final image.
+In parallel, the Draft Sequence selects and stores a representative frame as the Draft image for early display to the user.
+Upon successful completion of post-processing, the final image replaces the Draft image; if post-processing fails or is interrupted, the Draft image remains available for recovery.
 The Draft Sequence is therefore both user-facing and reliability-critical.
 
 \input{figures/fig_camera_pipeline.tex}
 
 \smallskip\noindent\textbf{Increasing Draft workload.}
-As post-processing became more compute- and memory-intensive across product generations, the framework began deferring final composition for selected shot modes until the camera application entered the background to preserve foreground responsiveness.
-This deferral kept the Draft image visible for longer, increasing the importance of visual consistency with the final photograph.
-The Draft Sequence consequently incorporated lightweight single-frame processing.
-It then incorporated lightweight single-frame processing to reduce conspicuous differences from the final photograph.
+As post-processing became more compute- and memory-intensive across product generations, the framework began deferring post-processing for selected shot modes until the camera application entered the background to preserve foreground responsiveness.
+This deferral kept the Draft image visible for longer, increasing the importance of visual consistency with the final image.
+The Draft Sequence consequently incorporated lightweight single-frame processing to reduce conspicuous differences from the final image.
 Most recently, the Draft Sequence was extended with a lightweight counterpart to the multi-frame compositing stage in the post-processing pipeline.
-These additions narrow the visual gap between the Draft image and the final photograph but increase the workload on the Capture Timeout path.
+These additions narrow the visual gap between the Draft image and the final image but increase the workload on the Capture Timeout path.
 
 \smallskip\noindent\textbf{Ordered single-worker execution.}
 The framework executes Draft Sequences on a single worker thread in capture order.
 This deliberate production design publishes Draft images in user-visible capture order and bounds active Draft processing to one sequence.
-Concurrent execution would require buffering out-of-order results and would increase the compute and memory footprint of Draft processing.
+Concurrent execution would require buffering out-of-order results and would increase peak compute and memory demand across the capture pipeline.

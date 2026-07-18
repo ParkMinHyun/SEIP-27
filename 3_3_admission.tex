@@ -58,7 +58,7 @@ decision.
 Admission also respects the structural dependencies among optional stages.
 On JPEG inputs, an optional decoding step is the prerequisite of all
 downstream YUV effects; it is forced to run when a frame watermark must be
-stamped, and conversely, when decoding or the filter is rejected, the
+stamped, and conversely, when decoding or the single-frame stage is rejected, the
 remaining YUV-dependent optional work is skipped as a group while the
 mandatory frame watermark is preserved. Because every decision is
 conditioned on the full remaining suffix, these per-stage decisions
@@ -66,7 +66,7 @@ compose into a consistent degraded path rather than an arbitrary subset of
 effects.
 
 Admission is a start-time decision, and it needs a second line of defense:
-once a native stage such as Bokeh has started, it cannot be aborted safely
+once a non-preemptible native stage has started, it cannot be aborted safely
 and consumes unrecoverable time if the runtime degrades mid-execution.
 Each admitted optional stage therefore runs on a watchdog whose timeout
 reserves the calibrated cost of the sequence's reserved workloads

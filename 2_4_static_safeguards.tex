@@ -1,49 +1,36 @@
-\subsection{Limitations of Static Runtime Safeguards}
+\subsection{Limitations of Fixed-Threshold Safeguards}
 \label{sec:guard-limit}
 \FloatBarrier
 
-\smallskip\noindent\textbf{Static thermal gating and capture pacing.}
-To contain Capture Timeouts without an online cost model, the production framework uses two forms of static control.
-First, it disables optional Draft processing at and above a fixed thermal boundary.
-Second, selected device configurations stop exposing \texttt{captureAvailable} when the thermal state or the number of in-flight captures crosses a fixed condition.
-These policies are inexpensive, deterministic, and practical for incident containment.
-Moreover, the Draft control path is shared across products and is maintained primarily through feature-level policy; proliferating model-specific branches would increase implementation and validation cost.
+\smallskip\noindent\textbf{Deployed safeguards.}
+The production framework uses two fixed-threshold policies to contain Capture Timeouts without an online cost model.
+First, the studied product disables optional Draft processing at and above a fixed overheat level.
+Second, on the HAL-driven parallel-capture path, the framework suppresses \texttt{captureAvailable} once the number of active post-processing sequences reaches a fixed cap.
+These deterministic policies impose little runtime overhead and are straightforward to validate, making them practical for incident containment.
 
-However, these proxies do not describe the work that remains for an individual capture.
-Thermal state does not encode the queueing delay already consumed, image resolution, enabled effect combination, memory pressure, storage-service delay, device capability, or position within a burst.
-An in-flight-capture count similarly treats all captures as having the same service demand.
-A fixed rule can therefore reject a feasible execution in one context and admit an unsafe execution in another.
+The overheat guard nevertheless has a key limitation: its fixed boundary does not estimate whether an individual capture's remaining ordered work fits its deadline budget.
+We characterized this mismatch on an anonymized flagship device that supports parallel capture.
+We normalized the deployed boundary as $K$ and bypassed it to execute the optional stages across the reported levels.
+Table~\ref{tab:timeout_index} reports the first Capture Timeout within the first 20 captures of each 30-capture trace; some traces marked ``--'' in this reporting window failed later.
 
 \input{tables/tab_timeout_index.tex}
 
-Table~\ref{tab:timeout_index} demonstrates this limitation on an anonymized flagship device that supports parallel capture.
-The deployed thermal boundary is normalized as $K$, and the guard was bypassed only for characterization.
-M denotes optional multi-frame Bokeh processing and S an optional single-frame Draft effect; shot-to-shot values are median intervals from the normal 24MP trace.
-Deadline violations occur below $K$: for example, under memory pressure the first miss occurs between the 7th and 19th captures at $K-1$, depending on resolution and workload.
-Thus, a policy that admits every optional execution below $K$ is not sufficient for reliability.
+Below $K$, the guard admits executions that still violate the deadline, and the failure point changes with the remaining Draft workload.
+At $K-1$ under 24MP memory pressure, the first miss occurs at capture 7 with M+S and at capture 15 with M alone.
+In every reported trace with an observed miss, the preceding captures meet the deadline before a later capture violates it.
+Thus, the decision depends on the remaining sequence and a capture's position in the queued burst, neither of which is represented by $K$.
 
-The observed failure regime already appears with 12 overlapping Draft Sequences, so the table reports first misses only within the first 20 captures.
-Entries marked ``--'' indicate that no timeout occurred within this reporting window, including configurations whose first miss occurred later in the longer characterization run.
+At and above $K$, however, the same guard suppresses optional work from the first capture even when early captures meet the deadline in the characterization.
+At $K$, the normal 12MP M-only workload completes 15 captures before its first miss; at $K+2$, the corresponding 12MP and 24MP M-only workloads each complete ten captures.
+These prefixes do not establish burst-wide safety; together with the below-$K$ misses, they show that overheat level alone cannot classify per-capture risk across the tested traces.
+Model-specific branches would raise implementation and validation cost without resolving within-burst variation.
 
-The same table also shows over-restriction at and above $K$.
-At $K$, the normal 12MP workload with only multi-frame Bokeh processing completes 15 captures before the first miss.
-At $K+2$, the corresponding M-only normal workloads still complete ten captures before the first miss.
-Nevertheless, a static guard at $K$ disables the optional stage from the first capture in all of these contexts.
-Even within one thermal row, the first-miss index varies widely: at $K$, it ranges from 5 to 16 as resolution, memory pressure, and workload composition change.
-No single thermal boundary separates safe and unsafe executions.
+\smallskip\noindent\textbf{Limits of independent fixed gates.}
+The callback gate is equally coarse: it uses the number of active post-processing sequences as a fixed proxy for outstanding capture backlog, although equal counts need not represent equal queued Draft work or equal remaining budgets.
+Tightening the cap can reduce backlog in constrained contexts but can reduce shot-to-shot responsiveness on capable devices; relaxing it can preserve responsiveness but admit more backlog in slow contexts.
+By the time a queued capture reaches the Draft worker, skipping optional work can also be too late for its remaining path to meet the deadline.
 
-Fixed capture pacing has the same limitation.
-A count threshold measures how many requests are active, but not how much ordered Draft work they contain or how much budget each request has already lost.
-Lowering the count protects constrained cases at the cost of shot-to-shot responsiveness on capable devices; raising it exposes slow contexts to accumulated backlog.
-
-\smallskip\noindent\textbf{Consequence for feature release.}
-Adding lightweight multi-frame Bokeh to the Draft Sequence exposes a fundamental trade-off in the existing architecture.
-A conservative guard protects reliability but suppresses executions that have sufficient budget.
-Relaxing the guard improves feature availability but permits deadline violations in constrained contexts.
-Retuning a global threshold only moves the boundary among reliability, feature availability, and shot-to-shot performance.
-Under the existing architecture, this multi-frame path could not be enabled for release.
-A viable solution must instead estimate the remaining per-capture work and coordinate both optional-work admission and the rate at which subsequent captures enter the system.
-
-% Optional sentence, subject to internal disclosure approval:
-% Despite repeated performance optimization across two product cycles, the
-% multi-frame path did not satisfy both reliability and feature-availability KPIs.
+\smallskip\noindent\textbf{Implication for runtime control.}
+For the richer Draft workload, these opposing errors expose a three-way trade-off among timeout compliance, optional-work retention, and shot-to-shot responsiveness.
+Retuning either threshold only moves the operating point among these goals; it does not resolve the mismatch between a global proxy and per-capture deadline risk.
+Fixed thresholds therefore leave two decisions unresolved: whether the current capture's remaining Draft path fits the budget left after queueing, and whether allowing the next request to start would create unsafe queueing.

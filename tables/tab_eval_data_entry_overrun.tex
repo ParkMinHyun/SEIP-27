@@ -1,7 +1,7 @@
 % Combined per-burst measurement table (Data Entry mirror), run-rate variant.
 % Shows only directly observed burst-level outcomes: a single shared
 % Capture-timeouts column (identical in both capture modes), Run rate
-% (Bokeh / Filter / Full = both admitted), and Pacing.
+% (M / S / Full = both admitted), and Pacing.
 % Prediction/decision quality: tab_eval_pred_quality.tex (tab:eval_pred_quality).
 % Baseline comparison frontier: fig_eval_frontier.tex (fig:eval_frontier).
 %
@@ -17,7 +17,7 @@
 %   NOTE vs. the pre-0710 file: Lv5 memory pacing corrected to S7 values
 %   (5 shots: 0/0, 10 shots: 479/1288; the old file showed 452/1150 and
 %   901/1288 from a different computation).
-% Full = count of shots with bokehAdmitted AND filterAdmitted.
+% Full = count of shots with both M and S admitted.
 % Capture timeouts: zero in every displayed burst, both modes. Outside the
 %   displayed bursts: normal dataset has 1 watchdog recovery (capture #344,
 %   session S9, no timeout); memory dataset has 1 capture timeout inside the
@@ -29,7 +29,7 @@
 
 \begin{table*}[t]
   \centering
-  \caption{Per-burst draft-sequence measurements under our admission controller (12MP tier), with normal and memory-pressure capture side by side. \emph{Capture timeouts} is the number of shots whose capture exceeded the timeout deadline; it is identical for both capture modes and zero in every burst shown (the normal-capture dataset's single watchdog recovery, which did not become a timeout, and the memory-pressure dataset's single capture timeout both occurred in sessions outside the bursts shown; the latter session is excluded from all reported metrics). Run rate is the cumulative number of captures in which the stage was admitted over the shot sequence; \emph{Full} counts the shots on which both optional stages were admitted, so Shots minus Full is the number of shots the controller degraded to protect the capture deadline. Pacing is the added delay of the \texttt{captureAvailable} callback. Prediction and decision quality of the admission controller is reported in Table~\ref{tab:eval_pred_quality}; the comparison against baseline predictors in Figure~\ref{fig:eval_frontier}.}
+  \caption{Per-burst draft-sequence measurements under our admission controller (12MP tier), with normal and memory-pressure capture side by side. M and S denote the anonymized multi-frame and single-frame Draft stages, respectively. \emph{Capture timeouts} is the number of shots whose capture exceeded the timeout deadline; it is identical for both capture modes and zero in every burst shown (the normal-capture dataset's single watchdog recovery, which did not become a timeout, and the memory-pressure dataset's single capture timeout both occurred in sessions outside the bursts shown; the latter session is excluded from all reported metrics). Run rate is the cumulative number of captures in which the stage was admitted over the shot sequence; \emph{Full} counts the shots on which both optional stages were admitted, so Shots minus Full is the number of shots the controller degraded to protect the capture deadline. Pacing is the added delay of the \texttt{captureAvailable} callback. Prediction and decision quality of the admission controller is reported in Table~\ref{tab:eval_pred_quality}; the comparison against baseline predictors in Figure~\ref{fig:eval_frontier}.}
   \label{tab:eval_data_12mp}
   \resizebox{\textwidth}{!}{%
   \begin{tabular}{c|c|c||ccc|rr||ccc|rr}
@@ -43,8 +43,8 @@
   & & & \multicolumn{3}{c|}{\textbf{Run rate}} & \multicolumn{2}{c||}{\textbf{Pacing (ms)}}
     & \multicolumn{3}{c|}{\textbf{Run rate}} & \multicolumn{2}{c}{\textbf{Pacing (ms)}} \\
   \cmidrule(lr){4-6}\cmidrule(lr){7-8}\cmidrule(lr){9-11}\cmidrule(l){12-13}
-  & & & \textbf{Bokeh} & \textbf{Filter} & \textbf{Full} & \textbf{Avg} & \textbf{Max}
-    & \textbf{Bokeh} & \textbf{Filter} & \textbf{Full} & \textbf{Avg} & \textbf{Max} \\
+  & & & \textbf{M} & \textbf{S} & \textbf{Full} & \textbf{Avg} & \textbf{Max}
+    & \textbf{M} & \textbf{S} & \textbf{Full} & \textbf{Avg} & \textbf{Max} \\
   \midrule \midrule
   \multirow{3}{*}{Lv0} & 5 & 0 & 5/5 & 5/5 & 5/5 & 0 & 0 & 5/5 & 5/5 & 5/5 & 0 & 0 \\
   & 10 & 0 & 10/10 & 10/10 & 10/10 & 0 & 0 & 10/10 & 10/10 & 10/10 & 0 & 0 \\

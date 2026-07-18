@@ -15,7 +15,7 @@
 
 \begin{table*}[t]
   \centering
-  \caption{Per-burst draft-sequence measurements under our admission controller (12MP tier), with normal and memory-pressure capture side by side. All optional stages are admitted with zero Capture Timeouts (stability 100\%). Run rate is the cumulative number of captures in which the stage was admitted over the shot sequence. Under \emph{Upper bound}, margin is the median headroom of the predicted upper bound over the observed sequence duration (predicted minus actual, in milliseconds; smaller is tighter) and cover is the percentage of stage executions whose observed duration stayed within the predicted upper bound (bound coverage; the rare misses are recovered by the watchdog so no capture times out). Pacing is the added delay of the \texttt{captureAvailable} callback.}
+  \caption{Per-burst draft-sequence measurements under our admission controller (12MP tier), with normal and memory-pressure capture side by side. M and S denote the anonymized multi-frame and single-frame Draft stages, respectively. All optional stages are admitted with zero Capture Timeouts (stability 100\%). Run rate is the cumulative number of captures in which the stage was admitted over the shot sequence. Under \emph{Upper bound}, margin is the median headroom of the predicted upper bound over the observed sequence duration (predicted minus actual, in milliseconds; smaller is tighter) and cover is the percentage of stage executions whose observed duration stayed within the predicted upper bound (bound coverage; the rare misses are recovered by the watchdog so no capture times out). Pacing is the added delay of the \texttt{captureAvailable} callback.}
   \label{tab:eval_data_12mp}
   \resizebox{\textwidth}{!}{%
   \begin{tabular}{c|c||cc|cc|rr||cc|cc|rr}
@@ -28,8 +28,8 @@
   & & \multicolumn{2}{c|}{\textbf{Run rate}} & \multicolumn{2}{c|}{\textbf{Upper bound}} & \multicolumn{2}{c||}{\textbf{Pacing (ms)}}
     & \multicolumn{2}{c|}{\textbf{Run rate}} & \multicolumn{2}{c|}{\textbf{Upper bound}} & \multicolumn{2}{c}{\textbf{Pacing (ms)}} \\
   \cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(lr){7-8}\cmidrule(lr){9-10}\cmidrule(lr){11-12}\cmidrule(l){13-14}
-  & & \textbf{Bokeh} & \textbf{Filter} & \makecell{\textbf{margin}\\{\scriptsize ms}} & \makecell{\textbf{cover}\\{\scriptsize \%}} & \textbf{Avg} & \textbf{Max}
-    & \textbf{Bokeh} & \textbf{Filter} & \makecell{\textbf{margin}\\{\scriptsize ms}} & \makecell{\textbf{cover}\\{\scriptsize \%}} & \textbf{Avg} & \textbf{Max} \\
+  & & \textbf{M} & \textbf{S} & \makecell{\textbf{margin}\\{\scriptsize ms}} & \makecell{\textbf{cover}\\{\scriptsize \%}} & \textbf{Avg} & \textbf{Max}
+    & \textbf{M} & \textbf{S} & \makecell{\textbf{margin}\\{\scriptsize ms}} & \makecell{\textbf{cover}\\{\scriptsize \%}} & \textbf{Avg} & \textbf{Max} \\
   \midrule \midrule
   \multirow{3}{*}{Lv0} & 5 & 5/5 & 5/5 & 52 & 80.0 & 0 & 0 & 5/5 & 5/5 & 34 & 80.0 & 0 & 0 \\
   & 10 & 10/10 & 10/10 & 22 & 84.0 & 0 & 0 & 10/10 & 10/10 & 25 & 64.6 & 0 & 0 \\

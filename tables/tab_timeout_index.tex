@@ -1,7 +1,7 @@
 % Anonymized characterization table using the original fixed-width layout.
 % K: deployed thermal boundary.
-% M: optional multi-frame Bokeh processing.
-% S: optional single-frame Draft effect.
+% M: anonymized optional multi-frame Draft stage.
+% S: anonymized optional single-frame Draft stage.
 \providecolor{tmoS1}{RGB}{252,227,220} % first failure at captures 10--20
 \providecolor{tmoS2}{RGB}{239,160,140} % 6--9
 \providecolor{tmoS3}{RGB}{201,80,63}   % <= 5
@@ -19,7 +19,7 @@
 
 \begin{table}[t]
   \centering
-  \caption{First Capture Timeout within a 20-capture window.}
+  \caption{First Capture Timeout within the first 20 captures of 30-capture bursts (deployed overheat-level guard bypassed).}
   \label{tab:timeout_index}
   {\scriptsize\setlength{\tabcolsep}{1.0pt}%
   \begin{tabular}{@{}D|H||RR|RR||RR|RR@{}}
@@ -80,5 +80,6 @@
   \colorbox{tmoS1}{\strut\,10--20\,}%
   \colorbox{tmoS2}{\strut\,6--9\,}%
   \colorbox{tmoS3}{\strut\,{${\leq}\,5$}\,}\par
+  $K$ denotes the deployed boundary; M and S denote anonymized multi-frame and single-frame Draft stages, respectively. Shot-to-Shot reports the median interval of the normal 24MP trace.\par
   \end{minipage}}
 \end{table}

@@ -16,11 +16,11 @@
   \textbf{Workload} & \textbf{Key context} & \textbf{Policy} &
   \textbf{Role under control} \\
   \midrule
-  Bokeh & size bucket & optional & admission-gated, watchdog-guarded \\
+  Multi-frame stage (M) & size bucket & optional & admission-gated, watchdog-guarded \\
   Dynamic Function & size bucket & required & always runs; observed only \\
   Decoding & size bucket & optional & JPEG-to-YUV prerequisite of
   YUV effects \\
-  Filter & size bucket & optional & admission-gated, watchdog-guarded \\
+  Single-frame stage (S) & size bucket & optional & admission-gated, watchdog-guarded \\
   Watermark (overlay) & size bucket, type & optional & degradable visual
   enhancement \\
   Watermark (frame) & size bucket, type & required & correctness stamp;

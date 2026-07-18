@@ -7,7 +7,7 @@
 % optional stage below the guard threshold (Lv4).
 %
 % Cell format: first timeout shot (top; -- = none within 30 shots)
-%              bokeh/filter cumulative run rate in % (bottom).
+%              M/S cumulative run rate in % (bottom).
 %
 % Severity shading reuses the Table 1 ramp; gray marks guard skip-all rows.
 \providecolor{tmoS1}{RGB}{252,227,220}   % first failure at shot >= 20
@@ -18,12 +18,13 @@
 \newcolumntype{Z}{>{\centering\arraybackslash}m{1.3cm}}
 \begin{table}[t]
   \centering
-  \caption{Draft-stage admission outcomes over a 30-shot continuous portrait
-  burst under the deployed thermal-level guard (Guard) and our admission
+  \caption{Draft-stage admission outcomes over a 30-shot continuous-capture
+  sequence under the deployed thermal-level guard (Guard) and our admission
   controller (Ours), by overheat level, memory condition, and image-size
-  tier. Each cell reports the first shot index at which Capture Timeout
+  tier. M and S denote the anonymized multi-frame and single-frame Draft
+  stages, respectively. Each cell reports the first shot index at which Capture Timeout
   occurs (top; ``--'' means no timeout within the burst) and the cumulative
-  bokeh/filter run rates in percent over the burst (bottom). The guard
+  M/S run rates in percent over the burst (bottom). The guard
   admits every optional stage below Lv4, inheriting the timeouts of
   Table~\ref{tab:timeout_index}, and skips every optional stage at Lv4 and
   above (gray cells). Cells marked $^{\dagger}$ report 12MP-mode
