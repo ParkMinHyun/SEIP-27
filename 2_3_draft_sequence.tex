@@ -1,27 +1,26 @@
-\subsection{The Draft Sequence as a Deadline-Critical Path}
+\subsection{The Draft Sequence on the Capture Timeout Path}
 \label{sec:draft-background}
 
 A shutter event requests multiple image buffers and their metadata.
 As Figure~\ref{fig:draft-pipeline} shows, the camera framework uses these inputs for two complementary purposes.
-Full post-processing performs compute- and memory-intensive multi-frame processing and eventually stores the final photograph.
-In parallel, the Draft Sequence selects a representative frame, encodes and stores it, and registers it in the media database.
-The user can therefore inspect the intermediate image before full post-processing finishes, after which the final image replaces it.
-The Draft image also serves as a recovery artifact when final processing fails or is interrupted.
-It is thus different from the transient preview stream: the Draft Sequence improves both responsiveness and capture reliability.
+The post-processing pipeline performs multi-frame compositing, applies single-frame processing to the composited image, and stores the result as the final photograph.
+In parallel, the Draft Sequence selects and stores a representative frame for early display to the user.
+Upon successful completion of post-processing, the final photograph replaces this frame; if post-processing fails or is interrupted, the stored frame remains available for recovery.
 
 \input{figures/fig_camera_pipeline.tex}
 
 \smallskip\noindent\textbf{Increasing Draft workload.}
-As AI-based post-processing has advanced, the visual difference between the untreated Draft image and the final result has increased.
-In addition, selected shot modes postpone expensive post-processing until the camera application moves to the background in order to protect preview continuity, peak memory, and foreground responsiveness.
-These modes expose the Draft image for a longer period.
-To reduce the resulting quality gap, the production pipeline first introduced lightweight single-frame effects into the Draft Sequence.
-A subsequent requirement was to support a lightweight multi-frame Draft enhancement for effects whose appearance cannot be approximated sufficiently from one frame.
-This enhancement improves the early result, but it adds work directly to the Capture Timeout path.
+As post-processing became more compute- and memory-intensive across product generations, the framework began deferring final composition for selected shot modes until the camera application entered the background to preserve foreground responsiveness.
+This deferral kept the Draft image visible for longer, increasing the importance of visual consistency with the final photograph.
+This need drove a three-stage evolution of the Draft Sequence.
+Initially, it applied no image effects.
+It then incorporated lightweight single-frame processing to reduce conspicuous differences from the final photograph.
+Most recently, the Draft Sequence was extended with a lightweight counterpart to the multi-frame compositing stage in the post-processing pipeline.
+These additions reduce visual differences between the Draft image and the final photograph but add work directly to the Capture Timeout path.
 
 \smallskip\noindent\textbf{Ordered single-worker execution.}
-Draft Sequences execute on one worker.
-This design preserves capture order and bounds the number of simultaneously active image-processing pipelines.
-Running several Draft Sequences concurrently would require result reordering and would increase peak memory, compute bursts, and interference with preview and ongoing capture.
-The single worker is therefore a deliberate production constraint, not an accidental lack of parallelism.
-Under parallel capture, however, requests can arrive faster than this worker completes them.
+The framework executes Draft Sequences on a single worker thread in capture order.
+This deliberate production design bounds active Draft processing to one sequence.
+Running multiple Draft Sequences concurrently would require buffering out-of-order results and would make their workloads compete with preview and capture for compute and memory resources.
+Under parallel capture, however, requests can be admitted faster than the worker completes their Draft Sequences.
+Consequently, parallel capture shortens the shot-to-shot interval at the cost of Draft queueing: later captures spend part of their timeout budgets waiting behind earlier Draft Sequences.

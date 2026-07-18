@@ -1,5 +1,6 @@
 \subsection{Limitations of Static Runtime Safeguards}
 \label{sec:guard-limit}
+\FloatBarrier
 
 \smallskip\noindent\textbf{Static thermal gating and capture pacing.}
 To contain Capture Timeouts without an online cost model, the production framework uses two forms of static control.
@@ -17,7 +18,7 @@ A fixed rule can therefore reject a feasible execution in one context and admit 
 
 Table~\ref{tab:timeout_index} demonstrates this limitation on an anonymized flagship device that supports parallel capture.
 The deployed thermal boundary is normalized as $K$, and the guard was bypassed only for characterization.
-M and S denote the optional multi-frame Draft enhancement and single-frame Draft effect, respectively; shot-to-shot values are median intervals from the normal 24MP trace.
+M denotes optional multi-frame Bokeh processing and S an optional single-frame Draft effect; shot-to-shot values are median intervals from the normal 24MP trace.
 Deadline violations occur below $K$: for example, under memory pressure the first miss occurs between the 7th and 19th captures at $K-1$, depending on resolution and workload.
 Thus, a policy that admits every optional execution below $K$ is not sufficient for reliability.
 
@@ -25,7 +26,7 @@ The observed failure regime already appears with 12 overlapping Draft Sequences,
 Entries marked ``--'' indicate that no timeout occurred within this reporting window, including configurations whose first miss occurred later in the longer characterization run.
 
 The same table also shows over-restriction at and above $K$.
-At $K$, the normal 12MP workload with only the multi-frame enhancement completes 15 captures before the first miss.
+At $K$, the normal 12MP workload with only multi-frame Bokeh processing completes 15 captures before the first miss.
 At $K+2$, the corresponding M-only normal workloads still complete ten captures before the first miss.
 Nevertheless, a static guard at $K$ disables the optional stage from the first capture in all of these contexts.
 Even within one thermal row, the first-miss index varies widely: at $K$, it ranges from 5 to 16 as resolution, memory pressure, and workload composition change.
@@ -36,13 +37,13 @@ A count threshold measures how many requests are active, but not how much ordere
 Lowering the count protects constrained cases at the cost of shot-to-shot responsiveness on capable devices; raising it exposes slow contexts to accumulated backlog.
 
 \smallskip\noindent\textbf{Consequence for feature release.}
-The lightweight multi-frame Draft enhancement exposes a fundamental trade-off in the existing architecture.
+Adding lightweight multi-frame Bokeh to the Draft Sequence exposes a fundamental trade-off in the existing architecture.
 A conservative guard protects reliability but suppresses executions that have sufficient budget.
 Relaxing the guard improves feature availability but permits deadline violations in constrained contexts.
 Retuning a global threshold only moves the boundary among reliability, feature availability, and shot-to-shot performance.
-Under the existing architecture, the enhancement could not be enabled for release.
+Under the existing architecture, this multi-frame path could not be enabled for release.
 A viable solution must instead estimate the remaining per-capture work and coordinate both optional-work admission and the rate at which subsequent captures enter the system.
 
 % Optional sentence, subject to internal disclosure approval:
 % Despite repeated performance optimization across two product cycles, the
-% enhancement did not satisfy both reliability and feature-availability KPIs.
+% multi-frame path did not satisfy both reliability and feature-availability KPIs.

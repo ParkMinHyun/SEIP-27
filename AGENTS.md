@@ -75,6 +75,10 @@ Apply them as guidance for:
 - how motivation, examples, experiments, threats, and related work are framed;
 - table/figure caption style and result discussion style.
 
+Read `docs/writing-style.md` when drafting manuscript text or giving writing
+feedback. It records the recurring style patterns found across the two papers
+and explains how to adapt them to an SEIP industrial paper.
+
 Do not copy text, claims, or citations from the reference papers unless the user explicitly asks and the source is properly cited. The research topic of this manuscript is different, so use the references for writing form rather than technical substance.
 
 ## Writing Rules

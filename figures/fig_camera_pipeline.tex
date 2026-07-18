@@ -1,4 +1,4 @@
-% Draft processing alongside deferred final post-processing (portrait).
+% Draft processing alongside deferred final post-processing.
 % Input directly from 2_1_draft_sequence.tex; contains the full figure
 % environment (Figure~\ref{fig:draft-pipeline}).
 %
@@ -7,7 +7,7 @@
 % Draft image (flat, untreated thumbnail) as the user-visible capture
 % result, while heavy post-processing is deferred until the camera
 % application switches to the background and replaces the Draft with the
-% final portrait (bokeh thumbnail: sharp subject, blurred background).
+% final image (sharp subject with processed background).
 \begin{figure}[b]
   \centering
   \begin{tikzpicture}[
@@ -78,7 +78,7 @@
 
     \draw[black!65, thick] (6.30,1.05) -- (6.53,1.05);
 
-    % final image thumbnail: portrait bokeh with a faint mountain background.
+    % final image thumbnail with a faint processed background.
     \fill[white] (6.55,0.79) rectangle (7.17,1.31);
     \fill[blue!12] (6.56,0.80) -- (6.72,1.10) -- (6.88,0.80) -- cycle;
     \fill[gray!15] (6.74,0.80) -- (6.98,1.15) -- (7.16,0.80) -- cycle;
@@ -100,6 +100,6 @@
     \node[anchor=west, text=black!55] at (7.68,1.90) {replace};
 
   \end{tikzpicture}
-  \caption{Draft processing in portrait capture.}
+  \caption{Draft processing alongside deferred final composition.}
   \label{fig:draft-pipeline}
 \end{figure}
