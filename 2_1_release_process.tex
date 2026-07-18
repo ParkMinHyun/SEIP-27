@@ -8,7 +8,7 @@ Near release, a specialized camera-validation team collaborates with development
 
 \smallskip\noindent\textbf{Capture Timeout.}
 Capture Timeout is one of the product's highest-priority camera reliability KPIs.
-For each capture, the timeout clock runs from request acceptance until the required frames and metadata are collected and the \emph{Draft Sequence} makes an intermediate result, called the \emph{Draft image}, to provide the user with an early indication of capture completion.
+For each capture, the timeout clock runs from request acceptance until the required frames and metadata are collected and the \emph{Draft Sequence} produces an early user-visible capture result, called the \emph{Draft image}.
 The product enforces a fixed internal deadline for this interval.
 In development builds, each deadline violation triggers a fail-fast diagnostic event and is then investigated.
 A reproducible violation blocks release until the failure is fixed, the affected behavior is restricted, or the feature is removed.
