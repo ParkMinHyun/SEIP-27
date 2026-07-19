@@ -7,7 +7,7 @@ The application can then accept the next shutter input without waiting for
 the preceding Draft image, which shortens the shot-to-shot interval.
 
 However, each accepted request starts an independent Capture Timeout clock, so parallel capture creates overlapping deadlines.
-Frame and metadata collection can overlap across requests, Draft processing remains serialized on a single worker in capture order.
+Although frame and metadata collection can overlap across requests, Draft processing remains serialized on a single worker in capture order.
 A later capture may therefore consume part of its timeout budget while waiting behind earlier Draft Sequences and time out even when its own processing time is unchanged, as illustrated in Figure~\ref{fig:overlap}.
 
 \begin{figure}[t]

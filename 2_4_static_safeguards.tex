@@ -7,6 +7,12 @@ The production framework uses two fixed-threshold policies to contain Capture Ti
 First, the studied product disables optional Draft processing at and above a fixed overheat level.
 Second, on the HAL-driven parallel-capture path, the framework suppresses \texttt{captureAvailable} once the number of active post-processing sequences reaches a fixed cap.
 These deterministic policies impose little runtime overhead and are straightforward to validate, making them practical for incident containment.
+/*
+The deployed camera stack protects the Capture Timeout contract with two independently configured fixed thresholds.
+A thermal guard disables all image-processing stages within the Draft Sequence at and above a fixed overheat level, normalized as $K$, while a model-specific backlog guard delays new capture availability at a fixed outstanding-task cap.
+Together, they provide deterministic, inexpensive, and easily validated control over per-capture service demand and capture arrivals.
+Yet neither evaluates the per-capture condition that governs timeout risk: whether its remaining work fits its remaining deadline budget.
+*/
 
 The overheat guard nevertheless has a key limitation: its fixed boundary does not estimate whether an individual capture's remaining ordered work fits its deadline budget.
 We characterized this mismatch on an anonymized flagship device that supports parallel capture.

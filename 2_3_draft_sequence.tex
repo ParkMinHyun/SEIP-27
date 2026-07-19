@@ -14,10 +14,10 @@ The Draft Sequence is therefore both user-facing and reliability-critical.
 As post-processing became more compute- and memory-intensive across product generations, the framework began deferring post-processing for selected shot modes until the camera application entered the background to preserve foreground responsiveness.
 This deferral kept the Draft image visible for longer, increasing the importance of visual consistency with the final image.
 The Draft Sequence consequently incorporated lightweight single-frame processing to reduce conspicuous differences from the final image.
-Most recently, the Draft Sequence was extended with a lightweight counterpart to the multi-frame compositing stage in the post-processing pipeline.
+Most recently, we have investigated extending the Draft Sequence with a lightweight counterpart to the multi-frame compositing stage.
 These additions narrow the visual gap between the Draft image and the final image but increase the workload on the Capture Timeout path.
 
 \smallskip\noindent\textbf{Ordered single-worker execution.}
 The framework executes Draft Sequences on a single worker thread in capture order.
-This deliberate production design publishes Draft images in user-visible capture order and bounds active Draft processing to one sequence.
-Concurrent execution would require buffering out-of-order results and would increase peak compute and memory demand across the capture pipeline.
+This deliberate production design bounds active Draft processing to one sequence.
+Concurrent execution would require buffering out-of-order results and would overlap image processing workloads across sequences, causing peak compute and memory demand to scale with the number of active sequences.
