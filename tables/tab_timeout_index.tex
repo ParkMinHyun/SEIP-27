@@ -1,14 +1,15 @@
-% Tables: first Capture Timeout shot index in a 30-shot continuous portrait
-% burst, plus the per-level median shot-to-shot interval (Chapter 2
-% motivation). This single table presents both devices consecutively:
-% S942B (parallel capture disabled), followed by S948U (enabled).
+% Earliest Capture Timeout shot index across ten 30-shot continuous-capture
+% bursts, plus the per-level median shot-to-shot interval (Chapter 2
+% motivation). The table reports the high-capability S948U.
 %
-% Data sources: internal portrait-mode 30-shot continuous-capture
+% Data sources: internal Portrait-mode 30-shot continuous-capture
 % measurements (timeout indices) and shot_to_shot_comparison.xlsx
 % "Comparison" sheet (Shot-to-Shot column: per-level median of the normal
 % 24MP-request trace, rounded to integer ms).
+% Protocol: ten bursts per starting level, resolution, memory condition, and
+% M/M+S configuration; optional work was forced on in a validation build.
 % Evidence TODO before submission: record the raw trace/session mapping and
-% the procedure used to execute Bokeh/Filter above the deployed guard.
+% the AnTuTu version and reset procedure used for memory-pressure runs.
 % Severity shading (first failing shot index): white = no timeout;
 % single-hue blush-to-brick ramp, lightness-monotone (grayscale-safe),
 % darkens as the first failure moves earlier.
@@ -37,18 +38,17 @@
 \providecommand{\noTOe}{\multicolumn{1}{c@{}}{--}}
 
 % ---------------------------------------------------------------------------
-% S948U and S942B, presented as one continuous table
+% S948U
 % ---------------------------------------------------------------------------
 \begin{table}[t]
   \centering
-  \caption{First Capture Timeout in 30-shot portrait bursts}
+  \caption{Earliest Capture Timeout across ten 30-capture Portrait bursts}
   \label{tab:timeout_index}
-  \label{tab:timeout_index_s942b}
   {\scriptsize\setlength{\tabcolsep}{1.0pt}%
   \begin{tabular}{@{}D|H|Z||RR|RR||RR|RR@{}}
   \toprule \midrule
   \multirow{3}{*}{\textbf{Device}} &
-  \multirow{3}{*}{\makecell{\textbf{Overheat}\\\textbf{level}}} &
+  \multirow{3}{*}{\makecell{\textbf{Starting}\\\textbf{overheat}\\\textbf{level}}} &
   \multicolumn{1}{>{\centering\arraybackslash}p{1.10cm}||}{%
   \multirow{3}{*}{\makecell{{\textbf{Shot-to-}}\\{\textbf{Shot}}\\\textbf{(ms)}}}} &
   \multicolumn{4}{c||}{\textbf{Normal capture}} &
@@ -58,10 +58,10 @@
   \multicolumn{2}{c||}{\textbf{24MP}} &
   \multicolumn{2}{c|}{\textbf{12MP}} &
   \multicolumn{2}{c@{}}{\textbf{24MP}} \\ \cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}\cmidrule(l){10-11}
-  & & & \multicolumn{1}{C}{\textbf{B{+}F}} & \multicolumn{1}{C|}{\textbf{B}} &
-  \multicolumn{1}{C}{\textbf{B{+}F}} & \multicolumn{1}{C||}{\textbf{B}} &
-  \multicolumn{1}{C}{\textbf{B{+}F}} & \multicolumn{1}{C|}{\textbf{B}} &
-  \multicolumn{1}{C}{\textbf{B{+}F}} & \multicolumn{1}{C@{}}{\textbf{B}} \\
+  & & & \multicolumn{1}{C}{\textbf{M{+}S}} & \multicolumn{1}{C|}{\textbf{M}} &
+  \multicolumn{1}{C}{\textbf{M{+}S}} & \multicolumn{1}{C||}{\textbf{M}} &
+  \multicolumn{1}{C}{\textbf{M{+}S}} & \multicolumn{1}{C|}{\textbf{M}} &
+  \multicolumn{1}{C}{\textbf{M{+}S}} & \multicolumn{1}{C@{}}{\textbf{M}} \\
   \midrule \midrule
   \multirow{7}{*}{\textbf{S948U}} & Lv0 & 367 &
     \noTO & \noTOs & \tmoCell{tmoS1}{29} & \noTOd &
@@ -97,7 +97,8 @@
   \par\vspace{3pt}
   {\scriptsize\begin{minipage}{0.933\columnwidth}
   \raggedright\setlength{\fboxsep}{1.8pt}%
-  --~no timeout\hfill
+  Each cell: earliest first-timeout index across ten bursts; --: none in any burst.\par
+  Shot-to-Shot: median capture-start interval in the normal 24MP trace.\par
   first failing shot:~%
   \colorbox{tmoS1}{\strut\,${\geq}\,20$\,}\colorbox{tmoS2}{\strut\,10--19\,}\colorbox{tmoS3}{\strut\,\textcolor{white}{6--9}\,}\colorbox{tmoS4}{\strut\,\textcolor{white}{${\leq}\,5$}\,}\par
   \end{minipage}}

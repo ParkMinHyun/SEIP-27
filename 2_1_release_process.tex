@@ -7,8 +7,8 @@ Because such an update requires cross-component coordination and broad revalidat
 Near release, a specialized camera-validation team collaborates with development engineers to stress-test these builds, diagnose timing and memory-pressure failures, and verify the resulting fixes.
 
 \smallskip\noindent\textbf{Capture Timeout.}
-Capture Timeout is one of the product's highest-priority camera reliability KPIs.
-For each capture, the timeout clock runs from request acceptance until the required frames and metadata are collected and the \emph{Draft Sequence} produces an early user-visible capture result, called the \emph{Draft image}.
-The product enforces a fixed internal deadline for this interval.
-In development builds, each deadline violation triggers a fail-fast diagnostic event and is then investigated.
-A reproducible violation blocks release until the failure is fixed, the affected behavior is restricted, or the feature is removed.
+Capture Timeout is one of the product's highest-priority camera reliability KPIs because it can surface as a failed shot, a missing result, or disruption of subsequent captures.
+For each capture, the timeout clock starts when the framework accepts the application's request and stops after the required frames and metadata are collected and the \emph{Draft Sequence} produces an early user-visible capture result, called the \emph{Draft image}.
+Final post-processing lies outside this fixed internal deadline.
+In development builds, each deadline violation triggers a fail-fast diagnostic event and an investigation.
+A reproducible violation blocks release until the failure is fixed, the affected behavior is disabled under the triggering conditions, or the feature is removed.

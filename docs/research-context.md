@@ -52,6 +52,16 @@ before the timeout deadline?
 
 Admission alone cannot recover budget already consumed by queueing. Capture pacing can let backlog drain before the next capture begins, preserving more optional processing, but it increases the shot-to-shot interval. Therefore, this research treats Capture Timeout prevention as coordinated runtime control over ordered workload sequences and capture arrivals, not as a per-stage latency prediction problem.
 
+## Static-Guard Motivation Experiment
+
+The Section 2.4 motivation table uses ten 30-capture bursts for each combination of starting Overheat Level (0--6), resolution, memory condition, and Draft configuration. A validation build bypasses the deployed guard condition so the optional stages execute at every starting level. Memory-pressure runs launch the camera while AnTuTu Benchmark's memory-stress workload is active; record the benchmark version and reset procedure before submission.
+
+Each table cell reports the earliest capture index at which a timeout occurred across the ten bursts. A dash means that none of the ten bursts timed out. The Shot-to-Shot column is the median interval between consecutive capture starts in the normal 24MP trace at each starting level; the other tested conditions showed comparable intervals. Pending Draft count and worker waiting vary by resolution and memory condition, so the 30-capture length is a common sustained-load horizon, not a fixed proxy for backlog count or cost.
+
+The table rows record the Overheat Level at burst start, not necessarily the level at the failing capture. Do not describe a failure as occurring below the deployed cutoff unless a per-capture log confirms that the reported level remained below the cutoff at failure.
+
+The product-level timeout contract was described by the author as beginning with the application's accepted capture request and ending after frame and metadata collection and Draft-image generation. The currently accessible `ML` prototype at commit `21397f966b53d2266152a5776c8400cc04a8e8a8` anchors its recorded timeout timestamp at the shutter callback. Treat this as a product-contract versus prototype-instrumentation distinction that must be reconciled in the methodology rather than silently assuming the timestamps are identical.
+
 ## Writing the Motivation
 
 When turning the motivation above into manuscript text:

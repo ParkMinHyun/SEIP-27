@@ -8,11 +8,12 @@ the preceding Draft image, which shortens the shot-to-shot interval.
 
 However, each accepted request starts an independent Capture Timeout clock, so parallel capture creates overlapping deadlines.
 Although frame and metadata collection can overlap across requests, Draft processing remains serialized on a single worker in capture order.
-A later capture may therefore consume part of its timeout budget while waiting behind earlier Draft Sequences and time out even when its own processing time is unchanged, as illustrated in Figure~\ref{fig:overlap}.
+When requests arrive faster than this worker completes Draft Sequences, worker waiting accumulates across the burst.
+A later capture may therefore consume more of its timeout budget before Draft execution and time out even when its own Draft execution duration is unchanged, as illustrated in Figure~\ref{fig:overlap}.
 
 \begin{figure}[t]
   \centering
   \resizebox{\columnwidth}{!}{\input{figures/fig_draft_overlap.tex}}
-  \caption{Cross-shot deadline contention under parallel capture.}
+  \caption{Cross-shot contention: accumulated worker waiting causes capture $i{+}2$ to time out despite equal Draft durations.}
   \label{fig:overlap}
 \end{figure}

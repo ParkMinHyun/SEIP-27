@@ -6,7 +6,7 @@
 % The figure intentionally abstracts away internal Draft workloads. Each
 % capture first collects frames and metadata. These collection periods can
 % overlap, whereas Draft Sequences run one at a time in capture order. The
-% resulting queueing delay grows across the burst until capture i+2 misses
+% resulting worker wait grows across the burst until capture i+2 misses
 % its deadline despite having the same Draft Sequence duration.
 \begin{tikzpicture}[font=\small,
   collectstage/.style={draw=black!55, fill=gray!14},
@@ -15,11 +15,11 @@
   overrun/.style={draw=red!80!black, fill=red!65},
   swatch/.style={draw, minimum width=8pt, minimum height=6pt, inner sep=0pt},
   ddl/.style={red, dashed, thick},
-  sig/.style={->, black!60}]
+  sig/.style={->, black!75}]
 
   % ---------- legend ----------
   \node[anchor=east, inner sep=2pt] (lt2) at (9.70, 5.40)
-    {\footnotesize Draft queueing delay};
+    {\footnotesize Draft-worker wait};
   \node[swatch, queued, left=0mm of lt2] (lg2) {};
   \node[anchor=east, inner sep=2pt, left=7mm of lg2] (lt1)
     {\footnotesize frames \& metadata};
@@ -43,7 +43,7 @@
   % work have completed.
   \fill[black!60] (0.35, 3.68) circle (1.3pt);
   \draw[sig] (0.35, 3.66) -- (0.50, 2.87);
-  \node[anchor=west, black!60] at (0.40, 3.35)
+  \node[anchor=west, black!75] at (0.40, 3.35)
     {\scriptsize\texttt{captureAvailable}};
 
   % ---------- capture i+1 ----------
@@ -91,7 +91,7 @@
   % ---------- budget braces for the failing capture ----------
   \draw[decorate, decoration={brace, mirror, amplitude=4pt}]
     (1.00, 0.50) -- (6.10, 0.50);
-  \node[anchor=north] at (3.55, 0.28) {\footnotesize budget consumed};
+  \node[anchor=north] at (3.55, 0.28) {\footnotesize pre-Draft budget consumed};
   \draw[decorate, decoration={brace, mirror, amplitude=4pt}]
     (6.10, 0.50) -- (8.30, 0.50);
   \node[anchor=north] at (7.20, 0.28) {\footnotesize remaining budget};
