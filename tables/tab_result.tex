@@ -1,0 +1,100 @@
+% ============================================================================
+% Result tables for our admission--pacing controller (Ours only; the deployed
+% baseline is characterised in the Motivation). Two floats:
+%   Table~\ref{tab:thermal_adaptation} -- per overheat-level behaviour (table*).
+%   Table~\ref{tab:validation}         -- objective / ground-truth validation.
+%
+% Fragment: \input from paper.tex. Uses only packages paper.tex already loads
+% (booktabs, makecell, multirow, array). No standalone / amssymb / threeparttable,
+% so the earlier package errors cannot occur.
+%
+% Data: 48U, 2026-07-20 set, from the CaptureMetricsExcelExporter sheets.
+% 12MP normal = full data (no timeout sessions present). 24MP memory = timeout-
+% terminated sessions excluded. M / S = anonymized multi-frame / single-frame
+% draft stages (cf. Table~\ref{tab:admission_results}).
+% ============================================================================
+
+\begin{table*}[t]
+  \centering
+  \caption{Per overheat-level behaviour of our admission--pacing controller. As the
+  device heats, pacing engages and the multi-frame stage (M) is selectively demoted,
+  while the cheaper single-frame stage (S) is largely preserved; \textbf{every} admitted
+  stage that was observed completed within budget (\textbf{0 unsafe admits, 100\%
+  admit precision at every level}). Paced: fraction of shots given a nonzero
+  capture-available delay. Delay/Peak: mean and maximum per-shot delay (ms).
+  M/S admit: run rate of each stage. Objective and ground-truth validation of
+  these decisions is in Table~\ref{tab:validation}.}
+  \label{tab:thermal_adaptation}
+  \setlength{\tabcolsep}{6pt}%
+  \renewcommand{\arraystretch}{1.15}%
+  \small
+  \begin{tabular}{c c || c c c || c c || c}
+  \toprule \midrule
+  \multirow{2}{*}{\makecell{\textbf{Overheat}\\\textbf{level}}} &
+  \multirow{2}{*}{\textbf{Shots}} &
+  \multicolumn{3}{c||}{\textbf{Pacing}} &
+  \multicolumn{2}{c||}{\textbf{Admission run rate}} &
+  \multirow{2}{*}{\makecell{\textbf{Unsafe}\\\textbf{admits}}} \\
+  \cmidrule(lr){3-5}\cmidrule(lr){6-7}
+  & & \makecell{Paced\\(\%)} & \makecell{Delay\\(ms)} & \makecell{Peak\\(ms)}
+    & \makecell{M admit\\(\%)} & \makecell{S keep\\(\%)} & \\
+  \midrule \midrule
+  \multicolumn{8}{c}{\textbf{(a) 12MP normal}} \\ \midrule
+  \textbf{Lv0} & \phantom{0}19 &  0 &   0 &   0 & 100  & 100  & 0 \\
+  Lv1          & \phantom{0}21 &  0 &   0 &   0 & 100  & 100  & 0 \\
+  Lv2          & \phantom{0}30 &  0 &   0 &   0 & 100  & 100  & 0 \\
+  Lv3          & \phantom{0}63 &  0 &   0 &   0 & 100  & 100  & 0 \\
+  Lv4          & \phantom{0}83 & 20 &  35 & 463 & 71.1 & 100  & 0 \\
+  Lv5          & \phantom{0}54 & 15 &  53 & 553 & 46.3 & 100  & 0 \\
+  \textbf{Lv6} & 211           & 20 &  59 & 498 & 46.0 & 93.4 & 0 \\
+  \midrule \midrule
+  \multicolumn{8}{c}{\textbf{(b) 24MP memory} \; (timeout-terminated sessions excluded)} \\ \midrule
+  \textbf{Lv0} & \phantom{0}15 & 14 &  24 &  267 & 100  & 100  & 0 \\
+  Lv1          & \phantom{0}21 & 75 & 151 &  347 & 100  & 100  & 0 \\
+  Lv2          & \phantom{0}23 & 57 & 171 &  506 & 100  & 100  & 0 \\
+  Lv3          & \phantom{0}97 & 70 & 296 & 1054 & 80.4 & 100  & 0 \\
+  Lv4          & 141           & 56 & 303 & 2059 & 61.0 & 81.6 & 0 \\
+  Lv5          & \phantom{0}72 & 60 & 365 &  940 & 55.6 & 100  & 0 \\
+  \textbf{Lv6} & 122           & 66 & 452 & 1306 & 60.7 & 100  & 0 \\
+  \midrule \bottomrule
+  \end{tabular}
+\end{table*}
+
+\begin{table}[t]
+  \centering
+  \caption{Objective and ground-truth validation of the same controller, aggregated
+  over all shots. Admission and pacing decisions are each scored on the axis the
+  online system cannot see for itself: skip decisions against feasibility recovered
+  from the ablation oracle ($\dagger$), and pacing against the ablation's own timeouts
+  ($\ddagger$). Higher is better except where noted.}
+  \label{tab:validation}
+  \setlength{\tabcolsep}{6pt}%
+  \renewcommand{\arraystretch}{1.2}%
+  \begin{tabular}{l c c}
+  \toprule \midrule
+  \textbf{Metric} & \textbf{12MP normal} & \textbf{24MP memory} \\
+  \midrule
+  \multicolumn{3}{l}{\textit{Admission --- is every admit safe, every skip warranted?}} \\
+  \quad Admit precision (\%) & 100 & 100 \\
+  \quad Unsafe admits (\#, $\downarrow$) & 0 & 0 \\
+  \quad Skip recall (\%)$^{\dagger}$ & 98.8 & 100\phantom{.0} \\
+  \quad Skip precision (\%)$^{\dagger}$ & 78.0 & 37.7 \\
+  \quad Admit specificity (\%)$^{\dagger}$ & 99.0 & 88.2 \\
+  \midrule
+  \multicolumn{3}{l}{\textit{Pacing --- right amount, right shots, reproducible?}} \\
+  \quad Shots paced (\%) & 15.3 & 61.6 \\
+  \quad Peak delay (ms) & 553 & 2059 \\
+  \quad Replay non-determinism (\#, $\downarrow$) & 0 & 0 \\
+  \quad Timeouts pre-flagged (\%)$^{\ddagger}$ & 68\phantom{.0} & 90\phantom{.0} \\
+  \midrule
+  \multicolumn{3}{l}{\textit{Delivered output}} \\
+  \quad Full-feature shots (\%) & 65.3 & 68.4 \\
+  \quad S-stage preserved (\%) & 97.1 & 94.7 \\
+  \midrule \bottomrule
+  \end{tabular}
+  \par\vspace{3pt}
+  {\footnotesize $^{\dagger}$Recovered from the ablation run, where every optional stage
+  executes regardless of the skip decision, exposing the ground-truth feasibility the
+  online system cannot observe. $^{\ddagger}$Counterfactual on the ablation (no pacing):
+  share of its capture timeouts that fell on shots our policy would have paced.}
+\end{table}
