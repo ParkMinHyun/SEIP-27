@@ -1,19 +1,16 @@
 \subsection{Parallel Capture and Cross-Shot Deadline Contention}
 \label{sec:parallel-capture}
 
-Without parallel capture, the Samsung camera application accepts the next shutter input only after the preceding capture's Draft image becomes available.
-Parallel capture removes this interface-level serialization: the hardware abstraction layer (HAL) can signal \texttt{captureAvailable} while the preceding capture's buffers are still in flight and its Draft Sequence has not yet completed.
-The application can then accept the next shutter input without waiting for
-the preceding Draft image, which shortens the shot-to-shot interval.
+Without parallel capture, the Samsung camera application accepts the next shutter input only after the preceding capture's frames and metadata have been collected and its Draft image is available.
+Parallel capture allows the hardware abstraction layer (HAL) to signal \texttt{captureAvailable} before these steps finish, enabling the application to accept the next shutter input sooner and shorten the shot-to-shot interval.
 
-However, each accepted request starts an independent Capture Timeout clock, so parallel capture creates overlapping deadlines.
-Although frame and metadata collection can overlap across requests, Draft processing remains serialized on a single worker in capture order.
-When requests arrive faster than this worker completes Draft Sequences, worker waiting accumulates across the burst.
-A later capture may therefore consume more of its timeout budget before Draft execution and time out even when its own Draft execution duration is unchanged, as illustrated in Figure~\ref{fig:overlap}.
+Each capture request has its own Capture Timeout clock; under parallel capture, these clocks can overlap.
+Because Draft Sequences execute in capture order on a single worker, Draft-worker waiting accumulates when requests arrive faster than the worker completes the sequences.
+This wait can push a later capture past its deadline even when successive Draft Sequences have equal execution times, as illustrated in Figure~\ref{fig:overlap}.
 
 \begin{figure}[t]
   \centering
   \resizebox{\columnwidth}{!}{\input{figures/fig_draft_overlap.tex}}
-  \caption{Cross-shot contention: accumulated worker waiting causes capture $i{+}2$ to time out despite equal Draft durations.}
+  \caption{Cross-shot deadline contention under parallel capture.}
   \label{fig:overlap}
 \end{figure}
