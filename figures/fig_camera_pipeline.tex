@@ -5,6 +5,8 @@
 % This is a logical dataflow view, not an execution-timing diagram. The
 % Draft Sequence publishes an early capture result, while post-processing
 % is deferred until the camera application switches to the background.
+% If post-processing fails or is interrupted, the published Draft image is
+% retained as the recovery result instead of being replaced.
 \begin{figure}[!ht]
   \centering
   \begin{tikzpicture}[
@@ -17,7 +19,7 @@
     sharedbox/.style={draw=black!55, fill=gray!10, rounded corners=1pt,
       align=center},
     flow/.style={->, thick, black!65, rounded corners=2pt},
-    defer/.style={->, dashed, thick, black!55, rounded corners=2pt},
+    recover/.style={->, dashed, thick, red!45!black, rounded corners=2pt},
     note/.style={text=black!55, align=left}
   ]
 
@@ -37,7 +39,7 @@
     % ---- fork into the two processing paths ----
     \draw[thick, black!65] (2.60,2.00) -- (2.82,2.00);
     \draw[flow]  (2.82,2.00) |- (3.10,2.95);
-    \draw[defer] (2.82,2.00) |- (3.10,1.05);
+    \draw[flow] (2.82,2.00) |- (3.10,1.05);
 
     % ---- Draft path (capture-critical) ----
     \draw[draftbox] (3.12,2.67) rectangle (5.02,3.23);
@@ -63,14 +65,9 @@
       (6.78,2.60) rectangle (8.48,3.28);
     \node at (7.63,2.94) {shown to user};
 
-    % ---- final path (deferred heavy post-processing) ----
+    % ---- final path ----
     \draw[finalbox] (3.12,0.73) rectangle (6.30,1.37);
     \node at (4.71,1.05) {Post-processing};
-    \draw[black!55] (3.30,0.42) circle (0.12);
-    \draw[black!55] (3.30,0.42) -- (3.30,0.51);
-    \draw[black!55] (3.30,0.42) -- (3.37,0.39);
-    \node[note, anchor=west] at (3.50,0.42)
-      {deferred until the app\\switches to background};
 
     \draw[black!65, thick] (6.30,1.05) -- (6.53,1.05);
 
@@ -93,9 +90,16 @@
 
     % replacement happens when final post-processing completes
     \draw[flow] (7.19,1.05) -- (7.60,1.05) -- (7.60,2.58);
-    \node[anchor=west, text=black!55] at (7.68,1.90) {replace};
+    \node[anchor=west, text=black!55] at (7.6,1.90) {replace};
+
+    % ---- recovery fallback (post-processing fails or is interrupted) ----
+    % On this outcome no final image is produced, so the already-published
+    % Draft image is retained as the recovery result.
+    \draw[recover] (5.86,1.38) -- (5.86,2.28);
+    \node[anchor=east, align=right, text=red!45!black] at (5.82,1.82)
+      {fail / interrupt};
 
   \end{tikzpicture}
-  \caption{Logical Draft and background-deferred post-processing paths in Portrait mode.}
+  \caption{Draft Sequence, post-processing, and recovery.}
   \label{fig:draft-pipeline}
 \end{figure}

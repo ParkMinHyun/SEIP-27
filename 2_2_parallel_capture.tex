@@ -1,10 +1,10 @@
 \subsection{Parallel Capture and Cross-Shot Deadline Contention}
 \label{sec:parallel-capture}
 
-Without parallel capture, the Samsung camera application accepts the next shutter input only after the preceding capture's frames and metadata have been collected and its Draft image is available.
-Parallel capture allows the hardware abstraction layer (HAL) to signal \texttt{captureAvailable} before these steps finish, enabling the application to accept the next shutter input sooner and shorten the shot-to-shot interval.
+Without parallel capture, the application accepts the next shutter input only after the preceding capture satisfies the Capture Timeout completion conditions.
+Parallel capture removes this serialization: the hardware abstraction layer (HAL) can signal \texttt{captureAvailable} before those conditions are met, enabling the application to accept the next shutter input sooner and thereby shortening the shot-to-shot interval.
 
-Each capture request has its own Capture Timeout clock; under parallel capture, these clocks can overlap.
+Each accepted capture request starts its own Capture Timeout clock; under parallel capture, these clocks can overlap.
 Because Draft Sequences execute in capture order on a single worker, Draft-worker waiting accumulates when requests arrive faster than the worker completes the sequences.
 This wait can push a later capture past its deadline even when successive Draft Sequences have equal execution times, as illustrated in Figure~\ref{fig:overlap}.
 
