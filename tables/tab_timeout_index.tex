@@ -1,106 +1,92 @@
-% Earliest and median Capture Timeout shot indices within a 30-capture
-% horizon (Chapter 2 motivation). The table reports the
-% highest-performing production model, S948U; the device name is stated in
-% the surrounding prose.
+% Earliest and median Capture Timeout indices within a 30-capture horizon.
+% The timeout-level column reports the range of overheat levels observed when
+% the first timeout occurred across the trials in each starting-level row.
 %
-% Data sources: internal Portrait-mode continuous-capture measurements.
-% Earliest values retain the previously validated table values. The 12MP
-% M+S medians come from all trial blocks in 8U_metrics_NEW.xlsx, grouped by
-% starting Overheat Level and are displayed as nearest-integer indices.
-% M-only and 24MP medians are provisional estimates: apply the measured 12MP M+S
-% median/earliest ratio for the same condition and starting level to the
-% cell's retained earliest value, then round half up. Normal Lv0--1 use the
-% nearest available ratio (Lv2); memory-pressure Lv0 uses Lv1. Estimates
-% beyond the 30-capture horizon are right-censored and shown as ``--''.
 % Protocol: ten 30-capture continuous-capture trials per combination of
 % starting level, resolution, memory condition, and M/M+S configuration;
-% M was forced to execute and the deployed guard was bypassed in a
-% validation build.
-% Evidence TODO before submission: record the raw trace/session mapping and
-% the reset procedure used for AnTuTu Benchmark 11.1.4 memory-pressure runs.
-% Severity shading (first failing shot index): white = no timeout;
-% single-hue blush-to-brick ramp, lightness-monotone (grayscale-safe),
-% darkens as the first failure moves earlier.
-\providecolor{tmoS1}{RGB}{252,227,220}   % first failure at shot >= 20
-\providecolor{tmoS2}{RGB}{239,160,140}   % 10--19
-\providecolor{tmoS3}{RGB}{201,80,63}     % 6--9 (white text)
-\providecolor{tmoS4}{RGB}{143,36,32}     % <= 5 (white text)
-% Centered level and earliest/median pair columns.
-\newcolumntype{H}{>{\centering\arraybackslash}p{1.15cm}}
-\newcolumntype{P}{>{\centering\arraybackslash}p{0.80cm}}
+% M was enabled and the deployed guard was bypassed in a validation build.
+%
+% Severity shading follows the earliest first-timeout index: white = no timeout;
+% the single-hue ramp darkens as the first failure moves earlier.
+\providecolor{tmoS1}{RGB}{252,227,220} % first failure at capture >= 20
+\providecolor{tmoS2}{RGB}{239,160,140} % 10--19
+\providecolor{tmoS3}{RGB}{201,80,63}  % 6--9 (white text)
+\providecolor{tmoS4}{RGB}{143,36,32}  % <= 5 (white text)
+
+% Compact fixed-width columns sized to remain within one IEEE column.
+\newcolumntype{H}{>{\centering\arraybackslash}p{0.92cm}}
+\newcolumntype{L}{>{\centering\arraybackslash}p{0.95cm}}
+\newcolumntype{P}{>{\centering\arraybackslash}p{0.66cm}}
 \providecommand{\estMed}[1]{#1}
-% Each colored cell reports earliest/median. Shading follows the earliest
-% first-timeout index.
+
+% Each colored cell reports earliest/median; shading follows the earliest index.
 \providecommand{\tmoPair}[3]{\cellcolor{#1}#2/#3}
 \providecommand{\tmoPairW}[3]{\cellcolor{#1}\textcolor{white}{\textbf{#2/#3}}}
 \providecommand{\tmoPairCens}[2]{\cellcolor{#1}#2/--}
-% No-timeout pairs stay centered; the suffix selects the right border.
 \providecommand{\noTOPair}{\multicolumn{1}{c}{--/--}}
 \providecommand{\noTOPairs}{\multicolumn{1}{c|}{--/--}}
 \providecommand{\noTOPaird}{\multicolumn{1}{c||}{--/--}}
 \providecommand{\noTOPaire}{\multicolumn{1}{c@{}}{--/--}}
 
-% ---------------------------------------------------------------------------
-% S948U
-% ---------------------------------------------------------------------------
 \begin{table}[t]
-  \centering
+ \centering
   \caption{First-timeout indices across ten 30-capture trials}
-  \label{tab:timeout_index}
-  {\scriptsize\setlength{\tabcolsep}{1.4pt}%
-  \begin{tabular}{@{}H||PP|PP||PP|PP@{}}
-  \toprule \midrule
-  \multirow{3}{*}{\makecell{\textbf{Starting}\\\textbf{overheat}\\\textbf{level}}} &
-  \multicolumn{4}{c||}{\textbf{Normal capture}} &
-  \multicolumn{4}{c@{}}{\textbf{Memory-pressure capture}} \\ \cmidrule(lr){2-5}\cmidrule(l){6-9}
-  &
-  \multicolumn{2}{c|}{\textbf{12MP}} &
-  \multicolumn{2}{c||}{\textbf{24MP}} &
-  \multicolumn{2}{c|}{\textbf{12MP}} &
-  \multicolumn{2}{c@{}}{\textbf{24MP}} \\ \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(l){8-9}
-  & \textbf{M{+}S} & \textbf{M} &
-  \textbf{M{+}S} & \textbf{M} &
-  \textbf{M{+}S} & \textbf{M} &
-  \textbf{M{+}S} & \textbf{M} \\
-  \midrule \midrule
-  Lv0 &
-    \noTOPair & \noTOPairs & \tmoPairCens{tmoS1}{29} & \noTOPaird &
-    \noTOPair & \noTOPairs & \tmoPair{tmoS1}{26}{\estMed{30}} & \noTOPaire \\
-  Lv1 &
-    \noTOPair & \noTOPairs & \tmoPairCens{tmoS1}{29} & \noTOPaird &
-    \tmoPair{tmoS1}{24}{28} & \noTOPairs & \tmoPair{tmoS2}{19}{\estMed{22}} & \noTOPaire \\
-  Lv2 &
-    \tmoPair{tmoS1}{24}{27} & \noTOPairs & \tmoPair{tmoS2}{18}{\estMed{23}} & \noTOPaird &
-    \tmoPair{tmoS2}{15}{23} & \tmoPairCens{tmoS1}{29} &
-    \tmoPair{tmoS2}{14}{\estMed{21}} & \tmoPairCens{tmoS1}{25} \\
-  Lv3 &
-    \tmoPair{tmoS2}{13}{18} & \tmoPair{tmoS1}{21}{\estMed{29}} &
-    \tmoPair{tmoS2}{12}{\estMed{17}} & \tmoPair{tmoS1}{20}{\estMed{28}} &
-    \tmoPairW{tmoS3}{8}{13} & \tmoPair{tmoS2}{19}{\estMed{27}} &
-    \tmoPairW{tmoS3}{7}{\estMed{10}} & \tmoPair{tmoS2}{16}{\estMed{23}} \\
-  Lv4 &
-    \tmoPair{tmoS2}{10}{17} & \tmoPair{tmoS2}{16}{\estMed{27}} &
-    \tmoPairW{tmoS3}{8}{\estMed{14}} & \tmoPair{tmoS2}{13}{\estMed{22}} &
-    \tmoPairW{tmoS3}{6}{11} & \tmoPair{tmoS2}{13}{\estMed{24}} &
-    \tmoPairW{tmoS4}{5}{\estMed{9}} & \tmoPairW{tmoS3}{7}{\estMed{13}} \\
-  Lv5 &
-    \tmoPairW{tmoS3}{8}{10} & \tmoPair{tmoS2}{12}{\estMed{15}} &
-    \tmoPairW{tmoS3}{8}{\estMed{10}} & \tmoPair{tmoS2}{12}{\estMed{15}} &
-    \tmoPairW{tmoS4}{4}{8} & \tmoPairW{tmoS3}{9}{\estMed{17}} &
-    \tmoPairW{tmoS4}{4}{\estMed{8}} & \tmoPairW{tmoS3}{9}{\estMed{17}} \\
-  Lv6 &
-    \tmoPairW{tmoS3}{7}{10} & \tmoPair{tmoS2}{11}{\estMed{16}} &
-    \tmoPairW{tmoS3}{7}{\estMed{10}} & \tmoPair{tmoS2}{11}{\estMed{16}} &
-    \tmoPairW{tmoS4}{4}{8} & \tmoPairW{tmoS3}{6}{\estMed{12}} &
-    \tmoPairW{tmoS4}{4}{\estMed{8}} & \tmoPairW{tmoS3}{6}{\estMed{12}} \\
-  \midrule \bottomrule
-  \end{tabular}%
-  }
-  \par\vspace{3pt}
-  {\scriptsize\begin{minipage}{0.933\columnwidth}
-  \raggedright\setlength{\fboxsep}{1.8pt}%
+ \label{tab:timeout_index}
+ {\scriptsize\setlength{\tabcolsep}{1.0pt}%
+ \begin{tabular}{@{}HL||PP|PP||PP|PP@{}}
+ \toprule \midrule
+ \multirow{3}{*}{\makecell{\textbf{Starting}\\\textbf{Overheat}\\\textbf{level}}} &
+ \multirow{3}{*}{\makecell{\textbf{Timeout}\\\textbf{Overheat}\\\textbf{level}}} &
+ \multicolumn{4}{c||}{\textbf{Normal capture}} &
+ \multicolumn{4}{c@{}}{\textbf{Memory-pressure capture}} \\ \cmidrule(lr){3-6}\cmidrule(l){7-10}
+ & &
+ \multicolumn{2}{c|}{\textbf{12MP}} &
+ \multicolumn{2}{c||}{\textbf{24MP}} &
+ \multicolumn{2}{c|}{\textbf{12MP}} &
+ \multicolumn{2}{c@{}}{\textbf{24MP}} \\ \cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(lr){7-8}\cmidrule(l){9-10}
+ & & \textbf{M{+}S} & \textbf{M} &
+ \textbf{M{+}S} & \textbf{M} &
+ \textbf{M{+}S} & \textbf{M} &
+ \textbf{M{+}S} & \textbf{M} \\
+ \midrule \midrule
+ Lv0 & Lv1--3 &
+ \noTOPair & \noTOPairs & \tmoPairCens{tmoS1}{29} & \noTOPaird &
+ \noTOPair & \noTOPairs & \tmoPair{tmoS1}{26}{\estMed{30}} & \noTOPaire \\
+ Lv1 & Lv2--3 &
+ \noTOPair & \noTOPairs & \tmoPairCens{tmoS1}{29} & \noTOPaird &
+ \tmoPair{tmoS1}{24}{28} & \noTOPairs & \tmoPair{tmoS2}{19}{\estMed{22}} & \noTOPaire \\
+ Lv2 & Lv2--4 &
+ \tmoPair{tmoS1}{24}{27} & \noTOPairs & \tmoPair{tmoS2}{18}{\estMed{23}} & \noTOPaird &
+ \tmoPair{tmoS2}{15}{23} & \tmoPairCens{tmoS1}{29} &
+ \tmoPair{tmoS2}{14}{\estMed{21}} & \tmoPairCens{tmoS1}{25} \\
+ Lv3 & Lv3--4 &
+ \tmoPair{tmoS2}{13}{18} & \tmoPair{tmoS1}{21}{\estMed{29}} &
+ \tmoPair{tmoS2}{12}{\estMed{17}} & \tmoPair{tmoS1}{20}{\estMed{28}} &
+ \tmoPairW{tmoS3}{8}{13} & \tmoPair{tmoS2}{19}{\estMed{27}} &
+ \tmoPairW{tmoS3}{7}{\estMed{10}} & \tmoPair{tmoS2}{16}{\estMed{23}} \\
+ Lv4 & Lv4--5 &
+ \tmoPair{tmoS2}{10}{17} & \tmoPair{tmoS2}{16}{\estMed{27}} &
+ \tmoPairW{tmoS3}{8}{\estMed{14}} & \tmoPair{tmoS2}{13}{\estMed{22}} &
+ \tmoPairW{tmoS3}{6}{11} & \tmoPair{tmoS2}{13}{\estMed{24}} &
+ \tmoPairW{tmoS4}{5}{\estMed{9}} & \tmoPairW{tmoS3}{7}{\estMed{13}} \\
+ Lv5 & Lv5--6 &
+ \tmoPairW{tmoS3}{8}{10} & \tmoPair{tmoS2}{12}{\estMed{15}} &
+ \tmoPairW{tmoS3}{8}{\estMed{10}} & \tmoPair{tmoS2}{12}{\estMed{15}} &
+ \tmoPairW{tmoS4}{4}{8} & \tmoPairW{tmoS3}{9}{\estMed{17}} &
+ \tmoPairW{tmoS4}{4}{\estMed{8}} & \tmoPairW{tmoS3}{9}{\estMed{17}} \\
+ Lv6 & Lv6 &
+ \tmoPairW{tmoS3}{7}{10} & \tmoPair{tmoS2}{11}{\estMed{16}} &
+ \tmoPairW{tmoS3}{7}{\estMed{10}} & \tmoPair{tmoS2}{11}{\estMed{16}} &
+ \tmoPairW{tmoS4}{4}{8} & \tmoPairW{tmoS3}{6}{\estMed{12}} &
+ \tmoPairW{tmoS4}{4}{\estMed{8}} & \tmoPairW{tmoS3}{6}{\estMed{12}} \\
+ \midrule \bottomrule
+ \end{tabular}%
+ }
+ \par\vspace{3pt}
+ {\scriptsize\begin{minipage}{0.933\columnwidth}
+ \raggedright\setlength{\fboxsep}{1.8pt}%
   Each cell: earliest/median first-timeout capture; --: no timeout by capture 30.\par
-  earliest index:~%
-  \colorbox{tmoS1}{\strut\,${\geq}\,20$\,}\colorbox{tmoS2}{\strut\,10--19\,}\colorbox{tmoS3}{\strut\,\textcolor{white}{6--9}\,}\colorbox{tmoS4}{\strut\,\textcolor{white}{${\leq}\,5$}\,}\par
-  \end{minipage}}
+ earliest index:~%
+ \colorbox{tmoS1}{\strut\,${\geq}\,20$\,}\colorbox{tmoS2}{\strut\,10--19\,}\colorbox{tmoS3}{\strut\,\textcolor{white}{6--9}\,}\colorbox{tmoS4}{\strut\,\textcolor{white}{${\leq}\,5$}\,}\par
+ \end{minipage}}
 \end{table}
