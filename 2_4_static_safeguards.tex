@@ -2,31 +2,33 @@
 \label{sec:guard-limit}
 
 \smallskip\noindent\textbf{Production thermal guard.}
-The Draft control logic in Samsung's camera framework is shared across device variants.
-Galaxy Overheat Level is a device-temperature-based throttling state; higher levels impose stronger throttling and can lengthen the same Draft workload.
-To contain this deadline risk, the framework disables all optional Draft image-processing stages from Level 4, where the existing single-frame stage \emph{S} had caused Capture Timeouts during production validation.
-Level 4 occurs during repeated-capture and stress-validation workloads and can also arise from high ambient temperatures, charging, and preceding device workloads.
-This deterministic rule is inexpensive to validate, but it does not estimate whether the current capture can complete within its remaining deadline budget.
+During pre-release validation of one model, a Capture Timeout occurred while the device was at overheat level 4, where thermal throttling delayed a single-frame Draft stage.
+When the timeout recurred at the same level despite workload reduction and code optimization, we adopted a level-4 release policy that disables all optional Draft stages rather than only the affected stage.
+Because Samsung's camera framework shares the Draft control code across models and this policy has no model-specific condition, the same cutoff applies fleet-wide.
+The framework reevaluates the guard when each Draft Sequence starts, so a sequence beginning after the level rises to 4 skips all optional image-processing stages.
+The restriction can be triggered under common conditions, including repeated capture, high ambient temperatures, charging, and preceding device workloads.
+Yet it relies only on overheat level, Samsung's indicator of device temperature and throttling severity, and cannot determine whether each capture's queued and remaining Draft work fits within its remaining budget.
 
 \smallskip\noindent\textbf{Target workload and setup.}
-We denote the lightweight multi-frame Draft stage introduced in Section~\ref{sec:draft-background} by \emph{M} and the existing single-frame stage by \emph{S}.
-We evaluate M alone to isolate its cost and \emph{M+S} to represent their coexistence in Portrait mode.
-We use the S948U, a high-capability flagship whose parallel-capture path has no additional queue-length restriction.
-An earlier Capture Timeout incident on a constrained flagship involved 12 pending Draft Sequences and prompted a model-specific queue-length limit on parallel capture.
-The S948U has no such cap, so we use 30-capture bursts as a common sustained-load horizon; the resulting pending count and worker wait vary with resolution and memory condition.
-For each starting level (0--6), resolution, memory condition, and Draft configuration, we ran ten bursts in a validation build that forced the optional stages to execute by disabling the guard's conditional check.
-For memory-pressure runs, the camera executed concurrently with AnTuTu Benchmark's memory-stress workload.
-Table~\ref{tab:timeout_index} reports the earliest capture index at which a timeout occurred across the ten bursts; Shot-to-Shot is the per-level median interval between consecutive capture starts in the normal 24MP trace, with comparable intervals in the other tested conditions.
+We denote the lightweight multi-frame Draft stage developed as a production candidate by \emph{M} and the deployed single-frame stage by \emph{S}.
+The target Portrait Draft Sequence runs optional M, S, and the mandatory encoding and saving stages in that order.
+Our goal is to make M eligible across the full thermal range rather than disable it solely at the level-4 cutoff.
+To characterize the risk of an always-on alternative even on the most capable hardware, we evaluated M on the S948U, our highest-performing model.
+With M forced to execute and the guard bypassed, we ran ten trials of 30 continuous captures for each combination of starting overheat level (0--6), resolution, memory condition, and Draft Sequence configuration.
+In the level-4 validation failure, the Draft backlog reached 12 sequences at approximately the 20th continuous capture.
+We therefore used a 30-capture horizon to cover that state with a conservative margin.
+Memory-pressure trials ran the camera alongside AnTuTu Benchmark~11.1.4's memory-stress workload.
+Table~\ref{tab:timeout_index} reports the earliest and median first-timeout indices by starting overheat level.
+The level can rise during a trial and intensify throttling before later captures reach the Draft worker.
 
 \input{tables/tab_timeout_index.tex}
 
-The fixed cutoff does not account for capture-specific deadline risk.
-In 24MP memory-pressure bursts begun at Level 3, M+S timed out as early as capture 7.
-Across the tested configurations, the earliest observed failure shifted with resolution, memory pressure, enabled stages, and burst position.
-The common cutoff therefore lacks the remaining-budget and queued-cost information needed to decide whether M can execute on a particular capture.
+Capture Timeouts occurred in forced-on trials that began below the level-4 cutoff.
+At starting levels 4--6, the earliest M+S timeout indices ranged from 4 to 10, meaning that several initial captures completed even though the production guard would disable their optional stages.
+Thus, starting overheat level alone did not distinguish captures that completed M+S from those that timed out.
 
 \smallskip\noindent\textbf{Required runtime control.}
-These results motivate deciding whether to execute M from each capture's remaining budget and predicted Draft cost.
-Admission alone, however, cannot recover budget already consumed while waiting behind earlier Draft Sequences.
-We therefore coordinate admission with capture pacing based on predicted queued cost rather than a fixed queue count.
-Pacing can reduce future queueing, but any delay to \texttt{captureAvailable} increases the earliest next-shot interval.
+To make this distinction at runtime, per-capture admission must compare each capture's remaining budget with the predicted cost of the complete remaining Draft Sequence.
+However, admission acts only after a capture reaches the Draft worker and therefore cannot address the cross-shot waiting described in Section~\ref{sec:parallel-capture}: budget already consumed in the queue is unrecoverable, and newly accepted captures can extend the backlog.
+We therefore pair admission with capture pacing, which delays \texttt{captureAvailable} according to predicted queued cost so that the backlog can drain before another capture is accepted.
+This delay can increase the earliest next-shot interval, making responsiveness an explicit trade-off.

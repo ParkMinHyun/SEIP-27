@@ -21,6 +21,9 @@ _minted-*/
 # Generated paper PDF. Do not ignore figures/*.pdf.
 /paper.pdf
 
+# Local scratch directory
+/tmp/
+
 # Machine-specific Codex/project notes
 /LOCAL_CONTEXT.md
 

@@ -11,10 +11,10 @@ The Draft path, like the post-processing path, deliberately uses a single worker
 Concurrent Draft execution would require buffering out-of-order results to preserve this order and would overlap Draft workloads across captures, thereby raising peak compute and memory demand and degrading camera performance as more sequences become active.
 
 \smallskip\noindent\textbf{Increasing Draft processing workload.}
-The initial Draft Sequence selected a representative frame and proceeded directly to required encoding and storage.
+The initial Draft Sequence selected a representative frame and proceeded directly to the required encoding and saving stages.
 To reduce visible differences between the Draft image and final image, the deployed Draft Sequence later incorporated a lightweight single-frame processing stage.
 As post-processing became more compute- and memory-intensive, selected shot modes began deferring the full post-processing pipeline until the camera application entered the background, leaving the Draft image visible longer and making these differences more noticeable.
-For Portrait mode, where this gap is pronounced, we have implemented a lightweight multi-frame Draft stage on all supported models to approximate the deferred post-processing result.
+For Portrait mode, where this gap is pronounced, we developed a lightweight multi-frame Draft stage as a production candidate for supported models to approximate the deferred post-processing result.
 Under parallel capture, however, this added multi-frame processing can grow the backlog of Draft Sequences waiting for the Draft worker and increase Capture Timeout risk.
 
 \input{figures/fig_camera_pipeline.tex}
