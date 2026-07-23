@@ -2,33 +2,33 @@
 \label{sec:guard-limit}
 
 \smallskip\noindent\textbf{Production thermal guard.}
-During pre-release validation of one model, a Capture Timeout occurred while the device was at overheat level 4, where thermal throttling delayed a single-frame Draft stage.
-When the timeout recurred at the same level despite workload reduction and code optimization, we adopted a level-4 release policy that disables all optional Draft stages rather than only the affected stage.
-Because Samsung's camera framework shares the Draft control code across models and this policy has no model-specific condition, the same cutoff applies fleet-wide.
-The framework reevaluates the guard when each Draft Sequence starts, so a sequence beginning after the level rises to 4 skips all optional image-processing stages.
-The restriction can be triggered under common conditions, including repeated capture, high ambient temperatures, charging, and preceding device workloads.
-Yet it relies only on overheat level, Samsung's indicator of device temperature and throttling severity, and cannot determine whether each capture's queued and remaining Draft work fits within its remaining budget.
+During one model's pre-release validation, thermal throttling at overheat level 4 delayed a single-frame Draft stage and caused a Capture Timeout.
+When the timeout recurred despite workload reduction and code optimization, we chose a uniform policy that disables all optional image processing for Draft Sequences starting at overheat level 4 or above.
+Because the shared Draft control path has no model-specific branch, the same policy applies across models.
+High ambient temperature, charging, and recent device workloads can readily raise the level to 4.
+However, Samsung's overheat level indicates device temperature and throttling severity, not whether a capture's remaining deadline budget can cover its queued and remaining Draft work.
 
 \smallskip\noindent\textbf{Target workload and setup.}
 We denote the lightweight multi-frame Draft stage developed as a production candidate by \emph{M} and the deployed single-frame stage by \emph{S}.
-The target Portrait Draft Sequence runs optional M, S, and the mandatory encoding and saving stages in that order.
-Our goal is to make M eligible across the full thermal range rather than disable it solely at the level-4 cutoff.
-To characterize the risk of an always-on alternative even on the most capable hardware, we evaluated M on the S948U, our highest-performing model.
-With M forced to execute and the guard bypassed, we ran ten trials of 30 continuous captures for each combination of starting overheat level (0--6), resolution, memory condition, and Draft Sequence configuration.
-In the level-4 validation failure, the Draft backlog reached 12 sequences at approximately the 20th continuous capture.
-We therefore used a 30-capture horizon to cover that state with a conservative margin.
+The target Portrait Draft Sequence runs optional M and S before mandatory encoding and saving.
+Our goal is to enable M across all supported device models and the full overheat range rather than disable it categorically at level 4.
+To characterize the always-on risk even on our highest-performing model, we evaluated M on the S948U.
+With M forced and the guard bypassed, we ran ten 30-capture trials per combination of starting overheat level (0--6), resolution, memory condition, and Draft Sequence configuration.
+In the level-4 validation failure, the Draft backlog reached 12 sequences near capture 20.
+A 30-capture horizon therefore covered this state conservatively.
 Memory-pressure trials ran the camera alongside AnTuTu Benchmark~11.1.4's memory-stress workload.
-Table~\ref{tab:timeout_index} reports the earliest and median first-timeout indices by starting overheat level.
-The level can rise during a trial and intensify throttling before later captures reach the Draft worker.
+Table~\ref{tab:timeout_index} reports the earliest and median first-timeout indices for each starting overheat level.
+During a trial, the level can rise and further throttle later captures before they reach the Draft worker.
 
 \input{tables/tab_timeout_index.tex}
 
 Capture Timeouts occurred in forced-on trials that began below the level-4 cutoff.
-At starting levels 4--6, the earliest M+S timeout indices ranged from 4 to 10, meaning that several initial captures completed even though the production guard would disable their optional stages.
+At starting levels 4--6, M+S first timed out at captures 4--10 after several initial captures completed, although the production guard would disable their optional stages.
 Thus, starting overheat level alone did not distinguish captures that completed M+S from those that timed out.
 
 \smallskip\noindent\textbf{Required runtime control.}
-To make this distinction at runtime, per-capture admission must compare each capture's remaining budget with the predicted cost of the complete remaining Draft Sequence.
-However, admission acts only after a capture reaches the Draft worker and therefore cannot address the cross-shot waiting described in Section~\ref{sec:parallel-capture}: budget already consumed in the queue is unrecoverable, and newly accepted captures can extend the backlog.
-We therefore pair admission with capture pacing, which delays \texttt{captureAvailable} according to predicted queued cost so that the backlog can drain before another capture is accepted.
-This delay can increase the earliest next-shot interval, making responsiveness an explicit trade-off.
+Achieving this goal requires coordinating per-capture admission with capture pacing.
+Admission compares each capture's remaining budget with the predicted cost of its complete remaining Draft Sequence.
+However, admission acts only when a capture reaches the Draft worker, so it cannot recover budget consumed by the cross-shot waiting in Section~\ref{sec:parallel-capture} or prevent newly accepted captures from extending the backlog.
+Pacing therefore delays \texttt{captureAvailable} according to predicted queued cost so the backlog can drain before another capture is accepted.
+This delay can lengthen the earliest next-shot interval, making responsiveness an explicit trade-off.

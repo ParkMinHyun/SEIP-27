@@ -2,11 +2,11 @@
 \label{sec:parallel-capture}
 
 Without parallel capture, the application accepts the next shutter input only after the preceding capture satisfies the Capture Timeout completion conditions.
-Parallel capture removes this serialization: the hardware abstraction layer (HAL) can signal \texttt{captureAvailable} before those conditions are met, enabling the application to accept the next shutter input sooner and thereby shortening the shot-to-shot interval.
+Parallel capture removes this serialization: the hardware abstraction layer (HAL) can signal \texttt{captureAvailable} before those conditions are met, allowing the application to accept the next shutter input earlier and shorten the shot-to-shot interval.
 
 Each accepted capture request starts its own Capture Timeout clock; under parallel capture, these clocks can overlap.
-Because Draft Sequences execute in capture order on a single worker, Draft-worker waiting accumulates when requests arrive faster than the worker completes the sequences.
-This wait can push a later capture past its deadline even when successive Draft Sequences have equal execution times, as illustrated in Figure~\ref{fig:overlap}.
+Because Draft Sequences execute on a single worker that publishes results in capture order (Section~\ref{sec:draft-background}), Draft-worker waiting accumulates when requests arrive faster than that worker completes the sequences.
+This wait can push a later capture past its deadline even when successive Draft Sequences take equal time, as Figure~\ref{fig:overlap} illustrates.
 
 \begin{figure}[t]
   \centering

@@ -7,14 +7,14 @@ The Draft Sequence supports both user-perceived responsiveness and capture relia
 Figure~\ref{fig:draft-pipeline} illustrates this workflow.
 
 \smallskip\noindent\textbf{Single-worker Draft execution.}
-The Draft path, like the post-processing path, deliberately uses a single worker to preserve capture-order publication and limit active processing to one sequence.
-Concurrent Draft execution would require buffering out-of-order results to preserve this order and would overlap Draft workloads across captures, thereby raising peak compute and memory demand and degrading camera performance as more sequences become active.
+Like post-processing, the Draft path uses single worker to preserve capture-order publication and limit active processing to one sequence.
+Concurrent Draft execution would require buffering out-of-order results to preserve order and would overlap workloads across captures, raising peak compute and memory demand and degrading performance as active sequences increase.
 
 \smallskip\noindent\textbf{Increasing Draft processing workload.}
-The initial Draft Sequence selected a representative frame and proceeded directly to the required encoding and saving stages.
-To reduce visible differences between the Draft image and final image, the deployed Draft Sequence later incorporated a lightweight single-frame processing stage.
-As post-processing became more compute- and memory-intensive, selected shot modes began deferring the full post-processing pipeline until the camera application entered the background, leaving the Draft image visible longer and making these differences more noticeable.
-For Portrait mode, where this gap is pronounced, we developed a lightweight multi-frame Draft stage as a production candidate for supported models to approximate the deferred post-processing result.
-Under parallel capture, however, this added multi-frame processing can grow the backlog of Draft Sequences waiting for the Draft worker and increase Capture Timeout risk.
+Initially, the Draft Sequence selected a representative frame and proceeded directly through the required encoding and saving stages.
+A later release added a lightweight single-frame stage to reduce visible differences between Draft and final images.
+As post-processing grew more compute- and memory-intensive, selected shot modes began deferring the full pipeline until the camera application entered the background, prolonging Draft visibility and making these differences more noticeable.
+Because this gap is pronounced in Portrait mode, we developed a lightweight multi-frame Draft stage as a production candidate for supported models to approximate the deferred result.
+Under parallel capture, however, this stage can grow the Draft-worker backlog and increase Capture Timeout risk.
 
 \input{figures/fig_camera_pipeline.tex}
