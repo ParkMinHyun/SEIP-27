@@ -2,33 +2,34 @@
 \label{sec:guard-limit}
 
 \smallskip\noindent\textbf{Production thermal guard.}
-During one model's pre-release validation, thermal throttling at overheat level 4 delayed a single-frame Draft stage and caused a Capture Timeout.
-When the timeout recurred despite workload reduction and code optimization, we chose a uniform policy that disables all optional image processing for Draft Sequences starting at overheat level 4 or above.
-Because the shared Draft control path has no model-specific branch, the same policy applies across models.
-High ambient temperature, charging, and recent device workloads can readily raise the level to 4.
-However, Samsung's overheat level indicates device temperature and throttling severity, not whether a capture's remaining deadline budget can cover its queued and remaining Draft work.
+Samsung's overheat level is an ordinal thermal indicator on a 0--6 scale, where larger values denote stronger throttling.
+During pre-release validation, level-4 throttling delayed a single-frame Draft stage and caused a Capture Timeout.
+After the failure recurred despite optimization, we adopted a uniform safeguard that skips optional Draft processing at level 4 or above.
+Because the Draft Sequence is implemented in framework code shared across models, the safeguard applies uniformly rather than through model-specific branches.
+However, level 4 is reachable in routine use under high ambient temperatures, charging, or preceding device workloads.
+The level also does not reveal whether a capture's remaining budget can cover queued and remaining Draft work.
 
 \smallskip\noindent\textbf{Target workload and setup.}
-We denote the lightweight multi-frame Draft stage developed as a production candidate by \emph{M} and the deployed single-frame stage by \emph{S}.
+We denote the lightweight multi-frame Draft stage under production evaluation by \emph{M} and the deployed single-frame stage by \emph{S}.
 The target Portrait Draft Sequence runs optional M and S before mandatory encoding and saving.
-Our goal is to enable M across all supported device models and the full overheat range rather than disable it categorically at level 4.
-To characterize the always-on risk even on our highest-performing model, we evaluated M on the S948U.
-With M forced and the guard bypassed, we ran ten 30-capture trials per combination of starting overheat level (0--6), resolution, memory condition, and Draft Sequence configuration.
-In the level-4 validation failure, the Draft backlog reached 12 sequences near capture 20.
-A 30-capture horizon therefore covered this state conservatively.
+To reduce the draft--final visual gap in Section~\ref{sec:draft-background}, we aim to make M available across all supported models and levels and execute it whenever safely possible, rather than disabling it uniformly at level 4.
+We evaluated M on the Galaxy S26 Ultra, our highest-performing model.
+With M enabled and the guard bypassed, we ran ten 30-capture trials per combination of starting level (0--6), resolution, memory condition, and Draft Sequence configuration.
+The level-4 failure had 12 pending sequences near capture 20; 30 captures extended beyond that state.
 Memory-pressure trials ran the camera alongside AnTuTu Benchmark~11.1.4's memory-stress workload.
-Table~\ref{tab:timeout_index} reports the earliest and median first-timeout indices for each starting overheat level.
-During a trial, the level can rise and further throttle later captures before they reach the Draft worker.
+Table~\ref{tab:timeout_index} reports the earliest and median first-timeout indices for each starting level.
 
 \input{tables/tab_timeout_index.tex}
 
-Capture Timeouts occurred in forced-on trials that began below the level-4 cutoff.
-At starting levels 4--6, M+S first timed out at captures 4--10 after several initial captures completed, although the production guard would disable their optional stages.
-Thus, starting overheat level alone did not distinguish captures that completed M+S from those that timed out.
+Some trials starting at levels 0--3 timed out despite beginning below the cutoff.
+Conversely, trials starting at levels 4--6 completed several M+S captures before timing out at captures 4--10, although the guard would suppress optional work immediately.
+Continuous capture can increase throttling, so the starting level is only a snapshot.
+Thus, the cutoff is under-protective for some low-level starts and over-conservative for early high-level captures.
 
 \smallskip\noindent\textbf{Required runtime control.}
-Achieving this goal requires coordinating per-capture admission with capture pacing.
-Admission compares each capture's remaining budget with the predicted cost of its complete remaining Draft Sequence.
-However, admission acts only when a capture reaches the Draft worker, so it cannot recover budget consumed by the cross-shot waiting in Section~\ref{sec:parallel-capture} or prevent newly accepted captures from extending the backlog.
-Pacing therefore delays \texttt{captureAvailable} according to predicted queued cost so the backlog can drain before another capture is accepted.
-This delay can lengthen the earliest next-shot interval, making responsiveness an explicit trade-off.
+These results call for complementary admission and pacing controls.
+Admission protects the current capture by running M only when its predicted remaining work fits the live budget.
+Skipping M reduces remaining work but cannot undo incurred queueing delay or absorb spikes in the remaining stages under memory pressure or increasing throttling.
+Meanwhile, each new capture extends the queue, and repeated capture can intensify throttling near level transitions.
+Pacing must therefore regulate subsequent captures so queued work can drain before another timeout window begins.
+Together, the controls must be coordinated at runtime to preserve M whenever feasible while maintaining timeout safety.
