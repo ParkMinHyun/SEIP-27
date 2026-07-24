@@ -25,19 +25,6 @@ This repository is a LaTeX paper project for SEIP 2027.
 - The paper studies coordinated workload and arrival control for tail-latency-based Capture Timeout, not average-latency optimization for a single image-processing stage.
 - Preserve the core research framing unless the user explicitly asks to change the problem statement, contribution, or terminology.
 
-## Research Context Documents
-
-- Read `docs/research-context.md` before writing or revising the motivation, preliminaries, approach, methodology, or implementation discussion.
-- Treat `docs/research-context.md` as the canonical shared research context for this project.
-- Keep `AGENTS.md` short and rule-oriented. Put long motivation notes, terminology definitions, and draft research explanations in `docs/research-context.md`.
-- If the research context conflicts with implementation evidence from the private `ML` repository, report the conflict instead of silently resolving it.
-
-## Research Motivation
-
-- Canonical motivation notes and guidance for turning them into manuscript text live in `docs/research-context.md` (see "Motivation" and "Writing the Motivation").
-- Present the motivation as an academic problem, not a personal anecdote; do not invent origin stories, experimental evidence, or reviewer/advisor comments.
-- If the motivation is still incomplete, ask the user for the missing concrete trigger before writing a full introduction.
-
 ## Implementation Reference
 
 The actual implementation for this research is maintained in a private GitHub repository:
