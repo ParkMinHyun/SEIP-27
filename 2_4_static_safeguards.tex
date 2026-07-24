@@ -26,7 +26,8 @@ Conversely, even at starting levels 4--6, optional Draft processing completed fo
 Thus, static thermal gating neither accurately characterizes per-capture timeout risk nor preserves feasible Draft processing opportunities.
 
 \smallskip\noindent\textbf{Required runtime control.}
-These results show that fixed thermal gating is insufficient because runtime control must address budget consumption both before and after a capture obtains the Draft worker.
-After assignment, the work performed for a capture must be adjusted to its remaining budget.
-Before assignment, the system must limit the budget loss caused by cross-shot queueing, as described in Section~\ref{sec:parallel-capture}.
-Because reducing such queueing may require spacing captures farther apart, a practical runtime solution must jointly consider the processing budget available to each capture and the resulting shot-to-shot responsiveness.
+These results expose why fixed thermal gating alone is insufficient.
+As shown in Section~\ref{sec:parallel-capture}, cross-shot queueing can consume part of a capture's budget before it obtains the Draft worker.
+Consequently, the budget available when execution begins is determined not only by the thermal state but also by contention from preceding captures.
+Reducing the work performed after worker acquisition can adapt execution to this remaining budget, but it cannot recover the time already spent waiting.
+Runtime control must therefore address both the work performed after execution begins and the contention accumulated before then.
