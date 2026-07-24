@@ -1,8 +1,8 @@
 \subsection{Production Release Process and Capture Reliability}
 \label{sec:release-process}
 
-The Samsung camera software studied here is a privileged, preloaded system application that interacts with Samsung-specific Android framework extensions, system services, vendor components, and companion applications.
-Capture is a core cross-layer workflow spanning these components, so a failure discovered late can require a firmware update rather than an application-only fix.
+The Samsung camera software studied here is a privileged preloaded system application that interacts with Samsung-specific Android framework extensions, system services, vendor components, and companion applications.
+Capture is a core cross-layer workflow that spans these components, so a failure discovered late can require a firmware update rather than an application-only fix.
 Because firmware updates require cross-component coordination and broad revalidation, daily development builds undergo automated black-box testing across supported camera workflows, device models, and OS versions.
 Periodically, the camera-validation team and development engineers stress-test the latest builds, diagnose timing and memory-pressure failures, and verify fixes.
 
