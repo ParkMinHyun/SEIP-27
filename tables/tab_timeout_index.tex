@@ -13,10 +13,10 @@
 \providecolor{tmoS3}{RGB}{201,80,63}  % 6--9 (white text)
 \providecolor{tmoS4}{RGB}{143,36,32}  % <= 5 (white text)
 
-% Compact fixed-width columns sized to remain within one IEEE column.
-\newcolumntype{H}{>{\centering\arraybackslash}p{0.92cm}}
-\newcolumntype{L}{>{\centering\arraybackslash}p{0.95cm}}
-\newcolumntype{P}{>{\centering\arraybackslash}p{0.66cm}}
+% Give the two Overheat headers enough width while preserving the table width.
+\newcolumntype{H}{>{\centering\arraybackslash}p{1.02cm}}
+\newcolumntype{L}{>{\centering\arraybackslash}p{1.05cm}}
+\newcolumntype{P}{>{\centering\arraybackslash}p{0.635cm}}
 \providecommand{\estMed}[1]{#1}
 
 % Each colored cell reports earliest/median; shading follows the earliest index.
@@ -35,8 +35,8 @@
  {\scriptsize\setlength{\tabcolsep}{1.0pt}%
  \begin{tabular}{@{}HL||PP|PP||PP|PP@{}}
  \toprule \midrule
- \multirow{3}{*}{\makecell{\textbf{Starting}\\\textbf{Overheat}\\\textbf{level}}} &
- \multirow{3}{*}{\makecell{\textbf{Timeout}\\\textbf{Overheat}\\\textbf{level}}} &
+ \multirow[c]{3}{=}[-0.8ex]{\makecell[c]{\textbf{Starting}\\\textbf{Overheat}\\\textbf{level}}} &
+ \multirow[c]{3}{=}[-0.8ex]{\makecell[c]{\textbf{Timeout}\\\textbf{Overheat}\\\textbf{level}}} &
  \multicolumn{4}{c||}{\textbf{Normal capture}} &
  \multicolumn{4}{c@{}}{\textbf{Memory-pressure capture}} \\ \cmidrule(lr){3-6}\cmidrule(l){7-10}
  & &
@@ -55,7 +55,7 @@
  Lv1 & Lv2--3 &
  \noTOPair & \noTOPairs & \tmoPairCens{tmoS1}{29} & \noTOPaird &
  \tmoPair{tmoS1}{24}{28} & \noTOPairs & \tmoPair{tmoS2}{19}{\estMed{22}} & \noTOPaire \\
- Lv2 & Lv2--4 &
+ Lv2 & Lv3 &
  \tmoPair{tmoS1}{24}{27} & \noTOPairs & \tmoPair{tmoS2}{18}{\estMed{23}} & \noTOPaird &
  \tmoPair{tmoS2}{15}{23} & \tmoPairCens{tmoS1}{29} &
  \tmoPair{tmoS2}{14}{\estMed{21}} & \tmoPairCens{tmoS1}{25} \\
@@ -85,7 +85,7 @@
  \par\vspace{3pt}
  {\scriptsize\begin{minipage}{0.933\columnwidth}
  \raggedright\setlength{\fboxsep}{1.8pt}%
-  Each cell: earliest/median first-timeout capture; --: no timeout by capture 30.\par
+  Each cell reports the earliest/median first-timeout capture index across ten trials\par -- indicates that the corresponding statistic was not reached within 30 captures.\par
  earliest index:~%
  \colorbox{tmoS1}{\strut\,${\geq}\,20$\,}\colorbox{tmoS2}{\strut\,10--19\,}\colorbox{tmoS3}{\strut\,\textcolor{white}{6--9}\,}\colorbox{tmoS4}{\strut\,\textcolor{white}{${\leq}\,5$}\,}\par
  \end{minipage}}
