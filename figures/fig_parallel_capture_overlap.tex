@@ -61,6 +61,7 @@
   \node[fill=white, inner sep=1.5pt] at (6.95, 2.725)
     {\footnotesize\textcolor{green!45!black}{\ding{51} in time}};
   \draw[ddl] (7.80, 2.35) -- (7.80, 3.10);
+  \node[red, anchor=east] at (10.00, 2.725) {deadline $i+1$};
 
   \fill[black!60] (0.85, 2.48) circle (1.3pt);
   \draw[sig] (0.85, 2.46) -- (1.00, 1.97);
@@ -89,7 +90,7 @@
   % ---------- budget braces for the failing capture ----------
   \draw[decorate, decoration={brace, mirror, amplitude=4pt}]
     (1.00, 1.10) -- (6.10, 1.10);
-  \node[anchor=north] at (3.55, 0.88) {\footnotesize pre-Draft budget consumed};
+  \node[anchor=north] at (3.55, 0.88) {\footnotesize Draft budget consumed};
   \draw[decorate, decoration={brace, mirror, amplitude=4pt}]
     (6.10, 1.10) -- (8.30, 1.10);
   \node[anchor=north] at (7.20, 0.88) {\footnotesize remaining budget};
