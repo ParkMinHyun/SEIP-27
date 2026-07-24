@@ -12,7 +12,7 @@ Nor does the level reveal how much of a capture's deadline has already been cons
 \smallskip\noindent\textbf{Target workload and configuration.}
 We denote the candidate lightweight multi-frame Draft stage by \emph{M} and the deployed all optional single-frame stages in the target Portrait configuration by \emph{S}. 
 We compare M with M+S; both are followed by the same mandatory encoding and saving.
-To reduce the final visual gap of the draft in Section~\ref{sec:draft-background}, we aim to make M available across all supported models and levels and execute it whenever safely possible, rather than disabling it uniformly at level 4.
+To reduce the draft--final visual gap in Section~\ref{sec:draft-background}, we aim to make M available across all supported models and levels and execute it whenever safely possible, rather than disabling it uniformly at level 4.
 We first evaluated M on the Galaxy S26 Ultra, the highest-performing model, to determine whether the problem persists even on the most capable device.
 With M enabled and the guard bypassed, we ran ten 30-capture trials per combination of starting level (0--6), resolution, memory condition, and Draft Sequence configuration.
 The motivating level-4 failure occurred near capture 20 with 12 Draft Sequences pending, so each trial continued to 30 captures to exercise the pipeline beyond the observed failure point.
@@ -21,13 +21,11 @@ Table~\ref{tab:timeout_index} reports the earliest and median first-timeout indi
 
 \input{tables/tab_timeout_index.tex}
 
-Some trials starting at levels 0--3 timed out, where the production guard admits optional Draft processing.
-Conversely, even at starting levels 4--6, optional Draft processing completed for several captures before the earliest timeout, although the guard would suppress it from the first capture.
-Thus, static thermal gating neither accurately characterizes per-capture timeout risk nor preserves feasible Draft processing opportunities.
-
 \smallskip\noindent\textbf{Required runtime control.}
-These results expose why fixed thermal gating alone is insufficient.
-As shown in Section~\ref{sec:parallel-capture}, cross-shot queueing can consume part of a capture's budget before it obtains the Draft worker.
-Consequently, the budget available when execution begins is determined not only by the thermal state but also by contention from preceding captures.
-Reducing the work performed after worker acquisition can adapt execution to this remaining budget, but it cannot recover the time already spent waiting.
-Runtime control must therefore address both the work performed after execution begins and the contention accumulated before then.
+Some trials starting at overheat levels 0--3 timed out even though the production guard permits optional Draft processing at those levels.
+Conversely, at starting levels 4--6, several captures completed optional Draft processing before the earliest timeout, even though the guard would suppress it from the first capture.
+Together, these results show that a fixed thermal threshold cannot reliably identify which captures have sufficient budget to execute \(M\).
+The overheat level does not reflect the budget remaining for each capture: waiting behind earlier captures can consume it before the Draft worker becomes available, and throttling can further erode it after a stage begins.
+Executing \(M\) for every capture would require spacing subsequent captures farther apart to prevent queued work from exhausting their budgets, directly increasing shot-to-shot latency.
+Adjusting only the current capture's work is also insufficient, because it cannot recover time already spent waiting or compensate for throttling that begins after the amount of work has been fixed.
+Reliably supporting multi-frame composition therefore requires two controls to act together at runtime: one that scales each capture's Draft work to its remaining budget and another that delays subsequent captures only as needed to prevent queued work from exhausting their budgets before execution begins.
