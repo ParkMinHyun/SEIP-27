@@ -1,0 +1,64 @@
+% RQ3: Device-stratified pacing intervention cost and backlog control.
+%
+% Fix the admitted workload across policies so the comparison isolates pacing.
+% Reconstruct real backlog from measured Draft start/end timestamps rather than
+% substituting the controller's own estimate.
+
+\begin{table}[t]
+  \centering
+  \setlength{\abovecaptionskip}{2pt}%
+  \setlength{\belowcaptionskip}{3pt}%
+  \caption{RQ3 pacing cost and backlog control under 12MP normal at starting
+  overheat level 3.}
+  \label{tab:rq3_pacing_summary}
+
+  {\scriptsize
+  \renewcommand{\arraystretch}{1.06}%
+  \setlength{\arrayrulewidth}{0.35pt}%
+  \setlength{\doublerulesep}{0.8pt}%
+  \newcommand{\rqthreeTBD}{\textit{TBD}}%
+  \newsavebox{\rqthreetabbox}%
+  \newcommand{\rqthreetabular}{%
+  \begin{tabular}{|c|l||c|c|c||c|c|}
+    \hline\hline
+    \textbf{Device} &
+    \textbf{Policy} &
+    \makecell[c]{\textbf{Paced}\\\textbf{(\%)}} &
+    \makecell[c]{\(\boldsymbol{d_{50}/d_{95}}\)\\\textbf{(ms)}} &
+    \makecell[c]{\(\boldsymbol{\sum d}\)\\\textbf{(s)}} &
+    \makecell[c]{\(\boldsymbol{B_{\max}}\)\\\textbf{(s)}} &
+    \makecell[c]{\(\boldsymbol{Q_{\max}}\)} \\
+    \hline\hline
+    \multirow{4}{*}{\makecell[c]{S26\\Ultra}}
+      & No pacing     & 0 & 0 & 0 & \rqthreeTBD & \rqthreeTBD \\
+    \cline{2-7}
+      & Static LUT    & \rqthreeTBD & \rqthreeTBD & \rqthreeTBD & \rqthreeTBD & \rqthreeTBD \\
+    \cline{2-7}
+      & Queue dynamic & \rqthreeTBD & \rqthreeTBD & \rqthreeTBD & \rqthreeTBD & \rqthreeTBD \\
+    \cline{2-7}
+      & \textbf{Ours} & \textbf{\rqthreeTBD} & \textbf{\rqthreeTBD} &
+      \textbf{\rqthreeTBD} & \textbf{\rqthreeTBD} & \textbf{\rqthreeTBD} \\
+    \hline
+    \multirow{4}{*}{S26}
+      & No pacing     & 0 & 0 & 0 & \rqthreeTBD & \rqthreeTBD \\
+    \cline{2-7}
+      & Static LUT    & \rqthreeTBD & \rqthreeTBD & \rqthreeTBD & \rqthreeTBD & \rqthreeTBD \\
+    \cline{2-7}
+      & Queue dynamic & \rqthreeTBD & \rqthreeTBD & \rqthreeTBD & \rqthreeTBD & \rqthreeTBD \\
+    \cline{2-7}
+      & \textbf{Ours} & \textbf{\rqthreeTBD} & \textbf{\rqthreeTBD} &
+      \textbf{\rqthreeTBD} & \textbf{\rqthreeTBD} & \textbf{\rqthreeTBD} \\
+    \hline\hline
+  \end{tabular}}%
+  \fittabcolsep{\rqthreetabbox}{\rqthreetabular}{\columnwidth}{14}%
+  \rqthreetabular
+  }
+
+  \par\vspace{2pt}
+  \begin{minipage}{0.97\columnwidth}
+    \scriptsize\emph{Notes:}
+    Each 30-shot session starts at thermal level 3; within each device, all
+    policies receive the same admitted workload.
+    \(d\), \(B\), and \(Q\) denote applied delay, real backlog, and queue depth.
+  \end{minipage}
+\end{table}
