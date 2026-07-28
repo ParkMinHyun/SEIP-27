@@ -1,0 +1,125 @@
+% RQ1(a): Compact Full-controller behavior over burst prefixes.
+%
+% Results are aggregated from the seven 2026-07-27 CaptureMetrics workbooks
+% according to the protocol in the implementation repository.
+% Implementation reference inspected at commit:
+% 267a29c769428df16c7b96bd18956764da7c37db
+
+\begin{table*}[t]
+  \centering
+  \setlength{\abovecaptionskip}{2pt}%
+  \setlength{\belowcaptionskip}{3pt}%
+  \caption{RQ1(a) pilot results for the full controller on S26 Ultra.
+  Inline triples report results after the first 5, 10, and 30 shots,
+  respectively; the 5-shot result is bold.}
+  \label{tab:rq1_preventive_alignment}
+  \label{tab:rq1_controller_behavior}
+
+  {\scriptsize
+  \newcommand{\rqTriple}[3]{%
+    \makebox[2.7em][r]{\textbf{#1}}\,\textbar\,
+    \makebox[2.7em][r]{#2}\,\textbar\,
+    \makebox[2.7em][r]{#3}}%
+  \setlength{\tabcolsep}{1.4pt}%
+  \setlength{\arrayrulewidth}{0.35pt}%
+  \setlength{\doublerulesep}{0.8pt}%
+  \renewcommand{\arraystretch}{1.08}%
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}|l|l|l||r|r|r||r|r|r|@{}}
+    \hline\hline
+    \textbf{Device} &
+    \textbf{Condition} &
+    \makecell[l]{\textbf{Start}\\\textbf{level}} &
+    \makecell[r]{\textbf{Slack P5}\\\textbf{(ms)}} &
+    \makecell[r]{\textbf{Admission-denial}\\\textbf{onset (E/M)}} &
+    \makecell[r]{\textbf{Pacing-delay}\\\textbf{onset (E/M)}} &
+    \makecell[r]{\textbf{$M{+}S$ completed (\%)}\\\textbf{@5} \textbar\ @10 \textbar\ @30} &
+    \makecell[r]{\textbf{Pacing activated (\%)}\\\textbf{@5} \textbar\ @10 \textbar\ @30} &
+    \makecell[r]{\textbf{Delay median (ms)}\\\textbf{@5} \textbar\ @10 \textbar\ @30} \\
+    \hline\hline
+    \multirow{7}{*}{S26 Ultra} &
+    \multirow{7}{*}{\makecell[l]{12MP\\normal}}
+      & Lv0 & 2102 & --    & --    &
+        \rqTriple{100}{100}{100} &
+        \rqTriple{0}{0}{0} &
+        \rqTriple{--}{--}{--} \\
+    \cline{3-9}
+      & & Lv1 & 1533 & --    & --    &
+        \rqTriple{100}{100}{100} &
+        \rqTriple{0}{0}{0} &
+        \rqTriple{--}{--}{--} \\
+    \cline{3-9}
+      & & Lv2 & 329  & 23/29 & 27/28 &
+        \rqTriple{100}{100}{88.9} &
+        \rqTriple{0}{0}{9.2} &
+        \rqTriple{--}{--}{182} \\
+    \cline{3-9}
+      & & Lv3 & 201  & 9/18  & 12/15 &
+        \rqTriple{100}{97.8}{57.8} &
+        \rqTriple{0}{0}{30.3} &
+        \rqTriple{--}{--}{372} \\
+    \cline{3-9}
+      & & Lv4 & 360  & 4/15  & 10/14 &
+        \rqTriple{96.0}{91.0}{47.0} &
+        \rqTriple{0}{2.2}{33.4} &
+        \rqTriple{--}{242}{386} \\
+    \cline{3-9}
+      & & Lv5 & 266  & 9/15  & 8/10  &
+        \rqTriple{100}{96.7}{55.6} &
+        \rqTriple{0}{11.1}{44.8} &
+        \rqTriple{--}{431}{451} \\
+    \cline{3-9}
+      & & Lv6 & 186  & 9/16  & 8/9   &
+        \rqTriple{100}{97.3}{47.0} &
+        \rqTriple{0}{17.2}{41.7} &
+        \rqTriple{--}{519}{519} \\
+    \hline\hline
+    \multirow{7}{*}{S26 Ultra} &
+    \multirow{7}{*}{\makecell[l]{24MP\\memory pressure}}
+      & Lv0 & 259 & 26/30 & 25/26 &
+        \rqTriple{100}{100}{93.3} &
+        \rqTriple{0}{0}{11.5} &
+        \rqTriple{--}{--}{243} \\
+    \cline{3-9}
+      & & Lv1 & 359 & 20/20 & 22/22 &
+        \rqTriple{100}{100}{81.7} &
+        \rqTriple{0}{0}{24.1} &
+        \rqTriple{--}{--}{310} \\
+    \cline{3-9}
+      & & Lv2 & 311 & 15/18 & 15/18 &
+        \rqTriple{100}{100}{57.8} &
+        \rqTriple{0}{0}{29.9} &
+        \rqTriple{--}{--}{269} \\
+    \cline{3-9}
+      & & Lv3 & 430 & 7/10  & 7/11  &
+        \rqTriple{100}{84.4}{31.7} &
+        \rqTriple{0}{8.6}{19.2} &
+        \rqTriple{--}{739}{446} \\
+    \cline{3-9}
+      & & Lv4 & 442 & 3/12  & 7/8   &
+        \rqTriple{88.0}{87.0}{45.0} &
+        \rqTriple{0}{7.8}{18.3} &
+        \rqTriple{--}{1071}{259} \\
+    \cline{3-9}
+      & & Lv5 & 577 & 5/10  & 7/11  &
+        \rqTriple{96.0}{82.0}{32.0} &
+        \rqTriple{0}{11.1}{19.3} &
+        \rqTriple{--}{613}{396} \\
+    \cline{3-9}
+      & & Lv6 & 490 & 4/10  & 7/11  &
+        \rqTriple{90.0}{86.2}{40.8} &
+        \rqTriple{0}{5.6}{27.6} &
+        \rqTriple{--}{2350}{369} \\
+    \hline\hline
+  \end{tabular*}%
+  }
+
+  \par\vspace{3pt}
+  {\scriptsize
+  Slack P5 pools deadline margins through shot 30.  Action cells report the
+  earliest/Kaplan--Meier median onset.  Completion values are session-level
+  macro means; pacing activation pools eligible shot transitions, and delay
+  medians include only applied delays.  -- means that the corresponding event
+  was not observed.  Pilot cell sizes are unbalanced ($N=2$--11); the
+  confirmatory experiment will use balanced policy arms and report confidence
+  intervals.}
+\end{table*}

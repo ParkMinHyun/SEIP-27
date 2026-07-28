@@ -1,0 +1,72 @@
+% RQ2 pilot results from seven Full-controller workbooks on one device.
+% Implementation reference inspected at ML commit 267a29c769428df16c7b96bd18956764da7c37db.
+% The three timeout-bearing sessions in 48U_metrics_24MP_memory_0727_4.xlsx
+% are excluded in full, as requested.
+%
+% Each capture contributes at most one decision per optional-work group:
+% Multi-frame = the Bokeh entry of PORTRAIT; Single-frame = the first
+% Decoding, Filter, or Overlay Watermark entry of DECORATION.
+
+\begin{table*}[!t]
+  \centering
+  \setlength{\abovecaptionskip}{2pt}%
+  \setlength{\belowcaptionskip}{2pt}%
+  \caption{RQ2 pilot: Optional-work execution, factual admit outcomes, and
+  predicted-upper-bound calibration across capture periods.}
+  \label{tab:rq2_admission_audit}
+  {\scriptsize
+  \renewcommand{\arraystretch}{1.10}%
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} |c|c|c|c|c|c|c|c|c|c| @{}}
+    \hline
+    \multirow{2}{*}{\textbf{Condition}} &
+    \multirow{2}{*}{\textbf{Group}} &
+    \multirow{2}{*}{\makecell{\textbf{Effective}\\\textbf{admit} (\%)}} &
+    \multirow{2}{*}{\makecell{\textbf{Successful / unsafe}\\\textbf{admit} (\%)}} &
+    \multicolumn{3}{c|}{\textbf{Actual-cost coverage (\%) $\uparrow$}} &
+    \multicolumn{3}{c|}{\textbf{P95 deficit (ms / \% of actual cost) $\downarrow$}} \\
+    \cline{5-10}
+    & & & &
+    \textbf{2--5} & \textbf{6--10} & \textbf{11--30} &
+    \textbf{2--5} & \textbf{6--10} & \textbf{11--30} \\
+    \hline
+    \multirow{2}{*}{12MP normal}
+      & Multi-frame
+      & 61.7
+      & 99.9 / 0.1
+      & 74.2 & 90.5 & 86.3
+      & 194 / 22.6\% & 21 / 1.9\% & 41 / 5.0\% \\
+    \cline{2-10}
+      & Single-frame
+      & 96.8
+      & 100.0 / 0.0
+      & 71.1 & 88.0 & 89.0
+      & 131 / 24.0\% & 20 / 3.4\% & 21 / 3.6\% \\
+    \hline
+    \multirow{2}{*}{\makecell{24MP memory\\pressure}}
+      & Multi-frame
+      & 46.4
+      & 99.8 / 0.2
+      & 74.5 & 82.3 & 86.5
+      & 352 / 29.2\% & 157 / 11.8\% & 82 / 8.1\% \\
+    \cline{2-10}
+      & Single-frame
+      & 87.8
+      & 100.0 / 0.0
+      & 72.9 & 81.6 & 91.5
+      & 208 / 24.3\% & 100 / 13.0\% & 45 / 8.0\% \\
+    \hline
+  \end{tabular*}
+  }
+
+  \par\vspace{1pt}
+  {\scriptsize Effective admit is the observed optional-group execution rate,
+  not safe-work retention: the traces do not execute skipped groups.  Admit
+  outcomes are conditional on effective admits; unsafe combines an invoked
+  watchdog with any uncontained deadline miss (none occurred).  For factual
+  remaining cost $C$ and predicted upper bound $U$, coverage is
+  $\Pr[C\leq U]$.  P95 deficit independently reports the 95th percentiles of
+  $\max(0,C-U)$ and $100\max(0,C-U)/C$; covered executions contribute zeros.
+  Calibration uses admitted non-watchdog executions.  First-shot $U$ was
+  uninitialized at zero and is omitted.  Three timeout-bearing 24MP sessions
+  are excluded in full.}
+\end{table*}

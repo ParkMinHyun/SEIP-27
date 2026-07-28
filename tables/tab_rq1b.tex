@@ -1,0 +1,56 @@
+% RQ1(b): Four-arm controller ablation.
+%
+% Baseline timeout values are copied from Table~\ref{tab:timeout_index}, using
+% its M+S columns for the two endpoint scenarios.
+% Implementation reference inspected at commit:
+% 267a29c769428df16c7b96bd18956764da7c37db
+
+\begin{table}[t]
+  \centering
+  \setlength{\abovecaptionskip}{2pt}%
+  \setlength{\belowcaptionskip}{3pt}%
+  \caption{RQ1(b) controller ablation on S26 Ultra: first-timeout capture index
+  (earliest/median).}
+  \label{tab:rq1_ablation}
+
+  {\scriptsize
+  \setlength{\tabcolsep}{1.7pt}%
+  \renewcommand{\arraystretch}{1.03}%
+  \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}l l r r r r@{}}
+    \toprule
+    \multirow{2}{*}{\textbf{Condition}} &
+    \multirow{2}{*}{\makecell[l]{\textbf{Start}\\\textbf{level}}} &
+    \multicolumn{4}{c}{\textbf{Controller configuration}} \\
+    \cmidrule(l){3-6}
+    & & \textbf{Baseline} & \makecell[r]{\textbf{Admission}\\\textbf{only}} &
+    \makecell[r]{\textbf{Pacing}\\\textbf{only}} & \textbf{Ours} \\
+    \midrule
+    \multirow{7}{*}{12MP normal}
+      & Lv0 & --    & \textit{TBD} & \textit{TBD} & \textbf{--} \\
+      & Lv1 & --    & \textit{TBD} & \textit{TBD} & \textbf{--} \\
+      & Lv2 & 24/27 & \textit{TBD} & \textit{TBD} & \textbf{--} \\
+      & Lv3 & 13/18 & \textit{TBD} & \textit{TBD} & \textbf{--} \\
+      & Lv4 & 10/17 & \textit{TBD} & \textit{TBD} & \textbf{--} \\
+      & Lv5 & 8/10  & \textit{TBD} & \textit{TBD} & \textbf{--} \\
+      & Lv6 & 7/10  & \textit{TBD} & \textit{TBD} & \textbf{--} \\
+    \midrule
+    \multirow{7}{*}{\makecell[l]{24MP memory\\pressure}}
+      & Lv0 & 26/30 & \textit{TBD} & \textit{TBD} & \textbf{--} \\
+      & Lv1 & 19/22 & \textit{TBD} & \textit{TBD} & \textbf{--} \\
+      & Lv2 & 14/21 & \textit{TBD} & \textit{TBD} & \textbf{--} \\
+      & Lv3 & 7/10  & \textit{TBD} & \textit{TBD} & \textbf{--} \\
+      & Lv4 & 5/9   & \textit{TBD} & \textit{TBD} & \textbf{--} \\
+      & Lv5 & 4/8   & \textit{TBD} & \textit{TBD} & \textbf{--} \\
+      & Lv6 & 4/8   & \textit{TBD} & \textit{TBD} & \textbf{--} \\
+    \bottomrule
+  \end{tabular*}%
+  }
+
+  \par\vspace{3pt}
+  {\scriptsize
+  Baseline disables both admission and pacing and executes $M{+}S$ with the
+  deployed thermal guard bypassed.  Admission only and Pacing only enable one
+  component each, whereas Ours enables both.  -- means that no Capture Timeout
+  occurred within 30 shots; \textit{TBD} marks an arm not yet measured.  A
+  Draft node-watchdog termination is not counted as a Capture Timeout.}
+\end{table}

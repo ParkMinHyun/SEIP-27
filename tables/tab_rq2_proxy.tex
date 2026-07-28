@@ -1,0 +1,57 @@
+% Strict immediate-previous-shot proxy analysis for RQ2 skipped work.
+% This is sensitivity evidence, not a factual counterfactual audit.
+
+\begin{table}[!t]
+  \centering
+  \setlength{\abovecaptionskip}{2pt}%
+  \setlength{\belowcaptionskip}{2pt}%
+  \caption{RQ2 pilot: Previous-shot proxy for skipped work.}
+  \label{tab:rq2_skip_proxy}
+  {\footnotesize
+  \renewcommand{\arraystretch}{1.08}%
+  \resizebox{\columnwidth}{!}{%
+  \begin{tabular}{|c|c|c|c|}
+    \hline
+    \textbf{Group} &
+    \makecell{\textbf{Proxy}\\\textbf{coverage} (\%)} &
+    \makecell{\textbf{Over-conservative}\textsuperscript{$\dagger$}\\
+      rate (\%)\\median (ms / \% budget)} &
+    \makecell{\textbf{Deadline-protecting}\textsuperscript{$\dagger$}\\
+      rate (\%)\\median (ms / \% budget)} \\
+    \hline
+    \multicolumn{4}{|c|}{\textbf{12MP normal}} \\
+    \hline
+    Multi-frame
+      & 6.6
+      & \makecell{38.2\\65 / 6.0}
+      & \makecell{61.8\\133 / 15.1} \\
+    \hline
+    Single-frame
+      & 11.6
+      & \makecell{40.0\\75 / 10.4}
+      & \makecell{60.0\\17 / 5.8} \\
+    \hline
+    \multicolumn{4}{|c|}{\textbf{24MP memory pressure}} \\
+    \hline
+    Multi-frame
+      & 6.6
+      & \makecell{45.2\\253 / 12.9}
+      & \makecell{54.8\\120 / 11.5} \\
+    \hline
+    Single-frame
+      & 8.3
+      & \makecell{83.3\\87 / 9.9}
+      & \makecell{16.7\\190 / 13.9} \\
+    \hline
+  \end{tabular}%
+  }
+  }
+
+  \par\vspace{1pt}
+  {\scriptsize \textsuperscript{$\dagger$}A skip is labeled only when the same
+  group completed without a watchdog in the immediately preceding shot.
+  Classification rates are conditional on labeled skips; each median reports
+  the consequence in ms and as a percentage of decision-time budget.  Coverage
+  uses all effective skips.  These are sensitivity estimates, not factual
+  counterfactual outcomes.  The same timeout-session exclusions are applied.}
+\end{table}
