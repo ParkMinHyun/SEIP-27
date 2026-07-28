@@ -9,8 +9,7 @@
   \centering
   \setlength{\abovecaptionskip}{2pt}%
   \setlength{\belowcaptionskip}{3pt}%
-  \caption{RQ1(b) controller ablation on S26 Ultra: first-timeout capture index
-  (earliest/median).}
+  \caption{RQ1(a) controller ablation on S26 Ultra.}
   \label{tab:rq1_ablation}
 
   {\scriptsize
@@ -23,8 +22,8 @@
   \newcommand{\rqonebtabular}{%
   \begin{tabular}{|c|c||c|c|c|c|}
     \hline\hline
-    \multirow{2}{*}{\textbf{Condition}} &
-    \multirow{2}{*}{\makecell[c]{\textbf{Start}\\\textbf{level}}} &
+    \multirow{2}{*}[-0.6ex]{\textbf{Condition}} &
+    \multirow{2}{*}[-0.6ex]{\makecell[c]{\textbf{Start}\\\textbf{level}}} &
     \multicolumn{4}{c|}{\textbf{Controller configuration}} \\
     \cline{3-6}
     & & \textbf{Baseline} & \makecell[c]{\textbf{Admission}\\\textbf{only}} &
@@ -66,10 +65,4 @@
   }
 
   \par\vspace{3pt}
-  {\scriptsize
-  Baseline disables both admission and pacing and executes $M{+}S$ with the
-  deployed thermal guard bypassed.  Admission only and Pacing only enable one
-  component each, whereas Ours enables both.  -- means that no Capture Timeout
-  occurred within 30 shots; \textit{TBD} marks an arm not yet measured.  A
-  Draft node-watchdog termination is not counted as a Capture Timeout.}
 \end{table}
