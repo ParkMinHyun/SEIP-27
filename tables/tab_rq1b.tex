@@ -14,36 +14,55 @@
   \label{tab:rq1_ablation}
 
   {\scriptsize
-  \setlength{\tabcolsep}{1.7pt}%
-  \renewcommand{\arraystretch}{1.03}%
-  \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}l l r r r r@{}}
-    \toprule
+  \setlength{\arrayrulewidth}{0.35pt}%
+  \setlength{\doublerulesep}{0.8pt}%
+  \renewcommand{\arraystretch}{1.08}%
+  % \fittabcolsep (macros.tex) solves for the \tabcolsep that makes the outer
+  % rules land exactly on \columnwidth.
+  \newsavebox{\rqonebbox}%
+  \newcommand{\rqonebtabular}{%
+  \begin{tabular}{|c|c||c|c|c|c|}
+    \hline\hline
     \multirow{2}{*}{\textbf{Condition}} &
-    \multirow{2}{*}{\makecell[l]{\textbf{Start}\\\textbf{level}}} &
-    \multicolumn{4}{c}{\textbf{Controller configuration}} \\
-    \cmidrule(l){3-6}
-    & & \textbf{Baseline} & \makecell[r]{\textbf{Admission}\\\textbf{only}} &
-    \makecell[r]{\textbf{Pacing}\\\textbf{only}} & \textbf{Ours} \\
-    \midrule
-    \multirow{7}{*}{12MP normal}
+    \multirow{2}{*}{\makecell[c]{\textbf{Start}\\\textbf{level}}} &
+    \multicolumn{4}{c|}{\textbf{Controller configuration}} \\
+    \cline{3-6}
+    & & \textbf{Baseline} & \makecell[c]{\textbf{Admission}\\\textbf{only}} &
+    \makecell[c]{\textbf{Pacing}\\\textbf{only}} & \textbf{Ours} \\
+    \hline\hline
+    \multirow{7}{*}{\makecell[c]{12MP\\normal}}
       & Lv0 & --    & \textit{TBD} & \textit{TBD} & \textbf{--} \\
+    \cline{2-6}
       & Lv1 & --    & \textit{TBD} & \textit{TBD} & \textbf{--} \\
+    \cline{2-6}
       & Lv2 & 24/27 & \textit{TBD} & \textit{TBD} & \textbf{--} \\
+    \cline{2-6}
       & Lv3 & 13/18 & \textit{TBD} & \textit{TBD} & \textbf{--} \\
+    \cline{2-6}
       & Lv4 & 10/17 & \textit{TBD} & \textit{TBD} & \textbf{--} \\
+    \cline{2-6}
       & Lv5 & 8/10  & \textit{TBD} & \textit{TBD} & \textbf{--} \\
+    \cline{2-6}
       & Lv6 & 7/10  & \textit{TBD} & \textit{TBD} & \textbf{--} \\
-    \midrule
-    \multirow{7}{*}{\makecell[l]{24MP memory\\pressure}}
+    \cline{1-6}
+    \multirow{7}{*}{\makecell[c]{24MP\\memory\\pressure}}
       & Lv0 & 26/30 & \textit{TBD} & \textit{TBD} & \textbf{--} \\
+    \cline{2-6}
       & Lv1 & 19/22 & \textit{TBD} & \textit{TBD} & \textbf{--} \\
+    \cline{2-6}
       & Lv2 & 14/21 & \textit{TBD} & \textit{TBD} & \textbf{--} \\
+    \cline{2-6}
       & Lv3 & 7/10  & \textit{TBD} & \textit{TBD} & \textbf{--} \\
+    \cline{2-6}
       & Lv4 & 5/9   & \textit{TBD} & \textit{TBD} & \textbf{--} \\
+    \cline{2-6}
       & Lv5 & 4/8   & \textit{TBD} & \textit{TBD} & \textbf{--} \\
+    \cline{2-6}
       & Lv6 & 4/8   & \textit{TBD} & \textit{TBD} & \textbf{--} \\
-    \bottomrule
-  \end{tabular*}%
+    \hline\hline
+  \end{tabular}}%
+  \fittabcolsep{\rqonebbox}{\rqonebtabular}{\columnwidth}{12}%
+  \rqonebtabular
   }
 
   \par\vspace{3pt}

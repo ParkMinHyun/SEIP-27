@@ -16,18 +16,22 @@
   \label{tab:rq2_admission_audit}
   {\scriptsize
   \renewcommand{\arraystretch}{1.10}%
-  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} |c|c|c|c|c|c|c|c|c|c| @{}}
+  % \fittabcolsep (macros.tex) solves for the \tabcolsep that makes the outer
+  % rules land exactly on \textwidth.
+  \newsavebox{\rqtwobox}%
+  \newcommand{\rqtwotabular}{%
+  \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}
     \hline
     \multirow{2}{*}{\textbf{Condition}} &
     \multirow{2}{*}{\textbf{Group}} &
-    \multirow{2}{*}{\makecell{\textbf{Effective}\\\textbf{admit} (\%)}} &
-    \multirow{2}{*}{\makecell{\textbf{Successful / unsafe}\\\textbf{admit} (\%)}} &
+    \multirow{2}{*}{\makecell[c]{\textbf{Admit rate} (\%)}} &
+    \multirow{2}{*}{\makecell[c]{\textbf{Successful}\\\textbf{/ unsafe admit} (\%)}} &
     \multicolumn{3}{c|}{\textbf{Actual-cost coverage (\%) $\uparrow$}} &
     \multicolumn{3}{c|}{\textbf{P95 deficit (ms / \% of actual cost) $\downarrow$}} \\
     \cline{5-10}
     & & & &
-    \textbf{2--5} & \textbf{6--10} & \textbf{11--30} &
-    \textbf{2--5} & \textbf{6--10} & \textbf{11--30} \\
+    \textbf{@2--5} & \textbf{@6--10} & \textbf{@11--30} &
+    \textbf{@2--5} & \textbf{@6--10} & \textbf{@11--30} \\
     \hline
     \multirow{2}{*}{12MP normal}
       & Multi-frame
@@ -42,7 +46,7 @@
       & 71.1 & 88.0 & 89.0
       & 131 / 24.0\% & 20 / 3.4\% & 21 / 3.6\% \\
     \hline
-    \multirow{2}{*}{\makecell{24MP memory\\pressure}}
+    \multirow{2}{*}{\makecell[c]{24MP\\memory pressure}}
       & Multi-frame
       & 46.4
       & 99.8 / 0.2
@@ -55,7 +59,9 @@
       & 72.9 & 81.6 & 91.5
       & 208 / 24.3\% & 100 / 13.0\% & 45 / 8.0\% \\
     \hline
-  \end{tabular*}
+  \end{tabular}}%
+  \fittabcolsep{\rqtwobox}{\rqtwotabular}{\textwidth}{20}%
+  \rqtwotabular
   }
 
   \par\vspace{1pt}

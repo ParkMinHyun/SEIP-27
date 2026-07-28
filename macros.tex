@@ -855,6 +855,26 @@
     \fi
 }
 
+% --- Fit a tabular to an exact target width by solving for \tabcolsep --------
+% Plain `tabular` centres cell contents correctly (unlike tabular* with
+% \extracolsep{\fill}, which pushes every cell against its right rule), but it
+% takes its natural width.  \fittabcolsep repeatedly typesets the table into a
+% scratch box and feeds the leftover slack back into \tabcolsep, so the outer
+% rules land exactly on the target width.  Iteration is required because a
+% \multicolumn span constrains a group of columns as a whole, which makes the
+% table width only piecewise linear in \tabcolsep; eight rounds converge well
+% below a printer's point for the tables used here.
+%   #1 savebox  #2 macro holding the tabular  #3 target width  #4 gap count
+%      (#4 = 2 x number of columns)
+\newcommand{\fittabcolsepstep}[4]{%
+  \sbox{#1}{#2}\addtolength{\tabcolsep}{\dimexpr(#3-\wd#1)/#4\relax}}
+\newcommand{\fittabcolsep}[4]{%
+  \setlength{\tabcolsep}{0pt}%
+  \fittabcolsepstep{#1}{#2}{#3}{#4}\fittabcolsepstep{#1}{#2}{#3}{#4}%
+  \fittabcolsepstep{#1}{#2}{#3}{#4}\fittabcolsepstep{#1}{#2}{#3}{#4}%
+  \fittabcolsepstep{#1}{#2}{#3}{#4}\fittabcolsepstep{#1}{#2}{#3}{#4}%
+  \fittabcolsepstep{#1}{#2}{#3}{#4}\fittabcolsepstep{#1}{#2}{#3}{#4}}
+
 
 %%% Local Variables:
 %%% mode: plain-tex
