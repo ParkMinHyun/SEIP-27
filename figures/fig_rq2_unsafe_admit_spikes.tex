@@ -1,150 +1,134 @@
-% RQ2 unsafe fresh-model admits: recent-safe baseline versus forced event.
+% RQ2 unsafe fresh-model admits: recent-safe baseline versus unsafe event.
 %
-% The figure summarizes the same four remaining-cost aggregates and the
-% per-decision node wall-time shifts used in the RQ2 unsafe-admit audit.
 % Each baseline is the mean of the preceding three safe model admits from the
-% same run and workload group.  Multi-event values are decision means.
+% same run and workload group.  CPU time is summed over the remaining nodes
+% from the selected admission point through Draft completion.
 %
-% Remaining cost (ms), baseline -> event:
-%   Bokeh                    945 -> 1884
-%   Filter+encoding          585 -> 846
-%   Shared Filter (Multi)    685 -> 855
-%   Shared Filter (Single)   397 -> 483
-% Node wall-time increase relative to the baseline (%):
-%   Bokeh (n=5)              28.7, 58.0, 246.7, 261.5, 316.5
-%   Shared Filter (n=8)       2.3,  3.8,   8.4,  11.8,
-%                             22.3, 54.7,  54.7,  88.3
-%
-% Across the audited decisions, predicted admission headroom is 4--612 ms and
-% measured overrun is 4--1,059 ms.  No event records blocking GC; run-queue
-% wait changes in both directions across workloads.
+% Remaining-sequence CPU time (ms), baseline -> event:
+%   Multi-frame 1:  2225 -> 3340
+%   Multi-frame 2:  2062 -> 2775
+%   Multi-frame 3:  1648 -> 2379
+%   Multi-frame 4:   948 -> 1043
+%   Multi-frame 5:   821 -> 1044
+%   Single-frame 1:  864 -> 1324
+%   Single-frame 2: 1012 -> 1067
+%   Single-frame 3:  444 ->  560
 
 \begin{figure}[!b]
   \centering
   \begin{tikzpicture}
-    \begin{groupplot}[
-      group style={group size=1 by 2, vertical sep=45pt},
-      width=0.84\columnwidth,
-      height=3.00cm,
+    \begin{axis}[
+      width=0.86\columnwidth,
+      height=6.20cm,
       xmin=0,
+      xmax=3600,
+      ymin=0.45,
+      ymax=8.55,
+      xtick={0,1000,2000,3000},
+      ytick={1,2,3,4,5,6,7,8},
+      yticklabels={
+        Single-frame 3,
+        Single-frame 2,
+        Single-frame 1,
+        Multi-frame 5,
+        Multi-frame 4,
+        Multi-frame 3,
+        Multi-frame 2,
+        Multi-frame 1
+      },
+      xlabel={Remaining-sequence CPU time (ms)},
       axis x line*=bottom,
       axis y line*=left,
       xmajorgrids,
-      grid style={gray!18, line width=0.3pt},
+      ymajorgrids,
+      grid style={gray!16,line width=0.3pt},
       axis line style={line width=0.35pt},
       tick style={line width=0.35pt},
       tick label style={font=\scriptsize},
+      yticklabel style={font=\scriptsize,align=right},
       label style={font=\scriptsize},
-      title style={font=\footnotesize},
-      yticklabel style={font=\scriptsize, align=right},
-      enlarge x limits=false,
       clip=false,
+      legend style={
+        font=\scriptsize,
+        draw=none,
+        fill=none,
+        at={(0.5,1.02)},
+        anchor=south,
+        legend columns=2,
+        /tikz/every even column/.append style={column sep=7pt},
+      },
     ]
+      % Separate the Multi-frame and Single-frame decision groups.
+      \addplot[black!70,line width=0.75pt,forget plot]
+        coordinates {(0,3.5) (3600,3.5)};
 
-      \nextgroupplot[
-        title={(a) Measured remaining cost},
-        xmax=2000,
-        xtick={0,500,1000,1500,2000},
-        ymin=0.5,
-        ymax=4.5,
-        ytick={1,2,3,4},
-        yticklabels={Shared Filter (Single),Shared Filter (Multi),
-                     Filter+encoding,Bokeh},
-        xlabel={Execution time (ms)},
-        legend style={
-          font=\scriptsize,
-          draw=none,
-          fill=none,
-          at={(0.5,1.02)},
-          anchor=south,
-          legend columns=2,
-          /tikz/every even column/.append style={column sep=5pt},
-        },
-      ]
-        \addplot[gray!65,->,>=stealth,line width=0.7pt,forget plot]
-          coordinates {(397,1) (483,1)};
-        \addplot[gray!65,->,>=stealth,line width=0.7pt,forget plot]
-          coordinates {(685,2) (855,2)};
-        \addplot[gray!65,->,>=stealth,line width=0.7pt,forget plot]
-          coordinates {(585,3) (846,3)};
-        \addplot[gray!65,->,>=stealth,line width=0.7pt,forget plot]
-          coordinates {(945,4) (1884,4)};
+      % Recent-safe baseline -> unsafe event.
+      \addplot[gray!65,->,>=stealth,line width=0.7pt,forget plot]
+        coordinates {(2225,8) (3340,8)};
+      \addplot[gray!65,->,>=stealth,line width=0.7pt,forget plot]
+        coordinates {(2062,7) (2775,7)};
+      \addplot[gray!65,->,>=stealth,line width=0.7pt,forget plot]
+        coordinates {(1648,6) (2379,6)};
+      \addplot[gray!65,->,>=stealth,line width=0.7pt,forget plot]
+        coordinates {(948,5) (1043,5)};
+      \addplot[gray!65,->,>=stealth,line width=0.7pt,forget plot]
+        coordinates {(821,4) (1044,4)};
+      \addplot[gray!65,->,>=stealth,line width=0.7pt,forget plot]
+        coordinates {(864,3) (1324,3)};
+      \addplot[gray!65,->,>=stealth,line width=0.7pt,forget plot]
+        coordinates {(1012,2) (1067,2)};
+      \addplot[gray!65,->,>=stealth,line width=0.7pt,forget plot]
+        coordinates {(444,1) (560,1)};
 
-        \addplot[
-          only marks,mark=o,mark size=2.1pt,
-          draw=black,fill=white
-        ] coordinates {(397,1) (685,2) (585,3) (945,4)};
-        \addlegendentry{Recent safe baseline}
-        \addplot[
-          only marks,mark=square*,mark size=1.9pt,
-          draw=black,fill=black
-        ] coordinates {(483,1) (855,2) (846,3) (1884,4)};
-        \addlegendentry{Unsafe event}
+      \addplot[
+        only marks,
+        mark=o,
+        mark size=2.1pt,
+        draw=black,
+        fill=white
+      ] coordinates {
+        (2225,8) (2062,7) (1648,6) (948,5)
+        (821,4) (864,3) (1012,2) (444,1)
+      };
+      \addlegendentry{Recent safe baseline}
 
-        \node[font=\tiny,anchor=east,xshift=-1pt] at (axis cs:397,1) {397};
-        \node[font=\tiny,anchor=west,xshift=1pt] at (axis cs:483,1) {483};
-        \node[font=\tiny,anchor=east,xshift=-1pt] at (axis cs:685,2) {685};
-        \node[font=\tiny,anchor=west,xshift=1pt] at (axis cs:855,2) {855};
-        \node[font=\tiny,anchor=east,xshift=-1pt] at (axis cs:585,3) {585};
-        \node[font=\tiny,anchor=west,xshift=1pt] at (axis cs:846,3) {846};
-        \node[font=\tiny,anchor=east,xshift=-1pt] at (axis cs:945,4) {945};
-        \node[font=\tiny,anchor=east,xshift=-1pt] at (axis cs:1884,4) {1,884};
+      \addplot[
+        only marks,
+        mark=square*,
+        mark size=1.9pt,
+        draw=black,
+        fill=black
+      ] coordinates {
+        (3340,8) (2775,7) (2379,6) (1043,5)
+        (1044,4) (1324,3) (1067,2) (560,1)
+      };
+      \addlegendentry{Unsafe event}
 
-      \nextgroupplot[
-        title={(b) Node wall-time increase},
-        xmax=340,
-        xtick={0,100,200,300},
-        ymin=0.5,
-        ymax=2.5,
-        ytick={1,2},
-        yticklabels={Shared Filter ($n=8$),Bokeh ($n=5$)},
-        xlabel={Increase from recent safe baseline (\%)},
-        legend style={
-          font=\scriptsize,
-          draw=none,
-          fill=none,
-          at={(0.5,1.02)},
-          anchor=south,
-          legend columns=2,
-          /tikz/every even column/.append style={column sep=5pt},
-        },
-      ]
-        \addplot[gray!65,line width=0.7pt,forget plot]
-          coordinates {(2.3,1) (88.3,1)};
-        \addplot[gray!65,line width=0.7pt,forget plot]
-          coordinates {(28.7,2) (316.5,2)};
-
-        \addplot[
-          only marks,mark=o,mark size=1.9pt,
-          draw=black,fill=white
-        ] coordinates {
-          (2.3,1) (3.8,1) (8.4,1) (11.8,1)
-          (22.3,1) (54.7,1) (54.7,1) (88.3,1)
-          (28.7,2) (58.0,2) (246.7,2)
-          (261.5,2) (316.5,2)
-        };
-        \addlegendentry{Decision}
-        \addplot[
-          only marks,mark=square*,mark size=1.9pt,
-          draw=black,fill=black
-        ] coordinates {(30.8,1) (182.3,2)};
-        \addlegendentry{Mean}
-    \end{groupplot}
-
-    \node[
-      font=\scriptsize,
-      anchor=north,
-      align=center,
-      text width=0.95\columnwidth
-    ] at ([yshift=-3pt]current bounding box.south) {%
-      Predicted headroom: 4--612\,ms
-      \quad Actual overrun: 4--1,059\,ms};
+      % Exact before/after values; vertical placement avoids overlap for the
+      % two short shifts.
+      \node[font=\tiny,anchor=south] at (axis cs:2225,8) {2,225};
+      \node[font=\tiny,anchor=north] at (axis cs:3340,8) {3,340};
+      \node[font=\tiny,anchor=south] at (axis cs:2062,7) {2,062};
+      \node[font=\tiny,anchor=north] at (axis cs:2775,7) {2,775};
+      \node[font=\tiny,anchor=south] at (axis cs:1648,6) {1,648};
+      \node[font=\tiny,anchor=north] at (axis cs:2379,6) {2,379};
+      \node[font=\tiny,anchor=south] at (axis cs:948,5) {948};
+      \node[font=\tiny,anchor=north] at (axis cs:1043,5) {1,043};
+      \node[font=\tiny,anchor=south] at (axis cs:821,4) {821};
+      \node[font=\tiny,anchor=north] at (axis cs:1044,4) {1,044};
+      \node[font=\tiny,anchor=south] at (axis cs:864,3) {864};
+      \node[font=\tiny,anchor=north] at (axis cs:1324,3) {1,324};
+      \node[font=\tiny,anchor=south] at (axis cs:1012,2) {1,012};
+      \node[font=\tiny,anchor=north] at (axis cs:1067,2) {1,067};
+      \node[font=\tiny,anchor=south] at (axis cs:444,1) {444};
+      \node[font=\tiny,anchor=north] at (axis cs:560,1) {560};
+    \end{axis}
   \end{tikzpicture}
 
-  \caption{Unsafe fresh-model admits relative to the preceding three safe
-  admits from the same run and workload group.  Panel (a) reports mean
-  remaining cost.  Panel (b) reports per-decision node wall-time increases;
-  squares mark the means.  Every Filter and Bokeh shift is positive, while no
-  event records blocking GC and run-queue wait shows no consistent trend.}
+  \caption{Remaining-sequence CPU-time shifts for all eight unsafe
+  fresh-model admits.  Each baseline averages the preceding three safe model
+  admits from the same run and workload group.  Every Multi-frame and
+  Single-frame decision exhibits CPU-time inflation before exceeding its
+  remaining budget.}
   \label{fig:rq2_unsafe_admit_spikes}
 \end{figure}
