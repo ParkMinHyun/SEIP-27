@@ -33,7 +33,7 @@ Reliable multi-frame composition therefore requires coordinated runtime control 
 \input{tables/tab_rq2_admission_summary.tex}
 
 \smallskip\noindent\textbf{Why unsafe work was admitted.}
-Figure~\ref{fig:rq2_unsafe_admit_spikes} summarizes all eight unsafe fresh-model
+Table~\ref{tab:rq2_unsafe_admit_cases} summarizes all eight unsafe fresh-model
 admits across three PostExecutionMetrics signatures.  In every case, the
 model admitted the group because its predicted upper bound was no greater than
 the remaining budget, but the measured remaining cost ultimately exceeded
@@ -41,7 +41,7 @@ that budget.  Six decisions had only 4--79\,ms of admission headroom, whereas
 two retained 527--612\,ms; all were overtaken by the measured change and
 exceeded the remaining budget by 4--1,059\,ms.
 
-\input{figures/fig_rq2_unsafe_admit_spikes.tex}
+\input{tables/tab_rq2_unsafe_admit_cases.tex}
 
 \smallskip\noindent\textbf{Post-decision latency change.}
 All eight unsafe admits coincided with an increase in remaining-sequence CPU
