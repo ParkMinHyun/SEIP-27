@@ -1,0 +1,220 @@
+{
+  "condition": {
+    "resolution": "12MP normal",
+    "startingOverheatLevel": 3,
+    "window": 30,
+    "transitionsPerRun": 29,
+    "nearDeadlineFraction": 0.8,
+    "workbooks": {
+      "no_pacing": [
+        "48U_metrics_12MP_normal_0729_AdmitOnly_1.xlsx",
+        "48U_metrics_12MP_normal_0729_AdmitOnly_2.xlsx"
+      ],
+      "ours": [
+        "48U_metrics_12MP_normal_0729.xlsx"
+      ]
+    }
+  },
+  "arms": {
+    "no_pacing": {
+      "runs": 9,
+      "transitions": 261,
+      "pacedCount": 0,
+      "pacedPercent": 0.0,
+      "d50": null,
+      "d95": null,
+      "totalDelayMedianS": 0.0,
+      "totalDelayMinS": 0.0,
+      "totalDelayMaxS": 0.0,
+      "backlogMeanS": 4.255155555555555,
+      "backlogP95S": 6.0071,
+      "bMaxS": 6.204,
+      "deadlineMs": 7000.0,
+      "nearDeadlinePercent": 25.185185185185183,
+      "queueMean": 6.811111111111111,
+      "queueP95": 13.0,
+      "qMax": 13,
+      "marginMinMs": 42.0,
+      "marginP5Ms": 208.35,
+      "marginP50Ms": 1352.0,
+      "marginUnder300Percent": 10.0,
+      "shotToShotP50Ms": 438.0,
+      "shotToShotP95Ms": 626.0,
+      "spanMedianS": 13.568,
+      "spanMinS": 12.383,
+      "spanMaxS": 14.119,
+      "timeouts": 0,
+      "watchdogs": 0,
+      "admit": {
+        "bokehAdmittedMedianPercent": 33.33333333333333,
+        "filterAdmittedMedianPercent": 40.0,
+        "bokehCompletedMedianPercent": 33.33333333333333,
+        "bothCompletedMedianPercent": 33.33333333333333
+      },
+      "decisionQuality": {
+        "pacedBacklogP50Ms": null,
+        "unpacedBacklogP50Ms": 4900.0,
+        "pacedQueueP50": null,
+        "unpacedQueueP50": 6.0,
+        "dominantDeficit": {},
+        "clockNote": "beforeBacklogMs not maintained by this build; clock calibration N/A"
+      }
+    },
+    "ours": {
+      "runs": 8,
+      "transitions": 232,
+      "pacedCount": 64,
+      "pacedPercent": 27.586206896551722,
+      "d50": 515.0,
+      "d95": 1115.1499999999994,
+      "totalDelayMedianS": 4.6095,
+      "totalDelayMinS": 2.674,
+      "totalDelayMaxS": 7.096,
+      "backlogMeanS": 3.609141666666667,
+      "backlogP95S": 5.6962,
+      "bMaxS": 5.973,
+      "deadlineMs": 7000.0,
+      "nearDeadlinePercent": 6.666666666666667,
+      "queueMean": 4.391666666666667,
+      "queueP95": 7.0,
+      "qMax": 9,
+      "marginMinMs": 158.0,
+      "marginP5Ms": 393.75,
+      "marginP50Ms": 2355.0,
+      "marginUnder300Percent": 2.5,
+      "shotToShotP50Ms": 453.0,
+      "shotToShotP95Ms": 1453.45,
+      "spanMedianS": 18.168,
+      "spanMinS": 15.644,
+      "spanMaxS": 21.826,
+      "timeouts": 0,
+      "watchdogs": 0,
+      "admit": {
+        "bokehAdmittedMedianPercent": 56.666666666666664,
+        "filterAdmittedMedianPercent": 100.0,
+        "bokehCompletedMedianPercent": 56.666666666666664,
+        "bothCompletedMedianPercent": 56.666666666666664
+      },
+      "decisionQuality": {
+        "pacedBacklogP50Ms": 4875.5,
+        "unpacedBacklogP50Ms": 3475.5,
+        "pacedQueueP50": 6.0,
+        "unpacedQueueP50": 4.0,
+        "dominantDeficit": {
+          "Backlog": 62,
+          "Level": 2
+        },
+        "backlogP75Ms": 4732.5,
+        "delayShareAboveP75Percent": 68.91124099497078,
+        "delayOverQueueWaitP50": 0.13077210962690006,
+        "delayOverQueueWaitP90": 0.24111618059674597,
+        "delayOverQueueWaitMax": 0.3922769640479361,
+        "clockErrorP5Ms": -813.35,
+        "clockErrorP50Ms": 972.5,
+        "clockErrorP95Ms": 3114.8499999999995,
+        "clockUnderPredictPercent": 18.103448275862068
+      }
+    }
+  },
+  "runLevelComparison": {
+    "sumDelayS": {
+      "noPacingMedian": 0.0,
+      "noPacingMin": 0.0,
+      "noPacingMax": 0.0,
+      "oursMedian": 4.6095,
+      "oursMin": 2.674,
+      "oursMax": 7.096,
+      "mannWhitneyP": 0.00021664965399869026
+    },
+    "backlogMeanMs": {
+      "noPacingMedian": 4384.633333333333,
+      "noPacingMin": 3362.0666666666666,
+      "noPacingMax": 4582.1,
+      "oursMedian": 3601.9833333333336,
+      "oursMin": 3311.2,
+      "oursMax": 3923.0666666666666,
+      "mannWhitneyP": 0.005512134923899629
+    },
+    "backlogP95Ms": {
+      "noPacingMedian": 5980.6,
+      "noPacingMin": 5705.2,
+      "noPacingMax": 6167.4,
+      "oursMedian": 5412.674999999999,
+      "oursMin": 5172.649999999999,
+      "oursMax": 5898.049999999999,
+      "mannWhitneyP": 0.00032908268202385847
+    },
+    "backlogMaxMs": {
+      "noPacingMedian": 6064.0,
+      "noPacingMin": 5876.0,
+      "noPacingMax": 6204.0,
+      "oursMedian": 5780.5,
+      "oursMin": 5613.0,
+      "oursMax": 5973.0,
+      "mannWhitneyP": 0.0017526388830146034
+    },
+    "nearDeadlinePercent": {
+      "noPacingMedian": 26.666666666666668,
+      "noPacingMin": 13.333333333333334,
+      "noPacingMax": 33.33333333333333,
+      "oursMedian": 3.3333333333333335,
+      "oursMin": 3.3333333333333335,
+      "oursMax": 23.333333333333332,
+      "mannWhitneyP": 0.001112381788150571
+    },
+    "queueMean": {
+      "noPacingMedian": 7.333333333333333,
+      "noPacingMin": 4.333333333333333,
+      "noPacingMax": 7.533333333333333,
+      "oursMedian": 4.35,
+      "oursMin": 4.066666666666666,
+      "oursMax": 5.033333333333333,
+      "mannWhitneyP": 0.002362498306599098
+    },
+    "queueMax": {
+      "noPacingMedian": 13.0,
+      "noPacingMin": 7.0,
+      "noPacingMax": 13.0,
+      "oursMedian": 7.0,
+      "oursMin": 6.0,
+      "oursMax": 9.0,
+      "mannWhitneyP": 0.0018190343575640907
+    },
+    "marginMinMs": {
+      "noPacingMedian": 157.0,
+      "noPacingMin": 42.0,
+      "noPacingMax": 325.0,
+      "oursMedian": 198.0,
+      "oursMin": 158.0,
+      "oursMax": 450.0,
+      "mannWhitneyP": 0.030281293470426608
+    },
+    "marginP5Ms": {
+      "noPacingMedian": 257.8,
+      "noPacingMin": 72.00000000000001,
+      "noPacingMax": 390.25,
+      "oursMedian": 449.90000000000003,
+      "oursMin": 279.1,
+      "oursMax": 596.95,
+      "mannWhitneyP": 0.0015631427396133276
+    },
+    "shotToShotP95Ms": {
+      "noPacingMedian": 602.8,
+      "noPacingMin": 503.79999999999995,
+      "noPacingMax": 648.1999999999999,
+      "oursMedian": 1392.0999999999995,
+      "oursMin": 1100.3999999999992,
+      "oursMax": 1483.1999999999994,
+      "mannWhitneyP": 8.227067050596462e-05
+    },
+    "spanS": {
+      "noPacingMedian": 13.568,
+      "noPacingMin": 12.383,
+      "noPacingMax": 14.119,
+      "oursMedian": 18.168,
+      "oursMin": 15.644,
+      "oursMax": 21.826,
+      "mannWhitneyP": 8.227067050596462e-05
+    }
+  }
+}

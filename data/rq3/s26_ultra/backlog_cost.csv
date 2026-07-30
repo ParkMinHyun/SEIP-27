@@ -1,1 +1,2 @@
 no_pacing_delay_s,no_pacing_max_backlog_s,static_delay_s,static_max_backlog_s,queue_dynamic_delay_s,queue_dynamic_max_backlog_s,ours_delay_s,ours_max_backlog_s
+0.0,6.204,nan,nan,nan,nan,4.609,5.973

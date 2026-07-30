@@ -1,0 +1,87 @@
+% RQ3 companion: is the delay targeted at the right states, and is its magnitude
+% justified?  Table~\ref{tab:rq3_pacing_summary} reports how much delay was spent
+% and what backlog resulted; neither answers whether the amount was appropriate.
+%
+% S26 Ultra Ours, 232 transitions over eight starting-Lv3 runs of
+% 48U_metrics_12MP_normal_0729.xlsx.  Unrounded values:
+%   real backlog at paced transitions   4875.5 ms (n=64)
+%   real backlog at unpaced transitions 3475.5 ms (n=168)
+%   real queue depth paced/unpaced      6 / 4
+%   share of total delay applied at backlog >= P75 (4732.5 ms)  68.9112 percent
+%   dominant deficit on paced transitions  Backlog 62, Level 2
+%   applied delay / measured time-to-free  P50 0.13077, P90 0.24112, max 0.39228
+%   clock error (beforeBacklogMs + beforeShutterElapsedMs - realQueueWaitMs)
+%       P5 -813.35, P50 972, P95 3115 ms; 18.1 percent under-predict
+%
+% A no-pacing arm has no paced transition, so targeting and magnitude are
+% undefined rather than zero.  Its clock cells are also undefined: the AdmitOnly
+% build never maintains beforeBacklogMs (all 261 transitions record 0), so
+% reporting its calibration would describe a disabled estimator, not a policy.
+
+\begin{table}[t]
+  \centering
+  \setlength{\abovecaptionskip}{2pt}%
+  \setlength{\belowcaptionskip}{3pt}%
+  \caption{RQ3 pacing-decision quality on S26 Ultra: where the delay is spent and
+  how its magnitude compares with the measured need.}
+  \label{tab:rq3_decision_quality}
+
+  {\scriptsize
+  \renewcommand{\arraystretch}{1.06}%
+  \setlength{\arrayrulewidth}{0.35pt}%
+  \setlength{\doublerulesep}{0.8pt}%
+  \newcommand{\rqthreeqTBD}{\textit{TBD}}%
+  \newcommand{\rqthreeqNA}{--}%
+  \newsavebox{\rqthreeqtabbox}%
+  \newcommand{\rqthreeqtabular}{%
+  \begin{tabular}{|l||c|c|c||c|c|}
+    \hline\hline
+    \multirow{2}{*}{\textbf{Policy}} &
+    \multicolumn{3}{c||}{\textbf{Targeting}} &
+    \multicolumn{2}{c|}{\textbf{Magnitude}} \\
+    \cline{2-6}
+    &
+    \makecell[c]{\(\boldsymbol{B}\) \textbf{paced/}\\\textbf{unpaced (ms)}} &
+    \makecell[c]{\(\boldsymbol{\sum d}\) \textbf{at}\\\(\boldsymbol{B \ge P_{75}}\) \textbf{(\%)}} &
+    \makecell[c]{\textbf{Trigger}\\\textbf{B\,/\,L}} &
+    \makecell[c]{\(\boldsymbol{d/w}\)\\\textbf{P50}} &
+    \makecell[c]{\textbf{Clock err}\\\textbf{P50 (ms)}} \\
+    \hline\hline
+    No pacing     & \rqthreeqNA & \rqthreeqNA & \rqthreeqNA &
+                    \rqthreeqNA & \rqthreeqNA \\
+    \hline
+    Static LUT    & \rqthreeqTBD & \rqthreeqTBD & \rqthreeqTBD &
+                    \rqthreeqTBD & \rqthreeqTBD \\
+    \hline
+    Queue dynamic & \rqthreeqTBD & \rqthreeqTBD & \rqthreeqTBD &
+                    \rqthreeqTBD & \rqthreeqTBD \\
+    \hline
+    \textbf{Ours} & \textbf{4876/3476} & \textbf{68.9} & \textbf{62/2} &
+                    \textbf{0.13} & \textbf{\(+972\)} \\
+    \hline\hline
+  \end{tabular}}%
+  \fittabcolsep{\rqthreeqtabbox}{\rqthreeqtabular}{\columnwidth}{12}%
+  \rqthreeqtabular
+  }
+
+  \par\vspace{2pt}
+  \begin{minipage}{0.97\columnwidth}
+    \scriptsize\emph{Notes:}
+    \(B\) is real backlog at the pacing decision and \(w\) is \emph{realQueueWait},
+    the measured time until the Draft pipeline is next free.
+    Column~1 contrasts the state in which the policy did and did not delay; a
+    state-blind policy would show equal values.
+    Column~2 is the share of the session's total delay applied while backlog was
+    in its top quartile.
+    Column~3 splits paced transitions by which deficit dominated the decision,
+    backlog (B) or thermal level (L).
+    \(d/w\) is the applied delay as a fraction of the measured time-to-free, so a
+    value below one means the policy defers a capture by less than the pipeline
+    actually needs rather than draining the queue outright.
+    \emph{Clock err} is the controller's occupancy estimate minus \(w\); a
+    positive median means the estimate that sizes the delay is conservative.
+    A zero-delay policy has no paced transition, so its cells are undefined
+    rather than zero, and the no-pacing build does not maintain the occupancy
+    estimate at all.
+  \end{minipage}
+\end{table}

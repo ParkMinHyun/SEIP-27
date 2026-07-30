@@ -1,8 +1,22 @@
 % RQ2 results from the current Full-controller traces and planned always-admit
 % audit on one device.
-% Each capture contributes at most one decision per optional-work group:
-% Multi-frame = the Bokeh entry of PORTRAIT; Single-frame = the first
-% Decoding, Filter, or Overlay Watermark entry of DECORATION.
+% Each capture contributes at most one selected decision per optional-work
+% group: Multi-frame = Bokeh; Single-frame = Filter.
+% The all-decision audit reports factual feasible/unsafe outcomes crossed with
+% the shadow admit/skip decision.  P50 effect uses all shadow-skipped
+% decisions in the corresponding factual class and is normalized by the
+% internal product Capture Timeout deadline, whose value is not reported.
+% The 12MP normal Always-admit cells use 659 captures from 34 unique runs in
+% SM-S948U_metrics_12MP_normal_0729_PacingOnly_{1,2}.xlsx.  Updated workbook 1
+% contains all 22 runs in workbook 2 plus 12 additional runs, so identical run
+% signatures were counted once.  All unique runs were included; shots after 30
+% were excluded.
+% The 24MP memory-pressure Always-admit cells use 827 captures from 53 included
+% runs in SM-S948U_metrics_24MP_memory_0729_PacingOnly_{1,2}.xlsx.  Of 54
+% attempted runs, workbook 1 source run 16 was invalid/incomplete and excluded;
+% shots after 30 were also excluded.
+% Shadow decision = afterEffectiveAdmit; factual
+% cost C = draftEndUptimeMs - nodeStartUptimeMs.
 
 \begin{table*}[!t]
   \centering
@@ -11,61 +25,88 @@
   \caption{Admission rate, safety, and factual audit of admission decisions.}
   \label{tab:rq2_admission_audit}
   {\footnotesize
-  \renewcommand{\arraystretch}{1.10}%
+  \renewcommand{\arraystretch}{1.12}%
   \newsavebox{\rqtwobox}%
   \newcommand{\rqtwotabular}{%
-  \begin{tabular}{|c|c|c|c|c|c|c|}
+  \begin{tabular}{|c|l|r|r|r|r|r|r|r|r|r|}
     \hline
-    \multirow{2}{*}[-0.6ex]{\textbf{Condition}} &
-    \multirow{2}{*}[-0.6ex]{\textbf{Group}} &
-    \multicolumn{2}{c|}{\textbf{Controller-enforced runs}} &
-    \multicolumn{3}{c|}{\textbf{Always-admit audit}} \\
-    \cline{3-7}
+    \multirow{3}{*}[-0.6ex]{\textbf{Condition}} &
+    \multicolumn{1}{c|}{\multirow{3}{*}[-0.6ex]{\textbf{Group}}} &
+    \multicolumn{3}{c|}{\textbf{Controller-enforced runs}} &
+    \multicolumn{6}{c|}{\textbf{Always-admit audit}} \\
+    \cline{3-11}
     & &
-    \makecell[c]{\textbf{Admit rate}\\(\%)} &
-    \makecell[c]{\textbf{Admit result} (\%)\\
-      \textbf{successful / unsafe}} &
-    \makecell[c]{\textbf{Admitted among}\\
-      \textbf{feasible work} (\%) $\uparrow$} &
-    \makecell[c]{\textbf{Skipped work} (\%)\\
-      \textbf{feasible / unsafe}} &
-    \makecell[c]{\textbf{P95 effect of skip (ms)}\\
-      \textbf{unused margin / avoided overrun}} \\
+    \multicolumn{1}{c|}{\multirow{2}{*}[-0.6ex]{\makecell[c]{\textbf{Admit}\\\textbf{rate}}}} &
+    \multicolumn{1}{c|}{\multirow{2}{*}[-0.6ex]{\makecell[c]{\textbf{Successful}\\\textbf{admits}}}} &
+    \multicolumn{1}{c|}{\multirow{2}{*}[-0.6ex]{\makecell[c]{\textbf{Unsafe}\\\textbf{admits}}}} &
+    \multicolumn{2}{c|}{\textbf{Feasible work}} &
+    \multicolumn{2}{c|}{\textbf{Unsafe work}} &
+    \multicolumn{2}{c|}{\textbf{P50 skip effect (\% deadline)}} \\
+    \cline{6-11}
+    & & & & &
+    \multicolumn{1}{c|}{\textbf{Admitted}} &
+    \multicolumn{1}{c|}{\textbf{Skipped}} &
+    \multicolumn{1}{c|}{\textbf{Admitted}} &
+    \multicolumn{1}{c|}{\textbf{Skipped}} &
+    \multicolumn{1}{c|}{\textbf{Unused ($+$)}} &
+    \multicolumn{1}{c|}{\textbf{Avoided ($-$)}} \\
     \hline
     \multirow{2}{*}[-0.6ex]{\makecell[c]{12MP\\normal}}
       & Multi-frame
-      & \multicolumn{1}{r|}{\makecell[r]{61.7\\{\scriptsize [828/1,341]}}}
-      & \makecell[c]{99.9 / 0.1\\{\scriptsize [827 / 1 watchdog]}}
-      & TBD
-      & TBD / TBD
-      & TBD / TBD \\
-    \cline{2-7}
+      & \makecell[r]{61.7\%\\{\scriptsize [828 of 1,341]}}
+      & \makecell[r]{99.9\%\\{\scriptsize [827]}}
+      & \makecell[r]{0.1\%\\{\scriptsize [1 watchdog]}}
+      & \makecell[r]{604\\{\scriptsize (95.3\%)}}
+      & 30
+      & 3
+      & \makecell[r]{22\\{\scriptsize (88.0\%)}}
+      & $+5.8\%$
+      & $-2.9\%$ \\
+    \cline{2-11}
       & Single-frame
-      & \multicolumn{1}{r|}{\makecell[r]{96.8\\{\scriptsize [1,297/1,340]}}}
-      & \makecell[c]{100.0 / 0.0\\{\scriptsize [1,297 / 0]}}
-      & TBD
-      & TBD / TBD
-      & TBD / TBD \\
+      & \makecell[r]{96.8\%\\{\scriptsize [1,297 of 1,340]}}
+      & \makecell[r]{100.0\%\\{\scriptsize [1,297]}}
+      & \makecell[r]{0.0\%\\{\scriptsize [0]}}
+      & \makecell[r]{616\\{\scriptsize (97.2\%)}}
+      & 18
+      & 0
+      & \makecell[r]{25\\{\scriptsize (100.0\%)}}
+      & $+6.9\%$
+      & $-3.0\%$ \\
     \hline
     \multirow{2}{*}[-0.6ex]{\makecell[c]{24MP\\memory pressure}}
       & Multi-frame
-      & \multicolumn{1}{r|}{\makecell[r]{46.4\\{\scriptsize [554/1,193]}}}
-      & \makecell[c]{99.8 / 0.2\\{\scriptsize [553 / 1 watchdog]}}
-      & TBD
-      & TBD / TBD
-      & TBD / TBD \\
-    \cline{2-7}
+      & \makecell[r]{46.4\%\\{\scriptsize [554 of 1,193]}}
+      & \makecell[r]{99.8\%\\{\scriptsize [553]}}
+      & \makecell[r]{0.2\%\\{\scriptsize [1 watchdog]}}
+      & \makecell[r]{691\\{\scriptsize (89.0\%)}}
+      & 85
+      & 1
+      & \makecell[r]{50\\{\scriptsize (98.0\%)}}
+      & $+6.4\%$
+      & $-3.2\%$ \\
+    \cline{2-11}
       & Single-frame
-      & \multicolumn{1}{r|}{\makecell[r]{87.8\\{\scriptsize [1,047/1,192]}}}
-      & \makecell[c]{100.0 / 0.0\\{\scriptsize [1,047 / 0]}}
-      & TBD
-      & TBD / TBD
-      & TBD / TBD \\
+      & \makecell[r]{87.8\%\\{\scriptsize [1,047 of 1,192]}}
+      & \makecell[r]{100.0\%\\{\scriptsize [1,047]}}
+      & \makecell[r]{0.0\%\\{\scriptsize [0]}}
+      & \makecell[r]{726\\{\scriptsize (93.6\%)}}
+      & 50
+      & 3
+      & \makecell[r]{48\\{\scriptsize (94.1\%)}}
+      & $+2.4\%$
+      & $-3.3\%$ \\
     \hline
   \end{tabular}}%
-  \fittabcolsep{\rqtwobox}{\rqtwotabular}{\textwidth}{14}%
+  \fittabcolsep{\rqtwobox}{\rqtwotabular}{\textwidth}{22}%
   \rqtwotabular
   }
 
   \par\vspace{1pt}
+  {\scriptsize Parenthesized values report feasible-admit or unsafe-skip rates;
+  bracketed values report event counts. P50 effects use all skips and are
+  normalized by the product Capture Timeout deadline: $+$ denotes unused budget
+  for feasible skips, and $-$ denotes avoided overrun for unsafe skips. Audit
+  samples comprise 34 runs and 659 captures for 12MP normal, and 53 runs and
+  827 captures for 24MP memory pressure.}
 \end{table*}
