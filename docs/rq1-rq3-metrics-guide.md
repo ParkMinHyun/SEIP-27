@@ -15,9 +15,15 @@ The definitions were checked against:
 - `data/rq2_metrics_aggregation.md`.
 
 The exporter intentionally does not store an RQ3 policy name. The experiment
-operator must identify each workbook as `no_pacing`, `static_lut`,
-`queue_dynamic`, or `ours` when supplying it for aggregation. That
+operator must identify each workbook as `no_pacing`, `thermal_lut`,
+`queue_ewma`, or `ours` when supplying it for aggregation. That
 operator-provided mapping is the authoritative policy label.
+
+The policy keys match the implementation's `PolicyType` enum in
+`patches/rq3-pacing-policy-switch.patch` (`OURS`, `THERMAL_LUT`, `QUEUE_EWMA`).
+Manuscript labels are Ours, Thermal LUT, and Queue-EWMA. The earlier
+`static_lut` / `queue_dynamic` keys and the "Static LUT" / "Queue dynamic"
+labels are retired; do not reintroduce them.
 
 ## 2. Research-question overview
 
@@ -358,21 +364,30 @@ The controlled setup is:
 - starting thermal level 3;
 - 30 shots per run;
 - the same admitted workload across policies;
-- separate factual runs for `no_pacing`, `static_lut`, `queue_dynamic`, and
+- separate factual runs for `no_pacing`, `thermal_lut`, `queue_ewma`, and
   `ours`;
 - results stratified by device.
 
 RQ3 excludes First Timeout, M-retained, safe-burst, and drain metrics. Those
 either belong to the end-to-end evaluation or require admission to interpret.
 
-Slack P5 and shot-to-shot P95 are the two exceptions and are repeated from RQ1
-in the RQ3 table. A table that reports only how much delay was spent and what
-backlog followed cannot establish that the delay was worth paying: backlog is an
-intermediate variable, and a reviewer reading RQ3 in isolation has no benefit
-column to weigh the cost against. Slack P5 is the margin the delay buys and
-shot-to-shot P95 is what the user actually feels, which the controller-side
-`sum d` does not convey. Label them in the notes as repeated RQ1 measures so
-they are not mistaken for independent RQ3 evidence.
+Slack P5 and shot-to-shot P95 are still computed for every RQ3 arm, but they
+are reported through RQ1 rather than duplicated as RQ3 summary-table columns.
+An earlier revision repeated them next to the pacing-cost columns so that cost
+and benefit could be read together; both column groups were then removed,
+because the pacing cost is already the pacing-delay and backlog--delay panels of
+the RQ3 figure and the deadline margin is already an RQ1 column. Keep the
+values in `rq3_metrics.json` and cite them from prose; a reader who needs the
+benefit alongside the backlog reduction is pointed at RQ1 from the table notes.
+
+The three RQ3 artifacts divide the question as follows, and the division should
+be preserved when adding data:
+
+| Artifact | Answers |
+|---|---|
+| `tab_rq3_pacing_summary.tex` | What backlog and queue depth resulted |
+| `fig_rq3_pacing_trajectories.tex` | When and how strongly each policy delayed, and backlog against cumulative delay |
+| `tab_rq3_decision_quality.tex` | Whether the delay was aimed at the right states and sized against the measured need |
 
 ### 6.2 RQ3 summary-table metrics
 
@@ -543,9 +558,12 @@ The panels mean:
 | Pacing delay vs. shot | Per-shot applied-delay distribution | When and how strongly each policy intervenes |
 | Backlog vs. cumulative delay | Session pacing cost against maximum real backlog | Whether backlog reduction justifies the added delay |
 
-The LaTeX plot draws the median as a thick line and the P10 and P90 series as
-thin lines of the same policy style, so the panels do display run-to-run
-variability. Edges are drawn only for policies whose CSV is populated.
+The LaTeX plot draws medians only. The P10/P90 columns are retained in the
+CSVs and released with the artifact, but they are not plotted: with four
+policies in a panel `0.215	extwidth` wide, eight band edges crossed each other
+and the medians, and no reader could attribute an edge to a policy. Report
+run-to-run variability in prose or the artifact instead of adding the edges
+back.
 
 `transitionDelayMs` is blank at shot 30, because the delay recorded on shot i
 gates shot i+1 and shot 30's delay falls outside the 30-shot window. Only
@@ -571,8 +589,8 @@ The current `backlog_cost.csv` schema is:
 
 ```text
 no_pacing_delay_s,no_pacing_max_backlog_s,
-static_delay_s,static_max_backlog_s,
-queue_dynamic_delay_s,queue_dynamic_max_backlog_s,
+thermal_lut_delay_s,thermal_lut_max_backlog_s,
+queue_ewma_delay_s,queue_ewma_max_backlog_s,
 ours_delay_s,ours_max_backlog_s
 ```
 
@@ -687,8 +705,8 @@ removed more work, and RQ3 would no longer isolate pacing ability.
 
 - `figures/fig_rq3_pacing_trajectories.tex`
 - `data/rq3/<device>/no_pacing.csv`
-- `data/rq3/<device>/static_lut.csv`
-- `data/rq3/<device>/queue_dynamic.csv`
+- `data/rq3/<device>/thermal_lut.csv`
+- `data/rq3/<device>/queue_ewma.csv`
 - `data/rq3/<device>/ours.csv`
 - `data/rq3/<device>/backlog_cost.csv`
 
@@ -714,8 +732,9 @@ uv run --with openpyxl --with pandas --with scipy python data/rq3_aggregate.py
 2. The current RQ3 table and figure name S26 Ultra and S26. If the evaluation
    uses Device A/B/C, both artifacts and their data directories must be
    updated consistently.
-3. The RQ3 CSVs contain P10/P90 columns, but the current plot renders median
-   lines only.
+3. The RQ3 CSVs contain P10/P90 columns that the plot deliberately does not
+   render. This is a decided reporting choice, not an omission; the columns
+   stay so the spread can be released with the artifact.
 4. The current figure caption calls the cost--backlog panel a frontier. With
    one configuration per policy it must instead be described as a scatter
    comparison, or the experiment must add parameter sweeps.

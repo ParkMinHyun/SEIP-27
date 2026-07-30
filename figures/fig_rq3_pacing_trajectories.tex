@@ -4,8 +4,16 @@
 % policy CSVs add no curve until their factual traces arrive.  S26 remains Data
 % pending.
 %
+% Baseline naming follows the implementation
+% (patches/rq3-pacing-policy-switch.patch, PolicyType): OURS, THERMAL_LUT,
+% QUEUE_EWMA.  The earlier "Static LUT" / "Queue dynamic" labels are retired.
+%
 % Each policy CSV contains one row per shot and the median, P10, and P90 of
-% realized backlog, queue depth, and applied delay.  Each backlog-cost CSV may
+% realized backlog, queue depth, and applied delay.  Only the medians are
+% plotted: with four policies in a panel 0.215\textwidth wide, eight band edges
+% crossed each other and the medians, and readers could not tell which edge
+% belonged to which policy.  The P10/P90 columns stay in the CSVs and the
+% per-run spread is released with the artifact.  Each backlog-cost CSV may
 % contain multiple parameter settings per policy to draw a frontier.
 %
 % The S26 Ultra series use the same included runs as
@@ -43,11 +51,9 @@
 
   \tikzset{
     rq3 no pacing/.style={gray, densely dotted, line width=0.8pt},
-    rq3 static/.style={blue!70!black, dashed, line width=0.8pt},
-    rq3 dynamic/.style={red!75!black, dash dot, line width=0.8pt},
+    rq3 thermal lut/.style={blue!70!black, dashed, line width=0.8pt},
+    rq3 queue ewma/.style={red!75!black, dash dot, line width=0.8pt},
     rq3 ours/.style={black, solid, line width=1.15pt},
-    % Applied on top of a policy style to draw its P10/P90 edge.
-    rq3 band/.style={line width=0.3pt, opacity=0.55},
   }
 
   \newcommand{\rqthreepending}{%
@@ -55,31 +61,17 @@
       {Data pending};}
 
   % #1: device data directory; #2: metric column prefix.
-  % P10/P90 edges are drawn first and thin so the medians stay legible on top.
-  % Only the two collected policies carry edges; a pending CSV holds a header
-  % only, so adding edges for it would draw nothing anyway.
+  % Medians only; see the header comment for why the P10/P90 edges were dropped.
   \newcommand{\rqthreepolicycurves}[2]{%
-    \addplot[rq3 no pacing,rq3 band,forget plot]
-      table[x=shot,y=#2_p10,col sep=comma]
-      {#1/no_pacing.csv};
-    \addplot[rq3 no pacing,rq3 band,forget plot]
-      table[x=shot,y=#2_p90,col sep=comma]
-      {#1/no_pacing.csv};
-    \addplot[rq3 ours,rq3 band,forget plot]
-      table[x=shot,y=#2_p10,col sep=comma]
-      {#1/ours.csv};
-    \addplot[rq3 ours,rq3 band,forget plot]
-      table[x=shot,y=#2_p90,col sep=comma]
-      {#1/ours.csv};
     \addplot[rq3 no pacing,forget plot]
       table[x=shot,y=#2_median,col sep=comma]
       {#1/no_pacing.csv};
-    \addplot[rq3 static,forget plot]
+    \addplot[rq3 thermal lut,forget plot]
       table[x=shot,y=#2_median,col sep=comma]
-      {#1/static_lut.csv};
-    \addplot[rq3 dynamic,forget plot]
+      {#1/thermal_lut.csv};
+    \addplot[rq3 queue ewma,forget plot]
       table[x=shot,y=#2_median,col sep=comma]
-      {#1/queue_dynamic.csv};
+      {#1/queue_ewma.csv};
     \addplot[rq3 ours,forget plot]
       table[x=shot,y=#2_median,col sep=comma]
       {#1/ours.csv};
@@ -93,16 +85,16 @@
         y=no_pacing_max_backlog_s,
         col sep=comma
       ] {#1/backlog_cost.csv};
-    \addplot[rq3 static,mark=square]
+    \addplot[rq3 thermal lut,mark=square]
       table[
-        x=static_delay_s,
-        y=static_max_backlog_s,
+        x=thermal_lut_delay_s,
+        y=thermal_lut_max_backlog_s,
         col sep=comma
       ] {#1/backlog_cost.csv};
-    \addplot[rq3 dynamic,mark=triangle]
+    \addplot[rq3 queue ewma,mark=triangle]
       table[
-        x=queue_dynamic_delay_s,
-        y=queue_dynamic_max_backlog_s,
+        x=queue_ewma_delay_s,
+        y=queue_ewma_max_backlog_s,
         col sep=comma
       ] {#1/backlog_cost.csv};
     \addplot[rq3 ours,mark=*]
@@ -252,8 +244,8 @@
       anchor=north,
     ] at ([yshift=-4.0ex]rqthreelegendpos) {
       \draw[rq3 no pacing] (0,0)--(0.38,0); & No pacing &
-      \draw[rq3 static] (0,0)--(0.38,0); & Static LUT &
-      \draw[rq3 dynamic] (0,0)--(0.38,0); & Queue dynamic &
+      \draw[rq3 thermal lut] (0,0)--(0.38,0); & Thermal LUT &
+      \draw[rq3 queue ewma] (0,0)--(0.38,0); & Queue-EWMA &
       \draw[rq3 ours] (0,0)--(0.38,0); & Ours \\
     };
   \end{tikzpicture}
@@ -262,9 +254,10 @@
 
   \caption{RQ3 pacing behavior on S26 Ultra and S26 under 12MP normal at
   starting thermal level 3.  Rows separate devices; columns report per-shot
-  backlog, queue depth, pacing delay, and the backlog--delay comparison.  Thick
-  lines are per-shot medians and thin lines of the same style are the P10 and
-  P90 edges over the nine No-pacing and eight Ours runs.
+  backlog, queue depth, pacing delay, and the backlog--delay comparison.  Each
+  line is the per-shot median over that policy's runs, nine for No pacing and
+  eight for Ours; per-run spread is released with the artifact rather than
+  drawn, because four bands per panel obscured the medians.
   Available factual policies are plotted; uncollected policies remain absent.
   The current S26 Ultra No-pacing and Ours curves are provisional because their
   admitted workloads were not matched.}

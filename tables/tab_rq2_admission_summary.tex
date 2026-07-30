@@ -17,6 +17,8 @@
 % shots after 30 were also excluded.
 % Shadow decision = afterEffectiveAdmit; factual
 % cost C = draftEndUptimeMs - nodeStartUptimeMs.
+% Every audit count carries the share of its own factual class, so the two
+% Feasible-work cells sum to 100% and the two Unsafe-work cells sum to 100%.
 
 \begin{table*}[!t]
   \centering
@@ -57,8 +59,8 @@
       & \makecell[r]{99.9\%\\{\scriptsize [827]}}
       & \makecell[r]{0.1\%\\{\scriptsize [1 watchdog]}}
       & \makecell[r]{604\\{\scriptsize (95.3\%)}}
-      & 30
-      & 3
+      & \makecell[r]{30\\{\scriptsize (4.7\%)}}
+      & \makecell[r]{3\\{\scriptsize (12.0\%)}}
       & \makecell[r]{22\\{\scriptsize (88.0\%)}}
       & $+5.8\%$
       & $-2.9\%$ \\
@@ -68,8 +70,8 @@
       & \makecell[r]{100.0\%\\{\scriptsize [1,297]}}
       & \makecell[r]{0.0\%\\{\scriptsize [0]}}
       & \makecell[r]{616\\{\scriptsize (97.2\%)}}
-      & 18
-      & 0
+      & \makecell[r]{18\\{\scriptsize (2.8\%)}}
+      & \makecell[r]{0\\{\scriptsize (0.0\%)}}
       & \makecell[r]{25\\{\scriptsize (100.0\%)}}
       & $+6.9\%$
       & $-3.0\%$ \\
@@ -80,8 +82,8 @@
       & \makecell[r]{99.8\%\\{\scriptsize [553]}}
       & \makecell[r]{0.2\%\\{\scriptsize [1 watchdog]}}
       & \makecell[r]{691\\{\scriptsize (89.0\%)}}
-      & 85
-      & 1
+      & \makecell[r]{85\\{\scriptsize (11.0\%)}}
+      & \makecell[r]{1\\{\scriptsize (2.0\%)}}
       & \makecell[r]{50\\{\scriptsize (98.0\%)}}
       & $+6.4\%$
       & $-3.2\%$ \\
@@ -91,8 +93,8 @@
       & \makecell[r]{100.0\%\\{\scriptsize [1,047]}}
       & \makecell[r]{0.0\%\\{\scriptsize [0]}}
       & \makecell[r]{726\\{\scriptsize (93.6\%)}}
-      & 50
-      & 3
+      & \makecell[r]{50\\{\scriptsize (6.4\%)}}
+      & \makecell[r]{3\\{\scriptsize (5.9\%)}}
       & \makecell[r]{48\\{\scriptsize (94.1\%)}}
       & $+2.4\%$
       & $-3.3\%$ \\
@@ -103,10 +105,4 @@
   }
 
   \par\vspace{1pt}
-  {\scriptsize Parenthesized values report feasible-admit or unsafe-skip rates;
-  bracketed values report event counts. P50 effects use all skips and are
-  normalized by the product Capture Timeout deadline: $+$ denotes unused budget
-  for feasible skips, and $-$ denotes avoided overrun for unsafe skips. Audit
-  samples comprise 34 runs and 659 captures for 12MP normal, and 53 runs and
-  827 captures for 24MP memory pressure.}
 \end{table*}
