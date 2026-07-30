@@ -2,12 +2,11 @@
 %
 % Scope: this table answers one question only -- how far does each pacing
 % policy push down realized Draft backlog and queue depth?  The delay it costs
-% is reported by the pacing-delay panel and the backlog-vs-delay panel of
-% Figure~\ref{fig:rq3_pacing_trajectories} and qualified by
-% Table~\ref{tab:rq3_decision_quality}, and the end-to-end outcome (Slack P5,
-% shot-to-shot P95) is already an RQ1 column.  Repeating cost and outcome here
-% duplicated both without adding evidence, so those two column groups were
-% removed.
+% is reported by the cumulative-delay panel of
+% Figure~\ref{fig:rq3_pacing_trajectories}, and the end-to-end outcome (Slack
+% P5, shot-to-shot P95) is already an RQ1 column.  Repeating cost and outcome
+% here duplicated both without adding evidence, so those two column groups
+% were removed.
 %
 % Baseline naming follows the implementation
 % (patches/rq3-pacing-policy-switch.patch, PolicyType): OURS, THERMAL_LUT,
@@ -25,13 +24,12 @@
 % excluded because its observation timestamps and real trace were incomplete.
 %
 % Unrounded pooled values (No-pacing / Ours):
-%   Bmean        4.25516 / 3.60914 s
-%   B95          6.0071 / 5.6962 s
-%   Bmax         6.204 / 5.973 s
-%   Near         25.1852 / 6.6667 percent of shots above 0.8 x 7000 ms
+%   Bmean        4255.16 / 3609.14 ms
+%   B50          4875 / 3746 ms
+%   B95          6007.1 / 5696.2 ms
+%   Risk exposure 25.1852 / 6.6667 percent of shots above 0.8 x 7000 ms
 %   Qmean        6.8111 / 4.39167     Qmax 13 / 9
-% Retained for the figure, the decision-quality table, and RQ1 rather than for
-% this table:
+% Retained for the figure, the artifact, and RQ1 rather than for this table:
 %   Paced        0 / 27.5862 percent
 %   d50/d95      -- / 515, 1115.15 ms
 %   sum d        0 / 4.6095 s (run median; run range 2.674-7.096)
@@ -44,19 +42,20 @@
 %
 % Run-level Mann-Whitney (two-sided, n = 9 vs 8) over the same runs, for the
 % columns this table now keeps:
-%   Bmean p=0.0055, B95 p=0.0003, Bmax p=0.0018, Near p=0.0011,
+%   Bmean p=0.0055, B50 p=0.0037, B95 p=0.0003, risk exposure p=0.0011,
 %   Qmean p=0.0024, Qmax p=0.0018.
 % Also computed and reported elsewhere: sum d p=0.0002, Slack P5 p=0.0016,
 % S2S P95 p=0.0001, span p=0.0001; Slack min is p=0.0303.
 % Reported uncorrected. These are ten pre-specified comparisons on the same run
-% pairs, so a Bonferroni threshold would be 0.005 and Bmean sits at that edge;
-% every other column clears it by an order of magnitude.
+% pairs, so a Bonferroni threshold would be 0.005; B50 and the other retained
+% distribution/tail columns clear it, while Bmean sits just outside at 0.0055.
 % Per-run ranges are in data/rq3/rq3_metrics.json; regenerate everything with
 % data/rq3_aggregate.py in the ML implementation repository.
 %
-% Bmax and Qmax are extreme-value statistics that one run decides, so the mean,
-% P95, and near-deadline columns carry the comparison and Bmax is retained only
-% because the metrics guide defines it.
+% Bmax is retained in the JSON audit but omitted from the table because it
+% saturates just below the timeout budget and is decided by one observation.
+% Qmax remains because the maximum number of waiting Drafts is a direct,
+% integer-valued queue bound.
 %
 % Still provisional rather than a controlled policy comparison: median run-level
 % Bokeh/Filter admit rates were 33.3/40.0 percent for No-pacing and 56.7/100.0
@@ -89,15 +88,15 @@
     \multicolumn{2}{c|}{\textbf{Queue depth}} \\
     \cline{3-8}
     & &
-    \makecell[c]{\(\boldsymbol{\bar{B}}\)\\\textbf{(s)}} &
-    \makecell[c]{\(\boldsymbol{B_{95}}\)\\\textbf{(s)}} &
-    \makecell[c]{\(\boldsymbol{B_{\max}}\)\\\textbf{(s)}} &
-    \makecell[c]{\textbf{Near}\\\textbf{(\%)}} &
+    \makecell[c]{\(\boldsymbol{\bar{B}}\)\\\textbf{(ms)}} &
+    \makecell[c]{\(\boldsymbol{B_{50}}\)\\\textbf{(ms)}} &
+    \makecell[c]{\(\boldsymbol{B_{95}}\)\\\textbf{(ms)}} &
+    \makecell[c]{\textbf{Risk}\\\textbf{exposure (\%)}} &
     \makecell[c]{\(\boldsymbol{\bar{Q}}\)} &
     \makecell[c]{\(\boldsymbol{Q_{\max}}\)} \\
     \hline\hline
     \multirow{4}{*}{\makecell[c]{S26\\Ultra}}
-      & No pacing     & 4.255 & 6.007 & 6.204 & 25.2 & 6.81 & 13 \\
+      & No pacing     & 4255 & 4875 & 6007 & 25.2 & 6.81 & 13 \\
     \cline{2-8}
       & Thermal LUT   & \rqthreeTBD & \rqthreeTBD & \rqthreeTBD &
         \rqthreeTBD & \rqthreeTBD & \rqthreeTBD \\
@@ -105,7 +104,7 @@
       & Queue-EWMA    & \rqthreeTBD & \rqthreeTBD & \rqthreeTBD &
         \rqthreeTBD & \rqthreeTBD & \rqthreeTBD \\
     \cline{2-8}
-      & \textbf{Ours} & \textbf{3.609} & \textbf{5.696} & \textbf{5.973} &
+      & \textbf{Ours} & \textbf{3609} & \textbf{3746} & \textbf{5696} &
         \textbf{6.7} & \textbf{4.39} & \textbf{9} \\
     \hline
     \multirow{4}{*}{S26}
@@ -135,18 +134,18 @@
     \(B\) and \(Q\) are real backlog and queue depth, reconstructed from
     measured Draft start/end timestamps rather than the controller's own
     estimate.
-    \emph{Near} is the share of shots whose real backlog exceeds \(0.8\) of the
+    \emph{Risk exposure} is the pooled share of shots across the included runs
+    whose real backlog exceeds \(0.8\) of the
     \(7\,000\)~ms Capture Timeout budget; backlog cannot pass that budget without
-    failing, so \(B_{\max}\) saturates and the mean, \(B_{95}\), and \emph{Near}
-    columns carry the comparison.
+    failing. We therefore omit the saturation-prone \(B_{\max}\) and report the
+    average, typical (\(B_{50}\)), tail (\(B_{95}\)), and risk-region occupancy.
     \emph{Thermal LUT} interpolates a calibrated per-headroom delay and reads no
     queue state; \emph{Queue-EWMA} sizes its delay from observable queue depth
     and an EWMA of completed Draft service times and reads no thermal state.
     This table reports only what the delay achieves; what it costs is the
-    pacing-delay and backlog--delay panels of
-    Figure~\ref{fig:rq3_pacing_trajectories}, whether it is well aimed is
-    Table~\ref{tab:rq3_decision_quality}, and the delivered deadline margin is
-    the Slack P5 column of Table~\ref{tab:rq1_controller_behavior}.
+    cumulative-delay panel of Figure~\ref{fig:rq3_pacing_trajectories}, and the
+    delivered deadline margin is the Slack P5 column of
+    Table~\ref{tab:rq1_controller_behavior}.
     Every measured S26 Ultra column separates the two policies under a two-sided
     run-level Mann--Whitney test (\(n = 9\) vs \(8\), uncorrected
     \(p \le 0.0055\), largest at \(\bar{B}\)). Per-run values and \(p\) for

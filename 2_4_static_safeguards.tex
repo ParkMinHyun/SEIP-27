@@ -31,7 +31,30 @@ Reliable multi-frame composition therefore requires coordinated runtime control 
 \input{tables/tab_rq1_ablation.tex}
 \input{tables/tab_rq1_result.tex}
 \input{tables/tab_rq2_admission_summary.tex}
+
+\smallskip\noindent\textbf{Why unsafe work was admitted.}
+Figure~\ref{fig:rq2_unsafe_admit_spikes} summarizes all eight unsafe fresh-model
+admits across three PostExecutionMetrics signatures.  In every case, the
+model admitted the group because its predicted upper bound was no greater than
+the remaining budget, but the measured remaining cost ultimately exceeded
+that budget.  Six decisions had only 4--79\,ms of admission headroom, whereas
+two retained 527--612\,ms; all were overtaken by the measured change and
+exceeded the remaining budget by 4--1,059\,ms.
+
+\input{figures/fig_rq2_unsafe_admit_spikes.tex}
+
+\smallskip\noindent\textbf{Post-decision latency change.}
+Mean remaining cost rose by 22--99\% relative to recent safe baselines across
+the audited signature groups.  The shared Filter node's wall time increased
+in all eight decisions by 2--88\%; Bokeh wall time increased by 29--317\% in
+all five multi-frame decisions and dominated the largest spikes.  Run-queue
+wait changed in both directions across workloads.  No blocking GC was
+recorded, and the recorded thermal state remained unchanged.  The common
+pattern is therefore abrupt node-execution inflation rather than a uniform
+run-queue stall or blocking GC.  This is the same structural limitation
+exposed by the RQ1 Admission-only ablation: once work is admitted, admission
+alone cannot react to a later execution-time spike.
+
 \input{tables/tab_rq3_pacing_summary.tex}
-\input{tables/tab_rq3_decision_quality.tex}
 \input{figures/fig_rq3_pacing_trajectories.tex}
 \FloatBarrier

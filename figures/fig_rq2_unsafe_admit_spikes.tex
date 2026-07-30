@@ -1,0 +1,152 @@
+% RQ2 unsafe fresh-model admits: recent-safe baseline versus forced event.
+%
+% The figure summarizes the same four remaining-cost aggregates and the
+% per-decision node wall-time shifts used in the RQ2 unsafe-admit audit.
+% Each baseline is the mean of the preceding three safe model admits from the
+% same run and workload group.  Multi-event values are decision means.
+%
+% Remaining cost (ms), baseline -> event:
+%   Bokeh                    945 -> 1884
+%   Filter+encoding          585 -> 846
+%   Shared Filter (Multi)    685 -> 855
+%   Shared Filter (Single)   397 -> 483
+% Node wall-time increase relative to the baseline (%):
+%   Bokeh (n=5)              28.7, 58.0, 246.7, 261.5, 316.5
+%   Shared Filter (n=8)       2.3,  3.8,   8.4,  11.8,
+%                             22.3, 54.7,  54.7,  88.3
+%
+% Across the audited decisions, predicted admission headroom is 4--612 ms and
+% measured overrun is 4--1,059 ms.  No event records blocking GC; run-queue
+% wait changes in both directions across workloads.
+
+\begin{figure}[!t]
+  \centering
+  \begin{tikzpicture}
+    \begin{groupplot}[
+      group style={group size=1 by 2, vertical sep=45pt},
+      width=0.84\columnwidth,
+      height=3.00cm,
+      xmin=0,
+      axis x line*=bottom,
+      axis y line*=left,
+      xmajorgrids,
+      grid style={gray!18, line width=0.3pt},
+      axis line style={line width=0.35pt},
+      tick style={line width=0.35pt},
+      tick label style={font=\scriptsize},
+      label style={font=\scriptsize},
+      title style={font=\footnotesize},
+      yticklabel style={font=\scriptsize, align=right},
+      enlarge x limits=false,
+      clip=false,
+    ]
+
+      \nextgroupplot[
+        title={(a) Measured remaining cost},
+        xmax=2000,
+        xtick={0,500,1000,1500,2000},
+        ymin=0.5,
+        ymax=4.5,
+        ytick={1,2,3,4},
+        yticklabels={Shared Filter (Single),Shared Filter (Multi),
+                     Filter+encoding,Bokeh},
+        xlabel={Execution time (ms)},
+        legend style={
+          font=\scriptsize,
+          draw=none,
+          fill=none,
+          at={(0.5,1.02)},
+          anchor=south,
+          legend columns=2,
+          /tikz/every even column/.append style={column sep=5pt},
+        },
+      ]
+        \addplot[gray!65,->,>=stealth,line width=0.7pt,forget plot]
+          coordinates {(397,1) (483,1)};
+        \addplot[gray!65,->,>=stealth,line width=0.7pt,forget plot]
+          coordinates {(685,2) (855,2)};
+        \addplot[gray!65,->,>=stealth,line width=0.7pt,forget plot]
+          coordinates {(585,3) (846,3)};
+        \addplot[gray!65,->,>=stealth,line width=0.7pt,forget plot]
+          coordinates {(945,4) (1884,4)};
+
+        \addplot[
+          only marks,mark=o,mark size=2.1pt,
+          draw=black,fill=white
+        ] coordinates {(397,1) (685,2) (585,3) (945,4)};
+        \addlegendentry{Recent safe baseline}
+        \addplot[
+          only marks,mark=square*,mark size=1.9pt,
+          draw=black,fill=black
+        ] coordinates {(483,1) (855,2) (846,3) (1884,4)};
+        \addlegendentry{Unsafe event}
+
+        \node[font=\tiny,anchor=east,xshift=-1pt] at (axis cs:397,1) {397};
+        \node[font=\tiny,anchor=west,xshift=1pt] at (axis cs:483,1) {483};
+        \node[font=\tiny,anchor=east,xshift=-1pt] at (axis cs:685,2) {685};
+        \node[font=\tiny,anchor=west,xshift=1pt] at (axis cs:855,2) {855};
+        \node[font=\tiny,anchor=east,xshift=-1pt] at (axis cs:585,3) {585};
+        \node[font=\tiny,anchor=west,xshift=1pt] at (axis cs:846,3) {846};
+        \node[font=\tiny,anchor=east,xshift=-1pt] at (axis cs:945,4) {945};
+        \node[font=\tiny,anchor=east,xshift=-1pt] at (axis cs:1884,4) {1,884};
+
+      \nextgroupplot[
+        title={(b) Node wall-time increase},
+        xmax=340,
+        xtick={0,100,200,300},
+        ymin=0.5,
+        ymax=2.5,
+        ytick={1,2},
+        yticklabels={Shared Filter ($n=8$),Bokeh ($n=5$)},
+        xlabel={Increase from recent safe baseline (\%)},
+        legend style={
+          font=\scriptsize,
+          draw=none,
+          fill=none,
+          at={(0.5,1.02)},
+          anchor=south,
+          legend columns=2,
+          /tikz/every even column/.append style={column sep=5pt},
+        },
+      ]
+        \addplot[gray!65,line width=0.7pt,forget plot]
+          coordinates {(2.3,1) (88.3,1)};
+        \addplot[gray!65,line width=0.7pt,forget plot]
+          coordinates {(28.7,2) (316.5,2)};
+
+        \addplot[
+          only marks,mark=o,mark size=2.1pt,
+          draw=black,fill=white
+        ] coordinates {
+          (2.3,0.86) (3.8,0.90) (8.4,0.94) (11.8,0.98)
+          (22.3,1.02) (54.7,1.06) (54.7,1.10) (88.3,1.14)
+          (28.7,1.92) (58.0,1.96) (246.7,2.00)
+          (261.5,2.04) (316.5,2.08)
+        };
+        \addlegendentry{Decision}
+        \addplot[
+          only marks,mark=square*,mark size=1.9pt,
+          draw=black,fill=black
+        ] coordinates {(30.8,1) (182.3,2)};
+        \addlegendentry{Mean}
+    \end{groupplot}
+
+    \node[
+      font=\scriptsize,
+      anchor=north,
+      align=center,
+      text width=0.95\columnwidth
+    ] at ([yshift=-3pt]current bounding box.south) {%
+      Predicted headroom: 4--612\,ms
+      \quad Actual overrun: 4--1,059\,ms};
+  \end{tikzpicture}
+
+  \caption{Baseline-to-event latency shifts for the eight unsafe fresh-model
+  admits.  Baselines average the preceding three safe model admits from the
+  same run and workload group.  Panel (a) reports mean remaining cost; panel
+  (b) reports each decision's wall-time increase in the shared Filter node and
+  the five multi-frame decisions' increase in Bokeh.  Squares mark the mean
+  across decisions.  Every plotted node shift is positive, while no event
+  records blocking GC and run-queue wait shows no consistent trend.}
+  \label{fig:rq2_unsafe_admit_spikes}
+\end{figure}

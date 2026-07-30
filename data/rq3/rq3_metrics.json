@@ -27,6 +27,7 @@
       "totalDelayMinS": 0.0,
       "totalDelayMaxS": 0.0,
       "backlogMeanS": 4.255155555555555,
+      "backlogP50S": 4.875,
       "backlogP95S": 6.0071,
       "bMaxS": 6.204,
       "deadlineMs": 7000.0,
@@ -71,6 +72,7 @@
       "totalDelayMinS": 2.674,
       "totalDelayMaxS": 7.096,
       "backlogMeanS": 3.609141666666667,
+      "backlogP50S": 3.746,
       "backlogP95S": 5.6962,
       "bMaxS": 5.973,
       "deadlineMs": 7000.0,
@@ -134,6 +136,15 @@
       "oursMin": 3311.2,
       "oursMax": 3923.0666666666666,
       "mannWhitneyP": 0.005512134923899629
+    },
+    "backlogP50Ms": {
+      "noPacingMedian": 4939.5,
+      "noPacingMin": 3295.5,
+      "noPacingMax": 5249.5,
+      "oursMedian": 3725.25,
+      "oursMin": 2908.0,
+      "oursMax": 4353.0,
+      "mannWhitneyP": 0.0037021801727684074
     },
     "backlogP95Ms": {
       "noPacingMedian": 5980.6,
