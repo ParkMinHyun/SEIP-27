@@ -19,7 +19,7 @@
 % measured overrun is 4--1,059 ms.  No event records blocking GC; run-queue
 % wait changes in both directions across workloads.
 
-\begin{figure}[!t]
+\begin{figure}[!b]
   \centering
   \begin{tikzpicture}
     \begin{groupplot}[
@@ -115,13 +115,13 @@
           coordinates {(28.7,2) (316.5,2)};
 
         \addplot[
-          only marks,mark=o,mark size=2.1pt,
+          only marks,mark=o,mark size=1.9pt,
           draw=black,fill=white
         ] coordinates {
-          (2.3,0.86) (3.8,0.90) (8.4,0.94) (11.8,0.98)
-          (22.3,1.02) (54.7,1.06) (54.7,1.10) (88.3,1.14)
-          (28.7,1.92) (58.0,1.96) (246.7,2.00)
-          (261.5,2.04) (316.5,2.08)
+          (2.3,1) (3.8,1) (8.4,1) (11.8,1)
+          (22.3,1) (54.7,1) (54.7,1) (88.3,1)
+          (28.7,2) (58.0,2) (246.7,2)
+          (261.5,2) (316.5,2)
         };
         \addlegendentry{Decision}
         \addplot[
@@ -141,12 +141,10 @@
       \quad Actual overrun: 4--1,059\,ms};
   \end{tikzpicture}
 
-  \caption{Baseline-to-event latency shifts for the eight unsafe fresh-model
-  admits.  Baselines average the preceding three safe model admits from the
-  same run and workload group.  Panel (a) reports mean remaining cost; panel
-  (b) reports each decision's wall-time increase in the shared Filter node and
-  the five multi-frame decisions' increase in Bokeh.  Squares mark the mean
-  across decisions.  Every plotted node shift is positive, while no event
-  records blocking GC and run-queue wait shows no consistent trend.}
+  \caption{Unsafe fresh-model admits relative to the preceding three safe
+  admits from the same run and workload group.  Panel (a) reports mean
+  remaining cost.  Panel (b) reports per-decision node wall-time increases;
+  squares mark the means.  Every Filter and Bokeh shift is positive, while no
+  event records blocking GC and run-queue wait shows no consistent trend.}
   \label{fig:rq2_unsafe_admit_spikes}
 \end{figure}
