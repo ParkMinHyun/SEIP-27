@@ -19,39 +19,30 @@
 %   S2    B     29     14    653    544.0    713   593.0   1.31       60
 %   S3    C     18     20    472    397.3    483   467.7   1.22       11
 %
-% Panel (b) decomposition.  PostExecutionMetrics reports, per node,
-% cpuTimeMs and cpuUtilizationRatio = cpuTimeMs / (wallTimeMs * cores);
-% the device reports 8 cores, which the recorded triples confirm.  Summing
-% over the remaining nodes gives wall = cpu / (util * cores) exactly, so
-%   wall_e - wall_b = (cpu_e - cpu_b)/(util_b * cores)      <- CPU-time growth
-%                   + cpu_e/(cores) * (1/util_e - 1/util_b) <- utilization loss
-% Values (ms), CPU-time growth / utilization loss / total:
-%   M1  372 /  799 / 1171     M5  181 /   -9 /  172
-%   M2  380 /  854 / 1235     S1   34 /  321 /  354
-%   M3  581 /  579 / 1159     S2  284 / -122 /  162
-%   M4   59 /  107 /  167     S3  101 /  -15 /   87
-% CPU-time factor 1.05-1.53x; utilization factor 0.60-1.18x.
+% Panel (b) normalized factors.  Over the remaining node suffix, camera-process
+% CPU time is sum(cpuTimeMs), wall time is sum(wallTimeMs), and average busy
+% cores is CPU time / wall time.  Each event is divided by the unweighted mean
+% of the same quantity over its three recent-safe decisions.
+% Values, CPU-time factor / average-busy-cores factor:
+%   M1  1.443 / 0.602     M5  1.272 / 1.011
+%   M2  1.346 / 0.634     S1  1.055 / 0.669
+%   M3  1.501 / 0.750     S2  1.532 / 1.176
+%   M4  1.100 / 0.859     S3  1.261 / 1.031
+% The corresponding wall-time factor is CPU-time factor / busy-cores factor.
 % Blocking GC time was 0 ms in every baseline and every event; overheat level
 % and thermal status were identical to the recent-safe baseline in all eight.
 
-% Final compact layout: both panels share one row and panel (b) uses the
-% reviewer-oriented, order-dependent accounting terminology.
+% Layout: one panel per row, each spanning the column, so the eight rows get
+% the full width instead of half of it.
 \begingroup
-\def\rqtwoUnsafeSpikeSideBySide{1}
 \def\rqtwoReviewerAccounting{1}
 
 \begin{figure}[!t]
   \centering
-  \newsavebox{\rqtwospikebox}
-  \begin{lrbox}{\rqtwospikebox}
-  \begin{tikzpicture}
+  % Styles and legend labels are defined before the picture so the panel
+  % options below can read them; each panel then draws its own key inside its
+  % axis.
     \tikzset{
-      cpubar/.style={fill=black!60,draw=black!60,line width=0.3pt},
-      utilbar/.style={pattern=north east lines,pattern color=black!55,
-                      draw=black!55,line width=0.3pt},
-      givebackbar/.style={fill=white,draw=black!55,line width=0.3pt,
-                          densely dashed},
-      totaltick/.style={draw=black,line width=0.8pt},
       glabel/.style={font=\tiny,inner sep=1pt},
     }
     \pgfplotsset{
@@ -62,6 +53,10 @@
         yticklabels={S3,S2,S1,M5,M4,M3,M2,M1},
         axis x line*=bottom,
         axis y line*=left,
+        % Outward ticks, as in fig_rq3_pacing_trajectories: these rows are
+        % dense, and inward ticks both intrude on the markers and duplicate
+        % the x grid lines.
+        tick align=outside,
         xmajorgrids,
         grid style={black!14,line width=0.3pt},
         axis line style={line width=0.35pt},
@@ -70,119 +65,88 @@
         legend cell align=left,
       },
     }
-    \ifdefined\rqtwoUnsafeSpikeSideBySide
-      \pgfplotsset{
-        spikepanel/.append style={
-          % Sized so the two panels plus their labels fill \columnwidth; the
-          % \resizebox below then runs at a scale of about 1.0.
-          width=0.62\columnwidth,
-          height=4.30cm,
-          tick label style={font=\tiny},
-          yticklabel style={font=\tiny},
-          label style={font=\tiny},
-          legend style={
-            font=\tiny,
-            draw=black!25,
-            fill=white,
-            line width=0.2pt,
-            inner sep=1pt,
-            row sep=-1pt,
-            legend columns=1,
-            at={(axis description cs:0.98,0.04)},
-            anchor=south east,
-          },
+    \pgfplotsset{
+      spikepanel/.append style={
+        % Sized so one panel plus its labels fills \columnwidth; the
+        % \resizebox below then runs at a scale of about 1.0.
+        width=1.105\columnwidth,
+        % 4.50cm over the 8.3-unit range gives a row pitch of about 15.5pt,
+        % roughly three times the tallest marker, so the rows read apart.
+        height=4.50cm,
+        tick label style={font=\tiny},
+        yticklabel style={font=\tiny},
+        label style={font=\tiny},
+        % Panel tags sit above their panel, as in
+        % fig_rq3_pacing_trajectories: stacked vertically, a tag below panel
+        % (a) reads as if it belonged to panel (b).
+        title style={font=\tiny},
+        xlabel style={yshift=2pt},
+        % In-axis key: at full column width the Single-frame rows leave the
+        % right of that band empty in both panels.  Each panel sets its own
+        % anchor point, flush right and at y=1.925, the centre of the band
+        % between the multi-frame separator (3.5) and ymin (0.35).  Anchoring
+        % on east rather than south east centres the box there whatever its
+        % height, so the two keys balance despite holding three entries and
+        % two.  Only the bottom and left axis lines are drawn, so nothing
+        % collides with the right edge.
+        legend style={
+          font=\tiny,
+          draw=black!25,
+          fill=white,
+          line width=0.2pt,
+          inner sep=1pt,
+          row sep=-1pt,
+          legend columns=1,
+          anchor=east,
         },
-      }
-      \ifdefined\rqtwoReviewerAccounting
-        \def\rqtwoBaselineLegend{Recent-safe avg.}
-        \def\rqtwoBoundLegend{Predicted bound}
-        \def\rqtwoEventLegend{Unsafe admit}
-        \def\rqtwoCpuLegend{CPU time growth}
-        \def\rqtwoUtilLossLegend{CPU Util. loss}
-        \def\rqtwoUtilGainLegend{CPU Util. gain}
-      \else
-        \def\rqtwoBaselineLegend{Baseline}
-        \def\rqtwoBoundLegend{Bound}
-        \def\rqtwoEventLegend{Event}
-        \def\rqtwoCpuLegend{CPU growth}
-        \def\rqtwoUtilLossLegend{Util. loss}
-        \def\rqtwoUtilGainLegend{Util. gain}
-      \fi
-    \else
-      \pgfplotsset{
-        spikepanel/.append style={
-          width=0.92\columnwidth,
-          height=4.15cm,
-          tick label style={font=\scriptsize},
-          yticklabel style={font=\scriptsize},
-          label style={font=\scriptsize},
-          legend style={
-            font=\tiny,
-            draw=none,
-            fill=none,
-            inner sep=0pt,
-            row sep=-1pt,
-            column sep=2pt,
-            legend columns=-1,
-            at={(axis description cs:0.5,1.03)},
-            anchor=south,
-          },
-        },
-      }
-      \def\rqtwoBaselineLegend{Recent-safe baseline}
+      },
+    }
+    \ifdefined\rqtwoReviewerAccounting
+      \def\rqtwoBaselineLegend{Recent-safe avg.}
       \def\rqtwoBoundLegend{Predicted bound}
-      \def\rqtwoEventLegend{Unsafe event}
-      \def\rqtwoCpuLegend{CPU-time growth}
-      \def\rqtwoUtilLossLegend{Utilization loss}
-      \def\rqtwoUtilGainLegend{Utilization gain}
-    \fi
-
-    \ifdefined\rqtwoUnsafeSpikeSideBySide
-      \begin{groupplot}[
-        group style={
-          group size=2 by 1,
-          horizontal sep=0.050\columnwidth,
-        },
-        spikepanel,
-      ]
+      \def\rqtwoEventLegend{Unsafe admit}
     \else
-      \begin{groupplot}[
-        group style={
-          group size=1 by 2,
-          vertical sep=1.15cm,
-        },
-        spikepanel,
-      ]
+      \def\rqtwoBaselineLegend{Baseline}
+      \def\rqtwoBoundLegend{Bound}
+      \def\rqtwoEventLegend{Event}
     \fi
+    % Panel (b) shows the two measured factors in
+    % wall-time factor = CPU-time factor / average-busy-cores factor.
+    \def\rqtwoCpuLegend{CPU time}
+    \def\rqtwoParallelLegend{Average busy cores}
+
+  \newsavebox{\rqtwospikebox}
+  \begin{lrbox}{\rqtwospikebox}
+  \begin{tikzpicture}
+    \begin{groupplot}[
+      group style={
+        group size=1 by 2,
+        % Room for the lower edge of panel (a), tick labels plus a one-line
+        % x label, and for panel (b)'s tag above it: two text lines have to
+        % fit between the plot boxes without touching.
+        vertical sep=1.60cm,
+      },
+      spikepanel,
+    ]
 
     %% ---------------------------------------------------------------- (a)
-    \ifdefined\rqtwoUnsafeSpikeSideBySide
       \nextgroupplot[
-        % Headroom past 2.0 keeps the growth-factor labels and the legend
-        % inside the axis instead of spilling into panel (b).
+        % Headroom past 2.0 keeps the growth-factor labels inside the axis.
         xmin=0.46,
-        xmax=2.45,
+        xmax=2.05,
         xtick={0.5,1.0,1.5,2.0},
         xticklabels={0.5,1.0,1.5,2.0},
-        xlabel={\shortstack{Cost $/$ admission budget\\[-1pt]
-          \textnormal{(a) Budget overrun}}},
+        title={(a) Remaining latency vs. budget},
+        xlabel={Remaining-sequence latency $/$ admission budget},
+        legend style={at={(axis cs:2.05,1.925)}},
       ]
-    \else
-      \nextgroupplot[
-        xmin=0.50,
-        xmax=2.08,
-        xtick={0.5,0.75,1.0,1.25,1.5,1.75,2.0},
-        xticklabels={0.50,0.75,1.00,1.25,1.50,1.75,2.00},
-        xlabel={\shortstack{Remaining-sequence cost $/$ admission budget\\[-1pt]
-          \textnormal{(a) How far each admitted group overran its budget}}},
-      ]
-    \fi
-      % Admission budget and the multi-frame / single-frame separator.
+      % Admission budget and the multi-frame / single-frame separator.  Both
+      % rules span the full panel: the key sits inside the Single-frame band,
+      % clear of the y=3.5 separator, and its white fill covers the grid.
       \draw[black!60,densely dashed,line width=0.5pt]
         (axis cs:1,0.35) -- (axis cs:1,8.65);
       \node[glabel,anchor=south,text=black!65] at (axis cs:1,8.65) {budget};
-      % Stops short of the legend box so the rule does not reappear beside it.
-      \draw[black!70,line width=0.6pt] (axis cs:0.46,3.5) -- (axis cs:1.58,3.5);
+      \draw[black!70,line width=0.6pt] (axis cs:0.46,3.5) -- (axis cs:2.05,3.5);
 
       % Recent-safe baseline -> unsafe event.
       \addplot[black!45,->,>=stealth,line width=0.6pt,forget plot]
@@ -230,97 +194,95 @@
       \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.023,1) {$\times$1.22};
 
     %% ---------------------------------------------------------------- (b)
-    \ifdefined\rqtwoUnsafeSpikeSideBySide
-      \ifdefined\rqtwoReviewerAccounting
-        \nextgroupplot[
-          % Same reason as panel (a): room for the total labels and legend.
-          xmin=0,
-          xmax=1560,
-          xtick={0,600,1200},
-          xlabel={\shortstack{Contribution to $\Delta$ wall time (ms)\\[-1pt]
-            \textnormal{(b) Accounting decomposition}}},
-        ]
-      \else
-        \nextgroupplot[
-          xmin=0,
-          xmax=1320,
-          xtick={0,600,1200},
-          yticklabels={},
-          xlabel={\shortstack{Latency increase (ms)\\[-1pt]
-            \textnormal{(b) Increase decomposition}}},
-        ]
-      \fi
-    \else
       \nextgroupplot[
-        xmin=0,
-        xmax=1320,
-        xtick={0,300,600,900,1200},
-        xlabel={\shortstack{Increase in remaining-sequence latency (ms)\\[-1pt]
-          \textnormal{(b) What the increase decomposes into}}},
+        xmin=0.50,
+        xmax=1.62,
+        xtick={0.6,0.8,1.0,1.2,1.4,1.6},
+        xticklabels={0.6,0.8,1.0,1.2,1.4,1.6},
+        title={(b) CPU time and parallelism changes},
+        xlabel={Relative to recent-safe average ($\times$)},
+        legend style={at={(axis cs:1.61,2.88)}},
       ]
-    \fi
-      \addplot[draw=none,forget plot] coordinates {(0,1)};
+      \addplot[draw=none,forget plot] coordinates {(1,1)};
 
-      \addlegendimage{area legend,cpubar}
+      \addlegendimage{only marks,mark=square*,mark size=1.9pt,
+                      draw=black,fill=black}
       \addlegendentry{\rqtwoCpuLegend}
-      \addlegendimage{area legend,utilbar}
-      \addlegendentry{\rqtwoUtilLossLegend}
-      \addlegendimage{area legend,givebackbar}
-      \addlegendentry{\rqtwoUtilGainLegend}
-      \ifdefined\rqtwoReviewerAccounting
-        \addlegendimage{only marks,mark=|,mark size=2.5pt,draw=black,
-                        line width=0.8pt}
-        \addlegendentry{$\Delta$ wall time}
-      \fi
+      \addlegendimage{only marks,mark=o,mark size=2.0pt,
+                      draw=black,fill=white,line width=0.5pt}
+      \addlegendentry{\rqtwoParallelLegend}
 
-      % Stops short of the legend box, as in panel (a).
-      \draw[black!70,line width=0.6pt] (axis cs:0,3.5) -- (axis cs:1000,3.5);
+      % A factor of 1.0 is the recent-safe average.  Offsetting the two series
+      % within each row makes their directions readable without encoding raw
+      % metric changes as same-direction latency contributions.
+      \draw[black!60,densely dashed,line width=0.5pt]
+        (axis cs:1,0.35) -- (axis cs:1,8.65);
+      \node[glabel,anchor=south,text=black!65]
+        at (axis cs:1,8.65) {recent-safe avg.};
+      \draw[black!70,line width=0.6pt]
+        (axis cs:0.50,3.5) -- (axis cs:1.62,3.5);
 
-      % M1
-      \draw[cpubar]      (axis cs:0,7.7)      rectangle (axis cs:371.6,8.3);
-      \draw[utilbar]     (axis cs:371.6,7.7)  rectangle (axis cs:1170.7,8.3);
-      \draw[totaltick]   (axis cs:1170.7,7.66) -- (axis cs:1170.7,8.34);
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1170.7,8) {1,171};
-      % M2
-      \draw[cpubar]      (axis cs:0,6.7)      rectangle (axis cs:380.2,7.3);
-      \draw[utilbar]     (axis cs:380.2,6.7)  rectangle (axis cs:1234.7,7.3);
-      \draw[totaltick]   (axis cs:1234.7,6.66) -- (axis cs:1234.7,7.34);
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1234.7,7) {1,235};
-      % M3
-      \draw[cpubar]      (axis cs:0,5.7)      rectangle (axis cs:580.6,6.3);
-      \draw[utilbar]     (axis cs:580.6,5.7)  rectangle (axis cs:1159.3,6.3);
-      \draw[totaltick]   (axis cs:1159.3,5.66) -- (axis cs:1159.3,6.34);
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1159.3,6) {1,159};
-      % M4
-      \draw[cpubar]      (axis cs:0,4.7)      rectangle (axis cs:59.2,5.3);
-      \draw[utilbar]     (axis cs:59.2,4.7)   rectangle (axis cs:166.7,5.3);
-      \draw[totaltick]   (axis cs:166.7,4.66) -- (axis cs:166.7,5.34);
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:166.7,5) {167};
-      % M5 (utilization improved slightly)
-      \draw[cpubar]      (axis cs:0,3.7)      rectangle (axis cs:181.2,4.3);
-      \draw[givebackbar] (axis cs:172.0,3.7)  rectangle (axis cs:181.2,4.3);
-      \draw[totaltick]   (axis cs:172.0,3.66) -- (axis cs:172.0,4.34);
-      \node[glabel,anchor=west,xshift=11pt] at (axis cs:181.2,4) {172};
-      % S1
-      \draw[cpubar]      (axis cs:0,2.7)      rectangle (axis cs:33.6,3.3);
-      \draw[utilbar]     (axis cs:33.6,2.7)   rectangle (axis cs:354.3,3.3);
-      \draw[totaltick]   (axis cs:354.3,2.66) -- (axis cs:354.3,3.34);
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:354.3,3) {354};
-      % S2 (utilization improved)
-      \draw[cpubar]      (axis cs:0,1.7)      rectangle (axis cs:284.0,2.3);
-      \draw[givebackbar] (axis cs:161.7,1.7)  rectangle (axis cs:284.0,2.3);
-      \draw[totaltick]   (axis cs:161.7,1.66) -- (axis cs:161.7,2.34);
-      \node[glabel,anchor=west,xshift=11pt] at (axis cs:284.0,2) {162};
-      % S3 (utilization improved slightly)
-      \draw[cpubar]      (axis cs:0,0.7)      rectangle (axis cs:101.2,1.3);
-      \draw[givebackbar] (axis cs:86.7,0.7)   rectangle (axis cs:101.2,1.3);
-      \draw[totaltick]   (axis cs:86.7,0.66)  -- (axis cs:86.7,1.34);
-      \node[glabel,anchor=west,xshift=11pt] at (axis cs:101.2,1) {87};
+      % Change segments from the normalized recent-safe value.
+      % CPU time (upper position in each row).
+      \draw[black!45,line width=0.6pt] (axis cs:1,8.17) -- (axis cs:1.443,8.17);
+      \draw[black!45,line width=0.6pt] (axis cs:1,7.17) -- (axis cs:1.346,7.17);
+      \draw[black!45,line width=0.6pt] (axis cs:1,6.17) -- (axis cs:1.501,6.17);
+      \draw[black!45,line width=0.6pt] (axis cs:1,5.17) -- (axis cs:1.100,5.17);
+      \draw[black!45,line width=0.6pt] (axis cs:1,4.17) -- (axis cs:1.272,4.17);
+      \draw[black!45,line width=0.6pt] (axis cs:1,3.17) -- (axis cs:1.055,3.17);
+      \draw[black!45,line width=0.6pt] (axis cs:1,2.17) -- (axis cs:1.532,2.17);
+      \draw[black!45,line width=0.6pt] (axis cs:1,1.17) -- (axis cs:1.261,1.17);
+
+      % Average busy cores (lower position in each row).
+      \draw[black!45,line width=0.6pt] (axis cs:1,7.83) -- (axis cs:0.602,7.83);
+      \draw[black!45,line width=0.6pt] (axis cs:1,6.83) -- (axis cs:0.634,6.83);
+      \draw[black!45,line width=0.6pt] (axis cs:1,5.83) -- (axis cs:0.750,5.83);
+      \draw[black!45,line width=0.6pt] (axis cs:1,4.83) -- (axis cs:0.859,4.83);
+      \draw[black!45,line width=0.6pt] (axis cs:1,3.83) -- (axis cs:1.011,3.83);
+      \draw[black!45,line width=0.6pt] (axis cs:1,2.83) -- (axis cs:0.669,2.83);
+      \draw[black!45,line width=0.6pt] (axis cs:1,1.83) -- (axis cs:1.176,1.83);
+      \draw[black!45,line width=0.6pt] (axis cs:1,0.83) -- (axis cs:1.031,0.83);
+
+      \addplot[only marks,mark=square*,mark size=1.9pt,
+               draw=black,fill=black]
+        coordinates {(1.443,8.17) (1.346,7.17) (1.501,6.17) (1.100,5.17)
+                     (1.272,4.17) (1.055,3.17) (1.532,2.17) (1.261,1.17)};
+      \addplot[only marks,mark=o,mark size=2.0pt,
+               draw=black,fill=white,line width=0.5pt]
+        coordinates {(0.602,7.83) (0.634,6.83) (0.750,5.83) (0.859,4.83)
+                     (1.011,3.83) (0.669,2.83) (1.176,1.83) (1.031,0.83)};
+
+      % Direct factor labels; labels sit outside their change segment.
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.443,8.17) {$1.44\times$};
+      \node[glabel,anchor=east,xshift=-2.5pt] at (axis cs:0.602,7.83) {$0.60\times$};
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.346,7.17) {$1.35\times$};
+      \node[glabel,anchor=east,xshift=-2.5pt] at (axis cs:0.634,6.83) {$0.63\times$};
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.501,6.17) {$1.50\times$};
+      \node[glabel,anchor=east,xshift=-2.5pt] at (axis cs:0.750,5.83) {$0.75\times$};
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.100,5.17) {$1.10\times$};
+      \node[glabel,anchor=east,xshift=-2.5pt] at (axis cs:0.859,4.83) {$0.86\times$};
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.272,4.17) {$1.27\times$};
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.011,3.83) {$1.01\times$};
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.055,3.17) {$1.05\times$};
+      \node[glabel,anchor=east,xshift=-2.5pt] at (axis cs:0.669,2.83) {$0.67\times$};
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.532,2.17) {$1.53\times$};
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.176,1.83) {$1.18\times$};
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.261,1.17) {$1.26\times$};
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.031,0.83) {$1.03\times$};
 
     \end{groupplot}
   \end{tikzpicture}
   \end{lrbox}
   \resizebox{\columnwidth}{!}{\usebox{\rqtwospikebox}}
+
+  \caption{Anatomy of the eight unsafe admits the always-admit model would
+  have produced.  (a) Remaining-sequence latency normalized by the admission
+  budget, with the growth over the recent-safe average annotated per row.
+  (b) The camera process's CPU time and average busy cores over the remaining
+  sequence, each normalized by its recent-safe average; 1.0 denotes no change.
+  CPU time rises for every unsafe admit, whereas average busy cores falls for
+  M1--M4 and S1 and rises for M5, S2, and S3.}
+  \label{fig:rq2_unsafe_spike_anatomy}
 
 \end{figure}
 \endgroup

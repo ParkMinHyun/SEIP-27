@@ -1,4 +1,4 @@
-% RQ1(b): Four-arm controller ablation.
+% RQ1(a): Four-arm controller ablation.
 %
 % Baseline timeout values are copied from Table~\ref{tab:timeout_index}, using
 % its M+S columns for the two endpoint scenarios.
@@ -39,7 +39,8 @@
   \centering
   \setlength{\abovecaptionskip}{2pt}%
   \setlength{\belowcaptionskip}{3pt}%
-  \caption{RQ1(a) controller ablation on S26 Ultra.}
+  \caption{RQ1(a) end-to-end controller ablation on S26 Ultra
+  (first-timeout shot, E/M).}
   \label{tab:rq1_ablation}
 
   {\scriptsize
@@ -94,5 +95,8 @@
   \rqonebtabular
   }
 
-  \par\vspace{3pt}
+  \par\vspace{2pt}
+  {\scriptsize E is the earliest first-timeout shot and M is the
+  Kaplan--Meier median.  -- indicates that the statistic was not reached
+  within the 30-shot burst.}
 \end{table}

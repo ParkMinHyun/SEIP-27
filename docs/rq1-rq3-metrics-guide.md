@@ -173,14 +173,22 @@ This table explains when the full controller intervenes and what it preserves.
 
 | Metric | Definition | Interpretation |
 |---|---|---|
-| Baseline `(E/M)` | Earliest and Kaplan--Meier median first-timeout shot without the controller | Reference failure point |
+| Controller-off baseline `(E/M)` | Earliest and Kaplan--Meier median first-timeout shot without the controller | Reference failure point, visually separated from the proposed implementation |
 | Admission-skip onset `(E/M)` | First shot with `bokehAdmitted != true` or `filterAdmitted != true` | Whether workload reduction begins before baseline failure |
 | Pacing-delay onset `(E/M)` | Shot following the first transition decision with applied delay \(>0\) | Whether arrival control begins before baseline failure |
+| Full-controller timeout outcome | Capture Timeout count among included full-controller runs through shot 30 | Direct deadline-safety outcome established by RQ1(a) |
 | Slack P5 `(%)` | Inclusive fifth percentile of `timeoutMarginMs`, normalized by the product Capture Timeout deadline | Lower-tail deadline safety margin |
 | \(M+S\) completed `(%)` | Per-run rate of `bokehCompleted && filterCompleted`, then macro-averaged across runs | Retention of the full optional Draft configuration |
 | \(M\) completed `(%)` | Per-run rate of `bokehCompleted`, then macro-averaged across runs | Retention of the target multi-frame stage |
 | Pacing activated `(%)` | Positive transition delays divided by all eligible transitions | Frequency of user-visible pacing |
 | Pacing delay `(ms)` | Median of positive applied delays, following the RQ1 run-level aggregation protocol | Typical nonzero intervention magnitude |
+
+The controller-off baseline is a reference and must not share a top-level
+header with the full-controller columns.  Because every included full-controller
+run is timeout-free within the 30-shot horizon, RQ1(b) states this once beside
+the Slack P5 explanation instead of adding an all-zero column.  This repetition
+is intentional: RQ1(a) establishes the comparative outcome, whereas RQ1(b)
+anchors the continuous lower-tail safety margin to that outcome.
 
 For the current percentage-form Slack column, calculate each eligible
 capture's normalized margin before taking P5:

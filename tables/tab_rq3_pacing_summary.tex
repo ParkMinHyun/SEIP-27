@@ -1,17 +1,95 @@
-% RQ3: Device-stratified backlog and queue control.
+% RQ3: pacing-policy comparison -- work delivered, backlog control, and cost.
 %
-% Scope: this table answers one question only -- how far does each pacing
-% policy push down realized Draft backlog and queue depth?  The delay it costs
-% is reported by the cumulative-delay panel of
-% Figure~\ref{fig:rq3_pacing_trajectories}, and the end-to-end outcome (Slack
-% P5, shot-to-shot P95) is already an RQ1 column.  Repeating cost and outcome
-% here duplicated both without adding evidence, so those two column groups
-% were removed.
+% Scope: an earlier revision reported backlog and queue depth alone, on the
+% grounds that cost belongs to the cumulative-delay panel of
+% Figure~\ref{fig:rq3_pacing_trajectories} and that end-to-end outcomes are
+% already RQ1 columns.  That structure cannot carry the RQ3 claim.  Every
+% backlog and queue column is lower-is-better and measures the same side of the
+% trade-off, so its optimum is a policy that runs no optional Draft work at all
+% -- which is exactly the production thermal guard that Section~\ref{sec:guard-limit}
+% argues against.  Any baseline that paces harder or admits less would win every
+% column.  The "already in RQ1" argument does not hold either: RQ1 reports the
+% full controller across thermal levels and has no Thermal LUT or Queue-EWMA
+% rows, so per-policy delivered work appears nowhere else.
+%
+% The table therefore carries three groups.  Optional work admitted states how
+% much optional Draft processing each policy actually ran, so that low backlog
+% earned by skipping work is visible rather than rewarded.  Queueing pressure
+% states how much work sat waiting and how often that pushed a capture toward
+% its budget.  Pacing cost states what the user paid for it.
+%
+% The readable metric name "High-backlog rate" follows the usual
+% name-plus-operational-definition pattern in SE evaluation tables.  The table
+% note preserves the exact threshold (queued Draft work above 80% of the
+% Capture Timeout budget).  "Near-deadline" and "Risk exposure" are avoided:
+% the former is a code identifier rather than the measured quantity, and the
+% latter adds a judgement that the data do not directly measure.
+% The shared word "admitted" sits in the group header so the M and S columns
+% need no abbreviation.
+%
+% Column choices within the groups:
+%   - M/S admitted are the run-level median Bokeh/Filter admit rates.
+%   - B95 alone represents backlog; Bmean and B50 were highly redundant with it
+%     and remain in the unrounded block below and in rq3_metrics.json.
+%   - Applied delay per run is the only cost column.  Shot-to-shot P95 and
+%     30-shot burst span were both considered and dropped: all three measure the
+%     same pacing cost, and the span is the weakest of them because it is simply
+%     the unpaced span plus the applied delay (13.568 s + 4.600 s against a
+%     median applied delay of 4.6095 s) and is defined only relative to the
+%     30-shot protocol rather than to anything a user does.  That near-identity
+%     is still worth citing in prose, because it is the evidence that the extra
+%     optional work Ours admitted added no time of its own; the values live in
+%     the block below and in rq3_metrics.json.
 %
 % Baseline naming follows the implementation
-% (patches/rq3-pacing-policy-switch.patch, PolicyType): OURS, THERMAL_LUT,
-% QUEUE_EWMA.  The manuscript labels are Ours, Thermal LUT, and Queue-EWMA;
-% the earlier "Static LUT" / "Queue dynamic" labels are retired.
+% (CaptureAvailableDelayPolicyFactory.PolicyType): NO_PACING, OURS,
+% THERMAL_LUT, CODEL.  The manuscript labels are No pacing, Ours, Thermal LUT,
+% and CoDel-inspired; the earlier "Queue-EWMA", "Static LUT", and "Queue
+% dynamic" labels are retired.
+%
+% Thermal LUT is ThermalHeadroomLutDelayPolicy: open-loop, delay interpolated
+% from PowerManager.getThermalHeadroom() against the action thresholds Android
+% publishes for the Adaptive Performance Framework (android-adpf-thermal).  It
+% is the strong form of the production thermal guard Section~\ref{sec:guard-limit}
+% criticises -- continuous rather than a step, and re-read within a burst --
+% and it sees neither the queue nor the deadline.
+%
+% CoDel-inspired is ControlledDelayPacingPolicy: the RFC 8289 controlled-delay
+% algorithm (codel-cacm, rfc8289) over the measured Draft queue wait, with
+% three forced adaptations recorded in its KDoc -- a Draft cannot be dropped so
+% one action delays the next capture by one measured service time instead; the
+% dodequeue and dequeue routines are split across the draft start and the
+% captureAvailable callback because that is where the quantity and the actuator
+% respectively live; and the drop loop becomes one action per callback.  Target
+% is half the Capture Timeout budget, so it settles the queue near six Drafts
+% rather than draining it -- RFC 8289's 5 ms does not transfer, because there
+% the queue is pure overhead and here it is the parallel-capture feature.
+%
+% Calibration, so neither baseline can be dismissed as under-paced or as a
+% strawman that pins the queue at zero.  Both are replayed over the nine
+% collected No-pacing bursts (data/lut_calibration.py in the implementation
+% repository):
+%   - Thermal LUT is cost-matched.  Its magnitudes are scaled (factor 0.585)
+%     so its run-median burst total is 4582 ms, equal to Ours' 4582 ms.  The
+%     headroom band those runs visit is 0.876-0.947, over which the calibrated
+%     points give 118-201 ms per transition.  That band is narrow because the
+%     thermal signal is narrow at a fixed starting level, which is itself part
+%     of what this baseline demonstrates.
+%   - CoDel is inert on 24 percent of shots, first acts at a median of shot 9
+%     of 30 with the queue already 4 Drafts deep, and settles near
+%     target/service = 8 Drafts at the unpaced 422 ms median Draft wall (5 at
+%     the 726 ms wall Ours' heavier admitted workload produces).  It never
+%     approaches a 0-1 queue.
+% First-delay shot differs by construction and is worth stating in prose:
+% Thermal LUT first paces at shot 3 in all nine runs (its only queue input is
+% whether anything is queued at all), Ours and CoDel later.  No arm paces the
+% 1->2 transition, because the pacer has no prediction until the first Draft
+% starts.
+%
+% Between them the two baselines span what Ours adds: Thermal LUT has neither
+% deadline awareness nor a model of the Draft work being admitted, CoDel has
+% the queue but neither of those two.  A separation from both therefore says
+% which of the two the separation came from.
 %
 % S26 Ultra No-pacing was aggregated from the starting-Lv3 runs in
 % 48U_metrics_12MP_normal_0729_AdmitOnly_{1,2}.xlsx: nine complete runs, 261
@@ -23,11 +101,34 @@
 % nine complete starting-Lv3 runs and 232 eligible transitions.  Run 11 was
 % excluded because its observation timestamps and real trace were incomplete.
 %
+% Only the S26 Ultra is measured, so the device moved into the caption and the
+% Device column was dropped along with the all-TBD S26 row block.  Restore both
+% as a second row group, keyed by a reinstated Device column, when S26 data
+% arrives.  No pacing is marked as the baseline in the Policy column because
+% every other row is read as a delta against it.
+%
+% High-backlog rate sits after B95 so the group reads mechanism first
+% (queue bound, backlog tail) and consequence last.  It is kept rather than
+% replaced by a spread column
+% such as B95 - B50: that difference is arithmetic on two columns the table
+% already prints, and it reverses direction (No pacing 1.13 s, Ours 1.95 s)
+% because No pacing saturates against the deadline and compresses its own
+% distribution.  B > 0.8D is the only cell that relates the distribution to
+% the failure threshold, and its ordering is stable across every threshold with
+% support: No pacing / Ours is 65.9/37.5 at 0.60, 49.3/18.8 at 0.70, 38.1/13.3
+% at 0.75, 25.2/6.7 at 0.80, 8.9/0.4 at 0.85, and 0/0 from 0.90 up.
+%
+% The backlog columns are rendered in seconds to two decimals so that this
+% table, the backlog panel, and the delay--tail panel of
+% Figure~\ref{fig:rq3_pacing_trajectories} all read in one unit.  The source
+% values below stay in milliseconds because that is what data/rq3/rq3_metrics.json
+% and the exporter record.
+%
 % Unrounded pooled values (No-pacing / Ours):
 %   Bmean        4255.16 / 3609.14 ms
 %   B50          4875 / 3746 ms
 %   B95          6007.1 / 5696.2 ms
-%   Risk exposure 25.1852 / 6.6667 percent of shots above 0.8 x 7000 ms
+%   B > 0.8D      25.1852 / 6.6667 percent of shots above 0.8 x 7000 ms
 %   Qmean        6.8111 / 4.39167     Qmax 13 / 9
 % Retained for the figure, the artifact, and RQ1 rather than for this table:
 %   Paced        0 / 27.5862 percent
@@ -42,7 +143,7 @@
 %
 % Run-level Mann-Whitney (two-sided, n = 9 vs 8) over the same runs, for the
 % columns this table now keeps:
-%   Bmean p=0.0055, B50 p=0.0037, B95 p=0.0003, risk exposure p=0.0011,
+%   Bmean p=0.0055, B50 p=0.0037, B95 p=0.0003, B > 0.8D p=0.0011,
 %   Qmean p=0.0024, Qmax p=0.0018.
 % Also computed and reported elsewhere: sum d p=0.0002, Slack P5 p=0.0016,
 % S2S P95 p=0.0001, span p=0.0001; Slack min is p=0.0303.
@@ -57,19 +158,24 @@
 % Qmax remains because the maximum number of waiting Drafts is a direct,
 % integer-valued queue bound.
 %
-% Still provisional rather than a controlled policy comparison: median run-level
-% Bokeh/Filter admit rates were 33.3/40.0 percent for No-pacing and 56.7/100.0
-% percent for Ours, so the admitted workload was not matched.  The mismatch runs
-% against Ours for backlog (it carried more optional work) and with Ours for
-% delay, and admission is closed-loop on backlog, so it cannot simply be removed
-% by reweighting.  Fix the admitted workload across policies to isolate pacing.
+% The admitted workload is not matched across arms, which is why it is now a
+% reported column rather than a footnote: No-pacing ran 33.3/40.0 percent
+% Bokeh/Filter against 56.7/100.0 percent for Ours.  Read as a confound the
+% mismatch cuts both ways -- it runs against Ours for backlog, since Ours
+% carried roughly twice the optional work and still finished lower on every
+% backlog and queue column, and with Ours for delay.  Admission is closed-loop
+% on backlog, so it cannot be removed by reweighting.  Matching admitted
+% workload across policies remains the fix that turns this into a controlled
+% pacing comparison; until then the backlog result is conservative and the cost
+% result is not.
 
 \begin{table}[t]
   \centering
   \setlength{\abovecaptionskip}{2pt}%
   \setlength{\belowcaptionskip}{3pt}%
-  \caption{RQ3 backlog and queue control under 12MP normal at starting overheat
-  level 3.}
+  \caption{RQ3 policy comparison on the S26 Ultra under 12MP normal at starting
+  overheat level 3: how much optional Draft work each policy delivered, how far
+  it kept the pipeline from the deadline, and what it charged for that.}
   \label{tab:rq3_pacing_summary}
 
   {\scriptsize
@@ -77,56 +183,62 @@
   \setlength{\arrayrulewidth}{0.35pt}%
   \setlength{\doublerulesep}{0.8pt}%
   \newcommand{\rqthreeTBD}{\textit{TBD}}%
-  \newcommand{\rqthreeNA}{--}%
+  % M and S use the same fixed content width; all metric cells are right
+  % aligned while the two-line headers remain centered.
+  \newlength{\rqthreeWorkW}\settowidth{\rqthreeWorkW}{\textbf{Work admitted}}%
+  \setlength{\rqthreeWorkW}{\dimexpr\rqthreeWorkW/2\relax}%
+  \newcommand{\rqthreeWork}[1]{\makebox[\rqthreeWorkW][r]{#1}}%
+  \newcommand{\rqthreeWorkHead}[1]{%
+    \makebox[\rqthreeWorkW][c]{\makecell[c]{#1\\\textbf{(\%)}}}}%
   \newsavebox{\rqthreetabbox}%
   \newcommand{\rqthreetabular}{%
-  \begin{tabular}{|c|l||c|c|c|c||c|c|}
+  \begin{tabular}{|l||r|r||r|r|r||r|}
     \hline\hline
-    \multirow{2}{*}{\textbf{Device}} &
     \multirow{2}{*}{\textbf{Policy}} &
-    \multicolumn{4}{c||}{\textbf{Real backlog}} &
-    \multicolumn{2}{c|}{\textbf{Queue depth}} \\
-    \cline{3-8}
-    & &
-    \makecell[c]{\(\boldsymbol{\bar{B}}\)\\\textbf{(ms)}} &
-    \makecell[c]{\(\boldsymbol{B_{50}}\)\\\textbf{(ms)}} &
-    \makecell[c]{\(\boldsymbol{B_{95}}\)\\\textbf{(ms)}} &
-    \makecell[c]{\textbf{Risk}\\\textbf{exposure (\%)}} &
-    \makecell[c]{\(\boldsymbol{\bar{Q}}\)} &
-    \makecell[c]{\(\boldsymbol{Q_{\max}}\)} \\
+    \multicolumn{2}{c||}{\textbf{Work admitted}} &
+    \multicolumn{3}{c||}{\textbf{Queueing pressure}} &
+    \multicolumn{1}{c|}{\textbf{Pacing cost}} \\
+    \cline{2-7}
+    &
+    \multicolumn{1}{c|}{\rqthreeWorkHead{\(\boldsymbol{M}\)}} &
+    \multicolumn{1}{c||}{\rqthreeWorkHead{\(\boldsymbol{S}\)}} &
+    \multicolumn{1}{c|}{\makecell[c]{\(\boldsymbol{Q_{\max}}\)}} &
+    \multicolumn{1}{c|}{\makecell[c]{\(\boldsymbol{B_{95}}\)\\\textbf{(s)}}} &
+    \multicolumn{1}{c||}{\makecell[c]{\textbf{High-backlog}\\
+      \textbf{rate (\%)}}} &
+    \multicolumn{1}{c|}{\makecell[c]{\textbf{Delay}\\\textbf{(s)}}} \\
     \hline\hline
-    \multirow{4}{*}{\makecell[c]{S26\\Ultra}}
-      & No pacing     & 4255 & 4875 & 6007 & 25.2 & 6.81 & 13 \\
-    \cline{2-8}
-      & Thermal LUT   & \rqthreeTBD & \rqthreeTBD & \rqthreeTBD &
-        \rqthreeTBD & \rqthreeTBD & \rqthreeTBD \\
-    \cline{2-8}
-      & Queue-EWMA    & \rqthreeTBD & \rqthreeTBD & \rqthreeTBD &
-        \rqthreeTBD & \rqthreeTBD & \rqthreeTBD \\
-    \cline{2-8}
-      & \textbf{Ours} & \textbf{3609} & \textbf{3746} & \textbf{5696} &
-        \textbf{6.7} & \textbf{4.39} & \textbf{9} \\
+    No pacing (base.) & \rqthreeWork{33.3} & \rqthreeWork{40.0} &
+      13 & 6.01 & 25.2 & 0 \\
     \hline
-    \multirow{4}{*}{S26}
-      & No pacing     & \rqthreeTBD & \rqthreeTBD & \rqthreeTBD &
-        \rqthreeTBD & \rqthreeTBD & \rqthreeTBD \\
-    \cline{2-8}
-      & Thermal LUT   & \rqthreeTBD & \rqthreeTBD & \rqthreeTBD &
-        \rqthreeTBD & \rqthreeTBD & \rqthreeTBD \\
-    \cline{2-8}
-      & Queue-EWMA    & \rqthreeTBD & \rqthreeTBD & \rqthreeTBD &
-        \rqthreeTBD & \rqthreeTBD & \rqthreeTBD \\
-    \cline{2-8}
-      & \textbf{Ours} & \textbf{\rqthreeTBD} & \textbf{\rqthreeTBD} &
-        \textbf{\rqthreeTBD} & \textbf{\rqthreeTBD} & \textbf{\rqthreeTBD} &
-        \textbf{\rqthreeTBD} \\
+    Thermal LUT & \rqthreeWork{\rqthreeTBD} &
+      \rqthreeWork{\rqthreeTBD} & \rqthreeTBD & \rqthreeTBD &
+      \rqthreeTBD & \rqthreeTBD \\
+    \hline
+    CoDel-inspired & \rqthreeWork{\rqthreeTBD} &
+      \rqthreeWork{\rqthreeTBD} & \rqthreeTBD & \rqthreeTBD &
+      \rqthreeTBD & \rqthreeTBD \\
+    \hline
+    \textbf{Ours} & \rqthreeWork{\textbf{56.7}} &
+      \rqthreeWork{\textbf{100.0}} & \textbf{9} &
+      \textbf{5.70} & \textbf{6.7} & 4.61 \\
     \hline\hline
   \end{tabular}}%
-  \fittabcolsep{\rqthreetabbox}{\rqthreetabular}{\columnwidth}{16}%
+  \fittabcolsep{\rqthreetabbox}{\rqthreetabular}{\columnwidth}{14}%
   \rqthreetabular
   }
 
   \par\vspace{2pt}
   \begin{minipage}{0.97\columnwidth}
+  {\scriptsize \(M\) and \(S\) are the multi-frame and single-frame optional
+  Draft stages of Section~\ref{sec:guard-limit}; \(Q_{\max}\) is the maximum
+  queued Draft count, and \(B_{95}\) is the 95th percentile of measured Draft
+  backlog. High-backlog rate is the percentage of shots whose queued Draft
+  work accounts for more than 80\% of the Capture Timeout budget. Work admitted
+  reads better higher and the other two groups better lower, so no single group
+  ranks a policy: admitting less optional work drives backlog, queue depth, and
+  delay down together. Bold marks where Ours leads; delay is not bold because it
+  is the price of the other five columns. Admit rates and delay are run-level
+  medians.\par}
   \end{minipage}
 \end{table}

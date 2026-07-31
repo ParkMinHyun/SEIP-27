@@ -1,46 +1,52 @@
-% RQ1(a): Compact Full-controller behavior over burst prefixes.
+% RQ1(b): Baseline failure, full-controller intervention timing,
+% short-burst usability, and sustained behavior.
 %
 % Results are aggregated from the seven 2026-07-27 CaptureMetrics workbooks
 % according to the protocol in the implementation repository.
 % Implementation reference inspected at commit:
 % 267a29c769428df16c7b96bd18956764da7c37db
 %
-% Baseline (E/M) repeats the no-controller first-timeout index from
+% Baseline timeout (E/M) repeats the no-controller first-timeout index from
 % Table~\ref{tab:timeout_index} (M+S columns) for the two endpoint scenarios,
-% matching the Baseline arm of Table~\ref{tab:rq1_ablation}.  It sits next to
-% the two action columns so that the controller's first skip and first pacing
-% delay can be read against the baseline failure point.
-% Slack P5 is normalized by the product Capture Timeout deadline.  The
-% deadline constant itself is internal and must not appear in the manuscript,
-% so only the normalized percentage is reported.
+% matching the Baseline arm of Table~\ref{tab:rq1_ablation}.  It is a
+% controller-off reference, not part of the proposed implementation, and is
+% separated from every full-controller column by its own top-level header and
+% a double vertical rule.  E and M each get their own column so that the shot
+% indices line up down the column; every action cell reports its absolute onset
+% followed by [Delta] relative to the Baseline timeout column.  Negative and positive
+% shifts mean earlier and later controller action, respectively; they do not
+% encode better and worse behavior because admission and pacing coordinate.
+% The full controller incurred no Capture Timeout within the 30-shot horizon
+% in any row, as already established by RQ1(a).  RQ1(b) states that result once
+% next to the Slack P5 explanation instead of adding an all-zero column.  Slack
+% P5 is normalized by the product Capture Timeout deadline.  The deadline
+% constant itself is internal and must not appear in the manuscript, so only
+% the normalized percentage is reported.
+% Draft completion and pacing cost are reported at @5 and @30.  The @5 prefix
+% characterizes short-burst behavior close to the user-facing capture
+% experience, whereas @30 characterizes sustained behavior.
 
 \begin{table*}[t]
   \centering
   \setlength{\abovecaptionskip}{2pt}%
   \setlength{\belowcaptionskip}{3pt}%
-  \caption{RQ1(b) results for the full controller on S26 Ultra.
-  Inline pairs report results after the first 5 and 30 shots.}
+  \caption{RQ1(b) controller-off failure reference and full-controller
+  behavior on S26 Ultra.}
   \label{tab:rq1_preventive_alignment}
   \label{tab:rq1_controller_behavior}
 
   {\scriptsize
-  % Each inline pair exactly fills its column, so the @5/@30 slots are equally
-  % wide and the last slot is flush with the column rule.
-  \newlength{\rqbarw}\settowidth{\rqbarw}{\,\textbar\,}%
-  \newlength{\rqwMS}\settowidth{\rqwMS}{\textbf{$M{+}S$ completed (\%)}}%
-  \newlength{\rqwM}\settowidth{\rqwM}{\textbf{$M$ completed (\%)}}%
-  \newlength{\rqwP}\settowidth{\rqwP}{\textbf{Pacing activated (\%)}}%
-  \newlength{\rqwD}\settowidth{\rqwD}{\textbf{Pacing delay (ms)}}%
-  \newcommand{\rqCell}[3]{%
-    \makebox[\dimexpr(#1-\rqbarw)/2\relax][r]{\textbf{#2}}\,\textbar\,%
-    \makebox[\dimexpr(#1-\rqbarw)/2\relax][r]{#3}}%
-  \newcommand{\rqHead}[3]{%
-    \makebox[\dimexpr(#1-\rqbarw)/2\relax][c]{\textbf{#2}}\,\textbar\,%
-    \makebox[\dimexpr(#1-\rqbarw)/2\relax][c]{#3}}%
-  \newcommand{\rqMS}[2]{\rqCell{\rqwMS}{#1}{#2}}%
-  \newcommand{\rqM}[2]{\rqCell{\rqwM}{#1}{#2}}%
-  \newcommand{\rqP}[2]{\rqCell{\rqwP}{#1}{#2}}%
-  \newcommand{\rqD}[2]{\rqCell{\rqwD}{#1}{#2}}%
+  % One value per cell.  E and M have their own columns and the shift sits to
+  % the right of the absolute onset; both parts are set in fixed-width boxes
+  % so that digits and brackets line up down the column.  @5 and @30 are
+  % likewise separate columns, so no in-cell separator is needed anywhere.
+  \newlength{\rqOnsetAbsW}\settowidth{\rqOnsetAbsW}{30}%
+  \newlength{\rqOnsetDelW}\settowidth{\rqOnsetDelW}{[+6]}%
+  \newcommand{\rqOnset}[2]{%
+    \makebox[\rqOnsetAbsW][r]{#1}\,\makebox[\rqOnsetDelW][r]{[#2]}}%
+  % Not reached within the horizon: keep the absolute slot, drop the shift.
+  \newcommand{\rqNoOnset}{%
+    \makebox[\rqOnsetAbsW][r]{--}\,\makebox[\rqOnsetDelW][r]{}}%
   \setlength{\arrayrulewidth}{0.35pt}%
   \setlength{\doublerulesep}{0.8pt}%
   \renewcommand{\arraystretch}{1.08}%
@@ -49,112 +55,130 @@
   % margin without an eyeballed constant.
   \newsavebox{\rqtabbox}%
   \newcommand{\rqtabular}{%
-  \begin{tabular}{|c|c|c||c|c|c||r||c|c|c|c|}
+  \begin{tabular}{|c|c||rr||rr|rr||r||rr|rr||rr|rr|}
     \hline\hline
-    \textbf{Device} &
-    \textbf{Condition} &
-    \makecell[c]{\textbf{Start}\\\textbf{level}} &
-    \makecell[c]{\textbf{Baseline}\\\textbf{(E/M)}} &
-    \makecell[c]{\textbf{Admission-skip}\\\textbf{onset (E/M)}} &
-    \makecell[c]{\textbf{Pacing-delay}\\\textbf{onset (E/M)}} &
-    \makecell[c]{\textbf{Slack P5}\\\textbf{(\%)}} &
-    \makecell[c]{\textbf{$M{+}S$ completed (\%)}\\\rqHead{\rqwMS}{@5}{@30}} &
-    \makecell[c]{\textbf{$M$ completed (\%)}\\\rqHead{\rqwM}{@5}{@30}} &
-    \makecell[c]{\textbf{Pacing activated (\%)}\\\rqHead{\rqwP}{@5}{@30}} &
-    \makecell[c]{\textbf{Pacing delay (ms)}\\\rqHead{\rqwD}{@5}{@30}} \\
-    \hline\hline
-    \multirow{14}{*}{\makecell[c]{S26\\Ultra}} &
-    \multirow{7}{*}{\makecell[c]{12MP\\normal}}
-      & Lv0 & --    & --    & --    & 30.0 &
-        \rqMS{100}{100} &
-        \rqM{100}{100} &
-        \rqP{0}{0} &
-        \rqD{--}{--} \\
-    \cline{3-11}
-      & & Lv1 & --    & --    & --    & 21.9 &
-        \rqMS{100}{100} &
-        \rqM{100}{100} &
-        \rqP{0}{0} &
-        \rqD{--}{--} \\
-    \cline{3-11}
-      & & Lv2 & 24/27 & 23/29 & 27/28 & 4.7  &
-        \rqMS{100}{88.9} &
-        \rqM{100}{90.0} &
-        \rqP{0}{9.2} &
-        \rqD{--}{182} \\
-    \cline{3-11}
-      & & Lv3 & 13/18 & 9/18  & 12/15 & 2.9  &
-        \rqMS{100}{57.8} &
-        \rqM{100}{61.5} &
-        \rqP{0}{30.3} &
-        \rqD{--}{372} \\
-    \cline{3-11}
-      & & Lv4 & 10/17 & 4/15  & 10/14 & 5.1  &
-        \rqMS{96.0}{47.0} &
-        \rqM{96.0}{47.0} &
-        \rqP{0}{33.4} &
-        \rqD{--}{386} \\
-    \cline{3-11}
-      & & Lv5 & 8/10  & 9/15  & 8/10  & 3.8  &
-        \rqMS{100}{55.6} &
-        \rqM{100}{55.6} &
-        \rqP{0}{44.8} &
-        \rqD{--}{451} \\
-    \cline{3-11}
-      & & Lv6 & 7/10  & 9/16  & 8/9   & 2.7  &
-        \rqMS{100}{47.0} &
-        \rqM{100}{48.2} &
-        \rqP{0}{41.7} &
-        \rqD{--}{519} \\
-    \cline{2-11}
+    % The four-row header makes the controller-off/full-controller boundary
+    % explicit while retaining the metric families beneath it.
+    \multirow{4}{*}[-1.8ex]{\textbf{Condition}} &
+    \multirow{4}{*}[-1.8ex]{\makecell[c]{\textbf{Start}\\\textbf{level}}} &
+    \multicolumn{2}{c||}{\makecell[c]{\textbf{Controller-off}\\\textbf{reference}}} &
+    \multicolumn{13}{c|}{\textbf{Full-controller behavior}} \\
+    \cline{3-17}
+    & &
+    \multicolumn{2}{c||}{\makecell[c]{\textbf{Failure point}\\\textbf{(shot index)}}} &
+    \multicolumn{4}{c||}{\makecell[c]{\textbf{Intervention onset}\\\textbf{(shot index)}}} &
+    \multicolumn{1}{c||}{\textbf{Deadline safety}} &
+    \multicolumn{4}{c||}{\textbf{Draft work completion}} &
+    \multicolumn{4}{c|}{\textbf{Pacing cost}} \\
+    \cline{3-17}
+    & &
+    \multicolumn{2}{c||}{\makecell[c]{\textbf{Baseline}\\\textbf{timeout}}} &
+    \multicolumn{2}{c|}{\makecell[c]{\textbf{Admission-skip}\\\textbf{onset}}} &
+    \multicolumn{2}{c||}{\makecell[c]{\textbf{Pacing-delay}\\\textbf{onset}}} &
+    \multirow{2}{*}[-0.6ex]{\makecell[c]{\textbf{Slack P5}\\
+      \textbf{(\%, @30)}}} &
+    \multicolumn{4}{c||}{\textbf{Draft work completion}} &
+    \multicolumn{4}{c|}{\textbf{Pacing cost}} \\
+    \cline{3-8}\cline{10-17}
+    & &
+    \multicolumn{1}{c}{\textbf{E}}  & \multicolumn{1}{c||}{\textbf{M}} &
+    \multicolumn{1}{c}{\textbf{E}}  & \multicolumn{1}{c|}{\textbf{M}} &
+    \multicolumn{1}{c}{\textbf{E}}  & \multicolumn{1}{c||}{\textbf{M}} &
     &
+    \multicolumn{2}{c|}{\makecell[c]{\textbf{$M{+}S$}\\\textbf{(\%)}}} &
+    \multicolumn{2}{c||}{\makecell[c]{\textbf{$M$}\\\textbf{(\%)}}} &
+    \multicolumn{2}{c|}{\makecell[c]{\textbf{Activated}\\\textbf{(\%)}}} &
+    \multicolumn{2}{c|}{\makecell[c]{\textbf{Delay}\\\textbf{(ms)}}} \\
+    \multicolumn{1}{c}{\textbf{@5}} & \multicolumn{1}{c|}{@30} &
+    \multicolumn{1}{c}{\textbf{@5}} & \multicolumn{1}{c||}{@30} &
+    \multicolumn{1}{c}{\textbf{@5}} & \multicolumn{1}{c|}{@30} &
+    \multicolumn{1}{c}{\textbf{@5}} & \multicolumn{1}{c|}{@30} \\
+    \hline\hline
+    \multirow{7}{*}{\makecell[c]{12MP\\normal}}
+      & Lv0 & -- & -- & \rqNoOnset & \rqNoOnset & \rqNoOnset & \rqNoOnset & 30.0
+        & \textbf{100} & 100 & \textbf{100} & 100
+        & \textbf{0} & 0 & \textbf{--} & -- \\
+    \cline{2-17}
+      & Lv1 & -- & -- & \rqNoOnset & \rqNoOnset & \rqNoOnset & \rqNoOnset & 21.9
+        & \textbf{100} & 100 & \textbf{100} & 100
+        & \textbf{0} & 0 & \textbf{--} & -- \\
+    \cline{2-17}
+      & Lv2 & 24 & 27 & \rqOnset{23}{-1} & \rqOnset{29}{+2}
+                      & \rqOnset{27}{+3} & \rqOnset{28}{+1} & 4.7
+        & \textbf{100} & 88.9 & \textbf{100} & 90.0
+        & \textbf{0} & 9.2 & \textbf{--} & 182 \\
+    \cline{2-17}
+      & Lv3 & 13 & 18 & \rqOnset{9}{-4}  & \rqOnset{18}{0}
+                      & \rqOnset{12}{-1} & \rqOnset{15}{-3} & 2.9
+        & \textbf{100} & 57.8 & \textbf{100} & 61.5
+        & \textbf{0} & 30.3 & \textbf{--} & 372 \\
+    \cline{2-17}
+      & Lv4 & 10 & 17 & \rqOnset{4}{-6}  & \rqOnset{15}{-2}
+                      & \rqOnset{10}{0}  & \rqOnset{14}{-3} & 5.1
+        & \textbf{96.0} & 47.0 & \textbf{96.0} & 47.0
+        & \textbf{0} & 33.4 & \textbf{--} & 386 \\
+    \cline{2-17}
+      & Lv5 & 8  & 10 & \rqOnset{9}{+1}  & \rqOnset{15}{+5}
+                      & \rqOnset{8}{0}   & \rqOnset{10}{0}  & 3.8
+        & \textbf{100} & 55.6 & \textbf{100} & 55.6
+        & \textbf{0} & 44.8 & \textbf{--} & 451 \\
+    \cline{2-17}
+      & Lv6 & 7  & 10 & \rqOnset{9}{+2}  & \rqOnset{16}{+6}
+                      & \rqOnset{8}{+1}  & \rqOnset{9}{-1}  & 2.7
+        & \textbf{100} & 47.0 & \textbf{100} & 48.2
+        & \textbf{0} & 41.7 & \textbf{--} & 519 \\
+    \cline{1-17}
     \multirow{7}{*}{\makecell[c]{24MP\\memory\\pressure}}
-      & Lv0 & 26/30 & 26/30 & 25/26 & 3.7 &
-        \rqMS{100}{93.3} &
-        \rqM{100}{93.3} &
-        \rqP{0}{11.5} &
-        \rqD{--}{243} \\
-    \cline{3-11}
-      & & Lv1 & 19/22 & 20/20 & 22/22 & 5.1 &
-        \rqMS{100}{81.7} &
-        \rqM{100}{81.7} &
-        \rqP{0}{24.1} &
-        \rqD{--}{310} \\
-    \cline{3-11}
-      & & Lv2 & 14/21 & 15/18 & 15/18 & 4.4 &
-        \rqMS{100}{57.8} &
-        \rqM{100}{58.9} &
-        \rqP{0}{29.9} &
-        \rqD{--}{269} \\
-    \cline{3-11}
-      & & Lv3 & 7/10  & 7/10  & 7/11  & 6.1 &
-        \rqMS{100}{31.7} &
-        \rqM{100}{31.7} &
-        \rqP{0}{19.2} &
-        \rqD{--}{446} \\
-    \cline{3-11}
-      & & Lv4 & 5/9   & 3/12  & 7/8   & 6.3 &
-        \rqMS{88.0}{45.0} &
-        \rqM{88.0}{45.3} &
-        \rqP{0}{18.3} &
-        \rqD{--}{259} \\
-    \cline{3-11}
-      & & Lv5 & 4/8   & 5/10  & 7/11  & 8.2 &
-        \rqMS{96.0}{32.0} &
-        \rqM{96.0}{32.0} &
-        \rqP{0}{19.3} &
-        \rqD{--}{396} \\
-    \cline{3-11}
-      & & Lv6 & 4/8   & 4/10  & 7/11  & 7.0 &
-        \rqMS{90.0}{40.8} &
-        \rqM{90.0}{40.8} &
-        \rqP{0}{27.6} &
-        \rqD{--}{369} \\
+      & Lv0 & 26 & 30 & \rqOnset{26}{0}  & \rqOnset{30}{0}
+                      & \rqOnset{25}{-1} & \rqOnset{26}{-4} & 3.7
+        & \textbf{100} & 93.3 & \textbf{100} & 93.3
+        & \textbf{0} & 11.5 & \textbf{--} & 243 \\
+    \cline{2-17}
+      & Lv1 & 19 & 22 & \rqOnset{20}{+1} & \rqOnset{20}{-2}
+                      & \rqOnset{22}{+3} & \rqOnset{22}{0}  & 5.1
+        & \textbf{100} & 81.7 & \textbf{100} & 81.7
+        & \textbf{0} & 24.1 & \textbf{--} & 310 \\
+    \cline{2-17}
+      & Lv2 & 14 & 21 & \rqOnset{15}{+1} & \rqOnset{18}{-3}
+                      & \rqOnset{15}{+1} & \rqOnset{18}{-3} & 4.4
+        & \textbf{100} & 57.8 & \textbf{100} & 58.9
+        & \textbf{0} & 29.9 & \textbf{--} & 269 \\
+    \cline{2-17}
+      & Lv3 & 7  & 10 & \rqOnset{7}{0}   & \rqOnset{10}{0}
+                      & \rqOnset{7}{0}   & \rqOnset{11}{+1} & 6.1
+        & \textbf{100} & 31.7 & \textbf{100} & 31.7
+        & \textbf{0} & 19.2 & \textbf{--} & 446 \\
+    \cline{2-17}
+      & Lv4 & 5  & 9  & \rqOnset{3}{-2}  & \rqOnset{12}{+3}
+                      & \rqOnset{7}{+2}  & \rqOnset{8}{-1}  & 6.3
+        & \textbf{88.0} & 45.0 & \textbf{88.0} & 45.3
+        & \textbf{0} & 18.3 & \textbf{--} & 259 \\
+    \cline{2-17}
+      & Lv5 & 4  & 8  & \rqOnset{5}{+1}  & \rqOnset{10}{+2}
+                      & \rqOnset{7}{+3}  & \rqOnset{11}{+3} & 8.2
+        & \textbf{96.0} & 32.0 & \textbf{96.0} & 32.0
+        & \textbf{0} & 19.3 & \textbf{--} & 396 \\
+    \cline{2-17}
+      & Lv6 & 4  & 8  & \rqOnset{4}{0}   & \rqOnset{10}{+2}
+                      & \rqOnset{7}{+3}  & \rqOnset{11}{+3} & 7.0
+        & \textbf{90.0} & 40.8 & \textbf{90.0} & 40.8
+        & \textbf{0} & 27.6 & \textbf{--} & 369 \\
     \hline\hline
   \end{tabular}}%
-  \fittabcolsep{\rqtabbox}{\rqtabular}{\textwidth}{22}%
+  \fittabcolsep{\rqtabbox}{\rqtabular}{\textwidth}{34}%
   \rqtabular
   }
 
-  \par\vspace{3pt}
+  \par\vspace{2pt}
+  {\scriptsize Bold @5 values characterize the first five shots as a
+  short-burst usability proxy; @30 values characterize the full burst.
+  The controller-off Baseline columns are references; all columns to their
+  right report the full controller.  Across the included full-controller runs,
+  no Capture Timeout occurred within the 30-shot horizon; Slack P5 reports the
+  remaining lower-tail deadline margin.  Onset cells report the absolute shot
+  index followed by its bracketed shift from the corresponding Baseline timeout
+  column.  Negative and positive
+  shifts denote earlier and later action, respectively.
+  -- indicates that the event was not observed within the corresponding
+  horizon.  Pacing delay is the median over positive applied delays.}
 \end{table*}

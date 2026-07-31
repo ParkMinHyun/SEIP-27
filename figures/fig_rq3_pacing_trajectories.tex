@@ -4,9 +4,10 @@
 % policy CSVs add no curve until their factual traces arrive.
 %
 % Baseline naming follows the implementation
-% (PolicyType): OURS, THERMAL_LUT,
-% CODEL_INSPIRED.  The earlier Queue-EWMA, "Static LUT", and "Queue dynamic"
-% labels are retired.
+% (CaptureAvailableDelayPolicyFactory.PolicyType): NO_PACING, OURS,
+% THERMAL_LUT, CODEL.  The earlier Queue-EWMA, "Static LUT", and "Queue
+% dynamic" labels are retired.  The CSV stems stay no_pacing / ours /
+% thermal_lut / codel_inspired.
 %
 % Each policy CSV contains one row per shot with realized backlog, queue depth,
 % applied delay, pacing activation, and cumulative delay.  Panel (a) retains
@@ -185,6 +186,11 @@
         group size=4 by 1,
         horizontal sep=0.042\textwidth,
       },
+      % scale only axis makes width/height describe the plot box itself rather
+      % than the box plus its tick labels, so all four boxes are identical and
+      % the group separation between them is uniform.  Panel (d) would
+      % otherwise be squeezed by its wider "5.5" tick labels.
+      scale only axis=true,
       width=0.215\textwidth,
       height=0.190\textwidth,
       tick label style={font=\tiny},
@@ -200,9 +206,13 @@
       enlarge y limits=0.08,
     ]
 
+      % The CSVs store backlog in milliseconds.  Convert on the axis rather than
+      % in the data so panels (a), (c), and (d) all read in seconds; (a) and (d)
+      % show the same quantity under two aggregations and must share a unit.
       \nextgroupplot[
-        title={(a) Backlog (ms)},
+        title={(a) Backlog (s)},
         xlabel={Shot index},
+        y filter/.expression={y/1000},
         \rqThreeShotAxis,
         \rqThreeBacklogAxis,
         \rqthreeultrapendingaxis
@@ -227,15 +237,12 @@
       ]
       \rqthreeultracumulativedata
 
-      % Panel (d) is the only panel with a y label and a different x quantity,
-      % so it gets extra separation; without it the rotated label is typeset
-      % on top of panel (c).
+      % Every panel names its y quantity in the title and its x quantity in the
+      % x label, so panel (d) carries no rotated y label either and needs no
+      % extra separation; the group's horizontal sep applies uniformly.
       \nextgroupplot[
-        xshift=0.036\textwidth,
-        title={(d) Delay--tail trade-off},
+        title={(d) Run backlog P95 (s)},
         xlabel={Total delay (s)},
-        ylabel={Run backlog P95 (s)},
-        ylabel style={font=\scriptsize},
         \rqThreeTradeoffAxis,
         \rqthreeultrapendingtradeoffaxis
       ]
