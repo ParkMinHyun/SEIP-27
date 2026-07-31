@@ -1,0 +1,237 @@
+% RQ3: Per-shot policy trajectories and backlog-cost comparison for two devices.
+%
+% S26 Ultra currently renders the collected No-pacing and Ours series; empty
+% policy CSVs add no curve until their factual traces arrive.  S26 remains Data
+% pending.
+%
+% Each policy CSV contains one row per shot and the median, P10, and P90 of
+% realized backlog, queue depth, and applied delay.  Each backlog-cost CSV may
+% contain multiple parameter settings per policy to draw a frontier.
+
+\begin{figure*}[t]
+  \centering
+  \newif\ifrqthreeultrahasdata
+  \newif\ifrqthreesixhasdata
+  \providecommand{\rqThreeUltraDataSwitch}{\rqthreeultrahasdatatrue}
+  \providecommand{\rqThreeStandardDataSwitch}{\rqthreesixhasdatafalse}
+  \providecommand{\rqThreeDataDir}{data/rq3}
+  \providecommand{\rqThreeUltraDataDir}{\rqThreeDataDir/s26_ultra}
+  \providecommand{\rqThreeStandardDataDir}{\rqThreeDataDir/s26}
+  \rqThreeUltraDataSwitch
+  \rqThreeStandardDataSwitch
+
+  % Apply the same explicit bounds to both device rows after data collection.
+  \providecommand{\rqThreeBacklogAxis}{ymin=0}
+  \providecommand{\rqThreeQueueAxis}{ymin=0}
+  \providecommand{\rqThreeDelayAxis}{ymin=0}
+  \providecommand{\rqThreeFrontierAxis}{xmin=0,ymin=0}
+
+  \tikzset{
+    rq3 no pacing/.style={gray, densely dotted, line width=0.8pt},
+    rq3 static/.style={blue!70!black, dashed, line width=0.8pt},
+    rq3 dynamic/.style={red!75!black, dash dot, line width=0.8pt},
+    rq3 ours/.style={black, solid, line width=1.15pt},
+  }
+
+  \newcommand{\rqthreepending}{%
+    \node[font=\scriptsize,text=gray] at (rel axis cs:0.5,0.5)
+      {Data pending};}
+
+  % #1: device data directory; #2: metric column prefix.
+  \newcommand{\rqthreepolicycurves}[2]{%
+    \addplot[rq3 no pacing,forget plot]
+      table[x=shot,y=#2_median,col sep=comma]
+      {#1/no_pacing.csv};
+    \addplot[rq3 static,forget plot]
+      table[x=shot,y=#2_median,col sep=comma]
+      {#1/static_lut.csv};
+    \addplot[rq3 dynamic,forget plot]
+      table[x=shot,y=#2_median,col sep=comma]
+      {#1/queue_dynamic.csv};
+    \addplot[rq3 ours,forget plot]
+      table[x=shot,y=#2_median,col sep=comma]
+      {#1/ours.csv};
+  }
+
+  % #1: device data directory.
+  \newcommand{\rqthreefrontiercurves}[1]{%
+    \addplot[rq3 no pacing,mark=o]
+      table[
+        x=no_pacing_delay_s,
+        y=no_pacing_max_backlog_s,
+        col sep=comma
+      ] {#1/backlog_cost.csv};
+    \addplot[rq3 static,mark=square]
+      table[
+        x=static_delay_s,
+        y=static_max_backlog_s,
+        col sep=comma
+      ] {#1/backlog_cost.csv};
+    \addplot[rq3 dynamic,mark=triangle]
+      table[
+        x=queue_dynamic_delay_s,
+        y=queue_dynamic_max_backlog_s,
+        col sep=comma
+      ] {#1/backlog_cost.csv};
+    \addplot[rq3 ours,mark=*]
+      table[
+        x=ours_delay_s,
+        y=ours_max_backlog_s,
+        col sep=comma
+      ] {#1/backlog_cost.csv};}
+
+  % Keep conditionals outside pgfplots axis bodies: \addplot scans its input,
+  % so a conditional spanning a plot command can be both slow and fragile.
+  \ifrqthreeultrahasdata
+    \newcommand{\rqthreeultrapendingaxis}{}
+    \newcommand{\rqthreeultrapendingfrontieraxis}{}
+    \newcommand{\rqthreeultrapaneldata}[1]{%
+      \rqthreepolicycurves{\rqThreeUltraDataDir}{#1}}
+    \newcommand{\rqthreeultrafrontierdata}{%
+      \rqthreefrontiercurves{\rqThreeUltraDataDir}}
+  \else
+    \newcommand{\rqthreeultrapendingaxis}{%
+      ymin=0,ymax=1,yticklabels=\empty}
+    \newcommand{\rqthreeultrapendingfrontieraxis}{%
+      xmax=1,ymin=0,ymax=1,xticklabels=\empty,yticklabels=\empty}
+    \newcommand{\rqthreeultrapaneldata}[1]{\rqthreepending}
+    \newcommand{\rqthreeultrafrontierdata}{\rqthreepending}
+  \fi
+
+  \ifrqthreesixhasdata
+    \newcommand{\rqthreesixpendingaxis}{}
+    \newcommand{\rqthreesixpendingfrontieraxis}{}
+    \newcommand{\rqthreesixpaneldata}[1]{%
+      \rqthreepolicycurves{\rqThreeStandardDataDir}{#1}}
+    \newcommand{\rqthreesixfrontierdata}{%
+      \rqthreefrontiercurves{\rqThreeStandardDataDir}}
+  \else
+    \newcommand{\rqthreesixpendingaxis}{%
+      ymin=0,ymax=1,yticklabels=\empty}
+    \newcommand{\rqthreesixpendingfrontieraxis}{%
+      xmax=1,ymin=0,ymax=1,xticklabels=\empty,yticklabels=\empty}
+    \newcommand{\rqthreesixpaneldata}[1]{\rqthreepending}
+    \newcommand{\rqthreesixfrontierdata}{\rqthreepending}
+  \fi
+
+  \newsavebox{\rqthreefigurebox}
+  \begin{lrbox}{\rqthreefigurebox}
+  \begin{tikzpicture}
+    \begin{groupplot}[
+      group style={
+        group size=4 by 2,
+        horizontal sep=0.024\textwidth,
+        vertical sep=0.060\textwidth,
+      },
+      width=0.215\textwidth,
+      height=0.190\textwidth,
+      xmin=1,
+      xmax=30,
+      xtick={1,10,20,30},
+      tick label style={font=\tiny},
+      label style={font=\scriptsize},
+      title style={font=\scriptsize},
+      grid=major,
+      major grid style={gray!20,line width=0.2pt},
+      axis line style={line width=0.35pt},
+      tick style={line width=0.35pt},
+      unbounded coords=discard,
+      enlarge y limits=0.08,
+    ]
+
+      \nextgroupplot[
+        title={(a) Backlog (ms)},
+        xticklabels=\empty,
+        \rqThreeBacklogAxis,
+        \rqthreeultrapendingaxis
+      ]
+      \rqthreeultrapaneldata{backlog}
+
+      \nextgroupplot[
+        title={(b) Queue depth},
+        xticklabels=\empty,
+        \rqThreeQueueAxis,
+        \rqthreeultrapendingaxis
+      ]
+      \rqthreeultrapaneldata{queue_depth}
+
+      \nextgroupplot[
+        title={(c) Pacing delay (ms)},
+        xticklabels=\empty,
+        \rqThreeDelayAxis,
+        \rqthreeultrapendingaxis
+      ]
+      \rqthreeultrapaneldata{delay}
+
+      \nextgroupplot[
+        title={(d) Backlog vs.\ delay},
+        \rqThreeFrontierAxis,
+        \rqthreeultrapendingfrontieraxis
+      ]
+      \rqthreeultrafrontierdata
+
+      \nextgroupplot[
+        title={(e) Backlog (ms)},
+        xlabel={Shot index},
+        \rqThreeBacklogAxis,
+        \rqthreesixpendingaxis
+      ]
+      \rqthreesixpaneldata{backlog}
+
+      \nextgroupplot[
+        title={(f) Queue depth},
+        xlabel={Shot index},
+        \rqThreeQueueAxis,
+        \rqthreesixpendingaxis
+      ]
+      \rqthreesixpaneldata{queue_depth}
+
+      \nextgroupplot[
+        title={(g) Pacing delay (ms)},
+        xlabel={Shot index},
+        \rqThreeDelayAxis,
+        \rqthreesixpendingaxis
+      ]
+      \rqthreesixpaneldata{delay}
+
+      \nextgroupplot[
+        title={(h) Backlog vs.\ delay},
+        xlabel={Cumulative delay (s)},
+        \rqThreeFrontierAxis,
+        \rqthreesixpendingfrontieraxis
+      ]
+      \rqthreesixfrontierdata
+    \end{groupplot}
+
+    \node[font=\scriptsize\bfseries,anchor=east,align=center]
+      at ([xshift=-1.2ex]group c1r1.west) {S26\\Ultra};
+    \node[font=\scriptsize\bfseries,anchor=east]
+      at ([xshift=-1.2ex]group c1r2.west) {S26};
+
+    % One shared policy legend applies to both device rows.
+    \coordinate (rqthreelegendpos) at
+      ($(group c1r2.south)!0.5!(group c4r2.south)$);
+    \matrix[
+      matrix of nodes,
+      nodes={font=\scriptsize,anchor=west},
+      column sep=2pt,
+      row sep=0pt,
+      anchor=north,
+    ] at ([yshift=-4.0ex]rqthreelegendpos) {
+      \draw[rq3 no pacing] (0,0)--(0.38,0); & No pacing &
+      \draw[rq3 static] (0,0)--(0.38,0); & Static LUT &
+      \draw[rq3 dynamic] (0,0)--(0.38,0); & Queue dynamic &
+      \draw[rq3 ours] (0,0)--(0.38,0); & Ours \\
+    };
+  \end{tikzpicture}
+  \end{lrbox}
+  \resizebox{\textwidth}{!}{\usebox{\rqthreefigurebox}}
+
+  \caption{RQ3 pacing behavior on S26 Ultra and S26 under 12MP normal at
+  starting thermal level 3.  Rows separate devices; columns report per-shot
+  median backlog, queue depth, pacing delay, and the backlog--delay comparison.
+  Available factual policies are plotted; uncollected policies remain absent.
+  The current S26 Ultra No-pacing and Ours curves are provisional because their
+  admitted workloads were not matched.}
+  \label{fig:rq3_pacing_trajectories}
+\end{figure*}

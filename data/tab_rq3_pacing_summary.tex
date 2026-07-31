@@ -1,0 +1,81 @@
+% RQ3: Device-stratified pacing intervention cost and backlog control.
+% S26 Ultra No-pacing was aggregated from the starting-Lv3 runs in
+% 48U_metrics_12MP_normal_0729_AdmitOnly_{1,2}.xlsx: nine complete runs, 261
+% eligible transitions, complete observation timestamps/real traces, and no
+% exact cross-workbook duplicates.  Workbook 2 run 6 terminated at shot 13 with
+% Capture Timeout/watchdog and is retained by RQ1 but excluded from the RQ3
+% controlled 30-shot protocol.  The row is comparable only to future pacing
+% policies that reproduce the same admitted workload.
+% S26 Ultra Ours was aggregated from 48U_metrics_12MP_normal.xlsx: eight of
+% nine complete starting-Lv3 runs and 232 eligible transitions.  Run 11 was
+% excluded because its observation timestamps and real trace were incomplete.
+% The unrounded pooled results were Paced=27.5862 percent, d50=515 ms,
+% d95=1115.15 ms, median run total delay=4.6095 s, Bmax=5.973 s, and Qmax=9.
+% This is provisional rather than a controlled policy comparison: median
+% run-level Bokeh/Filter admit rates were 33.3/40.0 percent for No-pacing and
+% 56.7/100.0 percent for Ours, so the admitted workload was not matched.
+%
+% Fix the admitted workload across policies so the comparison isolates pacing.
+% Reconstruct real backlog from measured Draft start/end timestamps rather than
+% substituting the controller's own estimate.
+
+\begin{table}[t]
+  \centering
+  \setlength{\abovecaptionskip}{2pt}%
+  \setlength{\belowcaptionskip}{3pt}%
+  \caption{RQ3 pacing cost and backlog control under 12MP normal at starting
+  overheat level 3.}
+  \label{tab:rq3_pacing_summary}
+
+  {\scriptsize
+  \renewcommand{\arraystretch}{1.06}%
+  \setlength{\arrayrulewidth}{0.35pt}%
+  \setlength{\doublerulesep}{0.8pt}%
+  \newcommand{\rqthreeTBD}{\textit{TBD}}%
+  \newsavebox{\rqthreetabbox}%
+  \newcommand{\rqthreetabular}{%
+  \begin{tabular}{|c|l||c|c|c||c|c|}
+    \hline\hline
+    \textbf{Device} &
+    \textbf{Policy} &
+    \makecell[c]{\textbf{Paced}\\\textbf{(\%)}} &
+    \makecell[c]{\(\boldsymbol{d_{50}/d_{95}}\)\\\textbf{(ms)}} &
+    \makecell[c]{\(\boldsymbol{\sum d}\)\\\textbf{(s)}} &
+    \makecell[c]{\(\boldsymbol{B_{\max}}\)\\\textbf{(s)}} &
+    \makecell[c]{\(\boldsymbol{Q_{\max}}\)} \\
+    \hline\hline
+    \multirow{4}{*}{\makecell[c]{S26\\Ultra}}
+      & No pacing     & 0 & 0/0 & 0 & 6.204 & 13 \\
+    \cline{2-7}
+      & Static LUT    & \rqthreeTBD & \rqthreeTBD & \rqthreeTBD & \rqthreeTBD & \rqthreeTBD \\
+    \cline{2-7}
+      & Queue dynamic & \rqthreeTBD & \rqthreeTBD & \rqthreeTBD & \rqthreeTBD & \rqthreeTBD \\
+    \cline{2-7}
+      & \textbf{Ours} & \textbf{27.6} & \textbf{515/1115} &
+      \textbf{4.610} & \textbf{5.973} & \textbf{9} \\
+    \hline
+    \multirow{4}{*}{S26}
+      & No pacing     & 0 & 0 & 0 & \rqthreeTBD & \rqthreeTBD \\
+    \cline{2-7}
+      & Static LUT    & \rqthreeTBD & \rqthreeTBD & \rqthreeTBD & \rqthreeTBD & \rqthreeTBD \\
+    \cline{2-7}
+      & Queue dynamic & \rqthreeTBD & \rqthreeTBD & \rqthreeTBD & \rqthreeTBD & \rqthreeTBD \\
+    \cline{2-7}
+      & \textbf{Ours} & \textbf{\rqthreeTBD} & \textbf{\rqthreeTBD} &
+      \textbf{\rqthreeTBD} & \textbf{\rqthreeTBD} & \textbf{\rqthreeTBD} \\
+    \hline\hline
+  \end{tabular}}%
+  \fittabcolsep{\rqthreetabbox}{\rqthreetabular}{\columnwidth}{14}%
+  \rqthreetabular
+  }
+
+  \par\vspace{2pt}
+  \begin{minipage}{0.97\columnwidth}
+    \scriptsize\emph{Notes:}
+    Each 30-shot session starts at thermal level 3.  A controlled comparison
+    requires identical admitted workload within each device; the current S26
+    Ultra No-pacing and Ours runs do not satisfy this requirement and are
+    therefore provisional.
+    \(d\), \(B\), and \(Q\) denote applied delay, real backlog, and queue depth.
+  \end{minipage}
+\end{table}
