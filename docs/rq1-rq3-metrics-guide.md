@@ -339,21 +339,33 @@ are not inferential estimates over independent runs.
 
 ### 5.4 RQ2 figure metrics: unsafe-admit spike anatomy
 
-`figures/fig_rq2_unsafe_spike.tex` characterizes every decision in the
+`figures/fig_rq2_unsafe_spike_anatomy.tex` characterizes every decision in the
 unsafe-admit cell of the confusion matrix: factually unsafe, model-admitted,
 drawn from the included runs only. It answers two questions per decision — how
-far the measured cost exceeded what recent behavior predicted, and which
-`PostExecutionMetrics` quantity accounts for that excess.
+far the measured cost exceeded the preceding capture and the model's own
+bound, and which `PostExecutionMetrics` quantity accounts for that excess.
 
-#### Recent-safe baseline
+#### Preceding-capture baseline
 
-For each unsafe admit, take the selected decisions from the same workbook,
-`runId`, and optional-work group that are model-admitted, factually feasible,
-and have a smaller `runShotIndex`; keep the last three by `runShotIndex`. Every
-baseline value is the unweighted mean over those three decisions. Holding the
-run and group fixed also holds the device, resolution, and memory condition
-fixed, so the comparison isolates within-burst variation. Do not substitute a
-pooled or global average.
+For each unsafe admit, take the selected decision from the same workbook,
+`runId`, and optional-work group with the largest `runShotIndex` below the
+event's — that is, the capture immediately before it. Holding the run and group
+fixed also holds the device, resolution, and memory condition fixed, so the
+comparison isolates within-burst variation. Do not substitute a pooled or
+global average.
+
+The single preceding capture is the right baseline because the question the
+figure asks is what the controller could have known: the predicted bound is
+formed from what it had just observed, so averaging three earlier decisions
+smooths away exactly the local state the model was reacting to. It also makes
+panel (b) a comparison of two real captures rather than of one capture against
+a synthetic mean, which keeps the decomposition below exactly equal to a
+measured wall-time difference.
+
+Record whether that preceding capture was itself a safe admit. If it was not,
+the baseline carries an earlier overrun and the growth factor understates the
+spike; say so rather than silently skipping to an earlier safe capture. In the
+current workbooks all eight preceding captures are safe admits.
 
 #### Node suffix
 
@@ -369,48 +381,70 @@ Plot three x values per decision, each divided by that decision's own
 `beforeBudgetMs`:
 
 ```text
-baseline = mean(C) over the three recent-safe decisions
+baseline = C of the preceding capture
 bound    = beforeSequencePredictedUpperBoundMs
 event    = C
 ```
 
+Draw the bound marker after the baseline marker. Where the two nearly coincide
+the bound must stay visible, because that coincidence is the figure's sharpest
+evidence that the model had no warning.
+
 with \(C\) as defined in section 5.2. Normalize by \(B\), not by the deadline
 \(D\): this places the admission criterion at exactly 1.0 and keeps the
 internal deadline constant out of the figure. The annotated growth factor is
-`event C / baseline mean C`.
+`event C / preceding-capture C`.
 
-#### Panel (b): decomposition of the increase
+#### Panels (b) and (c): the two measured quantities behind the latency
 
-`cpuUtilizationRatio` is recorded as `cpuTimeMs / (wallTimeMs * cores)`, so
-over the node suffix
+Panel (a) shows that the remaining sequence took longer. Panels (b) and (c)
+answer why by plotting the two measured quantities whose quotient is that
+latency, each before and after, using the same previous/this-capture markers as
+panel (a).
 
-```text
-cpu  = sum(cpuTimeMs)
-wall = sum(wallTimeMs)
-util = cpu / (wall * cores)
-wall = cpu / (util * cores)      identically
-```
-
-Recover the core count from any node row with a nonzero ratio,
-`cores = round(cpuTimeMs / (wallTimeMs * cpuUtilizationRatio))`; the S26 Ultra
-workbooks give 8. Writing `b` for the recent-safe baseline and `e` for the
-event, the latency increase splits additively and exactly:
+Over the node suffix:
 
 ```text
-cpuTerm  = (cpu_e - cpu_b) / (util_b * cores)
-utilTerm = cpu_e / cores * (1 / util_e - 1 / util_b)
-
-cpuTerm + utilTerm = wall_e - wall_b
+cpu   = sum(cpuTimeMs)            panel (b): how much CPU work it needed
+wall  = sum(wallTimeMs)
+cores = cpu / wall                panel (c): how many cores served it
+wall  = cpu / cores               identically
 ```
 
-or equivalently, in multiplicative form,
-`wall_e / wall_b = (cpu_e / cpu_b) / (util_e / util_b)`. `cpuTerm` is the part
-of the increase attributable to more CPU time being consumed at the baseline
-service rate; `utilTerm` is the part attributable to the process obtaining a
-smaller share of the cores at the event's CPU demand. `utilTerm` is negative
-when utilization improved; the figure draws those segments as an open dashed
-box running back from the bar end, so every bar still terminates at the
-measured total.
+`cores` is average busy cores: CPU time consumed per unit of wall time. Below
+1.0 the remaining sequence progressed no faster than a single-threaded
+execution, so mark 1.0 on the axis. Node wall time covers 97.5 to 99.0 percent
+of the panel (a) latency in the current workbooks, so the two panels account
+for essentially all of the increase; report that coverage whenever the
+workbooks change.
+
+**Plot the measured quantities, not a decomposition of the time difference.**
+An earlier version of this figure plotted the exact additive split
+
+```text
+cpuTerm  = (cpu_e - cpu_p) / cores_p
+coreTerm = cpu_e * (1 / cores_e - 1 / cores_p)
+
+cpuTerm + coreTerm = wall_e - wall_p
+```
+
+as a stacked bar in milliseconds. The identity is correct and the numbers are
+worth keeping in the figure's comment header for the prose, but "the time added
+by getting a smaller share of the cores" is a counterfactual construct, not
+something the trace recorded, and readers stall on it. CPU time went from
+1,687 ms to 2,379 ms and the cores serving it went from 1.96 to 1.18 needs no
+such explanation.
+
+This formulation needs no machine core count. `cpuUtilizationRatio` is recorded
+as `cpuTimeMs / (wallTimeMs * cores)`, so the physical core count only rescales
+`cores` uniformly; recover it as
+`round(cpuTimeMs / (wallTimeMs * cpuUtilizationRatio))` if a utilization
+percentage is wanted for the text. The S26 Ultra workbooks give 8.
+
+Take the suffix sums from the **per-node sheets**, not from `AdmissionReplay`.
+`AdmissionReplay` holds a row only for nodes that carried an admission
+decision, so summing it silently omits, for example, `DynamicFunctionNode` and
+the second `SecImageCodecNode` pass, and understates both `cpu` and `wall`.
 
 #### What `cpuTimeMs` covers
 
@@ -888,7 +922,7 @@ removed more work, and RQ3 would no longer isolate pacing ability.
 
 ### RQ2 figure
 
-- `figures/fig_rq2_unsafe_spike.tex` — self-contained; the per-decision
+- `figures/fig_rq2_unsafe_spike_anatomy.tex` — self-contained; the per-decision
   values and the decomposition inputs are recorded in its comment header, so no
   companion CSV is emitted. Regenerate it from section 5.4 whenever the RQ2
   workbook set changes.

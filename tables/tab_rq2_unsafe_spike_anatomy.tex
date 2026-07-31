@@ -1,0 +1,156 @@
+% RQ2: anatomy of the eight unsafe fresh-model admits.
+%
+% Single-column form.  figures/fig_rq2_unsafe_spike_anatomy.tex plots the same
+% eight decisions; use one or the other, not both.
+%
+% All three measurement blocks use the same shape, a Prev. -> Actual pair and
+% its ratio, so the row reads as one story across them.  The latency block adds
+% the model's predicted upper bound, which has no before/after form: it is
+% formed once, for the event capture only.
+%
+% Built per section 5.4 of docs/rq1-rq3-metrics-guide.md from the workbooks
+% below (ML implementation commit c871d3a); same decision set as the
+% unsafe-admit cell of Table~\ref{tab:rq2_admission_audit}.  Rows are ordered by
+% growth factor within each optional-work group, so the labels are positional.
+% Regenerate with data/rq2_spike_anatomy.mjs in the ML repository.
+%
+%   A = 48U_metrics_12MP_normal_0729_PacingOnly_1.xlsx   (12MP normal)
+%   B = 48U_metrics_24MP_memory_0729_PacingOnly_1.xlsx   (24MP memory)
+%   C = 48U_metrics_24MP_memory_0729_PacingOnly_2.xlsx   (24MP memory)
+%
+%   id  book run shot     B   Cprev      C      UB  growth  overrun
+%   M1    A   30   21  1516   877.0   2033   903.8   2.32      517
+%   M2    A   11    9  1308  1216.0   2367  1229.1   1.95     1059
+%   M3    A    9   26  1749  1221.0   2357  1222.5   1.93      608
+%   M4    A   31   29   746   596.0    777   682.8   1.30       31
+%   M5    C   18   20   844   747.0    855   765.1   1.14       11
+%   S1    C    6   11   975   611.0    979   915.0   1.60        4
+%   S2    B   29   14   653   501.0    713   593.0   1.42       60
+%   S3    C   18   20   472   415.0    483   467.7   1.16       11
+%
+% The baseline is the immediately preceding capture of the same run and the
+% same optional-work group.  In all eight cases it was itself a safe admit.
+%
+% Node wall time = CPU time / cores covers 97.5 to 99.0 percent of the latency
+% C in these workbooks, so the last four columns account for essentially all of
+% the increase.  Take both sums from the per-node sheets: AdmissionReplay holds
+% a row only for nodes that carried an admission decision.
+%
+% An equivalent additive split of the wall-time increase, for the prose:
+% cpuTerm = (cpu_e - cpu_p)/cores_p, coreTerm = cpu_e*(1/cores_e - 1/cores_p),
+% summing exactly to wall_e - wall_p.
+%   M1 +352/+798 = +1150   M5 +169/-64  = +105
+%   M2 +179/+970 = +1149   S1 +142/+228 = +370
+%   M3 +418/+709 = +1127   S2 +180/+26  = +206
+%   M4  +59/+115 =  +174   S3 +201/-134 =  +67
+%
+% Control signals recomputed against the same preceding capture.  Blocking GC
+% time was 0 ms for every baseline and every event, and overheat level and
+% thermal status were identical in all eight.  Run-queue wait and nonvoluntary
+% context switches moved in both directions:
+%   M1 rq 18->32  cs 108->119      M5 rq 94->70   cs 255->150
+%   M2 rq 59->88  cs 222->228      S1 rq 87->227  cs 311->463
+%   M3 rq 55->47  cs 196->131      S2 rq 23->87   cs  68->168
+%   M4 rq  5->2   cs  37->27       S3 rq 83->58   cs 224->141
+
+\begin{table}[t]
+  \centering
+  \setlength{\abovecaptionskip}{2pt}%
+  \setlength{\belowcaptionskip}{3pt}%
+  \caption{Anatomy of the eight unsafe admits the always-admit model would have
+  produced, each against the capture immediately before it.}
+  \label{tab:rq2_unsafe_spike_anatomy}
+
+  {\scriptsize
+  \renewcommand{\arraystretch}{1.06}%
+  \setlength{\arrayrulewidth}{0.35pt}%
+  \setlength{\doublerulesep}{0.8pt}%
+  % Compact before/after pair: the arrow keeps one measurement in one cell.
+  \newcommand{\rqtwoba}[2]{#1\,$\to$\,#2}%
+  \newsavebox{\rqtwoanatbox}%
+  \newcommand{\rqtwoanattabular}{%
+  \begin{tabular}{|c||c|c|c||c|c||c|c|}
+    \hline\hline
+    \multirow{2}{*}{\textbf{ID}} &
+    \multicolumn{3}{c||}{\textbf{Latency $/$ budget}} &
+    \multicolumn{2}{c||}{\textbf{CPU time (ms)}} &
+    \multicolumn{2}{c|}{\textbf{Busy cores}} \\
+    \cline{2-8}
+    & \textbf{Pred.} & \textbf{Prev.\,$\to$\,Actual} & \textbf{Ratio} &
+      \textbf{Prev.\,$\to$\,Actual} & \textbf{Ratio} &
+      \textbf{Prev.\,$\to$\,Actual} & \textbf{Ratio} \\
+    \hline\hline
+    M1 & 0.596 & \rqtwoba{0.578}{1.341} & $\times$2.32 &
+      \rqtwoba{1{,}687}{2{,}379} & $\times$1.41 &
+      \rqtwoba{1.96}{1.18} & $\times$0.60 \\
+    \hline
+    M2 & 0.940 & \rqtwoba{0.930}{1.810} & $\times$1.95 &
+      \rqtwoba{2{,}411}{2{,}775} & $\times$1.15 &
+      \rqtwoba{2.03}{1.19} & $\times$0.59 \\
+    \hline
+    M3 & 0.699 & \rqtwoba{0.698}{1.348} & $\times$1.93 &
+      \rqtwoba{2{,}472}{3{,}340} & $\times$1.35 &
+      \rqtwoba{2.08}{1.44} & $\times$0.69 \\
+    \hline
+    M4 & 0.915 & \rqtwoba{0.799}{1.042} & $\times$1.30 &
+      \rqtwoba{948}{1{,}043} & $\times$1.10 &
+      \rqtwoba{1.62}{1.37} & $\times$0.85 \\
+    \hline
+    M5 & 0.907 & \rqtwoba{0.885}{1.013} & $\times$1.14 &
+      \rqtwoba{849}{1{,}044} & $\times$1.23 &
+      \rqtwoba{1.16}{1.24} & $\times$1.08 \\
+    \hline\hline
+    S1 & 0.938 & \rqtwoba{0.627}{1.004} & $\times$1.60 &
+      \rqtwoba{863}{1{,}067} & $\times$1.24 &
+      \rqtwoba{1.44}{1.10} & $\times$0.76 \\
+    \hline
+    S2 & 0.908 & \rqtwoba{0.767}{1.092} & $\times$1.42 &
+      \rqtwoba{968}{1{,}324} & $\times$1.37 &
+      \rqtwoba{1.98}{1.91} & $\times$0.96 \\
+    \hline
+    S3 & 0.991 & \rqtwoba{0.879}{1.023} & $\times$1.16 &
+      \rqtwoba{375}{560} & $\times$1.49 &
+      \rqtwoba{0.92}{1.18} & $\times$1.28 \\
+    \hline\hline
+  \end{tabular}}%
+  \fittabcolsep{\rqtwoanatbox}{\rqtwoanattabular}{\columnwidth}{16}%
+  \rqtwoanattabular
+  }
+
+  \par\vspace{2pt}
+  \begin{minipage}{0.97\columnwidth}
+    \scriptsize\emph{Notes:}
+    M rows are Multi-frame and S rows Single-frame decisions, ordered by growth
+    within each group.  M1--M4 were captured under 12MP normal, and M5 and
+    S1--S3 under 24MP memory pressure.
+    Every column in the first block is a remaining-sequence cost divided by that
+    decision's own admission budget: \emph{Prev.}\ and \emph{Actual} are the
+    measured costs of the preceding capture and of the event itself, and
+    \emph{Pred.}\ is the \emph{upper bound} the model predicted for the event,
+    not its point estimate.  The model admits exactly when \emph{Pred.}\ does
+    not exceed \(1.0\), so every row here is an admit whose \emph{Actual} then
+    crossed \(1.0\) --- by as little as \(0.004\) for S1 and as much as
+    \(0.810\) for M2.
+    \emph{Prev.}\ is the capture immediately before the event in the same run
+    and group, itself a safe admit in all eight cases; for M2 and M3
+    \emph{Pred.}\ sits \(0.010\) and \(0.001\) from it, so the model's inputs
+    carried no warning before a jump of \(\times1.95\) and \(\times1.93\).
+    The last two blocks give the measured quantities whose quotient is that
+    latency: the CPU time the remaining node sequence consumed, and its
+    \emph{busy cores}, that CPU time divided by its wall time, which is how many
+    cores were working on it at once rather than how many the device has.  Node
+    wall time accounts for \(97.5\) to \(99.0\)\% of the latency, so the two
+    blocks explain essentially all of the increase.
+    The work grew moderately everywhere, whereas the three largest spikes lost
+    close to half their parallelism while M5 and S3 gained it and barely moved:
+    contention for the cores, not a larger workload, is what the model failed to
+    anticipate.
+    Overheat level, thermal status, and blocking GC time were identical to the
+    preceding capture throughout.
+    Costs are forced-execution: the audit build suppresses the per-node watchdog
+    so that admitted work can be measured to completion.  Under the production
+    watchdog, M1--M3, S1, and S3 would instead have been cut at their node's
+    budget, so their \emph{Actual} latency is what the admitted work cost, not
+    what a shipped build would have spent on it.
+  \end{minipage}
+\end{table}

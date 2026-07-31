@@ -3,47 +3,88 @@
 % Built per section 5.4 of docs/rq1-rq3-metrics-guide.md from the workbooks
 % below (ML implementation commit c871d3a); same decision set as the
 % unsafe-admit cell of Table~\ref{tab:rq2_admission_audit}.  Rows are ordered
-% by spike size within each optional-work group, so the labels are positional.
+% by growth factor within each optional-work group, so the labels are
+% positional.  Regenerate with data/rq2_spike_anatomy.mjs in the ML repository.
 %
 %   A = 48U_metrics_12MP_normal_0729_PacingOnly_1.xlsx
 %   B = 48U_metrics_24MP_memory_0729_PacingOnly_1.xlsx
 %   C = 48U_metrics_24MP_memory_0729_PacingOnly_2.xlsx
 %
-%   id  book  runId  shot     B     Cbar      C      UB   C/Cbar  overrun
-%   M1    A     30     21   1516    861.7   2033   903.8   2.36      517
-%   M2    A     11      9   1308   1123.7   2367  1229.1   2.11     1059
-%   M3    A      9     26   1749   1189.3   2357  1222.5   1.98      608
-%   M4    A     31     29    746    607.0    777   682.8   1.28       31
-%   M5    C     18     20    844    684.7    855   765.1   1.25       11
-%   S1    C      6     11    975    625.7    979   915.0   1.56        4
-%   S2    B     29     14    653    544.0    713   593.0   1.31       60
-%   S3    C     18     20    472    397.3    483   467.7   1.22       11
+% The baseline is the IMMEDIATELY PRECEDING capture of the same run and the
+% same optional-work group, not an average over three recent safe decisions.
+% The predicted bound is formed from what the controller had just observed, so
+% the fair question is whether the one shot before the spike gave any warning.
+% In all eight cases that preceding capture was itself a safe admit, so the
+% baseline is not contaminated by an earlier overrun.
 %
-% Panel (b) normalized factors.  Over the remaining node suffix, camera-process
-% CPU time is sum(cpuTimeMs), wall time is sum(wallTimeMs), and average busy
-% cores is CPU time / wall time.  Each event is divided by the unweighted mean
-% of the same quantity over its three recent-safe decisions.
-% Values, CPU-time factor / average-busy-cores factor:
-%   M1  1.443 / 0.602     M5  1.272 / 1.011
-%   M2  1.346 / 0.634     S1  1.055 / 0.669
-%   M3  1.501 / 0.750     S2  1.532 / 1.176
-%   M4  1.100 / 0.859     S3  1.261 / 1.031
-% The corresponding wall-time factor is CPU-time factor / busy-cores factor.
-% Blocking GC time was 0 ms in every baseline and every event; overheat level
-% and thermal status were identical to the recent-safe baseline in all eight.
+%   id  book run shot     B   Cprev      C      UB  growth  overrun
+%   M1    A   30   21  1516   877.0   2033   903.8   2.32      517
+%   M2    A   11    9  1308  1216.0   2367  1229.1   1.95     1059
+%   M3    A    9   26  1749  1221.0   2357  1222.5   1.93      608
+%   M4    A   31   29   746   596.0    777   682.8   1.30       31
+%   M5    C   18   20   844   747.0    855   765.1   1.14       11
+%   S1    C    6   11   975   611.0    979   915.0   1.60        4
+%   S2    B   29   14   653   501.0    713   593.0   1.42       60
+%   S3    C   18   20   472   415.0    483   467.7   1.16       11
+%
+% For M2 and M3 the predicted bound and the preceding capture's measured cost
+% differ by 0.010 and 0.001 of the budget, so the model's inputs carried no
+% warning at all before a roughly 2x jump.
+%
+% Panels (b) and (c) plot the two measured quantities whose quotient is the
+% latency in panel (a).  Over the node suffix, CPU work is sum(cpuTimeMs) and
+% the cores serving it is sum(cpuTimeMs) / sum(wallTimeMs), both read from the
+% per-node sheets rather than AdmissionReplay, which omits nodes that carry no
+% admission decision.  Node wall time then satisfies
+%
+%   wall = CPU work / cores
+%
+% identically, and covers 97.5 to 99.0 percent of the panel (a) latency C, so
+% the two panels account for essentially all of the increase.
+%
+%   id   cpu_p   cpu_e  factor   cores_p  cores_e  factor   wall_p  wall_e  factor
+%   M1    1687    2379   1.410      1.96     1.18   0.603      859    2009   2.339
+%   M2    2411    2775   1.151      2.03     1.19   0.585     1186    2335   1.969
+%   M3    2472    3340   1.351      2.08     1.44   0.694     1191    2318   1.946
+%   M4     948    1043   1.100      1.62     1.37   0.848      586     760   1.297
+%   M5     849    1044   1.230      1.16     1.24   1.076      734     839   1.143
+%   S1     863    1067   1.236      1.44     1.10   0.764      599     969   1.618
+%   S2     968    1324   1.368      1.98     1.91   0.962      489     695   1.421
+%   S3     375     560   1.493      0.92     1.18   1.282      407     474   1.165
+%
+% An equivalent additive split of wall_e - wall_p, kept for the prose and
+% deliberately not plotted because it reads as a derived quantity rather than a
+% measurement: cpuTerm = (cpu_e - cpu_p) / cores_p and
+% coreTerm = cpu_e * (1/cores_e - 1/cores_p), summing exactly to the increase.
+%   M1 +352/+798 = +1150   M5 +169/-64  = +105
+%   M2 +179/+970 = +1149   S1 +142/+228 = +370
+%   M3 +418/+709 = +1127   S2 +180/+26  = +206
+%   M4  +59/+115 =  +174   S3 +201/-134 =  +67
+%
+% Control signals recomputed against the same preceding capture.  Blocking GC
+% time was 0 ms for every baseline and every event, and overheat level and
+% thermal status were identical in all eight.  Run-queue wait and nonvoluntary
+% context switches moved in both directions:
+%   M1 rq 18->32  cs 108->119      M5 rq 94->70   cs 255->150
+%   M2 rq 59->88  cs 222->228      S1 rq 87->227  cs 311->463
+%   M3 rq 55->47  cs 196->131      S2 rq 23->87   cs  68->168
+%   M4 rq  5->2   cs  37->27       S3 rq 83->58   cs 224->141
 
 % Layout: one panel per row, each spanning the column, so the eight rows get
-% the full width instead of half of it.
+% the full width instead of a third of it.  All three panels share the same row
+% order and the same previous/this-capture grammar, so one key serves them all
+% and no legend box sits inside a plot.
 \begingroup
-\def\rqtwoReviewerAccounting{1}
 
 \begin{figure}[!t]
   \centering
-  % Styles and legend labels are defined before the picture so the panel
-  % options below can read them; each panel then draws its own key inside its
-  % axis.
     \tikzset{
       glabel/.style={font=\tiny,inner sep=1pt},
+      rqtwoprev/.style={mark=o,mark size=1.9pt,draw=black,fill=white,
+                        line width=0.5pt},
+      rqtwobound/.style={mark=|,mark size=2.6pt,draw=black!60,line width=0.7pt},
+      rqtwoevent/.style={mark=square*,mark size=1.8pt,draw=black,fill=black},
+      rqtwoarrow/.style={black!45,->,>=stealth,line width=0.6pt},
     }
     \pgfplotsset{
       spikepanel/.style={
@@ -62,69 +103,31 @@
         axis line style={line width=0.35pt},
         tick style={line width=0.35pt},
         clip=false,
-        legend cell align=left,
-      },
-    }
-    \pgfplotsset{
-      spikepanel/.append style={
         % Sized so one panel plus its labels fills \columnwidth; the
-        % \resizebox below then runs at a scale of about 1.0.
+        % \resizebox below then runs at a scale of about 0.9.
         width=1.105\columnwidth,
-        % 4.50cm over the 8.3-unit range gives a row pitch of about 15.5pt,
-        % roughly three times the tallest marker, so the rows read apart.
-        height=4.50cm,
+        height=3.15cm,
         tick label style={font=\tiny},
         yticklabel style={font=\tiny},
         label style={font=\tiny},
         % Panel tags sit above their panel, as in
-        % fig_rq3_pacing_trajectories: stacked vertically, a tag below panel
-        % (a) reads as if it belonged to panel (b).
+        % fig_rq3_pacing_trajectories: stacked vertically, a tag below one
+        % panel reads as if it belonged to the next.
         title style={font=\tiny},
         xlabel style={yshift=2pt},
-        % In-axis key: at full column width the Single-frame rows leave the
-        % right of that band empty in both panels.  Each panel sets its own
-        % anchor point, flush right and at y=1.925, the centre of the band
-        % between the multi-frame separator (3.5) and ymin (0.35).  Anchoring
-        % on east rather than south east centres the box there whatever its
-        % height, so the two keys balance despite holding three entries and
-        % two.  Only the bottom and left axis lines are drawn, so nothing
-        % collides with the right edge.
-        legend style={
-          font=\tiny,
-          draw=black!25,
-          fill=white,
-          line width=0.2pt,
-          inner sep=1pt,
-          row sep=-1pt,
-          legend columns=1,
-          anchor=east,
-        },
       },
     }
-    \ifdefined\rqtwoReviewerAccounting
-      \def\rqtwoBaselineLegend{Recent-safe avg.}
-      \def\rqtwoBoundLegend{Predicted bound}
-      \def\rqtwoEventLegend{Unsafe admit}
-    \else
-      \def\rqtwoBaselineLegend{Baseline}
-      \def\rqtwoBoundLegend{Bound}
-      \def\rqtwoEventLegend{Event}
-    \fi
-    % Panel (b) shows the two measured factors in
-    % wall-time factor = CPU-time factor / average-busy-cores factor.
-    \def\rqtwoCpuLegend{CPU time}
-    \def\rqtwoParallelLegend{Average busy cores}
 
   \newsavebox{\rqtwospikebox}
   \begin{lrbox}{\rqtwospikebox}
   \begin{tikzpicture}
     \begin{groupplot}[
       group style={
-        group size=1 by 2,
-        % Room for the lower edge of panel (a), tick labels plus a one-line
-        % x label, and for panel (b)'s tag above it: two text lines have to
-        % fit between the plot boxes without touching.
-        vertical sep=1.60cm,
+        group size=1 by 3,
+        % Room for one panel's tick labels plus a one-line x label, and for the
+        % next panel's tag above it: two text lines have to fit between the
+        % plot boxes without touching.
+        vertical sep=1.32cm,
       },
       spikepanel,
     ]
@@ -136,152 +139,155 @@
         xmax=2.05,
         xtick={0.5,1.0,1.5,2.0},
         xticklabels={0.5,1.0,1.5,2.0},
-        title={(a) Remaining latency vs. budget},
+        title={(a) How long the remaining work took},
         xlabel={Remaining-sequence latency $/$ admission budget},
-        legend style={at={(axis cs:2.05,1.925)}},
       ]
-      % Admission budget and the multi-frame / single-frame separator.  Both
-      % rules span the full panel: the key sits inside the Single-frame band,
-      % clear of the y=3.5 separator, and its white fill covers the grid.
       \draw[black!60,densely dashed,line width=0.5pt]
         (axis cs:1,0.35) -- (axis cs:1,8.65);
       \node[glabel,anchor=south,text=black!65] at (axis cs:1,8.65) {budget};
       \draw[black!70,line width=0.6pt] (axis cs:0.46,3.5) -- (axis cs:2.05,3.5);
 
-      % Recent-safe baseline -> unsafe event.
-      \addplot[black!45,->,>=stealth,line width=0.6pt,forget plot]
-        coordinates {(0.568,8) (1.341,8)};
-      \addplot[black!45,->,>=stealth,line width=0.6pt,forget plot]
-        coordinates {(0.859,7) (1.810,7)};
-      \addplot[black!45,->,>=stealth,line width=0.6pt,forget plot]
-        coordinates {(0.680,6) (1.348,6)};
-      \addplot[black!45,->,>=stealth,line width=0.6pt,forget plot]
-        coordinates {(0.814,5) (1.042,5)};
-      \addplot[black!45,->,>=stealth,line width=0.6pt,forget plot]
-        coordinates {(0.811,4) (1.013,4)};
-      \addplot[black!45,->,>=stealth,line width=0.6pt,forget plot]
-        coordinates {(0.642,3) (1.004,3)};
-      \addplot[black!45,->,>=stealth,line width=0.6pt,forget plot]
-        coordinates {(0.833,2) (1.092,2)};
-      \addplot[black!45,->,>=stealth,line width=0.6pt,forget plot]
-        coordinates {(0.842,1) (1.023,1)};
+      \draw[rqtwoarrow] (axis cs:0.578,8) -- (axis cs:1.341,8);
+      \draw[rqtwoarrow] (axis cs:0.930,7) -- (axis cs:1.810,7);
+      \draw[rqtwoarrow] (axis cs:0.698,6) -- (axis cs:1.348,6);
+      \draw[rqtwoarrow] (axis cs:0.799,5) -- (axis cs:1.042,5);
+      \draw[rqtwoarrow] (axis cs:0.885,4) -- (axis cs:1.013,4);
+      \draw[rqtwoarrow] (axis cs:0.627,3) -- (axis cs:1.004,3);
+      \draw[rqtwoarrow] (axis cs:0.767,2) -- (axis cs:1.092,2);
+      \draw[rqtwoarrow] (axis cs:0.879,1) -- (axis cs:1.023,1);
 
-      \addplot[only marks,mark=o,mark size=2.0pt,draw=black,fill=white,
-               line width=0.5pt]
-        coordinates {(0.568,8) (0.859,7) (0.680,6) (0.814,5)
-                     (0.811,4) (0.642,3) (0.833,2) (0.842,1)};
-      \addlegendentry{\rqtwoBaselineLegend}
-
-      \addplot[only marks,mark=|,mark size=2.7pt,draw=black!60,
-               line width=0.7pt]
+      \addplot[only marks,rqtwoprev]
+        coordinates {(0.578,8) (0.930,7) (0.698,6) (0.799,5)
+                     (0.885,4) (0.627,3) (0.767,2) (0.879,1)};
+      % Drawn after the circles so the bound stays visible where it nearly
+      % coincides with the preceding capture (M2 and M3).
+      \addplot[only marks,rqtwobound]
         coordinates {(0.596,8) (0.940,7) (0.699,6) (0.915,5)
                      (0.907,4) (0.938,3) (0.908,2) (0.991,1)};
-      \addlegendentry{\rqtwoBoundLegend}
-
-      \addplot[only marks,mark=square*,mark size=1.9pt,draw=black,fill=black]
+      \addplot[only marks,rqtwoevent]
         coordinates {(1.341,8) (1.810,7) (1.348,6) (1.042,5)
                      (1.013,4) (1.004,3) (1.092,2) (1.023,1)};
-      \addlegendentry{\rqtwoEventLegend}
 
-      % Growth over the recent-safe baseline.
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.341,8) {$\times$2.36};
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.810,7) {$\times$2.11};
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.348,6) {$\times$1.98};
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.042,5) {$\times$1.28};
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.013,4) {$\times$1.25};
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.004,3) {$\times$1.56};
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.092,2) {$\times$1.31};
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.023,1) {$\times$1.22};
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.341,8) {$\times$2.32};
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.810,7) {$\times$1.95};
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.348,6) {$\times$1.93};
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.042,5) {$\times$1.30};
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.013,4) {$\times$1.14};
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.004,3) {$\times$1.60};
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.092,2) {$\times$1.42};
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.023,1) {$\times$1.16};
 
     %% ---------------------------------------------------------------- (b)
       \nextgroupplot[
-        xmin=0.50,
-        xmax=1.62,
-        xtick={0.6,0.8,1.0,1.2,1.4,1.6},
-        xticklabels={0.6,0.8,1.0,1.2,1.4,1.6},
-        title={(b) CPU time and parallelism changes},
-        xlabel={Relative to recent-safe average ($\times$)},
-        legend style={at={(axis cs:1.61,2.88)}},
+        xmin=0,
+        xmax=3820,
+        xtick={0,1000,2000,3000},
+        xticklabels={0,{1{,}000},{2{,}000},{3{,}000}},
+        title={(b) How much CPU work it needed},
+        xlabel={CPU time over the remaining sequence (ms)},
       ]
-      \addplot[draw=none,forget plot] coordinates {(1,1)};
+      \draw[black!70,line width=0.6pt] (axis cs:0,3.5) -- (axis cs:3820,3.5);
 
-      \addlegendimage{only marks,mark=square*,mark size=1.9pt,
-                      draw=black,fill=black}
-      \addlegendentry{\rqtwoCpuLegend}
-      \addlegendimage{only marks,mark=o,mark size=2.0pt,
-                      draw=black,fill=white,line width=0.5pt}
-      \addlegendentry{\rqtwoParallelLegend}
+      \draw[rqtwoarrow] (axis cs:1687,8) -- (axis cs:2379,8);
+      \draw[rqtwoarrow] (axis cs:2411,7) -- (axis cs:2775,7);
+      \draw[rqtwoarrow] (axis cs:2472,6) -- (axis cs:3340,6);
+      \draw[rqtwoarrow] (axis cs:948,5)  -- (axis cs:1043,5);
+      \draw[rqtwoarrow] (axis cs:849,4)  -- (axis cs:1044,4);
+      \draw[rqtwoarrow] (axis cs:863,3)  -- (axis cs:1067,3);
+      \draw[rqtwoarrow] (axis cs:968,2)  -- (axis cs:1324,2);
+      \draw[rqtwoarrow] (axis cs:375,1)  -- (axis cs:560,1);
 
-      % A factor of 1.0 is the recent-safe average.  Offsetting the two series
-      % within each row makes their directions readable without encoding raw
-      % metric changes as same-direction latency contributions.
-      \draw[black!60,densely dashed,line width=0.5pt]
+      \addplot[only marks,rqtwoprev]
+        coordinates {(1687,8) (2411,7) (2472,6) (948,5)
+                     (849,4) (863,3) (968,2) (375,1)};
+      \addplot[only marks,rqtwoevent]
+        coordinates {(2379,8) (2775,7) (3340,6) (1043,5)
+                     (1044,4) (1067,3) (1324,2) (560,1)};
+
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:2379,8) {$\times$1.41};
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:2775,7) {$\times$1.15};
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:3340,6) {$\times$1.35};
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1043,5) {$\times$1.10};
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1044,4) {$\times$1.23};
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1067,3) {$\times$1.24};
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1324,2) {$\times$1.37};
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:560,1)  {$\times$1.49};
+
+    %% ---------------------------------------------------------------- (c)
+      \nextgroupplot[
+        xmin=0.58,
+        xmax=2.32,
+        xtick={0.75,1.00,1.25,1.50,1.75,2.00},
+        xticklabels={0.75,1.00,1.25,1.50,1.75,2.00},
+        title={(c) How many cores served it},
+        xlabel={CPU time $/$ wall time over the remaining sequence (cores)},
+      ]
+      % One core on average: below this line the remaining sequence ran no
+      % faster than a single-threaded execution.
+      \draw[black!45,densely dotted,line width=0.5pt]
         (axis cs:1,0.35) -- (axis cs:1,8.65);
-      \node[glabel,anchor=south,text=black!65]
-        at (axis cs:1,8.65) {recent-safe avg.};
-      \draw[black!70,line width=0.6pt]
-        (axis cs:0.50,3.5) -- (axis cs:1.62,3.5);
+      \draw[black!70,line width=0.6pt] (axis cs:0.58,3.5) -- (axis cs:2.32,3.5);
 
-      % Change segments from the normalized recent-safe value.
-      % CPU time (upper position in each row).
-      \draw[black!45,line width=0.6pt] (axis cs:1,8.17) -- (axis cs:1.443,8.17);
-      \draw[black!45,line width=0.6pt] (axis cs:1,7.17) -- (axis cs:1.346,7.17);
-      \draw[black!45,line width=0.6pt] (axis cs:1,6.17) -- (axis cs:1.501,6.17);
-      \draw[black!45,line width=0.6pt] (axis cs:1,5.17) -- (axis cs:1.100,5.17);
-      \draw[black!45,line width=0.6pt] (axis cs:1,4.17) -- (axis cs:1.272,4.17);
-      \draw[black!45,line width=0.6pt] (axis cs:1,3.17) -- (axis cs:1.055,3.17);
-      \draw[black!45,line width=0.6pt] (axis cs:1,2.17) -- (axis cs:1.532,2.17);
-      \draw[black!45,line width=0.6pt] (axis cs:1,1.17) -- (axis cs:1.261,1.17);
+      \draw[rqtwoarrow] (axis cs:1.96,8) -- (axis cs:1.18,8);
+      \draw[rqtwoarrow] (axis cs:2.03,7) -- (axis cs:1.19,7);
+      \draw[rqtwoarrow] (axis cs:2.08,6) -- (axis cs:1.44,6);
+      \draw[rqtwoarrow] (axis cs:1.62,5) -- (axis cs:1.37,5);
+      \draw[rqtwoarrow] (axis cs:1.16,4) -- (axis cs:1.24,4);
+      \draw[rqtwoarrow] (axis cs:1.44,3) -- (axis cs:1.10,3);
+      \draw[rqtwoarrow] (axis cs:1.98,2) -- (axis cs:1.91,2);
+      \draw[rqtwoarrow] (axis cs:0.92,1) -- (axis cs:1.18,1);
 
-      % Average busy cores (lower position in each row).
-      \draw[black!45,line width=0.6pt] (axis cs:1,7.83) -- (axis cs:0.602,7.83);
-      \draw[black!45,line width=0.6pt] (axis cs:1,6.83) -- (axis cs:0.634,6.83);
-      \draw[black!45,line width=0.6pt] (axis cs:1,5.83) -- (axis cs:0.750,5.83);
-      \draw[black!45,line width=0.6pt] (axis cs:1,4.83) -- (axis cs:0.859,4.83);
-      \draw[black!45,line width=0.6pt] (axis cs:1,3.83) -- (axis cs:1.011,3.83);
-      \draw[black!45,line width=0.6pt] (axis cs:1,2.83) -- (axis cs:0.669,2.83);
-      \draw[black!45,line width=0.6pt] (axis cs:1,1.83) -- (axis cs:1.176,1.83);
-      \draw[black!45,line width=0.6pt] (axis cs:1,0.83) -- (axis cs:1.031,0.83);
+      \addplot[only marks,rqtwoprev]
+        coordinates {(1.96,8) (2.03,7) (2.08,6) (1.62,5)
+                     (1.16,4) (1.44,3) (1.98,2) (0.92,1)};
+      \addplot[only marks,rqtwoevent]
+        coordinates {(1.18,8) (1.19,7) (1.44,6) (1.37,5)
+                     (1.24,4) (1.10,3) (1.91,2) (1.18,1)};
 
-      \addplot[only marks,mark=square*,mark size=1.9pt,
-               draw=black,fill=black]
-        coordinates {(1.443,8.17) (1.346,7.17) (1.501,6.17) (1.100,5.17)
-                     (1.272,4.17) (1.055,3.17) (1.532,2.17) (1.261,1.17)};
-      \addplot[only marks,mark=o,mark size=2.0pt,
-               draw=black,fill=white,line width=0.5pt]
-        coordinates {(0.602,7.83) (0.634,6.83) (0.750,5.83) (0.859,4.83)
-                     (1.011,3.83) (0.669,2.83) (1.176,1.83) (1.031,0.83)};
-
-      % Direct factor labels; labels sit outside their change segment.
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.443,8.17) {$1.44\times$};
-      \node[glabel,anchor=east,xshift=-2.5pt] at (axis cs:0.602,7.83) {$0.60\times$};
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.346,7.17) {$1.35\times$};
-      \node[glabel,anchor=east,xshift=-2.5pt] at (axis cs:0.634,6.83) {$0.63\times$};
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.501,6.17) {$1.50\times$};
-      \node[glabel,anchor=east,xshift=-2.5pt] at (axis cs:0.750,5.83) {$0.75\times$};
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.100,5.17) {$1.10\times$};
-      \node[glabel,anchor=east,xshift=-2.5pt] at (axis cs:0.859,4.83) {$0.86\times$};
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.272,4.17) {$1.27\times$};
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.011,3.83) {$1.01\times$};
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.055,3.17) {$1.05\times$};
-      \node[glabel,anchor=east,xshift=-2.5pt] at (axis cs:0.669,2.83) {$0.67\times$};
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.532,2.17) {$1.53\times$};
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.176,1.83) {$1.18\times$};
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.261,1.17) {$1.26\times$};
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.031,0.83) {$1.03\times$};
+      % Labels sit past the arrow head, so they fall left of a decrease and
+      % right of an increase and never overlap the arrow.
+      \node[glabel,anchor=east,xshift=-2.5pt] at (axis cs:1.18,8) {$\times$0.60};
+      \node[glabel,anchor=east,xshift=-2.5pt] at (axis cs:1.19,7) {$\times$0.59};
+      \node[glabel,anchor=east,xshift=-2.5pt] at (axis cs:1.44,6) {$\times$0.69};
+      \node[glabel,anchor=east,xshift=-2.5pt] at (axis cs:1.37,5) {$\times$0.85};
+      \node[glabel,anchor=west,xshift=2.5pt]  at (axis cs:1.24,4) {$\times$1.08};
+      \node[glabel,anchor=east,xshift=-2.5pt] at (axis cs:1.10,3) {$\times$0.76};
+      \node[glabel,anchor=east,xshift=-2.5pt] at (axis cs:1.91,2) {$\times$0.96};
+      \node[glabel,anchor=west,xshift=2.5pt]  at (axis cs:1.18,1) {$\times$1.28};
 
     \end{groupplot}
+
+    % One key for all three panels. The three markers name which capture a
+    % value belongs to and whether it was measured or predicted, so they read
+    % as one series rather than as three unrelated things.
+    \matrix[
+      matrix of nodes,
+      nodes={font=\tiny,anchor=west,inner sep=1pt},
+      column sep=1.5pt,
+      anchor=north,
+    ] at ([yshift=-4.6ex]group c1r3.south) {
+      \draw plot[rqtwoprev] coordinates {(0,0)}; & Previous capture, measured\quad &
+      \draw plot[rqtwobound] coordinates {(0,0)}; & This capture, predicted bound\quad &
+      \draw plot[rqtwoevent] coordinates {(0,0)}; & This capture, measured \\
+    };
   \end{tikzpicture}
   \end{lrbox}
   \resizebox{\columnwidth}{!}{\usebox{\rqtwospikebox}}
 
-  \caption{Anatomy of the eight unsafe admits the always-admit model would
-  have produced.  (a) Remaining-sequence latency normalized by the admission
-  budget, with the growth over the recent-safe average annotated per row.
-  (b) The camera process's CPU time and average busy cores over the remaining
-  sequence, each normalized by its recent-safe average; 1.0 denotes no change.
-  CPU time rises for every unsafe admit, whereas average busy cores falls for
-  M1--M4 and S1 and rises for M5, S2, and S3.}
+  \caption{Anatomy of the eight unsafe admits the always-admit model would have
+  produced, each compared with the capture immediately before it in the same
+  run and optional-work group.  (a) Remaining-sequence latency normalized by
+  the admission budget; every event lands past $1.0$, and for M2 and M3 the
+  predicted bound sits on the preceding capture, so the model's inputs carried
+  no warning before a roughly twofold jump.  The predicted bound applies to (a)
+  only.  (b) and (c) give the two measured quantities whose quotient is that
+  latency: the CPU time the remaining work consumed, and how many cores served
+  it in parallel.  The work grew moderately in all eight cases ($\times1.10$ to
+  $\times1.49$), whereas the three largest spikes lost close to half their
+  parallelism ($\times0.60$, $\times0.59$, $\times0.69$); M5 and S3 instead
+  gained parallelism, which is why their latency barely moved.  Contention for
+  the cores, not a larger workload, is therefore what the admission model
+  failed to anticipate.}
   \label{fig:rq2_unsafe_spike_anatomy}
 
 \end{figure}
