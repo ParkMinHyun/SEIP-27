@@ -327,13 +327,123 @@ counts, the table does not repeat their proportions or sample sizes in the
 median cells. These median values describe the typical capture-level decision effect; they
 are not inferential estimates over independent runs.
 
-### 5.4 RQ2 workbook mapping
+### 5.4 RQ2 figure metrics: unsafe-admit spike anatomy
+
+`figures/fig_rq2_unsafe_spike_anatomy.tex` characterizes every decision in the
+unsafe-admit cell of the confusion matrix: factually unsafe, model-admitted,
+drawn from the included runs only. It answers two questions per decision — how
+far the measured cost exceeded what recent behavior predicted, and which
+`PostExecutionMetrics` quantity accounts for that excess.
+
+#### Recent-safe baseline
+
+For each unsafe admit, take the selected decisions from the same workbook,
+`runId`, and optional-work group that are model-admitted, factually feasible,
+and have a smaller `runShotIndex`; keep the last three by `runShotIndex`. Every
+baseline value is the unweighted mean over those three decisions. Holding the
+run and group fixed also holds the device, resolution, and memory condition
+fixed, so the comparison isolates within-burst variation. Do not substitute a
+pooled or global average.
+
+#### Node suffix
+
+Every per-node quantity is summed over the *remaining* nodes of the capture:
+node rows whose `nodeOrder` is at least the selected decision's `nodeOrder`,
+taken in `nodeOrder` order. This is the work that the admission decision
+actually committed to, and it is the same suffix that \(C\) measures in wall
+time.
+
+#### Panel (a): overshoot against the budget
+
+Plot three x values per decision, each divided by that decision's own
+`beforeBudgetMs`:
+
+```text
+baseline = mean(C) over the three recent-safe decisions
+bound    = beforeSequencePredictedUpperBoundMs
+event    = C
+```
+
+with \(C\) as defined in section 5.2. Normalize by \(B\), not by the deadline
+\(D\): this places the admission criterion at exactly 1.0 and keeps the
+internal deadline constant out of the figure. The annotated growth factor is
+`event C / baseline mean C`.
+
+#### Panel (b): decomposition of the increase
+
+`cpuUtilizationRatio` is recorded as `cpuTimeMs / (wallTimeMs * cores)`, so
+over the node suffix
+
+```text
+cpu  = sum(cpuTimeMs)
+wall = sum(wallTimeMs)
+util = cpu / (wall * cores)
+wall = cpu / (util * cores)      identically
+```
+
+Recover the core count from any node row with a nonzero ratio,
+`cores = round(cpuTimeMs / (wallTimeMs * cpuUtilizationRatio))`; the S26 Ultra
+workbooks give 8. Writing `b` for the recent-safe baseline and `e` for the
+event, the latency increase splits additively and exactly:
+
+```text
+cpuTerm  = (cpu_e - cpu_b) / (util_b * cores)
+utilTerm = cpu_e / cores * (1 / util_e - 1 / util_b)
+
+cpuTerm + utilTerm = wall_e - wall_b
+```
+
+or equivalently, in multiplicative form,
+`wall_e / wall_b = (cpu_e / cpu_b) / (util_e / util_b)`. `cpuTerm` is the part
+of the increase attributable to more CPU time being consumed at the baseline
+service rate; `utilTerm` is the part attributable to the process obtaining a
+smaller share of the cores at the event's CPU demand. `utilTerm` is negative
+when utilization improved; the figure draws those segments as an open dashed
+box running back from the bar end, so every bar still terminates at the
+measured total.
+
+#### What `cpuTimeMs` covers
+
+`CpuProcessingTracker` documents its run-queue and context-switch counters as
+thread-level and its CPU-usage counter as not thread-level. Consistently with
+that, `cpuTimeMs` regularly exceeds `wallTimeMs` for the same node (2,117 ms of
+CPU over a 1,669 ms window in the largest Multi-frame spike). Read `cpuTimeMs`
+as the camera process's total CPU consumption during the node window, not as
+the node thread's own work, and read `cpuTerm` as added CPU demand inside the
+process — which includes concurrently executing Draft work.
+
+#### Control signals to recompute, not assume
+
+Report the same baseline-versus-event comparison for `overheatLevel`,
+`thermalStatus`, `blockingGcTimeMs`, `runQueueWaitMs`, and
+`nonvoluntaryCtxSwitches`. In the current workbooks the first three separate
+nothing — thermal state is identical to the baseline in all eight cases and
+blocking GC time is zero throughout — while the last two move in both
+directions. That asymmetry is the figure's argument and the reason a static
+thermal threshold cannot anticipate these decisions, so it must be recomputed
+whenever the workbooks change rather than carried forward.
+
+#### Row labels
+
+Rows are `M1`--`Mn` for Multi-frame and `S1`--`Sn` for Single-frame decisions,
+ordered by growth factor descending within each group. The labels are
+positional and will move if the data changes, so record the
+(workbook, `runId`, `runShotIndex`) triple for each label in the figure's
+comment header, together with the implementation commit the workbooks came
+from.
+
+### 5.5 RQ2 workbook mapping
 
 Primary sheet:
 
 - `AdmissionReplay`
 
-Supporting completion timestamps may also be read from `PacingReplay`.
+Supporting completion timestamps may also be read from `PacingReplay`. The
+section 5.4 figure additionally reads the per-node sheets, one per node class
+(`SecDualBokehNode`, `DynamicFunctionNode`, `SecFilterNode`,
+`SecImageCodecNode`, `WatermarkNode`) — that is, every sheet other than
+`AdmissionReplay`, `PacingReplay`, `RQ3Pacing`, `RQ3Summary`, `ReplayNotes`,
+and `Capture`.
 
 | Purpose | Sheet | Columns |
 |---|---|---|
@@ -349,6 +459,10 @@ Supporting completion timestamps may also be read from `PacingReplay`.
 | Capture Timeout outcome | `AdmissionReplay` | `beforeCaptureTimedOut` |
 | Decision audit labels | `AdmissionReplay` | `beforeDecisionOutcome`, `beforeDecisionObservationStatus`, `afterDecisionOutcome`, `afterObservationStatus` |
 | Draft completion | `PacingReplay` | `captureIndex`, `draftEndUptimeMs` |
+| Predicted bound, section 5.4 panel (a) | `AdmissionReplay` | `beforeSequencePredictedUpperBoundMs` |
+| Node suffix selection, section 5.4 | per-node sheets | `captureIndex`, `nodeOrder`, `nodeName` |
+| Latency decomposition, section 5.4 panel (b) | per-node sheets | `wallTimeMs`, `cpuTimeMs`, `cpuUtilizationRatio` |
+| Control signals, section 5.4 | per-node sheets | `runQueueWaitMs`, `nonvoluntaryCtxSwitches`, `blockingGcTimeMs`, `overheatLevel`, `thermalStatus` |
 
 Do not use `beforeSequenceActualDurationMs` as \(C\). It sums node durations
 and does not include the whole remaining wall-clock path to Draft completion.
@@ -733,6 +847,13 @@ removed more work, and RQ3 would no longer isolate pacing ability.
 - `tables/tab_rq1_result.tex`
 - `tables/tab_rq2_admission_summary.tex`
 - `tables/tab_rq3_pacing_summary.tex`
+
+### RQ2 figure
+
+- `figures/fig_rq2_unsafe_spike_anatomy.tex` — self-contained; the per-decision
+  values and the decomposition inputs are recorded in its comment header, so no
+  companion CSV is emitted. Regenerate it from section 5.4 whenever the RQ2
+  workbook set changes.
 
 ### RQ3 figure
 
