@@ -14,14 +14,16 @@ The definitions were checked against:
 - `data/rq1_metrics_aggregation.md`;
 - `data/rq2_metrics_aggregation.md`.
 
-The exporter intentionally does not store an RQ3 policy name. The experiment
-operator must identify each workbook as `no_pacing`, `thermal_lut`,
-`queue_ewma`, or `ours` when supplying it for aggregation. That
-operator-provided mapping is the authoritative policy label.
+The exporter records the active `PolicyType` in the `pacingPolicy` column of
+both `RQ3Pacing` and `RQ3Summary`. This exported value is the authoritative
+policy identity. Aggregation maps it to the artifact keys `no_pacing`,
+`thermal_lut`, `codel_inspired`, and `ours`; the operator-supplied workbook
+mapping only locates inputs and must agree with the exported policy. Legacy
+workbooks without `pacingPolicy` require an explicit operator mapping.
 
-The policy keys match the implementation's `PolicyType` enum in
-`patches/rq3-pacing-policy-switch.patch` (`OURS`, `THERMAL_LUT`, `QUEUE_EWMA`).
-Manuscript labels are Ours, Thermal LUT, and Queue-EWMA. The earlier
+The policy keys match the implementation's `PolicyType` enum
+(`NO_PACING`, `THERMAL_LUT`, `CODEL_INSPIRED`, `OURS`). Manuscript labels are
+No pacing, Thermal LUT, CoDel-inspired, and Ours. The earlier Queue-EWMA and
 `static_lut` / `queue_dynamic` keys and the "Static LUT" / "Queue dynamic"
 labels are retired; do not reintroduce them.
 
@@ -329,7 +331,7 @@ are not inferential estimates over independent runs.
 
 ### 5.4 RQ2 figure metrics: unsafe-admit spike anatomy
 
-`figures/fig_rq2_unsafe_spike_anatomy.tex` characterizes every decision in the
+`figures/fig_rq2_unsafe_spike.tex` characterizes every decision in the
 unsafe-admit cell of the confusion matrix: factually unsafe, model-admitted,
 drawn from the included runs only. It answers two questions per decision — how
 far the measured cost exceeded what recent behavior predicted, and which
@@ -484,7 +486,7 @@ The controlled setup is:
 - starting thermal level 3;
 - 30 shots per run;
 - the same admitted workload across policies;
-- separate factual runs for `no_pacing`, `thermal_lut`, `queue_ewma`, and
+- separate factual runs for `no_pacing`, `thermal_lut`, `codel_inspired`, and
   `ours`;
 - results stratified by device.
 
@@ -495,10 +497,10 @@ Slack P5 and shot-to-shot P95 are still computed for every RQ3 arm, but they
 are reported through RQ1 rather than duplicated as RQ3 summary-table columns.
 An earlier revision repeated them next to the pacing-cost columns so that cost
 and benefit could be read together; both column groups were then removed,
-because the RQ3 figure already shows cumulative pacing cost and deadline-risk
-exposure, while the deadline margin is an RQ1 column. Keep the values in
-`rq3_metrics.json` and cite them from prose; a reader who needs the benefit
-alongside the backlog reduction is pointed at RQ1 from the table notes.
+because the RQ3 figure already shows pacing activation, cumulative cost, and a
+continuous cost--tail trade-off, while the deadline margin is an RQ1 column.
+Keep the values in `rq3_metrics.json` and cite them from prose; a reader who
+needs the deadline benefit alongside backlog reduction is pointed at RQ1.
 
 The two main-paper RQ3 artifacts divide the question as follows, and the division should
 be preserved when adding data:
@@ -506,7 +508,7 @@ be preserved when adding data:
 | Artifact | Answers |
 |---|---|
 | `tab_rq3_pacing_summary.tex` | What backlog and queue depth resulted |
-| `fig_rq3_pacing_trajectories.tex` | How backlog, queue depth, cumulative pacing cost, and deadline-risk exposure evolve or compare |
+| `fig_rq3_pacing_trajectories.tex` | How backlog, pacing activation, and cumulative cost evolve, and how each run trades total delay for backlog P95 |
 
 ### 6.2 RQ3 summary-table metrics
 
@@ -665,6 +667,17 @@ and P90 of:
 - `realQueueDepth`;
 - `transitionDelayMs`.
 
+For the pacing-activation panel, compute one percentage per shot:
+
+```text
+activationRate_i
+    = 100 * count(transitionDelayMs_i > 0)
+            / count(nonblank transitionDelayMs_i)
+```
+
+Zeros remain in the denominator. This is a cross-run rate for one outgoing
+shot transition, not the magnitude of the applied delay.
+
 For cumulative delay, first compute the cost experienced within each run:
 
 ```text
@@ -683,6 +696,7 @@ shot,
 backlog_median,backlog_p10,backlog_p90,
 queue_depth_median,queue_depth_p10,queue_depth_p90,
 delay_median,delay_p10,delay_p90,
+activation_rate_percent,
 cumulative_delay_median,cumulative_delay_p25,cumulative_delay_p75
 ```
 
@@ -690,47 +704,63 @@ The panels mean:
 
 | Panel | Metric | Interpretation |
 |---|---|---|
-| Backlog vs. shot | Per-shot real-backlog distribution | Whether queued processing time accumulates during the burst |
-| Queue depth vs. shot | Per-shot waiting-Draft distribution | How many Drafts are waiting for service |
+| Backlog vs. shot | Per-shot real-backlog median | Whether queued processing time accumulates during the burst |
+| Pacing activation vs. shot | Per-shot share of runs with positive delay | When and how consistently each policy intervenes |
 | Cumulative delay vs. shot | Within-run cumulative applied delay | How much user-visible pacing cost has accumulated by each shot |
-| Deadline-risk exposure | Share of transitions with \(B>0.8T\) | How often each policy operates in the deadline-risk region |
+| Total delay vs. backlog P95 | One point per complete run | Whether lower tail backlog requires excessive pacing cost |
 
-The backlog and queue panels draw medians only. Their P10/P90 columns are
-retained in the CSVs and released with the artifact, but they are not plotted:
-with four policies in a panel `0.215\textwidth` wide, the band edges obscured
-the policy curves. The cumulative-delay panel draws the median and IQR because
-the run-to-run range of total user-visible cost is central to its
-interpretation.
+The backlog panel draws medians only. Queue-depth and applied-delay P10/P50/P90
+columns remain available in the CSVs and summary artifact, but queue depth is
+not repeated as a trajectory panel because it conveys the same accumulation
+pattern as backlog in the space-constrained `0.215\textwidth` panel. The
+pacing-activation panel instead exposes when a policy actually intervenes.
+The cumulative-delay panel draws policy medians and IQR bands for the arms
+whose traces are currently available because run-to-run pacing cost is central
+to its interpretation. After all four arms are populated, verify that four
+bands remain legible; if they do not, retain all policy medians in the figure
+and move every policy's IQR to the artifact rather than showing uncertainty
+for only a subset of policies.
 
-`transitionDelayMs` is blank at shot 30, because the delay recorded on shot i
-gates shot i+1 and shot 30's delay falls outside the 30-shot window. Only
-over-length runs carry a value there, so emit `nan` for the shot-30 delay
-columns rather than pooling a different set of runs at the last point. The
-cumulative-delay value at shot 30 nevertheless remains defined: it is the sum
-of the 29 eligible delays on shots 1--29. Backlog and queue depth also remain
-defined at shot 30.
+`transitionDelayMs` and `activation_rate_percent` are blank at shot 30, because
+the delay recorded on shot i gates shot i+1 and shot 30's outgoing transition
+falls outside the 30-shot window. Only over-length runs carry a delay there, so
+emit `nan` for both shot-30 fields rather than pooling a different set of runs
+at the last point. The cumulative-delay value at shot 30 nevertheless remains
+defined: it is the sum of the 29 eligible delays on shots 1--29. Backlog and
+queue depth also remain defined at shot 30.
 
-### 6.4 Deadline-risk exposure panel
+### 6.4 Run-level cost--tail trade-off panel
 
-This panel reports one point per included run:
+This panel reports one point per included complete run:
 
 ```text
-RunRiskExposure
-    = 100 * count_run(realBacklogMs > 0.8 * captureTimeoutMs)
-            / count_run(realBacklogMs)
+RunTotalDelay
+    = sum(transitionDelayMs_i, i = 1, ..., 29) / 1000
+
+RunBacklogP95
+    = PERCENTILE.INC({realBacklogMs_i | i = 1, ..., 30}, 0.95) / 1000
 ```
 
-Jitter points horizontally only to reveal repeated values; the x offset has no
-metric meaning. Draw a horizontal bar at each policy's run-level median. Table
-VI retains the pooled shot-level shares, so the figure adds run-to-run
-variability rather than repeating the table cells.
+Use the same run inclusion and deduplication rules as the summary table. Every
+point must therefore contain 30 real-backlog observations and exactly 29
+eligible outgoing-transition delays.
 
-Statistical significance is computed over these same run-level risk-exposure
-shares using the two-sided Mann--Whitney procedure reported with Table VI; do
-not compute a p-value over pooled shots.
+The per-policy artifact schema is:
 
-The generated JSON retains the internal key `nearDeadlinePercent` for artifact
-compatibility; the manuscript labels this metric *deadline-risk exposure*.
+```text
+run,total_delay_s,backlog_p95_s
+```
+
+Plot total delay in seconds on the x-axis and run backlog P95 in seconds on the
+y-axis. Movement toward the lower left indicates a better cost--tail trade-off.
+Do not claim policy dominance from an arbitrary scalarization of the two axes,
+or from unmatched admitted workloads.
+
+This continuous panel remains discriminative when timeout and fixed-threshold
+risk rates collapse to zero for every paced policy. The pooled thresholded
+deadline-risk metric remains in Table VI, and its per-run values remain in
+`risk_exposure_runs.csv` and the generated JSON under `nearDeadlinePercent` for
+artifact compatibility and run-level statistical analysis.
 
 `backlog_cost.csv` remains in the artifact for secondary cost--backlog
 inspection, but it is not plotted in the main paper figure. Its schema is:
@@ -738,7 +768,7 @@ inspection, but it is not plotted in the main paper figure. Its schema is:
 ```text
 no_pacing_delay_s,no_pacing_max_backlog_s,
 thermal_lut_delay_s,thermal_lut_max_backlog_s,
-queue_ewma_delay_s,queue_ewma_max_backlog_s,
+codel_inspired_delay_s,codel_inspired_max_backlog_s,
 ours_delay_s,ours_max_backlog_s
 ```
 
@@ -850,7 +880,7 @@ removed more work, and RQ3 would no longer isolate pacing ability.
 
 ### RQ2 figure
 
-- `figures/fig_rq2_unsafe_spike_anatomy.tex` — self-contained; the per-decision
+- `figures/fig_rq2_unsafe_spike.tex` — self-contained; the per-decision
   values and the decomposition inputs are recorded in its comment header, so no
   companion CSV is emitted. Regenerate it from section 5.4 whenever the RQ2
   workbook set changes.
@@ -860,10 +890,11 @@ removed more work, and RQ3 would no longer isolate pacing ability.
 - `figures/fig_rq3_pacing_trajectories.tex`
 - `data/rq3/<device>/no_pacing.csv`
 - `data/rq3/<device>/thermal_lut.csv`
-- `data/rq3/<device>/queue_ewma.csv`
+- `data/rq3/<device>/codel_inspired.csv`
 - `data/rq3/<device>/ours.csv`
-- `data/rq3/<device>/risk_exposure_runs.csv`
-- `data/rq3/<device>/backlog_cost.csv`
+- `data/rq3/<device>/<policy>_tradeoff.csv` — panel (d), one row per run
+- `data/rq3/<device>/risk_exposure_runs.csv` — threshold-risk audit, not plotted
+- `data/rq3/<device>/backlog_cost.csv` — secondary max-backlog audit
 
 ### RQ3 audit record
 
@@ -887,17 +918,14 @@ uv run --with openpyxl --with pandas --with scipy python data/rq3_aggregate.py
 2. The current RQ3 table and figure name S26 Ultra and S26. If the evaluation
    uses Device A/B/C, both artifacts and their data directories must be
    updated consistently.
-3. The RQ3 CSVs contain P10/P90 columns that the plot deliberately does not
-   render. This is a decided reporting choice, not an omission; the columns
-   stay so the spread can be released with the artifact.
-4. The current figure caption calls the cost--backlog panel a frontier. With
-   one configuration per policy it must instead be described as a scatter
-   comparison, or the experiment must add parameter sweeps.
-5. The historical RQ1 aggregation note describes Slack P5 in milliseconds,
+3. The RQ3 CSVs retain backlog, queue-depth, and delay P10/P90 columns even
+   when only medians or activation rates are rendered. This is a decided
+   reporting choice so the full spread remains available in the artifact.
+4. The historical RQ1 aggregation note describes Slack P5 in milliseconds,
    whereas the current paper table labels and comments define a
    deadline-normalized percentage. This guide follows the current paper:
    normalize each event first and then calculate P5.
-6. Any deviation from the aggregation rules in this document must be recorded
+5. Any deviation from the aggregation rules in this document must be recorded
    before inspecting comparative outcomes.
 
 ## 10. Data handoff checklist

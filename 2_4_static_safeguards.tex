@@ -31,30 +31,6 @@ Reliable multi-frame composition therefore requires coordinated runtime control 
 \input{tables/tab_rq1_ablation.tex}
 \input{tables/tab_rq1_result.tex}
 \input{tables/tab_rq2_admission_summary.tex}
-
-\smallskip\noindent\textbf{Why unsafe work was admitted.}
-Table~\ref{tab:rq2_unsafe_admit_cases} summarizes all eight unsafe fresh-model
-admits across three PostExecutionMetrics signatures.  In every case, the
-model admitted the group because its predicted upper bound was no greater than
-the remaining budget, but the measured remaining cost ultimately exceeded
-that budget.  Six decisions had only 4--79\,ms of admission headroom, whereas
-two retained 527--612\,ms; all were overtaken by the measured change and
-exceeded the remaining budget by 4--1,059\,ms.
-
-\input{tables/tab_rq2_unsafe_admit_cases.tex}
 \input{figures/fig_rq2_unsafe_spike_anatomy.tex}
-
-\smallskip\noindent\textbf{Post-decision latency change.}
-All eight unsafe admits coincided with an increase in remaining-sequence CPU
-time relative to the preceding three safe admits from the same run and
-workload group.  The increase ranged from 10--50\% for the five Multi-frame
-decisions and from 6--53\% for the three Single-frame decisions.  Run-queue
-wait changed in both directions, no blocking GC was recorded, and the thermal
-state remained unchanged.  CPU-time inflation was therefore the only common
-measured contributor to these spikes.  This is the same structural limitation
-exposed by the RQ1 Admission-only ablation: once work is admitted, admission
-alone cannot react to a later execution-time spike.
-
 \input{tables/tab_rq3_pacing_summary.tex}
 \input{figures/fig_rq3_pacing_trajectories.tex}
-\FloatBarrier

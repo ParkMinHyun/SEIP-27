@@ -128,31 +128,5 @@
 
   \par\vspace{2pt}
   \begin{minipage}{0.97\columnwidth}
-    \scriptsize\emph{Notes:}
-    Each 30-shot session starts at thermal level 3; nine No-pacing and eight Ours
-    runs contribute 261 and 232 transitions.
-    \(B\) and \(Q\) are real backlog and queue depth, reconstructed from
-    measured Draft start/end timestamps rather than the controller's own
-    estimate.
-    \emph{Risk exposure} is the pooled share of shots across the included runs
-    whose real backlog exceeds \(0.8\) of the
-    \(7\,000\)~ms Capture Timeout budget; backlog cannot pass that budget without
-    failing. We therefore omit the saturation-prone \(B_{\max}\) and report the
-    average, typical (\(B_{50}\)), tail (\(B_{95}\)), and risk-region occupancy.
-    \emph{Thermal LUT} interpolates a calibrated per-headroom delay and reads no
-    queue state; \emph{Queue-EWMA} sizes its delay from observable queue depth
-    and an EWMA of completed Draft service times and reads no thermal state.
-    This table reports only what the delay achieves; what it costs is the
-    cumulative-delay panel of Figure~\ref{fig:rq3_pacing_trajectories}, and the
-    delivered deadline margin is the Slack P5 column of
-    Table~\ref{tab:rq1_controller_behavior}.
-    Every measured S26 Ultra column separates the two policies under a two-sided
-    run-level Mann--Whitney test (\(n = 9\) vs \(8\), uncorrected
-    \(p \le 0.0055\), largest at \(\bar{B}\)). Per-run values and \(p\) for
-    every column are released with the artifact.
-    A controlled comparison additionally requires identical admitted workload
-    within each device.  The current S26 Ultra rows do not satisfy this
-    requirement --- Ours admitted more optional work (median Bokeh/Filter
-    \(56.7/100.0\)\% versus \(33.3/40.0\)\%) --- and are therefore provisional.
   \end{minipage}
 \end{table}

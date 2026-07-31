@@ -34,8 +34,16 @@
 % Blocking GC time was 0 ms in every baseline and every event; overheat level
 % and thermal status were identical to the recent-safe baseline in all eight.
 
-\begin{figure*}[!t]
+% Final compact layout: both panels share one row and panel (b) uses the
+% reviewer-oriented, order-dependent accounting terminology.
+\begingroup
+\def\rqtwoUnsafeSpikeSideBySide{1}
+\def\rqtwoReviewerAccounting{1}
+
+\begin{figure}[!t]
   \centering
+  \newsavebox{\rqtwospikebox}
+  \begin{lrbox}{\rqtwospikebox}
   \begin{tikzpicture}
     \tikzset{
       cpubar/.style={fill=black!60,draw=black!60,line width=0.3pt},
@@ -48,7 +56,6 @@
     }
     \pgfplotsset{
       spikepanel/.style={
-        height=5.55cm,
         ymin=0.35,
         ymax=8.65,
         ytick={1,2,3,4,5,6,7,8},
@@ -59,45 +66,123 @@
         grid style={black!14,line width=0.3pt},
         axis line style={line width=0.35pt},
         tick style={line width=0.35pt},
-        tick label style={font=\scriptsize},
-        yticklabel style={font=\scriptsize},
-        label style={font=\scriptsize},
         clip=false,
         legend cell align=left,
-        legend style={
-          font=\scriptsize,
-          draw=black!35,
-          fill=white,
-          line width=0.3pt,
-          inner sep=2pt,
-          row sep=-1pt,
-          legend pos=south east,
-        },
       },
     }
+    \ifdefined\rqtwoUnsafeSpikeSideBySide
+      \pgfplotsset{
+        spikepanel/.append style={
+          % Sized so the two panels plus their labels fill \columnwidth; the
+          % \resizebox below then runs at a scale of about 1.0.
+          width=0.62\columnwidth,
+          height=4.30cm,
+          tick label style={font=\tiny},
+          yticklabel style={font=\tiny},
+          label style={font=\tiny},
+          legend style={
+            font=\tiny,
+            draw=black!25,
+            fill=white,
+            line width=0.2pt,
+            inner sep=1pt,
+            row sep=-1pt,
+            legend columns=1,
+            at={(axis description cs:0.98,0.04)},
+            anchor=south east,
+          },
+        },
+      }
+      \ifdefined\rqtwoReviewerAccounting
+        \def\rqtwoBaselineLegend{Recent-safe avg.}
+        \def\rqtwoBoundLegend{Predicted bound}
+        \def\rqtwoEventLegend{Unsafe admit}
+        \def\rqtwoCpuLegend{CPU time growth}
+        \def\rqtwoUtilLossLegend{CPU Util. loss}
+        \def\rqtwoUtilGainLegend{CPU Util. gain}
+      \else
+        \def\rqtwoBaselineLegend{Baseline}
+        \def\rqtwoBoundLegend{Bound}
+        \def\rqtwoEventLegend{Event}
+        \def\rqtwoCpuLegend{CPU growth}
+        \def\rqtwoUtilLossLegend{Util. loss}
+        \def\rqtwoUtilGainLegend{Util. gain}
+      \fi
+    \else
+      \pgfplotsset{
+        spikepanel/.append style={
+          width=0.92\columnwidth,
+          height=4.15cm,
+          tick label style={font=\scriptsize},
+          yticklabel style={font=\scriptsize},
+          label style={font=\scriptsize},
+          legend style={
+            font=\tiny,
+            draw=none,
+            fill=none,
+            inner sep=0pt,
+            row sep=-1pt,
+            column sep=2pt,
+            legend columns=-1,
+            at={(axis description cs:0.5,1.03)},
+            anchor=south,
+          },
+        },
+      }
+      \def\rqtwoBaselineLegend{Recent-safe baseline}
+      \def\rqtwoBoundLegend{Predicted bound}
+      \def\rqtwoEventLegend{Unsafe event}
+      \def\rqtwoCpuLegend{CPU-time growth}
+      \def\rqtwoUtilLossLegend{Utilization loss}
+      \def\rqtwoUtilGainLegend{Utilization gain}
+    \fi
 
-    \begin{groupplot}[
-      group style={
-        group size=2 by 1,
-        horizontal sep=1.35cm,
-      },
-      spikepanel,
-    ]
+    \ifdefined\rqtwoUnsafeSpikeSideBySide
+      \begin{groupplot}[
+        group style={
+          group size=2 by 1,
+          horizontal sep=0.050\columnwidth,
+        },
+        spikepanel,
+      ]
+    \else
+      \begin{groupplot}[
+        group style={
+          group size=1 by 2,
+          vertical sep=1.15cm,
+        },
+        spikepanel,
+      ]
+    \fi
 
     %% ---------------------------------------------------------------- (a)
-    \nextgroupplot[
-      width=0.385\textwidth,
-      xmin=0.48,
-      xmax=2.16,
-      xtick={0.5,0.75,1.0,1.25,1.5,1.75,2.0},
-      xticklabels={0.50,0.75,1.00,1.25,1.50,1.75,2.00},
-      xlabel={Remaining-sequence cost $/$ admission budget},
-    ]
+    \ifdefined\rqtwoUnsafeSpikeSideBySide
+      \nextgroupplot[
+        % Headroom past 2.0 keeps the growth-factor labels and the legend
+        % inside the axis instead of spilling into panel (b).
+        xmin=0.46,
+        xmax=2.45,
+        xtick={0.5,1.0,1.5,2.0},
+        xticklabels={0.5,1.0,1.5,2.0},
+        xlabel={\shortstack{Cost $/$ admission budget\\[-1pt]
+          \textnormal{(a) Budget overrun}}},
+      ]
+    \else
+      \nextgroupplot[
+        xmin=0.50,
+        xmax=2.08,
+        xtick={0.5,0.75,1.0,1.25,1.5,1.75,2.0},
+        xticklabels={0.50,0.75,1.00,1.25,1.50,1.75,2.00},
+        xlabel={\shortstack{Remaining-sequence cost $/$ admission budget\\[-1pt]
+          \textnormal{(a) How far each admitted group overran its budget}}},
+      ]
+    \fi
       % Admission budget and the multi-frame / single-frame separator.
       \draw[black!60,densely dashed,line width=0.5pt]
         (axis cs:1,0.35) -- (axis cs:1,8.65);
       \node[glabel,anchor=south,text=black!65] at (axis cs:1,8.65) {budget};
-      \draw[black!70,line width=0.6pt] (axis cs:0.48,3.5) -- (axis cs:2.16,3.5);
+      % Stops short of the legend box so the rule does not reappear beside it.
+      \draw[black!70,line width=0.6pt] (axis cs:0.46,3.5) -- (axis cs:1.58,3.5);
 
       % Recent-safe baseline -> unsafe event.
       \addplot[black!45,->,>=stealth,line width=0.6pt,forget plot]
@@ -121,18 +206,18 @@
                line width=0.5pt]
         coordinates {(0.568,8) (0.859,7) (0.680,6) (0.814,5)
                      (0.811,4) (0.642,3) (0.833,2) (0.842,1)};
-      \addlegendentry{Recent-safe baseline}
+      \addlegendentry{\rqtwoBaselineLegend}
 
       \addplot[only marks,mark=|,mark size=2.7pt,draw=black!60,
                line width=0.7pt]
         coordinates {(0.596,8) (0.940,7) (0.699,6) (0.915,5)
                      (0.907,4) (0.938,3) (0.908,2) (0.991,1)};
-      \addlegendentry{Predicted bound}
+      \addlegendentry{\rqtwoBoundLegend}
 
       \addplot[only marks,mark=square*,mark size=1.9pt,draw=black,fill=black]
         coordinates {(1.341,8) (1.810,7) (1.348,6) (1.042,5)
                      (1.013,4) (1.004,3) (1.092,2) (1.023,1)};
-      \addlegendentry{Unsafe event}
+      \addlegendentry{\rqtwoEventLegend}
 
       % Growth over the recent-safe baseline.
       \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.341,8) {$\times$2.36};
@@ -144,27 +229,52 @@
       \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.092,2) {$\times$1.31};
       \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.023,1) {$\times$1.22};
 
-      \node[font=\scriptsize,anchor=north] at (rel axis cs:0.5,-0.20)
-        {(a) How far each admitted group overran its budget};
-
     %% ---------------------------------------------------------------- (b)
-    \nextgroupplot[
-      width=0.385\textwidth,
-      xmin=0,
-      xmax=1470,
-      xtick={0,300,600,900,1200},
-      xlabel={Increase in remaining-sequence latency (ms)},
-    ]
+    \ifdefined\rqtwoUnsafeSpikeSideBySide
+      \ifdefined\rqtwoReviewerAccounting
+        \nextgroupplot[
+          % Same reason as panel (a): room for the total labels and legend.
+          xmin=0,
+          xmax=1560,
+          xtick={0,600,1200},
+          xlabel={\shortstack{Contribution to $\Delta$ wall time (ms)\\[-1pt]
+            \textnormal{(b) Accounting decomposition}}},
+        ]
+      \else
+        \nextgroupplot[
+          xmin=0,
+          xmax=1320,
+          xtick={0,600,1200},
+          yticklabels={},
+          xlabel={\shortstack{Latency increase (ms)\\[-1pt]
+            \textnormal{(b) Increase decomposition}}},
+        ]
+      \fi
+    \else
+      \nextgroupplot[
+        xmin=0,
+        xmax=1320,
+        xtick={0,300,600,900,1200},
+        xlabel={\shortstack{Increase in remaining-sequence latency (ms)\\[-1pt]
+          \textnormal{(b) What the increase decomposes into}}},
+      ]
+    \fi
       \addplot[draw=none,forget plot] coordinates {(0,1)};
 
       \addlegendimage{area legend,cpubar}
-      \addlegendentry{CPU-time growth}
+      \addlegendentry{\rqtwoCpuLegend}
       \addlegendimage{area legend,utilbar}
-      \addlegendentry{Utilization loss}
+      \addlegendentry{\rqtwoUtilLossLegend}
       \addlegendimage{area legend,givebackbar}
-      \addlegendentry{Utilization gain}
+      \addlegendentry{\rqtwoUtilGainLegend}
+      \ifdefined\rqtwoReviewerAccounting
+        \addlegendimage{only marks,mark=|,mark size=2.5pt,draw=black,
+                        line width=0.8pt}
+        \addlegendentry{$\Delta$ wall time}
+      \fi
 
-      \draw[black!70,line width=0.6pt] (axis cs:0,3.5) -- (axis cs:1470,3.5);
+      % Stops short of the legend box, as in panel (a).
+      \draw[black!70,line width=0.6pt] (axis cs:0,3.5) -- (axis cs:1000,3.5);
 
       % M1
       \draw[cpubar]      (axis cs:0,7.7)      rectangle (axis cs:371.6,8.3);
@@ -207,30 +317,10 @@
       \draw[totaltick]   (axis cs:86.7,0.66)  -- (axis cs:86.7,1.34);
       \node[glabel,anchor=west,xshift=11pt] at (axis cs:101.2,1) {87};
 
-      \node[font=\scriptsize,anchor=north] at (rel axis cs:0.5,-0.20)
-        {(b) What the increase decomposes into};
-
     \end{groupplot}
   \end{tikzpicture}
+  \end{lrbox}
+  \resizebox{\columnwidth}{!}{\usebox{\rqtwospikebox}}
 
-  \caption{Anatomy of the eight unsafe fresh-model admits.  Rows M1--M5 are
-  Multi-frame decisions and S1--S3 are Single-frame decisions, ordered by
-  spike size within each group; each baseline averages the three preceding
-  safe admits from the same run and group.  (a)~Remaining-sequence cost,
-  normalized by the admission budget of the same decision.  Every group was
-  admitted because its predicted upper bound fell below the budget, and every
-  one still crossed it, growing $1.22\times$--$2.36\times$ over its
-  recent-safe baseline.  (b)~The same increase decomposed through
-  \texttt{PostExecutionMetrics}: because a node's wall time equals its CPU
-  time divided by \texttt{cpuUtilizationRatio} and the core count, the
-  increase splits exactly into the part explained by additional CPU time and
-  the part explained by the process obtaining a smaller share of the cores.
-  All eight consumed more CPU time ($1.05\times$--$1.53\times$), but the four
-  that also lost at least a quarter of their CPU service (M1--M3, S1) are
-  exactly the four that grew by more than $1.5\times$; the other four stayed
-  within $1.31\times$.  Blocking GC time was zero in every baseline and every
-  event, and the overheat level and thermal status were identical to the
-  recent-safe baseline in all eight cases, so neither signal could have
-  separated these decisions at admission time.}
-  \label{fig:rq2_unsafe_spike_anatomy}
-\end{figure*}
+\end{figure}
+\endgroup
