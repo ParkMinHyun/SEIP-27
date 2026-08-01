@@ -1,7 +1,8 @@
 % RQ2: anatomy of the eight unsafe fresh-model admits.
 %
-% Single-column form.  figures/fig_rq2_unsafe_spike_anatomy.tex plots the same
-% eight decisions; use one or the other, not both.
+% Single-column form.  figures/fig_rq2_unsafe_spike_anatomy.tex shows the same
+% eight decisions as ratio bars and prints no numbers, so it complements this
+% table rather than repeating it.
 %
 % All three measurement blocks use the same shape, a Prev. -> Actual pair and
 % its ratio, so the row reads as one story across them.  The latency block adds
@@ -28,30 +29,56 @@
 %   S2    B   29   14   653   501.0    713   593.0   1.42       60
 %   S3    C   18   20   472   415.0    483   467.7   1.16       11
 %
-% The baseline is the immediately preceding capture of the same run and the
-% same optional-work group.  In all eight cases it was itself a safe admit.
+% M5 and S3 are the two admission decisions of one capture (C run 18 shot 20),
+% so the eight rows cover seven captures and are not eight independent samples.
 %
-% Node wall time = CPU time / cores covers 97.5 to 99.0 percent of the latency
-% C in these workbooks, so the last four columns account for essentially all of
-% the increase.  Take both sums from the per-node sheets: AdmissionReplay holds
-% a row only for nodes that carried an admission decision.
+% COST DEFINITION.  C is the measured wall time of the suffix as executed.  The
+% label is deliberately a measurement, not a counterfactual: RQ2 scores the
+% model's judgement on the decision it made.  The audit build does force every
+% optional node, so the suffix also contains work this model rejected, but
+% netting that out would answer a different question -- was the whole decision
+% set safe end to end -- and would read as moving the metric in the model's
+% favour.  That question is answered separately, per row, below.
 %
-% An equivalent additive split of the wall-time increase, for the prose:
-% cpuTerm = (cpu_e - cpu_p)/cores_p, coreTerm = cpu_e*(1/cores_e - 1/cores_p),
-% summing exactly to wall_e - wall_p.
-%   M1 +352/+798 = +1150   M5 +169/-64  = +105
-%   M2 +179/+970 = +1149   S1 +142/+228 = +370
-%   M3 +418/+709 = +1127   S2 +180/+26  = +206
-%   M4  +59/+115 =  +174   S3 +201/-134 =  +67
+%   id   cpu_p   cpu_e  factor   cores_p  cores_e  factor   wall_p  wall_e  factor
+%   M1    1687    2379   1.410      1.96     1.18   0.603      859    2009   2.339
+%   M2    2411    2775   1.151      2.03     1.19   0.585     1186    2335   1.969
+%   M3    2472    3340   1.351      2.08     1.44   0.694     1191    2318   1.946
+%   M4     948    1043   1.100      1.62     1.37   0.848      586     760   1.297
+%   M5     849    1044   1.230      1.16     1.24   1.076      734     839   1.143
+%   S1     863    1067   1.236      1.44     1.10   0.764      599     969   1.618
+%   S2     968    1324   1.368      1.98     1.91   0.962      489     695   1.421
+%   S3     375     560   1.493      0.92     1.18   1.282      407     474   1.165
 %
-% Control signals recomputed against the same preceding capture.  Blocking GC
-% time was 0 ms for every baseline and every event, and overheat level and
-% thermal status were identical in all eight.  Run-queue wait and nonvoluntary
-% context switches moved in both directions:
-%   M1 rq 18->32  cs 108->119      M5 rq 94->70   cs 255->150
-%   M2 rq 59->88  cs 222->228      S1 rq 87->227  cs 311->463
-%   M3 rq 55->47  cs 196->131      S2 rq 23->87   cs  68->168
-%   M4 rq  5->2   cs  37->27       S3 rq 83->58   cs 224->141
+% Node wall time = CPU time / busy cores covers 97.5 to 99.0 percent of the
+% latency, so the last four columns account for essentially all of the increase.
+% Take both sums from the per-node sheets: AdmissionReplay holds a row only for
+% nodes that carried an admission decision.
+%
+% WOULD IT HAVE SHIPPED AS A TIMEOUT?  beforeBudgetMs is the time left to the
+% deadline, so C > B and a Capture Timeout are the same event in this recording.
+% Two shipped safeguards are absent from the audit build, and each row is
+% covered by at least one:
+%
+%   id  node dur / watchdog budget   C_model / B_model   verdict
+%   M1     1460 / 1202  cut +258        1814 / 1516  over    W
+%   M2     1648 /  889  cut +759        2118 / 1308  over    W
+%   M3     1670 / 1300  cut +370        2060 / 1749  over    W
+%   M4      384 /  540  156 spare        603 /  746  fits    B
+%   M5      345 /  545  200 spare        833 /  844  fits    B
+%   S1      389 /  371  cut  +18         961 / 1435  fits    W+B
+%   S2      224 /  268   44 spare        713 /  983  fits    B
+%   S3      200 /  173  cut  +27         461 /  472  fits    W+B
+%
+% W: the per-node watchdog, suppressed by the audit build so admitted work could
+%    be measured, would have cut the decision node at its own budget.
+% B: honouring the model's own skips on both sides -- removing rejected work
+%    from the cost, and crediting a rejected node before the decision to the
+%    budget it would have freed -- leaves the decision inside its budget.
+% Removing a node also removes its contention, so C_model is an upper bound and
+% B_model a lower bound; the B verdicts are conservative.  Neither correction
+% propagates to the queue the earlier shots left behind, which a sequential
+% replay would be needed to model.
 
 \begin{table}[t]
   \centering
@@ -121,18 +148,16 @@
   \begin{minipage}{0.97\columnwidth}
     \scriptsize\emph{Notes:}
     M rows are Multi-frame and S rows Single-frame decisions, ordered by growth
-    within each group.  M1--M4 were captured under 12MP normal, and M5 and
-    S1--S3 under 24MP memory pressure.
-    Every column in the first block is a remaining-sequence cost divided by that
-    decision's own admission budget: \emph{Prev.}\ and \emph{Actual} are the
-    measured costs of the preceding capture and of the event itself, and
-    \emph{Pred.}\ is the \emph{upper bound} the model predicted for the event,
-    not its point estimate.  The model admits exactly when \emph{Pred.}\ does
-    not exceed \(1.0\), so every row here is an admit whose \emph{Actual} then
-    crossed \(1.0\) --- by as little as \(0.004\) for S1 and as much as
-    \(0.810\) for M2.
-    \emph{Prev.}\ is the capture immediately before the event in the same run
-    and group, itself a safe admit in all eight cases; for M2 and M3
+    within each group.  M1--M4 were captured under 12MP normal and M5 and S1--S3
+    under 24MP memory pressure; M5 and S3 are the two decisions of one capture,
+    so the eight rows cover seven captures.
+    Every column in the first block is a measured remaining-sequence cost
+    divided by that decision's own admission budget: \emph{Prev.}\ and
+    \emph{Actual} are the preceding capture and the event, and \emph{Pred.}\ is
+    the \emph{upper bound} the model predicted for the event, not its point
+    estimate.  The model admits exactly when \emph{Pred.}\ does not exceed
+    \(1.0\).  \emph{Prev.}\ is the capture immediately before the event in the
+    same run and group, itself a safe admit in all eight cases; for M2 and M3
     \emph{Pred.}\ sits \(0.010\) and \(0.001\) from it, so the model's inputs
     carried no warning before a jump of \(\times1.95\) and \(\times1.93\).
     The last two blocks give the measured quantities whose quotient is that
@@ -144,13 +169,11 @@
     The work grew moderately everywhere, whereas the three largest spikes lost
     close to half their parallelism while M5 and S3 gained it and barely moved:
     contention for the cores, not a larger workload, is what the model failed to
-    anticipate.
-    Overheat level, thermal status, and blocking GC time were identical to the
-    preceding capture throughout.
-    Costs are forced-execution: the audit build suppresses the per-node watchdog
-    so that admitted work can be measured to completion.  Under the production
-    watchdog, M1--M3, S1, and S3 would instead have been cut at their node's
-    budget, so their \emph{Actual} latency is what the admitted work cost, not
-    what a shipped build would have spent on it.
+    anticipate.  Overheat level, thermal status, and blocking GC time were
+    identical to the preceding capture throughout.
+    These are the model's decisions scored as measured; the audit build forces
+    every optional node and suppresses the per-node watchdog, and
+    Figure~\ref{fig:rq2_unsafe_spike_anatomy} marks, per row, which shipped
+    safeguard would have prevented the overrun.
   \end{minipage}
 \end{table}

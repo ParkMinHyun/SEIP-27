@@ -53,6 +53,11 @@ The intended argument is:
 - \(B\): the remaining deadline budget at an admission decision.
 - \(C\): the factual remaining wall time from the selected Bokeh or Filter
   node start to Draft completion.
+- \(C_{\mathrm{model}}\), \(B_{\mathrm{model}}\): \(C\) and \(B\) with the fresh
+  model's own skips honoured. They are **never** the classifier — every reported
+  cell uses \(C\) and \(B\) — and exist only for the outcome interpretation in
+  section 5.4, which asks whether a shipped build would have emitted the
+  overrun. They coincide with \(C\) and \(B\) outside the always-admit audit.
 - \(d_i\): the pacing delay associated with shot \(i\). In the current
   aggregation convention, this delay gates the transition to shot \(i+1\).
 - \(B_i^{real}\): the measured Draft backlog at a pacing decision.
@@ -272,12 +277,37 @@ The successful and unsafe percentages use all effective admits in that group
 as their denominator. A watchdog-contained execution is unsafe for admission
 quality even if the watchdog prevents the end-to-end Capture Timeout.
 
+`beforeBudgetMs` is the time left until the Capture Timeout deadline at that
+node, so \(C > B\) and the capture timing out are the same event. In the three
+audit workbooks every one of the 154 over-budget decisions belongs to a capture
+that timed out. Do not present the unsafe-admit count as a proxy for timeouts;
+it is the timeout attributed to the decision that caused it.
+
 ### 5.3 Always-admit audit metrics
 
 The audit forces optional work to execute while a shadow controller records
 the fresh model decision it would make before applying session-sticky
 demotion. This supplies factual outcomes for both model-admitted and
 model-skipped work without attributing later policy-carried skips to the model.
+
+#### Score the decision as measured
+
+Every cell in the audit block uses \(C\) and \(B\) exactly as recorded. Forcing
+every optional node is part of the condition being measured, not an error to net
+out: RQ2 scores the model's judgement on the decision it made, and the forced
+suffix is the workload that decision was taken against.
+
+It is tempting to subtract the work the same model rejected, since the audit ran
+it anyway. Do not make that the label. It answers a different question — was the
+whole decision set safe end to end — and a reviewer will read a metric that was
+redefined in the model's favour. Report it instead as the outcome
+interpretation of section 5.4, per decision, where it belongs and where the
+counterfactual is visible as a counterfactual.
+
+State plainly what the label does and does not mean. An unsafe-admitted decision
+here is a model misjudgement under the audit condition. It is not a Capture
+Timeout a shipped build would emit, because that build both enforces admission
+and arms the per-node watchdog, and the audit does neither.
 
 #### All-decision confusion matrix
 
@@ -306,6 +336,25 @@ Bokeh or Filter decision; it is not restricted to the first skip in a run.
 It does not use `afterEffectiveAdmit`, because that field carries an earlier
 group demotion through the remainder of the burst and would attribute
 session-policy state to the fresh model decision.
+
+#### The audit decision set
+
+Record this explicitly, because the counts cannot be reproduced without it and
+a later recomputation that silently uses a different set is indistinguishable
+from a data change. The current cells come from
+`48U_metrics_12MP_normal_0729_PacingOnly_{1,2}.xlsx` and
+`48U_metrics_24MP_memory_0729_PacingOnly_{1,2}.xlsx` with:
+
+- runs delimited by `ppSequenceId` reset, per section 3.2;
+- shots after 30 of each run excluded;
+- identical run signatures counted once, since the updated 12MP workbook 1
+  contains every run of workbook 2;
+- one manifest exclusion, source run 16 of the 24MP workbook 1, which was
+  invalid/incomplete.
+
+That yields 659 captures from 34 unique 12MP runs and 827 captures from 53
+included 24MP runs. Any change to this set must be recorded here before the
+cells are regenerated.
 
 #### Median margin and overrun for model-skipped work
 
@@ -371,9 +420,8 @@ current workbooks all eight preceding captures are safe admits.
 
 Every per-node quantity is summed over the *remaining* nodes of the capture:
 node rows whose `nodeOrder` is at least the selected decision's `nodeOrder`,
-taken in `nodeOrder` order. This is the work that the admission decision
-actually committed to, and it is the same suffix that \(C\) measures in wall
-time.
+taken in `nodeOrder` order. This is the suffix that \(C\) measures in wall time,
+so the panels and the label describe the same execution.
 
 #### Panel (a): overshoot against the budget
 
@@ -390,9 +438,11 @@ Draw the bound marker after the baseline marker. Where the two nearly coincide
 the bound must stay visible, because that coincidence is the figure's sharpest
 evidence that the model had no warning.
 
-with \(C\) as defined in section 5.2. Normalize by \(B\), not by the deadline
-\(D\): this places the admission criterion at exactly 1.0 and keeps the
-internal deadline constant out of the figure. The annotated growth factor is
+with \(C\) as defined in section 5.2. Normalize by \(B\), not
+by the deadline \(D\): this places the admission criterion at exactly 1.0 and
+keeps the internal deadline constant out of the figure. Because \(B\) is the
+time left to the deadline, every event past 1.0 is also a Capture Timeout. The
+annotated growth factor is
 `event C / preceding-capture C`.
 
 #### Panels (b) and (c): the two measured quantities behind the latency
@@ -466,6 +516,48 @@ blocking GC time is zero throughout — while the last two move in both
 directions. That asymmetry is the figure's argument and the reason a static
 thermal threshold cannot anticipate these decisions, so it must be recomputed
 whenever the workbooks change rather than carried forward.
+
+#### Outcome interpretation: would this have shipped as a timeout?
+
+\(B\) is the time left to the deadline, so an unsafe admit is a capture that
+overran its deadline in the recording. A shipped build would not necessarily
+have emitted it, because the audit removes two safeguards at once. Report both
+per decision, as an annotation on the figure rather than as a change to the
+label:
+
+**W — the per-node watchdog.** The audit suppresses it so that admitted work can
+be measured to completion, but `onWatchdogArmed` still records the budget, so
+this is a comparison, not a guess. The watchdog wraps one OPTIONAL node with
+`budgetMs` less the predicted upper bound of the sequence's RESERVED work:
+
+```text
+W  <=>  decision node durationMs > that node's watchdogTimeoutMs
+```
+
+Test the node that carried the decision under test. Ignore nodes the model would
+have skipped: their recorded budget is often zero only because the forced prefix
+had already consumed the deadline, and they would not run at all.
+
+**B — the model's own decision set.** Honour the fresh model's skips on both
+sides of the comparison. Work it rejected after the decision leaves the cost;
+work it rejected *before* the decision shortens the path to it and therefore
+raises that decision's budget:
+
+```text
+C_model = C - durations of guarded nodes after  the decision that the model skipped
+B_model = B + durations of guarded nodes before the decision that the model skipped
+B       <=>  C_model <= B_model
+```
+
+Removing a node also removes its contention, so `C_model` is an upper bound and
+`B_model` a lower bound: a B verdict is conservative. Neither correction
+propagates to the queue the earlier shots left behind, which only a sequential
+replay would model, so a decision carrying neither W nor B is not proof of a
+shipped timeout — only the absence of these two defences.
+
+In the current workbooks every one of the eight unsafe admits carries at least
+one verdict, and the three carrying only W are the three that are over budget
+even on the model's own decision set.
 
 #### Row labels
 
@@ -918,6 +1010,7 @@ removed more work, and RQ3 would no longer isolate pacing ability.
 - `tables/tab_rq1_ablation.tex`
 - `tables/tab_rq1_result.tex`
 - `tables/tab_rq2_admission_summary.tex`
+- `tables/tab_rq2_unsafe_spike_anatomy.tex`
 - `tables/tab_rq3_pacing_summary.tex`
 
 ### RQ2 figure
@@ -926,6 +1019,17 @@ removed more work, and RQ3 would no longer isolate pacing ability.
   values and the decomposition inputs are recorded in its comment header, so no
   companion CSV is emitted. Regenerate it from section 5.4 whenever the RQ2
   workbook set changes.
+
+`tables/tab_rq2_unsafe_spike_anatomy.tex` carries the measured values for the
+same decisions and the figure carries their ratios, so the two are read
+together and must be regenerated together. Both, and the always-admit block of
+`tables/tab_rq2_admission_summary.tex`, come from `data/rq2_spike_anatomy.mjs`
+in the ML implementation repository, which is the single place the
+\(C_{\mathrm{model}}\) rule of section 5.3 is implemented:
+
+```text
+node data/rq2_spike_anatomy.mjs
+```
 
 ### RQ3 figure
 

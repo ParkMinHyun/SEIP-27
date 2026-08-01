@@ -39,11 +39,23 @@
   \centering
   \setlength{\abovecaptionskip}{2pt}%
   \setlength{\belowcaptionskip}{3pt}%
-  \caption{RQ1(a) end-to-end controller ablation on S26 Ultra
-  (first-timeout shot, E/M).}
+  % The device is now a column, so it no longer belongs in the caption.
+  \caption{RQ1(a) end-to-end controller ablation (first-timeout shot).}
   \label{tab:rq1_ablation}
 
   {\scriptsize
+  % E and M get their own columns, as in Table~\ref{tab:rq1_controller_behavior},
+  % so the shot indices line up down each column instead of hiding behind a
+  % slash.  Every cell is set in one fixed-width box: a \multicolumn wider than
+  % the columns it spans dumps the whole excess into the last spanned column,
+  % which would push M away from its header, and the four groups have headers of
+  % very different widths.  Sizing every cell to half the widest header line
+  % makes all eight data columns equal, so each label sits centred over its own
+  % column while the digits stay right aligned inside the box.
+  \newlength{\abCellW}\settowidth{\abCellW}{\textbf{Admission}}%
+  \setlength{\abCellW}{0.5\abCellW}%
+  \newcommand{\abCell}[1]{\makebox[\abCellW][r]{#1}}%
+  \newcommand{\abHd}[1]{\makebox[\abCellW][c]{#1}}%
   \setlength{\arrayrulewidth}{0.35pt}%
   \setlength{\doublerulesep}{0.8pt}%
   \renewcommand{\arraystretch}{1.08}%
@@ -51,47 +63,90 @@
   % rules land exactly on \columnwidth.
   \newsavebox{\rqonebbox}%
   \newcommand{\rqonebtabular}{%
-  \begin{tabular}{|c|c||c|c|c|c|}
+  \begin{tabular}{|c|c|c||cc|cc|cc|cc|}
     \hline\hline
-    \multirow{2}{*}[-0.6ex]{\textbf{Condition}} &
-    \multirow{2}{*}[-0.6ex]{\makecell[c]{\textbf{Start}\\\textbf{level}}} &
-    \multicolumn{4}{c|}{\textbf{Controller configuration}} \\
-    \cline{3-6}
-    & & \textbf{Baseline} & \makecell[c]{\textbf{Admission}\\\textbf{only}} &
-    \makecell[c]{\textbf{Pacing}\\\textbf{only}} & \textbf{Ours} \\
+    \multirow{3}{*}[-1.2ex]{\textbf{Device}} &
+    \multirow{3}{*}[-1.2ex]{\textbf{Condition}} &
+    \multirow{3}{*}[-1.2ex]{\makecell[c]{\textbf{Starting}\\\textbf{overheat}\\\textbf{level}}} &
+    \multicolumn{8}{c|}{\textbf{Timeout onset}} \\
+    \cline{4-11}
+    & & &
+    \multicolumn{2}{c|}{\textbf{Baseline}} &
+    \multicolumn{2}{c|}{\makecell[c]{\textbf{Admission}\\\textbf{only}}} &
+    \multicolumn{2}{c|}{\makecell[c]{\textbf{Pacing}\\\textbf{only}}} &
+    \multicolumn{2}{c|}{\textbf{Ours}} \\
+    \cline{4-11}
+    & & &
+    \multicolumn{1}{c}{\abHd{\textbf{E}}} & \multicolumn{1}{c|}{\abHd{\textbf{M}}} &
+    \multicolumn{1}{c}{\abHd{\textbf{E}}} & \multicolumn{1}{c|}{\abHd{\textbf{M}}} &
+    \multicolumn{1}{c}{\abHd{\textbf{E}}} & \multicolumn{1}{c|}{\abHd{\textbf{M}}} &
+    \multicolumn{1}{c}{\abHd{\textbf{E}}} & \multicolumn{1}{c|}{\abHd{\textbf{M}}} \\
     \hline\hline
-    \multirow{7}{*}{\makecell[c]{12MP\\normal}}
-      & Lv0 & --    & -- & -- & \textbf{--} \\
-    \cline{2-6}
-      & Lv1 & --    & -- & -- & \textbf{--} \\
-    \cline{2-6}
-      & Lv2 & 24/27 & -- & 30/-- & \textbf{--} \\
-    \cline{2-6}
-      & Lv3 & 13/18 & 13/-- & 20/-- & \textbf{--} \\
-    \cline{2-6}
-      & Lv4 & 10/17 & -- & 9/24 & \textbf{--} \\
-    \cline{2-6}
-      & Lv5 & 8/10  & -- & 8/9 & \textbf{--} \\
-    \cline{2-6}
-      & Lv6 & 7/10  & -- & 9/18 & \textbf{--} \\
-    \cline{1-6}
-    \multirow{7}{*}{\makecell[c]{24MP\\memory\\pressure}}
-      & Lv0 & 26/30 & -- & 27/-- & \textbf{--} \\
-    \cline{2-6}
-      & Lv1 & 19/22 & -- & 20/23 & \textbf{--} \\
-    \cline{2-6}
-      & Lv2 & 14/21 & 21/-- & 15/24 & \textbf{--} \\
-    \cline{2-6}
-      & Lv3 & 7/10  & 14/-- & 7/9 & \textbf{--} \\
-    \cline{2-6}
-      & Lv4 & 5/9   & -- & 9/14 & \textbf{--} \\
-    \cline{2-6}
-      & Lv5 & 4/8   & -- & 7/12 & \textbf{--} \\
-    \cline{2-6}
-      & Lv6 & 4/8   & -- & 7/11 & \textbf{--} \\
+    % A cell that was a bare -- carried both statistics, so it expands to -- in
+    % each of the two columns.
+    % One device is measured, so the Device cell spans all fourteen data rows;
+    % the block separator below is \cline{2-11} so it does not cut through it.
+    \multirow{14}{*}{\makecell[c]{S26\\Ultra}}
+      & \multirow{7}{*}{\makecell[c]{12MP\\normal}}
+      & Lv0 & \abCell{--} & \abCell{--} & \abCell{--} & \abCell{--}
+             & \abCell{--} & \abCell{--}
+             & \abCell{\textbf{--}} & \abCell{\textbf{--}} \\
+    \cline{3-11}
+      & & Lv1 & \abCell{--} & \abCell{--} & \abCell{--} & \abCell{--}
+             & \abCell{--} & \abCell{--}
+             & \abCell{\textbf{--}} & \abCell{\textbf{--}} \\
+    \cline{3-11}
+      & & Lv2 & \abCell{24} & \abCell{27} & \abCell{--} & \abCell{--}
+             & \abCell{30} & \abCell{--}
+             & \abCell{\textbf{--}} & \abCell{\textbf{--}} \\
+    \cline{3-11}
+      & & Lv3 & \abCell{13} & \abCell{18} & \abCell{13} & \abCell{--}
+             & \abCell{20} & \abCell{--}
+             & \abCell{\textbf{--}} & \abCell{\textbf{--}} \\
+    \cline{3-11}
+      & & Lv4 & \abCell{10} & \abCell{17} & \abCell{--} & \abCell{--}
+             & \abCell{9}  & \abCell{24}
+             & \abCell{\textbf{--}} & \abCell{\textbf{--}} \\
+    \cline{3-11}
+      & & Lv5 & \abCell{8}  & \abCell{10} & \abCell{--} & \abCell{--}
+             & \abCell{8}  & \abCell{9}
+             & \abCell{\textbf{--}} & \abCell{\textbf{--}} \\
+    \cline{3-11}
+      & & Lv6 & \abCell{7}  & \abCell{10} & \abCell{--} & \abCell{--}
+             & \abCell{9}  & \abCell{18}
+             & \abCell{\textbf{--}} & \abCell{\textbf{--}} \\
+    \cline{2-11}
+      & \multirow{7}{*}{\makecell[c]{24MP\\memory\\pressure}}
+      & Lv0 & \abCell{26} & \abCell{30} & \abCell{--} & \abCell{--}
+             & \abCell{27} & \abCell{--}
+             & \abCell{\textbf{--}} & \abCell{\textbf{--}} \\
+    \cline{3-11}
+      & & Lv1 & \abCell{19} & \abCell{22} & \abCell{--} & \abCell{--}
+             & \abCell{20} & \abCell{23}
+             & \abCell{\textbf{--}} & \abCell{\textbf{--}} \\
+    \cline{3-11}
+      & & Lv2 & \abCell{14} & \abCell{21} & \abCell{21} & \abCell{--}
+             & \abCell{15} & \abCell{24}
+             & \abCell{\textbf{--}} & \abCell{\textbf{--}} \\
+    \cline{3-11}
+      & & Lv3 & \abCell{7}  & \abCell{10} & \abCell{14} & \abCell{--}
+             & \abCell{7}  & \abCell{9}
+             & \abCell{\textbf{--}} & \abCell{\textbf{--}} \\
+    \cline{3-11}
+      & & Lv4 & \abCell{5}  & \abCell{9}  & \abCell{--} & \abCell{--}
+             & \abCell{9}  & \abCell{14}
+             & \abCell{\textbf{--}} & \abCell{\textbf{--}} \\
+    \cline{3-11}
+      & & Lv5 & \abCell{4}  & \abCell{8}  & \abCell{--} & \abCell{--}
+             & \abCell{7}  & \abCell{12}
+             & \abCell{\textbf{--}} & \abCell{\textbf{--}} \\
+    \cline{3-11}
+      & & Lv6 & \abCell{4}  & \abCell{8}  & \abCell{--} & \abCell{--}
+             & \abCell{7}  & \abCell{11}
+             & \abCell{\textbf{--}} & \abCell{\textbf{--}} \\
     \hline\hline
   \end{tabular}}%
-  \fittabcolsep{\rqonebbox}{\rqonebtabular}{\columnwidth}{12}%
+  \fittabcolsep{\rqonebbox}{\rqonebtabular}{\columnwidth}{22}%
   \rqonebtabular
   }
 

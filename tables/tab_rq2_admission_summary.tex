@@ -16,8 +16,32 @@
 % runs in 48U_metrics_24MP_memory_0729_PacingOnly_{1,2}.xlsx.  Of 54
 % attempted runs, workbook 1 source run 16 was invalid/incomplete and excluded;
 % shots after 30 were also excluded.
-% Shadow model decision = afterModelAdmit; factual
-% cost C = draftEndUptimeMs - nodeStartUptimeMs.
+% Shadow model decision = afterModelAdmit; factual cost
+% C = draftEndUptimeMs - nodeStartUptimeMs, the suffix as executed.
+%
+% The label is deliberately a measurement.  RQ2 scores the model's judgement on
+% the decision it made, so the audit build forcing every optional node is part
+% of the condition being measured, not an error to net out.  Netting it out
+% would answer a different question -- was the whole decision set safe end to
+% end -- and would read as moving the metric in the model's favour.  That
+% question is answered per decision in
+% Table~\ref{tab:rq2_unsafe_spike_anatomy} and
+% Figure~\ref{fig:rq2_unsafe_spike_anatomy}, which mark, for each of the eight
+% unsafe-admitted decisions, which shipped safeguard would have prevented the
+% overrun; all eight are covered by at least one.
+%
+% For reference, honouring the model's own skips on both the cost and the budget
+% moves this block to:
+%   12MP Multi   623 (96.4%) / 23 (3.6%)  +3.0%   3 (23.1%) / 10 (76.9%)  -1.4%
+%   12MP Single  630 (99.4%) / 23 (3.6%)  +4.0%   0 (0.0%)  /  6 (100.0%) -4.5%
+%   24MP Multi   729 (91.0%) / 72 (9.0%)  +3.7%   0 (0.0%)  / 26 (100.0%) -2.9%
+%   24MP Single  752 (92.4%) / 62 (7.6%)  +5.4%   0 (0.0%)  / 13 (100.0%) -1.5%
+% It lowers the unsafe-admit counts and raises the unnecessary-skip counts by
+% the same act, so it is recorded here rather than reported as the headline.
+%
+% Regenerate with data/rq2_spike_anatomy.mjs in the ML implementation
+% repository.
+%
 % Every audit count carries the share of its own factual class, so the two
 % Feasible-work cells sum to 100% and the two Unsafe-work cells sum to 100%.
 
@@ -39,7 +63,7 @@
     \multicolumn{6}{c|}{\textbf{Always-admit model audit}} \\
     \cline{3-11}
     & &
-    \multicolumn{1}{c|}{\multirow{2}{*}[-0.6ex]{\makecell[c]{\textbf{Admit}\\\textbf{rate}}}} &
+    \multicolumn{1}{c|}{\multirow{2}{*}[-0.6ex]{\makecell[c]{\textbf{Admit rate}}}} &
     \multicolumn{1}{c|}{\multirow{2}{*}[-0.6ex]{\makecell[c]{\textbf{Successful}\\\textbf{admits}}}} &
     \multicolumn{1}{c|}{\multirow{2}{*}[-0.6ex]{\makecell[c]{\textbf{Unsafe}\\\textbf{admits}}}} &
     \multicolumn{3}{c|}{\textbf{Feasible work}} &
@@ -104,5 +128,20 @@
   \rqtwotabular
   }
 
-  \par\vspace{1pt}
+  \par\vspace{2pt}
+  \begin{minipage}{0.97\textwidth}
+    \scriptsize\emph{Notes:}
+    The audit block scores each decision as measured: this suffix, executed as
+    the audit build ran it, against the budget the decision saw.  Because the
+    build forces every optional node and suppresses the per-node watchdog, an
+    unsafe-admitted decision here is a model misjudgement under that condition,
+    not a Capture Timeout a shipped build would emit.
+    Table~\ref{tab:rq2_unsafe_spike_anatomy} and
+    Figure~\ref{fig:rq2_unsafe_spike_anatomy} take the eight unsafe-admitted
+    decisions apart and mark, for each, which shipped safeguard would have
+    prevented the overrun; every one is covered, three of them only by the
+    watchdog.
+    The budget is the time left to the deadline, so a decision is unsafe here
+    exactly when its capture overran that deadline in the recording.
+  \end{minipage}
 \end{table*}

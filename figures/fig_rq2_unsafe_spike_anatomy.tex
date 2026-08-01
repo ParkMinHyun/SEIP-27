@@ -1,294 +1,228 @@
-% RQ2: anatomy of the eight unsafe fresh-model admits.
+% RQ2: what changed at each of the eight unsafe fresh-model admits, as ratios to
+% the capture immediately before it, and which shipped safeguard would have
+% prevented each overrun.
 %
-% Built per section 5.4 of docs/rq1-rq3-metrics-guide.md from the workbooks
-% below (ML implementation commit c871d3a); same decision set as the
-% unsafe-admit cell of Table~\ref{tab:rq2_admission_audit}.  Rows are ordered
-% by growth factor within each optional-work group, so the labels are
-% positional.  Regenerate with data/rq2_spike_anatomy.mjs in the ML repository.
+% Companion to Table~\ref{tab:rq2_unsafe_spike_anatomy}, which carries the
+% measured values behind these ratios.
 %
-%   A = 48U_metrics_12MP_normal_0729_PacingOnly_1.xlsx
-%   B = 48U_metrics_24MP_memory_0729_PacingOnly_1.xlsx
-%   C = 48U_metrics_24MP_memory_0729_PacingOnly_2.xlsx
+% Bars are anchored at 1.0, so a bar to the right is an increase over the
+% preceding capture and a bar to the left a decrease.  The x coordinates below
+% are therefore ratio - 1, and the tick labels restate them as ratios.
 %
-% The baseline is the IMMEDIATELY PRECEDING capture of the same run and the
-% same optional-work group, not an average over three recent safe decisions.
-% The predicted bound is formed from what the controller had just observed, so
-% the fair question is whether the one shot before the spike gave any warning.
-% In all eight cases that preceding capture was itself a safe admit, so the
-% baseline is not contaminated by an earlier overrun.
+%   id  latency  CPU time  busy cores   prevented by
+%   M1     2.32      1.41        0.60   watchdog
+%   M2     1.95      1.15        0.59   watchdog
+%   M3     1.93      1.35        0.69   watchdog
+%   M4     1.30      1.10        0.85   skipped work
+%   M5     1.14      1.23        1.08   skipped work
+%   S1     1.60      1.24        0.76   both
+%   S2     1.42      1.37        0.96   skipped work
+%   S3     1.16      1.49        1.28   both
 %
-%   id  book run shot     B   Cprev      C      UB  growth  overrun
-%   M1    A   30   21  1516   877.0   2033   903.8   2.32      517
-%   M2    A   11    9  1308  1216.0   2367  1229.1   1.95     1059
-%   M3    A    9   26  1749  1221.0   2357  1222.5   1.93      608
-%   M4    A   31   29   746   596.0    777   682.8   1.30       31
-%   M5    C   18   20   844   747.0    855   765.1   1.14       11
-%   S1    C    6   11   975   611.0    979   915.0   1.60        4
-%   S2    B   29   14   653   501.0    713   593.0   1.42       60
-%   S3    C   18   20   472   415.0    483   467.7   1.16       11
+% The right-hand column is the interpretation layer, kept outside the plot box
+% so the measured ratios stay the measured ratios:
 %
-% For M2 and M3 the predicted bound and the preceding capture's measured cost
-% differ by 0.010 and 0.001 of the budget, so the model's inputs carried no
-% warning at all before a roughly 2x jump.
+%   watchdog   the per-node watchdog, suppressed by the audit build so that admitted
+%      work could be measured to completion, would have cut the decision node at
+%      its own budget:
+%        M1 1460/1202 (+258)   M2 1648/889 (+759)   M3 1670/1300 (+370)
+%        S1  389/ 371 ( +18)   S3  200/173 ( +27)
+%   skipped work  the model's remaining skips in the same capture leave the
+%      decision inside its budget.  Work rejected AFTER the decision leaves the
+%      cost; a node rejected BEFORE it frees budget by shortening the path to
+%      it.  Both directions occur, so neither "prior" nor "later" alone would
+%      label these rows correctly -- and a Multi-frame decision is nodeOrder 1,
+%      so nothing can precede it at all:
+%        id  before(budget+)  after(cost-)   C_model/B_model
+%        M4        0              174          603 /  746
+%        M5        0               22          833 /  844
+%        S1      460               18          961 / 1435
+%        S2      330                0          713 /  983
+%        S3        0               22          461 /  472
 %
-% Panels (b) and (c) plot the two measured quantities whose quotient is the
-% latency in panel (a).  Over the node suffix, CPU work is sum(cpuTimeMs) and
-% the cores serving it is sum(cpuTimeMs) / sum(wallTimeMs), both read from the
-% per-node sheets rather than AdmissionReplay, which omits nodes that carry no
-% admission decision.  Node wall time then satisfies
+% Every row carries at least one, so none of the eight would have reached a
+% shipped build as a Capture Timeout.  M1-M3 are covered only by the watchdog:
+% they are over budget even on their own decision set, which is why they are the
+% three genuine model errors.
 %
-%   wall = CPU work / cores
+% The row pitch is set by the value labels, not the bars: three labels per row
+% need about 6.5pt of vertical separation at \tiny, so the bar shift, the bar
+% width that makes the group's bars touch, and the y unit all follow from that.
+% A transposed, vertical-bar version was tried and dropped: three labels per
+% group then sit side by side and need a full-width float to clear each other,
+% which costs more page area than this layout.
 %
-% identically, and covers 97.5 to 99.0 percent of the panel (a) latency C, so
-% the two panels account for essentially all of the increase.
-%
-%   id   cpu_p   cpu_e  factor   cores_p  cores_e  factor   wall_p  wall_e  factor
-%   M1    1687    2379   1.410      1.96     1.18   0.603      859    2009   2.339
-%   M2    2411    2775   1.151      2.03     1.19   0.585     1186    2335   1.969
-%   M3    2472    3340   1.351      2.08     1.44   0.694     1191    2318   1.946
-%   M4     948    1043   1.100      1.62     1.37   0.848      586     760   1.297
-%   M5     849    1044   1.230      1.16     1.24   1.076      734     839   1.143
-%   S1     863    1067   1.236      1.44     1.10   0.764      599     969   1.618
-%   S2     968    1324   1.368      1.98     1.91   0.962      489     695   1.421
-%   S3     375     560   1.493      0.92     1.18   1.282      407     474   1.165
-%
-% An equivalent additive split of wall_e - wall_p, kept for the prose and
-% deliberately not plotted because it reads as a derived quantity rather than a
-% measurement: cpuTerm = (cpu_e - cpu_p) / cores_p and
-% coreTerm = cpu_e * (1/cores_e - 1/cores_p), summing exactly to the increase.
-%   M1 +352/+798 = +1150   M5 +169/-64  = +105
-%   M2 +179/+970 = +1149   S1 +142/+228 = +370
-%   M3 +418/+709 = +1127   S2 +180/+26  = +206
-%   M4  +59/+115 =  +174   S3 +201/-134 =  +67
-%
-% Control signals recomputed against the same preceding capture.  Blocking GC
-% time was 0 ms for every baseline and every event, and overheat level and
-% thermal status were identical in all eight.  Run-queue wait and nonvoluntary
-% context switches moved in both directions:
-%   M1 rq 18->32  cs 108->119      M5 rq 94->70   cs 255->150
-%   M2 rq 59->88  cs 222->228      S1 rq 87->227  cs 311->463
-%   M3 rq 55->47  cs 196->131      S2 rq 23->87   cs  68->168
-%   M4 rq  5->2   cs  37->27       S3 rq 83->58   cs 224->141
+% The relation is multiplicative, latency = CPU time / busy cores, so the bars
+% must not be read as adding up on this linear scale.  Regenerate the values
+% with data/rq2_spike_anatomy.mjs in the ML repository.
 
-% Layout: one panel per row, each spanning the column, so the eight rows get
-% the full width instead of a third of it.  All three panels share the same row
-% order and the same previous/this-capture grammar, so one key serves them all
-% and no legend box sits inside a plot.
-\begingroup
-
-\begin{figure}[!t]
+\begin{figure}[t]
   \centering
-    \tikzset{
-      glabel/.style={font=\tiny,inner sep=1pt},
-      rqtwoprev/.style={mark=o,mark size=1.9pt,draw=black,fill=white,
-                        line width=0.5pt},
-      rqtwobound/.style={mark=|,mark size=2.6pt,draw=black!60,line width=0.7pt},
-      rqtwoevent/.style={mark=square*,mark size=1.8pt,draw=black,fill=black},
-      rqtwoarrow/.style={black!45,->,>=stealth,line width=0.6pt},
-    }
-    \pgfplotsset{
-      spikepanel/.style={
-        ymin=0.35,
-        ymax=8.65,
-        ytick={1,2,3,4,5,6,7,8},
-        yticklabels={S3,S2,S1,M5,M4,M3,M2,M1},
-        axis x line*=bottom,
-        axis y line*=left,
-        % Outward ticks, as in fig_rq3_pacing_trajectories: these rows are
-        % dense, and inward ticks both intrude on the markers and duplicate
-        % the x grid lines.
-        tick align=outside,
-        xmajorgrids,
-        grid style={black!14,line width=0.3pt},
-        axis line style={line width=0.35pt},
-        tick style={line width=0.35pt},
-        clip=false,
-        % Sized so one panel plus its labels fills \columnwidth; the
-        % \resizebox below then runs at a scale of about 0.9.
-        width=1.105\columnwidth,
-        height=3.15cm,
-        tick label style={font=\tiny},
-        yticklabel style={font=\tiny},
-        label style={font=\tiny},
-        % Panel tags sit above their panel, as in
-        % fig_rq3_pacing_trajectories: stacked vertically, a tag below one
-        % panel reads as if it belonged to the next.
-        title style={font=\tiny},
-        xlabel style={yshift=2pt},
-      },
-    }
-
-  \newsavebox{\rqtwospikebox}
-  \begin{lrbox}{\rqtwospikebox}
+  \setlength{\abovecaptionskip}{3pt}%
+  \setlength{\belowcaptionskip}{2pt}%
+  % Safeguard verdict, drawn outside the plot box so it never competes with a
+  % value label for x range. The tick reads as "this did not ship as a timeout"
+  % on its own; the letter says which safeguard prevented it.
+  \newcommand{\rqtwosg}[2]{%
+    \node[font=\tiny,inner sep=0pt,anchor=west] at (axis cs:1.66,#1)
+      {\ding{51}\,\textsf{#2}};}%
   \begin{tikzpicture}
-    \begin{groupplot}[
-      group style={
-        group size=1 by 3,
-        % Room for one panel's tick labels plus a one-line x label, and for the
-        % next panel's tag above it: two text lines have to fit between the
-        % plot boxes without touching.
-        vertical sep=1.32cm,
+    % Value labels: one macro per side so the anchor and its matching nudge stay
+    % literal. A conditional inside a TikZ key value is not worth the fragility.
+    % #1 vertical offset matching the bar shift, #2 bar end in plot
+    % coordinates, #3 row, #4 printed ratio.
+    \newcommand{\rqtwovalr}[4]{%
+      \node[font=\tiny,inner sep=0pt,anchor=west,yshift=#1,xshift=2.5pt]
+        at (axis cs:#2,#3) {$\times$#4};}
+    \newcommand{\rqtwovall}[4]{%
+      \node[font=\tiny,inner sep=0pt,anchor=east,yshift=#1,xshift=-2.5pt]
+        at (axis cs:#2,#3) {$\times$#4};}
+    \begin{axis}[
+      xbar,
+      % Bar width equals the bar shift spacing below, so the three bars of a
+      % group touch. Both are 6.5pt because that is the least vertical room the
+      % three value labels need at \tiny; anything narrower would either
+      % reintroduce a gap or collide the labels.
+      bar width=6.5pt,
+      % Fixing the y unit sets the row pitch directly. A group is 19.5pt tall,
+      % so 25pt leaves 5.5pt between groups - enough that touching bars read as
+      % one group rather than the rows running together.
+      y=25pt,
+      % scale only axis makes width the plot box rather than the box plus its
+      % labels, so the bars get the column's full width instead of sharing it
+      % with the row names.
+      scale only axis=true,
+      width=0.775\columnwidth,
+      ymin=0.4, ymax=8.6,
+      ytick={1,2,3,4,5,6,7,8},
+      yticklabels={S3,S2,S1,M5,M4,M3,M2,M1},
+      % Plotted values are ratio - 1 so that the bars grow out of 1.0; the tick
+      % labels put them back into ratio units.  The limits leave room for a
+      % value label past either end of the longest bar and for the key.
+      xmin=-0.65, xmax=1.60,
+      xtick={-0.4,-0.2,0,0.2,0.4,0.6,0.8,1.0,1.2},
+      xticklabels={0.6,0.8,1.0,1.2,1.4,1.6,1.8,2.0,2.2},
+      xlabel={Ratio to the previous capture ($\times$)},
+      axis x line*=bottom,
+      axis y line*=left,
+      tick align=outside,
+      xmajorgrids,
+      grid style={black!14,line width=0.3pt},
+      axis line style={line width=0.35pt},
+      tick style={line width=0.35pt},
+      tick label style={font=\tiny},
+      label style={font=\tiny},
+      xlabel style={yshift=2pt},
+      % The key sits inside the plot: the single-frame band is empty right of
+      % about 0.8, which is where its three rows fit without covering a bar or
+      % a value label.
+      legend style={
+        font=\tiny,
+        draw=black!25,
+        fill=white,
+        line width=0.2pt,
+        inner sep=2pt,
+        row sep=-1pt,
+        at={(axis cs:1.56,4.5)},
+        anchor=east,
+        legend columns=1,
+        /tikz/every even column/.append style={column sep=3pt},
       },
-      spikepanel,
+      legend cell align=left,
+      % A bar plot's default legend image stacks two swatches; one is enough.
+      legend image code/.code={%
+        \draw[#1] (0cm,-0.075cm) rectangle (0.24cm,0.075cm);},
+      clip=false,
     ]
 
-    %% ---------------------------------------------------------------- (a)
-      \nextgroupplot[
-        % Headroom past 2.0 keeps the growth-factor labels inside the axis.
-        xmin=0.46,
-        xmax=2.05,
-        xtick={0.5,1.0,1.5,2.0},
-        xticklabels={0.5,1.0,1.5,2.0},
-        title={(a) How long the remaining work took},
-        xlabel={Remaining-sequence latency $/$ admission budget},
-      ]
-      \draw[black!60,densely dashed,line width=0.5pt]
-        (axis cs:1,0.35) -- (axis cs:1,8.65);
-      \node[glabel,anchor=south,text=black!65] at (axis cs:1,8.65) {budget};
-      \draw[black!70,line width=0.6pt] (axis cs:0.46,3.5) -- (axis cs:2.05,3.5);
+    % 1.0: no change from the preceding capture.  Bars leave this line, so it is
+    % drawn over the grid rather than as one more gridline.
+    \draw[black!60,densely dashed,line width=0.5pt]
+      (axis cs:0,0.4) -- (axis cs:0,8.6);
+    % Multi-frame / single-frame boundary.
+    \draw[black!70,line width=0.6pt]
+      (axis cs:-0.65,3.5) -- (axis cs:1.60,3.5);
 
-      \draw[rqtwoarrow] (axis cs:0.578,8) -- (axis cs:1.341,8);
-      \draw[rqtwoarrow] (axis cs:0.930,7) -- (axis cs:1.810,7);
-      \draw[rqtwoarrow] (axis cs:0.698,6) -- (axis cs:1.348,6);
-      \draw[rqtwoarrow] (axis cs:0.799,5) -- (axis cs:1.042,5);
-      \draw[rqtwoarrow] (axis cs:0.885,4) -- (axis cs:1.013,4);
-      \draw[rqtwoarrow] (axis cs:0.627,3) -- (axis cs:1.004,3);
-      \draw[rqtwoarrow] (axis cs:0.767,2) -- (axis cs:1.092,2);
-      \draw[rqtwoarrow] (axis cs:0.879,1) -- (axis cs:1.023,1);
+    % Explicit shifts: pgfplots would otherwise put the first plot at the bottom
+    % of each group, reversing the legend's reading order.
+    \addplot[draw=black,fill=black,line width=0.3pt,bar shift=6.5pt]
+      coordinates {(1.32,8) (0.95,7) (0.93,6) (0.30,5)
+                   (0.14,4) (0.60,3) (0.42,2) (0.16,1)};
+    \addlegendentry{Latency}
 
-      \addplot[only marks,rqtwoprev]
-        coordinates {(0.578,8) (0.930,7) (0.698,6) (0.799,5)
-                     (0.885,4) (0.627,3) (0.767,2) (0.879,1)};
-      % Drawn after the circles so the bound stays visible where it nearly
-      % coincides with the preceding capture (M2 and M3).
-      \addplot[only marks,rqtwobound]
-        coordinates {(0.596,8) (0.940,7) (0.699,6) (0.915,5)
-                     (0.907,4) (0.938,3) (0.908,2) (0.991,1)};
-      \addplot[only marks,rqtwoevent]
-        coordinates {(1.341,8) (1.810,7) (1.348,6) (1.042,5)
-                     (1.013,4) (1.004,3) (1.092,2) (1.023,1)};
+    \addplot[draw=black,fill=black!35,line width=0.3pt,bar shift=0pt]
+      coordinates {(0.41,8) (0.15,7) (0.35,6) (0.10,5)
+                   (0.23,4) (0.24,3) (0.37,2) (0.49,1)};
+    \addlegendentry{CPU time}
 
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.341,8) {$\times$2.32};
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.810,7) {$\times$1.95};
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.348,6) {$\times$1.93};
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.042,5) {$\times$1.30};
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.013,4) {$\times$1.14};
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.004,3) {$\times$1.60};
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.092,2) {$\times$1.42};
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.023,1) {$\times$1.16};
+    \addplot[draw=black,fill=white,line width=0.35pt,bar shift=-6.5pt]
+      coordinates {(-0.40,8) (-0.41,7) (-0.31,6) (-0.15,5)
+                   (0.08,4) (-0.24,3) (-0.04,2) (0.28,1)};
+    \addlegendentry{Busy cores}
 
-    %% ---------------------------------------------------------------- (b)
-      \nextgroupplot[
-        xmin=0,
-        xmax=3820,
-        xtick={0,1000,2000,3000},
-        xticklabels={0,{1{,}000},{2{,}000},{3{,}000}},
-        title={(b) How much CPU work it needed},
-        xlabel={CPU time over the remaining sequence (ms)},
-      ]
-      \draw[black!70,line width=0.6pt] (axis cs:0,3.5) -- (axis cs:3820,3.5);
+    % Value labels sit past the end of their bar, so they fall right of an
+    % increase and left of a decrease and never cover the bar.
+    \rqtwovalr{6.5pt}{1.32}{8}{2.32}
+    \rqtwovalr{6.5pt}{0.95}{7}{1.95}
+    \rqtwovalr{6.5pt}{0.93}{6}{1.93}
+    \rqtwovalr{6.5pt}{0.30}{5}{1.30}
+    \rqtwovalr{6.5pt}{0.14}{4}{1.14}
+    \rqtwovalr{6.5pt}{0.60}{3}{1.60}
+    \rqtwovalr{6.5pt}{0.42}{2}{1.42}
+    \rqtwovalr{6.5pt}{0.16}{1}{1.16}
 
-      \draw[rqtwoarrow] (axis cs:1687,8) -- (axis cs:2379,8);
-      \draw[rqtwoarrow] (axis cs:2411,7) -- (axis cs:2775,7);
-      \draw[rqtwoarrow] (axis cs:2472,6) -- (axis cs:3340,6);
-      \draw[rqtwoarrow] (axis cs:948,5)  -- (axis cs:1043,5);
-      \draw[rqtwoarrow] (axis cs:849,4)  -- (axis cs:1044,4);
-      \draw[rqtwoarrow] (axis cs:863,3)  -- (axis cs:1067,3);
-      \draw[rqtwoarrow] (axis cs:968,2)  -- (axis cs:1324,2);
-      \draw[rqtwoarrow] (axis cs:375,1)  -- (axis cs:560,1);
+    \rqtwovalr{0pt}{0.41}{8}{1.41}
+    \rqtwovalr{0pt}{0.15}{7}{1.15}
+    \rqtwovalr{0pt}{0.35}{6}{1.35}
+    \rqtwovalr{0pt}{0.10}{5}{1.10}
+    \rqtwovalr{0pt}{0.23}{4}{1.23}
+    \rqtwovalr{0pt}{0.24}{3}{1.24}
+    \rqtwovalr{0pt}{0.37}{2}{1.37}
+    \rqtwovalr{0pt}{0.49}{1}{1.49}
 
-      \addplot[only marks,rqtwoprev]
-        coordinates {(1687,8) (2411,7) (2472,6) (948,5)
-                     (849,4) (863,3) (968,2) (375,1)};
-      \addplot[only marks,rqtwoevent]
-        coordinates {(2379,8) (2775,7) (3340,6) (1043,5)
-                     (1044,4) (1067,3) (1324,2) (560,1)};
+    \rqtwovall{-6.5pt}{-0.40}{8}{0.60}
+    \rqtwovall{-6.5pt}{-0.41}{7}{0.59}
+    \rqtwovall{-6.5pt}{-0.31}{6}{0.69}
+    \rqtwovall{-6.5pt}{-0.15}{5}{0.85}
+    \rqtwovalr{-6.5pt}{0.08}{4}{1.08}
+    \rqtwovall{-6.5pt}{-0.24}{3}{0.76}
+    \rqtwovall{-6.5pt}{-0.04}{2}{0.96}
+    \rqtwovalr{-6.5pt}{0.28}{1}{1.28}
 
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:2379,8) {$\times$1.41};
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:2775,7) {$\times$1.15};
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:3340,6) {$\times$1.35};
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1043,5) {$\times$1.10};
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1044,4) {$\times$1.23};
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1067,3) {$\times$1.24};
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1324,2) {$\times$1.37};
-      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:560,1)  {$\times$1.49};
+    % Safeguard column, outside the plot box. The header sits on the box edge so
+    % it reads as this column's heading rather than as a floating note, and it
+    % states the outcome so the panel carries the conclusion without the caption.
+    \node[font=\tiny,inner sep=0pt,anchor=south west]
+      at (axis cs:1.66,8.62) {\textsf{no timeout reason}};
+    \rqtwosg{8}{watchdog occur}
+    \rqtwosg{7}{watchdog occur}
+    \rqtwosg{6}{watchdog occur}
+    \rqtwosg{5}{skipped work}
+    \rqtwosg{4}{skipped work}
+    \rqtwosg{3}{skipped work}
+    \rqtwosg{2}{skipped work}
+    \rqtwosg{1}{skipped work}
 
-    %% ---------------------------------------------------------------- (c)
-      \nextgroupplot[
-        xmin=0.58,
-        xmax=2.32,
-        xtick={0.75,1.00,1.25,1.50,1.75,2.00},
-        xticklabels={0.75,1.00,1.25,1.50,1.75,2.00},
-        title={(c) How many cores served it},
-        xlabel={CPU time $/$ wall time over the remaining sequence (cores)},
-      ]
-      % One core on average: below this line the remaining sequence ran no
-      % faster than a single-threaded execution.
-      \draw[black!45,densely dotted,line width=0.5pt]
-        (axis cs:1,0.35) -- (axis cs:1,8.65);
-      \draw[black!70,line width=0.6pt] (axis cs:0.58,3.5) -- (axis cs:2.32,3.5);
-
-      \draw[rqtwoarrow] (axis cs:1.96,8) -- (axis cs:1.18,8);
-      \draw[rqtwoarrow] (axis cs:2.03,7) -- (axis cs:1.19,7);
-      \draw[rqtwoarrow] (axis cs:2.08,6) -- (axis cs:1.44,6);
-      \draw[rqtwoarrow] (axis cs:1.62,5) -- (axis cs:1.37,5);
-      \draw[rqtwoarrow] (axis cs:1.16,4) -- (axis cs:1.24,4);
-      \draw[rqtwoarrow] (axis cs:1.44,3) -- (axis cs:1.10,3);
-      \draw[rqtwoarrow] (axis cs:1.98,2) -- (axis cs:1.91,2);
-      \draw[rqtwoarrow] (axis cs:0.92,1) -- (axis cs:1.18,1);
-
-      \addplot[only marks,rqtwoprev]
-        coordinates {(1.96,8) (2.03,7) (2.08,6) (1.62,5)
-                     (1.16,4) (1.44,3) (1.98,2) (0.92,1)};
-      \addplot[only marks,rqtwoevent]
-        coordinates {(1.18,8) (1.19,7) (1.44,6) (1.37,5)
-                     (1.24,4) (1.10,3) (1.91,2) (1.18,1)};
-
-      % Labels sit past the arrow head, so they fall left of a decrease and
-      % right of an increase and never overlap the arrow.
-      \node[glabel,anchor=east,xshift=-2.5pt] at (axis cs:1.18,8) {$\times$0.60};
-      \node[glabel,anchor=east,xshift=-2.5pt] at (axis cs:1.19,7) {$\times$0.59};
-      \node[glabel,anchor=east,xshift=-2.5pt] at (axis cs:1.44,6) {$\times$0.69};
-      \node[glabel,anchor=east,xshift=-2.5pt] at (axis cs:1.37,5) {$\times$0.85};
-      \node[glabel,anchor=west,xshift=2.5pt]  at (axis cs:1.24,4) {$\times$1.08};
-      \node[glabel,anchor=east,xshift=-2.5pt] at (axis cs:1.10,3) {$\times$0.76};
-      \node[glabel,anchor=east,xshift=-2.5pt] at (axis cs:1.91,2) {$\times$0.96};
-      \node[glabel,anchor=west,xshift=2.5pt]  at (axis cs:1.18,1) {$\times$1.28};
-
-    \end{groupplot}
-
-    % One key for all three panels. The three markers name which capture a
-    % value belongs to and whether it was measured or predicted, so they read
-    % as one series rather than as three unrelated things.
-    \matrix[
-      matrix of nodes,
-      nodes={font=\tiny,anchor=west,inner sep=1pt},
-      column sep=1.5pt,
-      anchor=north,
-    ] at ([yshift=-4.6ex]group c1r3.south) {
-      \draw plot[rqtwoprev] coordinates {(0,0)}; & Previous capture, measured\quad &
-      \draw plot[rqtwobound] coordinates {(0,0)}; & This capture, predicted bound\quad &
-      \draw plot[rqtwoevent] coordinates {(0,0)}; & This capture, measured \\
-    };
+    \end{axis}
   \end{tikzpicture}
-  \end{lrbox}
-  \resizebox{\columnwidth}{!}{\usebox{\rqtwospikebox}}
 
-  \caption{Anatomy of the eight unsafe admits the always-admit model would have
-  produced, each compared with the capture immediately before it in the same
-  run and optional-work group.  (a) Remaining-sequence latency normalized by
-  the admission budget; every event lands past $1.0$, and for M2 and M3 the
-  predicted bound sits on the preceding capture, so the model's inputs carried
-  no warning before a roughly twofold jump.  The predicted bound applies to (a)
-  only.  (b) and (c) give the two measured quantities whose quotient is that
-  latency: the CPU time the remaining work consumed, and how many cores served
-  it in parallel.  The work grew moderately in all eight cases ($\times1.10$ to
-  $\times1.49$), whereas the three largest spikes lost close to half their
-  parallelism ($\times0.60$, $\times0.59$, $\times0.69$); M5 and S3 instead
-  gained parallelism, which is why their latency barely moved.  Contention for
-  the cores, not a larger workload, is therefore what the admission model
-  failed to anticipate.}
+  \caption{What changed at each unsafe admit of
+  Table~\ref{tab:rq2_unsafe_spike_anatomy}, relative to the capture immediately
+  before it.  Bars grow out of \(1.0\), so a bar reaching left is a decrease.
+  Latency and CPU time rose in all eight cases, but the CPU-time bar is the
+  shorter of the two everywhere except M5 and S3; the difference is taken up by
+  busy cores, which fell in six cases and rose in exactly the two where latency
+  barely moved.  Latency is CPU time divided by busy cores, a multiplicative
+  relation, so the bars do not add on this scale.
+  The right-hand column names the safeguard the audit build removes and that a
+  shipped build would have applied.  \textsf{watchdog occurs}: the per-node
+  watchdog would have cut the decision node at its own budget.
+  \textsf{skipped work}: the work this same model skipped elsewhere in the
+  capture would have left the decision inside its budget --- what it rejected
+  after the decision leaves the cost, and a node it rejected before the decision
+  frees budget by shortening the path to it.  Every row carries a reason, so
+  none of the eight reaches a shipped build as a Capture Timeout; M1--M3 are the
+  three the skipped work alone does not cover, and so the three that stay over
+  budget even on the model's own decision set.}
   \label{fig:rq2_unsafe_spike_anatomy}
-
 \end{figure}
-\endgroup
