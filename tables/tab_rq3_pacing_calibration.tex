@@ -44,6 +44,39 @@
 % thing only -- the delay attributable to the controller mispricing its own
 % inputs -- rather than confounding estimator error with policy structure.
 %
+% ---------------------------------------------------------------------------
+% Envelope, not tracking -- say this before a reviewer computes it
+% ---------------------------------------------------------------------------
+% d does not track d* per transition, and the manuscript must not imply that it
+% does.  Over the transitions with a positive requirement:
+%   Pearson r    +0.182 (12MP)  +0.136 (24MP)
+%   Spearman     +0.242          +0.215
+%   LS fit       d = 0.26 d* + 362 ms      d = 0.31 d* + 522 ms
+%   d* quartiles  32 /  81 / 183 ms         74 / 197 / 310 ms
+%   d  quartiles 324 / 393 / 472 ms        318 / 615 / 780 ms
+% The applied delay occupies a narrow band while the requirement ranges over an
+% order of magnitude, which is why the scatter reads as a horizontal cloud above
+% the diagonal rather than as points along it.
+%
+% That is arithmetic, not a defect.  Chat is
+% CaptureAvailablePacingSession.getMaxDraftSequenceDurationMs -- the burst's
+% observed *maximum* for the size bucket -- so it barely moves within a burst,
+% while C is the actual duration of one Draft and moves a great deal.  A
+% max-based reserve cannot correlate with a per-Draft actual.  The controller is
+% therefore an envelope regulator, not a tracking one, which is the right shape
+% for a deadline whose violation is user-visible and whose over-provisioning
+% costs only bounded delay.
+% It does respond at the coarse level: for d* <= 100 ms the median applied delay
+% is 370 ms in both conditions, and for d* > 300 ms it is 471 ms (12MP) and
+% 699 ms (24MP).  Monotone, not proportional.
+%
+% Wording consequence.  "Calibration" is kept as the name of the *analysis*
+% -- applied against required is exactly what it does -- but no caption, note,
+% or sentence claims the controller computes a minimum, an optimum, or a match.
+% The verbs are cover, clear, hold an envelope.  Claims to avoid: "the delay is
+% calibrated to the requirement", "computes the minimum necessary delay",
+% "tracks the requirement".
+%
 % Two variants of C:
 %   C_mand = DynamicFunctionNode.durationMs + SecImageCodecNode ENCODING
 %            durationMs + (draftSequenceDurationMs - workloadSequenceDurationMs)
@@ -168,13 +201,28 @@
 % Single-column float.  Ten candidate columns do not fit \columnwidth at a
 % readable size, so the set was cut to what carries row-to-row variation:
 % coverage with its denominator, the worst shortfall, the surplus, and the two
-% terms it decomposes into.  Reserve and Backlog share one cell because the
-% point is their comparison, not their separate magnitudes.  Constants and
+% terms it decomposes into.  Reserve and Backlog remain separate so their signs
+% and relative magnitudes are explicit.  Waiting max is omitted because a
+% one-off extreme is less stable and less direct than backlog P95.  Constants and
 % single-number-per-condition quantities -- the mandatory floor, the per-burst
-% surplus, realized slack -- moved to the caption and notes.  The band split at
-% Lv3/Lv4 is the production-guard boundary of Section~\ref{sec:guard-limit} and
-% is kept because the rows disagree: 12MP coverage is 82.9% below the boundary
-% and 100% above it, while the Reserve term grows with level in both conditions.
+% surplus, realized slack -- moved to the caption and notes.
+%
+% Thermal bands.  Lv0-2 / Lv3-4 / Lv5-6, not the earlier two-band Lv0-3 /
+% Lv4-6 split.  Both boundaries are product boundaries: the production guard of
+% Section~\ref{sec:guard-limit} begins suppressing optional work at Lv4, and
+% Lv5 is where the 24MP condition falls back to MP12 capture.  Three bands also
+% resolve a pattern the two-band split hid.  Every column is now monotone in
+% thermal level, and identically so in both conditions:
+%   coverage    63.6 -> 96.0 -> 100.0 %   and   72.7 -> 83.3 -> 88.6 %
+%   surplus P50  167 ->  340 ->   444 ms  and    188 ->  261 ->  301 ms
+%   backlog P95 70.4 -> 63.9 ->  56.9 %   and   67.2 -> 66.2 ->  53.6 %
+% That is the policy characterisation this table exists to give: as thermal
+% pressure rises the controller reserves more, and the extra reservation buys
+% both higher coverage and a lighter regulated backlog.  Under the two-band
+% split the 12MP coverage read as 82.9 -> 100.0 with no visible middle, and the
+% backlog trend was invisible.
+% The low-band coverage figures rest on 11 required transitions each, so they
+% are reported with their denominators and should not be quoted alone.
 %
 % From the compact revision: the Lv0-4 / Lv5-6 resolution note, the run and
 % session exclusions, and the discipline of stating that the target is
@@ -192,9 +240,10 @@
   \setlength{\abovecaptionskip}{2pt}%
   \setlength{\belowcaptionskip}{3pt}%
   \caption{RQ3 pacing calibration on the S26 Ultra: the applied delay against
-  the delay the controller's own condition requires on measured inputs. No
-  transition fell below the mandatory-work floor, which was positive on 6 of
-  2,201 transitions and covered on all 6.}
+  the delay the controller's own condition requires on measured inputs. Across
+  the 82 analyzed timeout-free sessions no transition fell below the
+  mandatory-work floor, which was positive on 6 of 2,201 transitions and covered
+  on all 6.}
   \label{tab:rq3_pacing_calibration}
 
   {\scriptsize
@@ -203,47 +252,65 @@
   \setlength{\doublerulesep}{0.8pt}%
   \newsavebox{\rqthreecalbox}%
   \newcommand{\rqthreecaltabular}{%
-  \begin{tabular}{|c|c||r|r||r|r|}
+  \begin{tabular}{|>{\centering\arraybackslash}m{25pt}%
+                   |>{\centering\arraybackslash}m{23pt}%
+                   ||>{\raggedleft\arraybackslash}m{30pt}%
+                   |>{\raggedleft\arraybackslash}m{30pt}%
+                   ||>{\raggedleft\arraybackslash}m{30pt}%
+                   |>{\raggedleft\arraybackslash}m{30pt}%
+                   |>{\raggedleft\arraybackslash}m{30pt}%
+                   ||>{\raggedleft\arraybackslash}m{30pt}|}
     \hline\hline
     \multirow{2}{*}[-0.6ex]{\textbf{Cond.}} &
-    \multirow{2}{*}[-0.6ex]{\makecell[c]{\textbf{Levels}\\\textbf{[\(n\)]}}} &
+    \multirow{2}{*}[-0.6ex]{\makecell[c]{\textbf{Levels}\\\textbf{[\(n_{\mathrm{req}}\)]}}} &
     \multicolumn{2}{c||}{\textbf{Sufficiency}} &
-    \multicolumn{2}{c|}{\textbf{Surplus}} \\
-    \cline{3-6}
+    \multicolumn{3}{c||}{\textbf{Surplus decomposition (ms)}} &
+    \multicolumn{1}{c|}{\makecell[c]{\textbf{Backlog}\\\textbf{state}}} \\
+    \cline{3-8}
     & &
-    \multicolumn{1}{c|}{\makecell[c]{\textbf{Requirement}\\\textbf{met}}} &
-    \multicolumn{1}{c||}{\makecell[c]{\textbf{Worst}\\\textbf{deficit}}} &
-    \multicolumn{1}{c|}{\makecell[c]{\textbf{P50}\\\textbf{(ms)}}} &
-    \multicolumn{1}{c|}{\makecell[c]{\textbf{Reserve /}\\\textbf{backlog (ms)}}} \\
+    \multicolumn{1}{c|}{\textbf{Coverage}} &
+    \multicolumn{1}{c||}{\makecell[c]{\textbf{Worst}\\\textbf{deficit (ms)}}} &
+    \multicolumn{1}{c|}{\textbf{Median}} &
+    \multicolumn{1}{c|}{\makecell[c]{\textbf{Reserve}\\\textbf{term}}} &
+    \multicolumn{1}{c||}{\makecell[c]{\textbf{Backlog}\\\textbf{term}}} &
+    \multicolumn{1}{c|}{\makecell[c]{\textbf{P95}\\\textbf{(\% budget)}}} \\
     \hline\hline
-    \multirow{3}{*}{\makecell[c]{12MP\\normal}}
-      & \makecell[c]{Lv0--3\\{\scriptsize [578]}}
-      & \makecell[r]{82.9\%\\{\scriptsize [34 of 41]}} & 206
-      & 276 & $+234$ / $-18$ \\
-    \cline{2-6}
-      & \makecell[c]{Lv4--6\\{\scriptsize [589]}}
-      & \makecell[r]{100.0\%\\{\scriptsize [53 of 53]}} & --
-      & 352 & $+339$ / $-19$ \\
-    \cline{2-6}
-      & \makecell[c]{\textit{All}\\{\scriptsize [1,167]}}
+    \multirow{4}{*}{\makecell[c]{12MP\\normal}}
+      & \makecell[c]{Lv0--2\\{\scriptsize [11]}}
+      & \makecell[r]{63.6\%\\{\scriptsize [7 of 11]}} & 94
+      & 167 & $+302$ & $-67$ & 70.4\% \\
+    \cline{2-8}
+      & \makecell[c]{Lv3--4\\{\scriptsize [75]}}
+      & \makecell[r]{96.0\%\\{\scriptsize [72 of 75]}} & 206
+      & 340 & $+289$ & $-16$ & 63.9\% \\
+    \cline{2-8}
+      & \makecell[c]{Lv5--6\\{\scriptsize [8]}}
+      & \makecell[r]{100.0\%\\{\scriptsize [8 of 8]}} & --
+      & 444 & $+369$ & $-16$ & 56.9\% \\
+    \cline{2-8}
+      & \makecell[c]{\textit{All}\\{\scriptsize [94]}}
       & \makecell[r]{92.6\%\\{\scriptsize [87 of 94]}} & 206
-      & 329 & $+296$ / $-19$ \\
+      & 329 & $+296$ & $-19$ & 64.1\% \\
     \hline
-    \multirow{3}{*}{\makecell[c]{24MP\\memory\\pressure}}
-      & \makecell[c]{Lv0--3\\{\scriptsize [508]}}
-      & \makecell[r]{83.3\%\\{\scriptsize [20 of 24]}} & 514
-      & 235 & $+226$ / $-40$ \\
-    \cline{2-6}
-      & \makecell[c]{Lv4--6\\{\scriptsize [526]}}
-      & \makecell[r]{85.7\%\\{\scriptsize [42 of 49]}} & 322
-      & 294 & $+584$ / $-74$ \\
-    \cline{2-6}
-      & \makecell[c]{\textit{All}\\{\scriptsize [1,034]}}
+    \multirow{4}{*}{\makecell[c]{24MP\\memory\\pressure}}
+      & \makecell[c]{Lv0--2\\{\scriptsize [11]}}
+      & \makecell[r]{72.7\%\\{\scriptsize [8 of 11]}} & 514
+      & 188 & $+140$ & $+4$ & 67.2\% \\
+    \cline{2-8}
+      & \makecell[c]{Lv3--4\\{\scriptsize [18]}}
+      & \makecell[r]{83.3\%\\{\scriptsize [15 of 18]}} & 322
+      & 261 & $+249$ & $-44$ & 66.2\% \\
+    \cline{2-8}
+      & \makecell[c]{Lv5--6\\{\scriptsize [44]}}
+      & \makecell[r]{88.6\%\\{\scriptsize [39 of 44]}} & 195
+      & 301 & $+594$ & $-74$ & 53.6\% \\
+    \cline{2-8}
+      & \makecell[c]{\textit{All}\\{\scriptsize [73]}}
       & \makecell[r]{84.9\%\\{\scriptsize [62 of 73]}} & 514
-      & 258 & $+450$ / $-61$ \\
+      & 258 & $+450$ & $-61$ & 64.9\% \\
     \hline\hline
   \end{tabular}}%
-  \fittabcolsep{\rqthreecalbox}{\rqthreecaltabular}{\columnwidth}{12}%
+  \fittabcolsep{\rqthreecalbox}{\rqthreecaltabular}{\columnwidth}{16}%
   \rqthreecaltabular
   }
 
@@ -252,13 +319,24 @@
     \scriptsize\emph{Notes:} \(d^{*}\) is the deployed pacing condition
     evaluated on measured inputs --- reconstructed real backlog and the Draft
     duration as it ran --- against the same deadline and two-Draft horizon.
-    \emph{Requirement met} covers the transitions with \(d^{*}>0\);
+    Because that reserve is the burst's observed maximum Draft duration, the
+    delay holds an envelope over Draft cost rather than matching any one
+    transition's need, and these columns ask whether the envelope covered the
+    requirement rather than whether it equalled it.
+    \(n_{\mathrm{req}}\) counts transitions with \(d^{*}>0\).
+    \emph{Coverage} is the share of those transitions whose requirement was
+    covered;
     \emph{Worst deficit} is the largest shortfall in ms among those not met.
-    \emph{Surplus} is \(\max(0,d-d^{*})\) over paced transitions, with a
-    per-burst median of \(3.11\) and \(2.69\)\,s. Where \(d\) and \(d^{*}\) are
+    \emph{Surplus} is \(\max(0,d-d^{*})\) over paced transitions, summing to a
+    per-burst median of \(3.11\) and \(2.69\)\,s out of a total applied delay
+    that is \(18\%\) and \(14\%\) of the \(17.5\) and \(22.6\)\,s median burst.
+    Where \(d\) and \(d^{*}\) are
     both positive, \(d-d^{*}=(\hat{C}-C)+(\hat{B}-B)/2\) holds identically, so
-    the last column splits the surplus: the backlog clock is unbiased and the
-    Draft reserve carries the cost. No Capture Timeout occurred, and the
+    the \emph{Reserve} and \emph{Backlog} columns split the surplus: the backlog
+    clock is unbiased and the Draft reserve carries the cost. \emph{Backlog P95}
+    is the 95th percentile of measured Draft backlog as a share of the timeout
+    budget, i.e., the state the delay regulates rather than the delay itself.
+    No Capture Timeout occurred, and the
     smallest realized margin --- \(0.3\)\% and \(0.2\)\% of the deadline ---
     belongs to no under-paced transition. Measured on a trace pacing
     already shaped, \(d^{*}\) is a local target rather than a global

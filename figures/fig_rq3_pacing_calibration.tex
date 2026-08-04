@@ -7,9 +7,13 @@
 % transition with a positive requirement, x the measured requirement d*, y the
 % applied delay d, and the dashed diagonal exact calibration.  Above the
 % diagonal the controller paced more than the trace required, below it less.
-% The +/-100 ms guides are drawn because a transition inside that band is
-% calibrated to within roughly one frame interval, which is the granularity at
-% which a delay is actuated at all.
+% The +/-100 ms guides are drawn because the caption reports against them: 88%
+% and 77% of points clear the diagonal by more than 100 ms, and all but 1 and 5
+% of the points below it fall inside them.  100 ms is a fifth of the 497 ms
+% median shot-to-shot interval, so it is a tolerance a user could plausibly not
+% notice.  An earlier version of this note justified the same number as "roughly
+% one frame interval", which is wrong by an order of magnitude -- a frame is
+% about 33 ms -- and is corrected here rather than repeated.
 %
 % ---------------------------------------------------------------------------
 % Why the d* = 0 transitions are not plotted here
@@ -26,10 +30,10 @@
 %      277 overplotted marks on one x it also saturates into a solid bar, so
 %      even that marginal cannot be read off it.
 %   2. Panel (c) already contains every one of them, quantitatively.  For a
-%      transition with d* = 0 the error d - d* is exactly d, so the column is
-%      the part of (c) between the step at zero and the right tail.  Removing
-%      it from (a) and (b) routes each quantity to the panel whose grammar fits
-%      it; it does not remove anything from the figure.
+%      transition with d* = 0 the error d - d* is exactly d, so the column makes
+%      up most of the positive side of (c).  Removing it from (a) and (b) routes
+%      each quantity to the panel whose grammar fits it; it does not remove
+%      anything from the figure.
 %
 % The restriction is therefore declared on the x label, where it cannot be
 % mistaken for a hidden filter, and the count plus the pointer to (c) are in
@@ -71,13 +75,35 @@
 % small, so the split is presented as a marker class to be inspected rather than
 % as a table column with statistics.
 %
-% Panel (c) is the same quantity as a distribution over every analyzed
-% transition rather than only the plotted ones, which is what makes the tail
-% readable.  The step at zero (68.2% in 12MP, 66.1% in 24MP) is the transitions
-% where neither the controller nor the measured requirement asked for a delay;
-% the mass to the left of zero is under-pacing and is small (0.6% and 1.1%); the
-% right tail is the surplus that Table~\ref{tab:rq3_pacing_calibration}
-% attributes to the Draft-duration reserve.
+% Panel (c) is the same quantity as a distribution, over the 371 and 351
+% transitions where pacing was in play -- the controller applied a delay, or the
+% measured requirement was positive, or both.  Two earlier choices were changed
+% here and the reasons matter, because both changes are the kind that can be
+% mistaken for flattering the data.
+%
+% Population.  The panel previously ran over all 1,167 and 1,034 transitions.
+% Two thirds of those have d = 0 and d* = 0: nothing was applied and nothing was
+% required.  They contributed a vertical step at the origin that occupied 69% of
+% the y range and recorded only that most captures need no pacing at all, which
+% is Table~\ref{tab:rq1_ablation}'s subject rather than this panel's.  Dropping
+% them compresses no information about calibration.  Every transition where
+% either side is non-zero is kept, including d = 0 with d* > 0 -- the worst
+% under-pacing there is, three cases in each condition.  The change moves the
+% reported under-pacing rate UP, from 0.6% and 1.1% of all transitions to 1.9%
+% and 3.1% of those in play, and makes it visible on the plot instead of a
+% hairline against the axis.  That is the honest direction and is the reason the
+% smaller denominator is defensible.
+%
+% Units.  The x axis was in milliseconds, where a surplus of 1,200 ms has no
+% scale to be large or small against.  It is now a share of the Capture Timeout
+% budget, which is the only scale on which a delay in this system is either.  It
+% also makes the panel consistent with the rest of the paper: the State-held
+% column of Table~\ref{tab:rq3_pacing_calibration}, the backlog and margin axes
+% of Figure~\ref{fig:casestudy_12mp}, and RQ1's Slack P5 are all shares of the
+% same budget.  Distribution over the in-play population, as a share of budget:
+%   12MP  min -2.9  P50 +4.7  P90 +9.6  P95 +11.2  max +17.1  under-paced 1.9%
+%   24MP  min -7.3  P50 +3.7  P90 +10.5 P95 +14.1  max +27.3  under-paced 3.1%
+% The -10..30 window clips nothing in either condition.
 %
 % Axis range.  Both scatter panels use an identical 0-800 by 0-1500 ms box so
 % the two conditions can be compared by eye.  The box is no longer square
@@ -88,9 +114,22 @@
 % not at 45 degrees; it is still the exact-calibration locus, which is what the
 % panel is read against.  Two of the 73 plotted points in (b) exceed 1500 ms on
 % the y axis (largest 2010 ms) and are clipped; no point in (a) is clipped.
-% Panel (c) keeps the 1500 ms window on the error axis, where 0.58% of the 24MP
-% transitions (largest error 1909 ms) fall outside it and none of the 12MP ones
-% do.
+% Panel (c) no longer shares that unit: its axis is a share of the Capture
+% Timeout budget over -10..30%, which clips nothing in either condition.
+%
+% In-plot annotation.  The panels are annotated so that a reader who skims the
+% figure gets the reading without the caption.  (a) and (b) carry n and the
+% covered percentage in the corner, the diagonal is labelled d = d* on itself,
+% and the region below it is tinted and named "under-paced" -- a tint rather
+% than a per-region legend, because the direction then needs no decoding and the
+% reader can see at a glance that the tinted triangle is nearly empty.  Both
+% panels are empty above x = 400, so one placement serves both.
+% (c) is deliberately NOT tinted the same way.  There the under-paced region is
+% a full-height band left of zero holding 1.9% and 3.1% of the mass, so a tint
+% would give it visual weight the data does not have; the arrow in its label
+% carries the direction instead.  Its two annotations are the under-paced share
+% and the +10%-of-budget guide, which is where 91% and 88% of the distribution
+% has been reached.
 %
 % Point counts: (a) 94 with a positive requirement (80 undemoted, 14 demoted)
 % of 1,167 analyzed transitions; the other 1,073 are the 277 with d* = 0 and
@@ -102,52 +141,104 @@
 % Run and transition eligibility is documented in
 % tables/tab_rq3_pacing_calibration.tex and is identical here.
 
-\begin{figure*}[t]
+% Layout: single-column float.  A three-panel row across \textwidth was tried
+% and dropped -- resized into one column its tick labels fall below four point.
+% The panels are therefore stacked, the two scatters side by side on the first
+% row because they are meant to be compared with each other, and the error
+% distribution on its own wider row because its x range is three times theirs.
+% Only panel (a) carries the y label; (b) shares the axis and would only repeat
+% it at the cost of the plot box.
+
+\begin{figure}[t]
   \centering
   \providecommand{\rqThreeCalDir}{data/rq3/calibration}
 
+  % Palette: the figure is monochrome apart from one accent.  Circle and diamond
+  % are both compact and rounded, so the two classes separate by shape without
+  % the visual shout of a triangle, and the accent is a muted teal rather than a
+  % saturated blue so it sits quietly against the grey tint below the diagonal.
   \tikzset{
     rq3cal required/.style={
-      mark=*, mark size=1.25pt, only marks,
-      draw=black, fill=black, fill opacity=0.55, draw opacity=0.75},
-    rq3cal demoted/.style={
-      mark=triangle, mark size=1.9pt, only marks,
-      draw=blue!70!black, fill=white, line width=0.5pt, draw opacity=0.9},
+      mark=*, mark size=1.3pt, only marks,
+      draw=black!75, fill=black!75, fill opacity=0.5, draw opacity=0.65},
+    % There is no second marker class.  An earlier revision split the points by
+    % whether admission demoted the sequence after the pacing decision, to answer
+    % the first objection to the surplus -- that a delay priced for M+S only
+    % looks over-large once admission has removed M.  The split is retired
+    % because the objection's answer is a null result and a scatter cannot show
+    % one: on the quantity these panels plot, distance from the diagonal, the two
+    % subsets are indistinguishable (Mann-Whitney p = 0.62 and 0.66; medians +253
+    % vs +290 ms and +250 vs +340 ms).  The only apparent difference, 21.4% of
+    % demoted points below the diagonal against 5.0% in 12MP, rests on 3 of 14
+    % points and reverses in 24MP (13.6% against 15.7%).  A reader given a second
+    % marker class hunts for a pattern that is not there; the finding is one
+    % sentence and belongs in the caption, which is where it now is.
     rq3cal diag/.style={black, densely dashed, line width=0.6pt},
     rq3cal band/.style={gray!60, dotted, line width=0.45pt},
-    rq3cal ecdf a/.style={black, solid, line width=1.0pt},
-    rq3cal ecdf b/.style={black!55, densely dashed, line width=1.0pt},
-    rq3cal zeroline/.style={gray!70, solid, line width=0.4pt},
+    % 0.7pt, not the 1.0pt these curves carried while the figure spanned
+    % \textwidth.  Against a 0.35pt axis and a 0.2pt grid the heavier stroke
+    % read as coarse once the figure was cut to one column, and the dash needed
+    % shortening with it or it broke into visible chunks at this scale.
+    % Plotted as connected order statistics rather than with pgfplots'
+    % "const plot" step handler.  The step form is the literal ECDF, but the CSV
+    % holds every distinct error value, so in the dense middle its risers are
+    % below one device pixel while in the sparse tail they become long flats
+    % joined by tall jumps -- which is exactly the staircase that read as coarse.
+    % The same ECDF points are connected with a low-tension curve.  This removes
+    % visible polygon corners in the steep middle without the broad bowing of
+    % TikZ's default tension; round caps also keep the short dashed trace from
+    % reading as a chain of square blocks at one-column scale.
+    rq3cal ecdf a/.style={black, solid, line width=0.7pt, smooth,
+      tension=0.35, line join=round, line cap=round},
+    rq3cal ecdf b/.style={black!55, line width=0.7pt, smooth,
+      tension=0.35, line join=round, line cap=round,
+      dash pattern=on 2pt off 1.1pt},
+    % Both edges of the shaded band, drawn alike.  Darker than the grid they sit
+    % among, because a light rule on the boundary of a fill reads as the edge of
+    % the fill rather than as a marked value -- and both are marked values: zero
+    % is the exact-calibration locus and +10% closes the band the caption quotes.
+    rq3cal band edge/.style={black!45, solid, line width=0.5pt},
   }
 
-  % #1: file stem of the condition.
-  \newcommand{\rqthreecalscatter}[1]{%
+  % In-plot annotation, so that the panels carry their own reading without the
+  % caption.  The tint below the diagonal is the region where the delay did not
+  % cover the requirement; tinting it rather than labelling every region keeps
+  % the direction readable at a glance and costs no text.  The same tint marks
+  % the same meaning left of zero in panel (c).
+  % #1 file stem  #2 point count  #3 percentage with d >= d*
+  % fill opacity, not a colour mix.  pgfplots draws the grid before the axis
+  % body, so an opaque region fill covers every grid line inside it -- which is
+  % what hid them here.  A translucent fill of the same apparent lightness lets
+  % the grid through unchanged.
+  % Warm for the region where the envelope failed, against the cool band of
+  % panel (c) that marks where the error distribution sits: one hue per
+  % direction, so no tint means two things across the figure.
+  \newcommand{\rqthreecalscatter}[3]{%
+    \draw[fill=red,fill opacity=0.07,draw=none]
+      (axis cs:0,0) -- (axis cs:800,800) -- (axis cs:800,0) -- cycle;
     \addplot[rq3cal band,forget plot,domain=0:800,samples=2] {x+100};
     \addplot[rq3cal band,forget plot,domain=100:800,samples=2] {x-100};
     \addplot[rq3cal diag,forget plot,domain=0:800,samples=2] {x};
+    % Two files, one style: the split they encode is no longer drawn, and the
+    % files are left alone so the subset stays available for the audit.
     \addplot[rq3cal required,forget plot]
       table[x=required_ms,y=applied_ms,col sep=comma]
       {\rqThreeCalDir/scatter_#1_req_kept.csv};
-    \addplot[rq3cal demoted,forget plot]
+    \addplot[rq3cal required,forget plot]
       table[x=required_ms,y=applied_ms,col sep=comma]
-      {\rqThreeCalDir/scatter_#1_req_changed.csv};}
+      {\rqThreeCalDir/scatter_#1_req_changed.csv};
+    % Both panels are empty above x = 400, so one placement serves both.
+    \node[anchor=north east,font=\tiny,align=right,inner sep=1.5pt]
+      at (rel axis cs:0.98,0.98) {\(n=#2\)\\covered #3\%};
+    \node[anchor=south east,font=\tiny,text=red!45!black,inner sep=1.5pt]
+      at (axis cs:790,60) {under-paced};}
 
-  \newsavebox{\rqthreecalfigbox}
-  \begin{lrbox}{\rqthreecalfigbox}
-  \begin{tikzpicture}
-    \begin{groupplot}[
-      % Panels (a) and (c) both carry a rotated y label, so the group separation
-      % has to clear a label plus a tick column rather than a tick column alone.
-      group style={group size=3 by 1, horizontal sep=0.075\textwidth},
-      % scale only axis keeps the three plot boxes identical regardless of how
-      % wide each one's tick labels are, so the two scatter panels stay square
-      % and therefore comparable.
+  \pgfplotsset{
+    rq3cal axis/.style={
       scale only axis=true,
-      width=0.215\textwidth,
-      height=0.215\textwidth,
       tick label style={font=\tiny},
       label style={font=\scriptsize},
-      title style={font=\scriptsize},
+      title style={font=\scriptsize,yshift=-2pt},
       grid=major,
       major grid style={gray!20,line width=0.2pt},
       axis line style={line width=0.35pt},
@@ -156,94 +247,149 @@
       tick pos=left,
       enlargelimits=false,
       clip=true,
-    ]
+    },
+  }
 
-      % The restriction to d* > 0 is stated on the x label rather than in the
-      % caption alone: a filter that is visible on the axis it applies to
-      % cannot be read as a hidden one.
+  \begin{tikzpicture}
+    \begin{groupplot}[
+      rq3cal axis,
+      % Only (a) carries the y label, so the separation has to clear one tick
+      % column rather than a label plus a tick column.
+      group style={group size=2 by 1, horizontal sep=0.05\columnwidth},
+      width=0.35\columnwidth,
+      height=0.35\columnwidth,
+      xmin=0,xmax=800,ymin=0,ymax=1500,
+      xtick={0,400,800},ytick={0,500,1000,1500},
+    ]
+      % The two panels share both axes, so each axis is described once: the y
+      % label on (a), and the x label as a single centred node under the pair.
+      % Repeating "Required delay (ms)" under each box would only say the same
+      % thing twice in a figure this small.
       \nextgroupplot[
         title={(a) 12MP normal},
-        xlabel={Required delay \(d^{*}>0\) (ms)\\
-                {\tiny 277 with \(d^{*}=0\) omitted --- see (c)}},
-        xlabel style={align=center},
         ylabel={Applied delay \(d\) (ms)},
-        xmin=0,xmax=800,ymin=0,ymax=1500,
-        xtick={0,200,400,600,800},ytick={0,500,1000,1500},
       ]
-      \rqthreecalscatter{12mp_normal}
+      \rqthreecalscatter{12mp_normal}{94}{93}
 
+      % (b) shares (a)'s y range, so repeating the tick labels would only spend
+      % the gap between the two plot boxes on redundant text.
       \nextgroupplot[
         title={(b) 24MP memory pressure},
-        xlabel={Required delay \(d^{*}>0\) (ms)\\
-                {\tiny 278 with \(d^{*}=0\) omitted --- see (c)}},
-        xlabel style={align=center},
-        xmin=0,xmax=800,ymin=0,ymax=1500,
-        xtick={0,200,400,600,800},ytick={0,500,1000,1500},
+        yticklabels={},
       ]
-      \rqthreecalscatter{24mp_memory}
-
-      \nextgroupplot[
-        title={(c) Calibration error},
-        xlabel={\(d-d^{*}\) (ms)},
-        ylabel={Cumulative fraction},
-        xmin=-600,xmax=1500,ymin=0,ymax=1.02,
-        xtick={-500,0,500,1000,1500},
-        ytick={0,0.25,0.5,0.75,1},
-        yticklabel style={/pgf/number format/fixed},
-      ]
-      \addplot[rq3cal zeroline,forget plot] coordinates {(0,0) (0,1.02)};
-      \addplot[rq3cal ecdf a,const plot,no marks,forget plot]
-        table[x=error_ms,y=cdf,col sep=comma]
-        {\rqThreeCalDir/error_ecdf_12mp_normal.csv};
-      \addplot[rq3cal ecdf b,const plot,no marks,forget plot]
-        table[x=error_ms,y=cdf,col sep=comma]
-        {\rqThreeCalDir/error_ecdf_24mp_memory.csv};
+      \rqthreecalscatter{24mp_memory}{73}{85}
     \end{groupplot}
 
-    % Shared legend: the two marker classes explain panels (a) and (b), the two
-    % line styles explain panel (c).
-    \coordinate (rqthreecallegend) at
-      ($(group c1r1.south)!0.5!(group c3r1.south)$);
-    \matrix[
-      matrix of nodes,
-      nodes={font=\scriptsize,anchor=west},
-      column sep=2pt,
-      row sep=0pt,
-      anchor=north,
-    % -7.4ex rather than -5.2ex: the scatter x labels now carry a second line
-    % declaring the d* = 0 omission, and the legend has to clear it.
-    ] at ([yshift=-7.4ex]rqthreecallegend) {
-      \draw[draw=black,fill=black,fill opacity=0.55]
-        (0,0) circle (1.25pt); & \(d^{*}>0\) &
-      \draw[draw=blue!70!black,fill=white,line width=0.5pt]
-        (90:1.9pt)--(210:1.9pt)--(330:1.9pt)--cycle;
-        & \(d^{*}>0\), demoted &
-      \draw[rq3cal ecdf a] (0,0)--(0.38,0); & 12MP normal &
-      \draw[rq3cal ecdf b] (0,0)--(0.38,0); & 24MP mem.\ pressure \\
-    };
-  \end{tikzpicture}
-  \end{lrbox}
-  \resizebox{\textwidth}{!}{\usebox{\rqthreecalfigbox}}
+    \node[font=\scriptsize,anchor=north]
+      at ([yshift=-3.4ex]$(group c1r1.south)!0.5!(group c2r1.south)$)
+      {Required delay \(d^{*}\) (ms)};
 
-  \caption{RQ3 pacing calibration. Panels (a) and (b) plot the \(94\) and
-  \(73\) analyzed transitions whose measured requirement is positive, one point
-  each; the dashed diagonal is exact calibration and the dotted guides mark
-  \(\pm100\)\,ms. Triangles mark transitions whose sequence admission demoted
-  after the pacing decision, so that the coordination effect on the surplus is
-  visible; it does not run one way, being adverse in (a) and neutral in (b). A
+    % No legend under the scatter row: one marker class needs none, and the two
+    % curves of panel (c) are labelled inside that panel.
+  \end{tikzpicture}
+
+  \par\vspace{0.6ex}
+
+  \begin{tikzpicture}
+    \begin{axis}[
+      rq3cal axis,
+      width=0.735\columnwidth,
+      % Raised from 0.235 so the spelled-out y label fits the axis height:
+      % "Cum. fraction" saved space by abbreviating the one word that carries
+      % the panel's meaning, and a reader who has to expand it has already lost
+      % the reading.
+      height=0.26\columnwidth,
+      title={(c) Calibration error where pacing was in play},
+      xlabel={\(d-d^{*}\) (\% of Capture Timeout budget)},
+      ylabel={Cumulative fraction},
+      xmin=-10,xmax=30,ymin=0,ymax=1.02,
+      xtick={-10,0,10,20,30},
+      ytick={0,0.5,1},
+      yticklabel style={/pgf/number format/fixed},
+      legend style={
+        font=\tiny, at={(0.97,0.06)}, anchor=south east,
+        draw=gray!50, line width=0.3pt, fill=white, fill opacity=0.85,
+        text opacity=1, inner sep=1.5pt, row sep=-1pt,
+      },
+      legend cell align=left,
+    ]
+      % The scatters tint their under-paced region because there it is a
+      % triangle the reader can see is empty.  Here the same region is a
+      % full-height band holding 1.9% and 3.1% of the mass, so a tint would give
+      % it weight the data does not have; the arrow in the label carries the
+      % direction instead.  The curves sit near zero left of the line, so the
+      % label lands on empty space in both conditions.
+      % The 0..+10% band, shaded so the region the distribution lives in reads
+      % without a label.  Teal, not the grey of (a) and (b): there grey marks
+      % the region where the envelope failed, and reusing it here for the
+      % opposite meaning would make one tint mean two things across the figure.
+      % Drawn first, so the curves sit on top of it.
+      \draw[fill=teal,fill opacity=0.13,draw=none]
+        (axis cs:0,0) rectangle (axis cs:10,1.02);
+      \addplot[rq3cal band edge,forget plot] coordinates {(0,0) (0,1.02)};
+      \addplot[rq3cal band edge,forget plot] coordinates {(10,0) (10,1.02)};
+      % No horizontal rule at 0.9.  One was drawn there to close a crosshair
+      % with the band edge, and it was circular: 0.9 was chosen because the
+      % curves cross the edge at that height, and the edge was put at +10%
+      % because the curves reach 0.9 there.  Nothing in the paper uses 90% as a
+      % threshold, so the rule asserted a criterion that does not exist.  The
+      % two band edges are stated quantities and stay.
+      \addplot[rq3cal ecdf a,no marks]
+        table[x=error_pct,y=cdf,col sep=comma]
+        {\rqThreeCalDir/error_ecdf_12mp_normal.csv};
+      \addlegendentry{12MP normal}
+      \addplot[rq3cal ecdf b,no marks]
+        table[x=error_pct,y=cdf,col sep=comma]
+        {\rqThreeCalDir/error_ecdf_24mp_memory.csv};
+      \addlegendentry{24MP mem.\ pressure}
+      % No text labels.  Two earlier attempts -- "1.9% / 3.1%" and "91% / 88%",
+      % then "delay below requirement: 2-3% of cases" and "9 cases in 10 are
+      % within +10%" -- both failed the same way: a phrase short enough for the
+      % panel was too short to say what the number was a share of, and a phrase
+      % long enough to say it was too long for the panel.  The guides do the work
+      % instead.  The solid rule at zero and the dotted rule at +10% bracket the
+      % band the distribution lives in, and the dotted rule at 0.9 is where both
+      % curves cross it, so the reading comes off the axes.  The exact figures
+      % are in the caption, which is the place with room for their denominators.
+    \end{axis}
+  \end{tikzpicture}
+
+  \caption{RQ3 pacing envelope and its error. Panels (a) and (b) plot the
+  \(94\) and \(73\) analyzed transitions whose measured requirement is positive,
+  one point each; the dashed diagonal marks equality and the dotted guides
+  \(\pm100\)\,ms. The points sit above the diagonal rather than along it ---
+  \(88\%\) and \(77\%\) clear it by more than \(100\)\,ms --- because the
+  reserve the delay is priced from is the burst's observed maximum Draft
+  duration: the delay holds an envelope over Draft cost rather than matching the
+  Draft that follows it. Below the diagonal is where that envelope failed, and
+  all but \(1\) and \(5\) of those cases fall inside the guides.
+  The \(14\) and \(22\) transitions whose sequence admission demoted after the
+  pacing decision are not marked apart, because on this quantity they are
+  indistinguishable from the rest (\(p=0.62\) and \(0.66\)); coordination
+  therefore does not explain the surplus, which
+  Table~\ref{tab:rq3_pacing_calibration} attributes to the reserve instead. A
   further \(277\) and \(278\) paced transitions have \(d^{*}=0\) on the realized
-  trace and are not plotted here; because their error \(d-d^{*}\) is exactly
-  \(d\), they are the part of panel~(c) between the step at zero and the right
-  tail. They are not idle pacing: every one of them had a positive measured
+  trace and are not plotted here; because their error \(d-d^{*}\) is then
+  exactly the delay applied, they make up most of the positive side of
+  panel~(c). They are not idle pacing: every one of them had a positive measured
   backlog, the median measured time until the Draft pipeline was next free was
   \(3.2\) and \(3.1\)\,s, and the applied delay covered a median \(11\%\) and
   \(7\%\) of that wait. Because the trace was already shaped by pacing, the
   requirement of the unpaced trajectory is at or above \(d^{*}\), and
   Table~\ref{tab:rq1_ablation} shows that removing pacing reintroduces Capture
-  Timeouts under the same conditions. Panel~(c) gives the calibration error over
-  all \(1{,}167\) and \(1{,}034\) analyzed transitions, the transitions at the
-  origin included: \(0.6\%\) and \(1.1\%\) of them lie left of zero, and the
-  right tail is the surplus that Table~\ref{tab:rq3_pacing_calibration}
-  attributes to the Draft-duration reserve.}
+  Timeouts under the same conditions. Panel~(c) gives the calibration error, as
+  a share of the Capture Timeout budget, over the \(371\) and \(351\)
+  transitions where pacing was in play --- a delay was applied, the measured
+  requirement was positive, or both. The \(796\) and \(683\) transitions where
+  neither holds are omitted: they record that nothing was required and nothing
+  was applied, and they carry no calibration information. Its curves read
+  cumulatively: at a given error the height is the fraction of those transitions
+  whose error is at most that large, and the shaded band is the first
+  \(10\%\) of the budget, which both curves leave having accounted for nine
+  transitions in ten. Left of zero is
+  under-pacing, at \(1.9\%\) and \(3.1\%\) of transitions in play; the median
+  error is \(+4.7\%\) and \(+3.7\%\) of the budget, and the right tail is the
+  surplus that Table~\ref{tab:rq3_pacing_calibration} attributes to the
+  Draft-duration reserve.}
   \label{fig:rq3_pacing_calibration}
-\end{figure*}
+\end{figure}

@@ -22,12 +22,20 @@
 % scripts/export_casestudy.py.  Peers hold the condition, the starting overheat
 % level, and the size bucket of the selected session fixed and keep only
 % complete timeout-free sessions (n = 10).  Selected / peer median / peer
-% [min, max], with the preferred direction in brackets:
-%   cumulative delay        5212 / 4411.5 / [2930, 8375] ms      [lower]
-%   paced transitions       55.2 / 43.1   / [20.7, 75.9] %       [lower]
-%   deadline margin P5     366.1 / 428.6  / [209.2, 717.5] ms    [higher]
+% [min, max], with the preferred direction in brackets, in table row order --
+% work delivered first, then what it cost, then the margin that survived:
 %   M executed              26.7 / 38.3   / [23.3, 100.0] %      [higher]
 %   S executed              73.3 / 100.0  / [73.3, 100.0] %      [higher]
+%   pacing activated        55.2 / 43.1   / [20.7, 75.9] %       [lower]
+%   cumulative delay        5212 / 4411.5 / [2930, 8375] ms      [lower]
+%   deadline margin P5     366.1 / 428.6  / [209.2, 717.5] ms    [higher]
+% The two cost rows read frequency then magnitude: how often pacing intervened,
+% then what those interventions summed to.
+% "Pacing activated" is the RQ1(a) name for this quantity and replaces the
+% earlier "paced transitions": both are RQ3Summary.pacedPercent, the share of a
+% run's 29 transitions carrying a positive applied delay.  RQ1(a) prints 46.6
+% for 12MP Lv4, the macro-average over the same ten runs whose median is the
+% 43.1 peer figure here.
 %
 % Burst span (burstSpanMs, the 30-shot span: sum(shotToShotTimeMs) over shots
 % 2..30) is a sixth peer metric in the CSV and is deliberately NOT a row here.
@@ -54,16 +62,22 @@
 % the reader has to take on trust in a sentence and can check at a glance in a
 % grid, and naming a subset invites the question of what the unnamed ones say.
 %
-% The last column states the verdict instead of the preferred direction.  An
-% earlier revision put an up/down arrow on each metric name, which made the
-% reader do three steps per row -- read the arrow, compare the two numbers,
-% combine them -- six times over, to recover one word.  "worse" is that word.
-% A column of six identical entries is the point rather than a redundancy: it
-% is the evidence for the claim in the note, and a future run that beats its
-% peers on some metric would break the column visibly.  The arrows are gone
-% because keeping both would reintroduce the decoding they were removed for;
-% the [min, max] column needs no direction, since its job is to show that the
-% S value coincides with the peer minimum.
+% The metric names carry the preferred direction and the last column carries the
+% verdict.  An intermediate revision dropped the arrows on the grounds that they
+% duplicate the verdict column and make the reader combine an arrow with two
+% numbers to recover the one word "worse".  They are restored because that
+% argument had the dependency backwards: without a direction marker the verdict
+% column can only be trusted, not checked, and a reader who wants to confirm
+% that 55.2 against a peer median of 43.1 is in fact worse has to find the
+% answer in the note.  With both present the row is self-verifying, which is
+% what a reviewer needs from an anti-selection table.
+% The verdict column stays: a column of five identical entries is the evidence
+% for the claim in the note, and a future run that beats its peers on some
+% metric would break it visibly.  The [min, max] column needs no direction,
+% since its job is to show that the S value coincides with the peer minimum.
+% Direction is a property of the metric, not of this run, so the arrow sits on
+% the metric name.  Delay and activation are costs and read better lower;
+% margin and the two completion rates read better higher.
 %
 % Layout: booktabs, which the preamble already loads and whose rule spacing it
 % already tunes.  The previous grid ruled every row and every column, so the
@@ -126,25 +140,26 @@
     \makecell[c]{\textbf{Peer}\\\textbf{[min--max]}} &
     \makecell[c]{\textbf{vs.}\\\textbf{med.}} \\
     \midrule
-    Cumulative applied delay (s)
-      & 5.21 & 4.41 & [2.93--8.38] & worse \\
-    Paced transitions (\%)
-      & 55.2 & 43.1 & [20.7--75.9] & worse \\
-    Deadline margin \(P_5\) (\%)
-      & 5.2 & 6.1 & [3.0--10.3] & worse \\
-    \(M\)~executed (\%)
+    \(M\)~executed (\%)\,\(\uparrow\)
       & 26.7 & 38.3 & [23.3--100.0] & worse \\
-    \(S\)~executed (\%)
+    \(S\)~executed (\%)\,\(\uparrow\)
       & 73.3 & 100.0 & [73.3--100.0] & worse \\
+    Pacing activated (\%)\,\(\downarrow\)
+      & 55.2 & 43.1 & [20.7--75.9] & worse \\
+    Cumulative applied delay (s)\,\(\downarrow\)
+      & 5.21 & 4.41 & [2.93--8.38] & worse \\
+    Deadline margin \(P_5\) (\%)\,\(\uparrow\)
+      & 5.2 & 6.1 & [3.0--10.3] & worse \\
     \bottomrule
   \end{tabular}}
 
   \par\vspace{2pt}
   \begin{minipage}{0.98\columnwidth}
   {\scriptsize Peers in~(b) are the 10 complete, failure-free runs with the
-  same setting; \emph{worse} means the run falls on the unfavourable side of
-  the peer median, whichever direction that is for the metric. It does so on
-  every metric, and its \(S\) completion equals the peer minimum: the trace is
-  mechanism-revealing, not best-performing.\par}
+  same setting. \(\uparrow\) and \(\downarrow\) give the preferred direction of
+  each metric, and \emph{worse} means the run falls on the unfavourable side of
+  the peer median in that direction. It does so on every metric, and its \(S\)
+  completion equals the peer minimum: the trace is mechanism-revealing, not
+  best-performing.\par}
   \end{minipage}
 \end{table}
