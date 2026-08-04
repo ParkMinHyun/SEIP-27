@@ -1040,7 +1040,6 @@ removed more work, and RQ3 would no longer isolate pacing ability.
 - `tables/tab_rq1_ablation.tex`
 - `tables/tab_rq1_result.tex`
 - `tables/tab_rq2_admission_summary.tex`
-- `tables/tab_rq2_unsafe_spike_anatomy.tex`
 - `tables/tab_rq3_pacing_summary.tex`
 
 ### RQ2 figure
@@ -1050,9 +1049,6 @@ removed more work, and RQ3 would no longer isolate pacing ability.
   companion CSV is emitted. Regenerate it from section 5.4 whenever the RQ2
   workbook set changes.
 
-`tables/tab_rq2_unsafe_spike_anatomy.tex` carries the measured values for the
-same decisions and the figure carries their ratios, so the two are read
-together and must be regenerated together. Both, and the always-admit block of
 `tables/tab_rq2_admission_summary.tex`, come from `data/rq2_spike_anatomy.mjs`
 in the ML implementation repository, which is the single place the
 \(C_{\mathrm{model}}\) rule of section 5.3 is implemented:
