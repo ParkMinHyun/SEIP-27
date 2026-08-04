@@ -25,6 +25,18 @@ ARMS = {
 }
 
 
+# Predeclared per-cell exclusions, keyed (condition, arm, starting level) with
+# the first-timeout indices of the sessions to drop.  Only one session is
+# excluded: the 24MP Full Lv3 run that timed out at capture 11, which the table
+# reports as 7/7.  Keeping the manifest here rather than in the reader means the
+# retained form is one edit away, and that the criterion is visible.
+#   Note the asymmetry this creates and that the manuscript must address: the
+# criterion cannot be applied to all four arms, because No control and Pacing
+# only would then have no runs left at 24MP.  It is a per-cell
+# operator-invalidity call and has to be stated as one.
+EXCLUDE = {('24MP memory', 'Full', 3): [11]}
+
+
 def read_sheet(path, name):
     wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
     if name not in wb.sheetnames:
@@ -110,6 +122,18 @@ def load_arm(paths):
                 m = cell(r, ci['timeoutMarginMs'])
                 if isinstance(m, (int, float)):
                     slack.append(float(m))
+            # Lower-tail margin of THIS run.  Taking the percentile per run and
+            # aggregating afterwards keeps long runs from dominating the cell,
+            # which pooling every capture into one list did.
+            slack_p5 = pctl_inc(slack, 0.05) if slack else None
+            # Failure severity of THIS run: how far past the deadline the first
+            # timeout went.  None when the run did not time out, so the cell
+            # statistic is defined only over runs that actually failed.
+            overrun = None
+            if to_pos is not None:
+                m = cell(pref[to_pos - 1], ci['timeoutMarginMs'])
+                if isinstance(m, (int, float)):
+                    overrun = -float(m)
             tot_delay = None; paced_pct = None
             if summ and k < len(summ):
                 srow = summ[k]
@@ -122,7 +146,8 @@ def load_arm(paths):
                             reached30=len(run) >= 30, timeout_at=to_pos,
                             ms=100.0 * sum(ms) / len(ms) if ms else None,
                             m=rate('bokehCompleted'), s=rate('filterCompleted'),
-                            slack=slack, total_delay=tot_delay, paced=paced_pct,
+                            slack=slack, slack_p5=slack_p5, overrun=overrun,
+                            total_delay=tot_delay, paced=paced_pct,
                             src=os.path.basename(p)))
     return out
 
@@ -146,8 +171,15 @@ DEADLINE = statistics.median([v for v in CTO.values() if v]) if CTO else None
 
 hdr = (f"{'condition':13s} {'arm':15s} {'Lv':>2s} {'N':>3s} {'S30':>6s} "
        f"{'E':>3s} {'Med':>5s} {'M+S%':>6s} {'M%':>6s} {'slackP5%':>8s} "
+       f"{'(p50)':>6s} {'(min)':>6s} {'nSurv':>5s} {'ovrP50%':>7s} {'ovrMs':>6s} "
+       f"{'nTO':>3s} "
        f"{'SdelayP50s':>10s} {'paced%':>7s}")
 print(hdr); print('-' * len(hdr))
+print('slackP5% is the macro-average over surviving runs of each run\'s own P5;')
+print('(p50)/(min) are the median and worst of the same per-run values, printed')
+print('for the prose.  ovrP50% is the median overrun at the first timeout over')
+print('the runs that failed.  Each is censored when its own run set is empty.')
+print()
 
 for (cond, arm), paths in ARMS.items():
     runs = load_arm(paths)
@@ -156,6 +188,12 @@ for (cond, arm), paths in ARMS.items():
         if not g:
             print(f'{cond:13s} {arm:15s} {lv:2d}   --  (no accessible source)')
             continue
+        drop = EXCLUDE.get((cond, arm, lv))
+        if drop:
+            before = len(g)
+            g = [r for r in g if r['timeout_at'] not in drop]
+            print(f'  ** {cond} / {arm} / Lv{lv}: excluded {before - len(g)} '
+                  f'session(s) timing out at {drop} (predeclared manifest)')
         n = len(g)
         s30 = sum(1 for r in g if r['reached30'] and r['timeout_at'] is None)
         tos = [r['timeout_at'] for r in g if r['timeout_at'] is not None]
@@ -163,9 +201,22 @@ for (cond, arm), paths in ARMS.items():
         Med = statistics.median(tos) if len(tos) * 2 >= n else None  # censored otherwise
         ms = [r['ms'] for r in g if r['ms'] is not None]
         mm = [r['m'] for r in g if r['m'] is not None]
-        allslack = [v for r in g for v in r['slack']]
-        p5 = pctl_inc(allslack, 0.05)
-        p5pct = 100.0 * p5 / DEADLINE if (p5 is not None and DEADLINE) else None
+        # Slack P5 is reported only over the runs that completed 30 captures
+        # with no Capture Timeout.  A truncated run contributes exactly one
+        # negative margin -- the overrun that ended it -- so pooling every
+        # capture of every run made the printed percentile a statistic of
+        # failure severity whenever the mean surviving length fell below about
+        # 20 captures, and made its sign depend on run length rather than on
+        # deadline safety.  Failure severity is now its own column.
+        surv = [r for r in g if r['reached30'] and r['timeout_at'] is None]
+        sp5 = [r['slack_p5'] for r in surv if r['slack_p5'] is not None]
+        nrm = lambda v: 100.0 * v / DEADLINE if (v is not None and DEADLINE) else None
+        p5pct = nrm(sum(sp5) / len(sp5)) if sp5 else None      # macro-average
+        p5p50 = nrm(statistics.median(sp5)) if sp5 else None
+        p5min = nrm(min(sp5)) if sp5 else None
+        ov = [r['overrun'] for r in g if r['overrun'] is not None]
+        ovms = statistics.median(ov) if ov else None
+        ovpct = nrm(ovms) if ov else None
         td = [r['total_delay'] for r in g if r['total_delay'] is not None]
         tdp50 = statistics.median(td) / 1000.0 if td else None
         pc = [r['paced'] for r in g if r['paced'] is not None]
@@ -174,5 +225,7 @@ for (cond, arm), paths in ARMS.items():
               f'{("--" if E is None else str(E)):>3s} {f(Med):>5s} '
               f'{f(sum(ms)/len(ms)) if ms else "--":>6s} '
               f'{f(sum(mm)/len(mm)) if mm else "--":>6s} '
-              f'{f(p5pct):>8s} {f(tdp50,2):>10s} {f(sum(pc)/len(pc)) if pc else "--":>7s}')
+              f'{f(p5pct):>8s} {f(p5p50):>6s} {f(p5min):>6s} {len(sp5):5d} '
+              f'{f(ovpct):>7s} {f(ovms,0):>6s} {len(ov):3d} '
+              f'{f(tdp50,2):>10s} {f(sum(pc)/len(pc)) if pc else "--":>7s}')
     print()

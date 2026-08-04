@@ -4,23 +4,58 @@
 % and the full definition of d*.
 %
 % Panels (a) and (b) are the calibration view: one point per analyzed
-% transition, x the measured requirement d*, y the applied delay d, and the
-% dashed diagonal exact calibration.  Above the diagonal the controller paced
-% more than the trace required, below it less.  The +/-100 ms guides are drawn
-% because a transition inside that band is calibrated to within roughly one
-% frame interval, which is the granularity at which a delay is actuated at all.
+% transition with a positive requirement, x the measured requirement d*, y the
+% applied delay d, and the dashed diagonal exact calibration.  Above the
+% diagonal the controller paced more than the trace required, below it less.
+% The +/-100 ms guides are drawn because a transition inside that band is
+% calibrated to within roughly one frame interval, which is the granularity at
+% which a delay is actuated at all.
 %
-% Both kinds of point are plotted, and this is deliberate.  Transitions whose
-% requirement is zero sit on the vertical axis and are the majority of the paced
-% ones (75.3% in (a), 79.9% in (b)).  Dropping them would make the calibration
-% cloud read better and was rejected: the omission would have to be disclosed
-% anyway, and a reader who cannot see the vertical column cannot judge how much
-% of the picture it is.  They are drawn hollow so the diagonal cloud stays
-% legible underneath.  What the column must NOT be labelled is "unnecessary
-% pacing".  d* is computed on the realized trace, which pacing already shaped;
-% removing those delays would deepen the backlog and lengthen later Drafts, so
-% the requirement of the unpaced trajectory is at or above d*.  RQ1(b) supplies
-% the counterfactual directly: with pacing removed the same conditions time out.
+% ---------------------------------------------------------------------------
+% Why the d* = 0 transitions are not plotted here
+% ---------------------------------------------------------------------------
+% An earlier revision drew them as a hollow column on the vertical axis -- 277
+% points in (a) and 278 in (b), 75.3% and 79.9% of the paced transitions -- on
+% the reasoning that a reader who cannot see the column cannot judge how much
+% of the picture it is.  That reasoning was right about disclosure and wrong
+% about where the disclosure belongs.  Two things settle it:
+%
+%   1. Those points carry no calibration information.  The grammar of these
+%      panels is distance from the diagonal, and a point at x = 0 has no such
+%      distance; all it shows is the marginal distribution of d.  Rendered at
+%      277 overplotted marks on one x it also saturates into a solid bar, so
+%      even that marginal cannot be read off it.
+%   2. Panel (c) already contains every one of them, quantitatively.  For a
+%      transition with d* = 0 the error d - d* is exactly d, so the column is
+%      the part of (c) between the step at zero and the right tail.  Removing
+%      it from (a) and (b) routes each quantity to the panel whose grammar fits
+%      it; it does not remove anything from the figure.
+%
+% The restriction is therefore declared on the x label, where it cannot be
+% mistaken for a hidden filter, and the count plus the pointer to (c) are in
+% the caption.  What the column must NOT be labelled, wherever it appears, is
+% "unnecessary pacing".  d* is computed on the realized trace, which pacing
+% already shaped; removing those delays would deepen the backlog and lengthen
+% later Drafts, so the requirement of the unpaced trajectory is at or above d*.
+% RQ1(b) supplies the counterfactual directly: with pacing removed the same
+% conditions time out.
+%
+% The caption now makes that case with a measurement rather than with the
+% closed-loop argument alone.  On the same eligible set, every one of the 277
+% and 278 zero-requirement paced transitions had a positive measured backlog
+% (RQ3Pacing.realBacklogMs), a measured time-to-free
+% (PacingReplay.realQueueWaitMs) with P10/P50/P90 of 1,925/3,197/4,006 ms in
+% 12MP and 1,589/3,069/4,258 ms in 24MP, and realQueueDepth >= 1 on 100% and
+% 99.6% of them (median 4 waiting Drafts).  The applied delay covered a median
+% 11% and 7% of that measured wait, and stayed below it on 100% and 96.8%.
+% d* = 0 therefore does not mean the pipeline was idle; it means the newest
+% committed capture's deadline was not yet threatened on a trace pacing had
+% already flattened.  Recomputed from the same workbooks and the same run and
+% transition eligibility as Table~\ref{tab:rq3_pacing_calibration}; the 12MP
+% figures reproduce that table's 1,167 analyzed / 368 paced / 94 required
+% exactly, and the 24MP figures come from 1,036 analyzed before the two
+% watchdog-truncated transitions are dropped, which do not fall in this subset
+% (278 either way).
 %
 % Positive-requirement points are split by whether admission demoted the
 % sequence after the pacing decision was taken, because that is the first
@@ -44,17 +79,23 @@
 % right tail is the surplus that Table~\ref{tab:rq3_pacing_calibration}
 % attributes to the Draft-duration reserve.
 %
-% Axis range.  Both scatter panels use an identical 0-1500 ms square so the two
-% conditions can be compared by eye and so the diagonal is at 45 degrees.  Five
-% of the 351 plotted points in (b) have an applied delay above 1500 ms (largest
-% 2010 ms) and are clipped; no point in (a) is clipped, and no requirement in
-% either panel exceeds 727 ms.  Panel (c) shows the same window on the error
-% axis, clipping the same five transitions.
+% Axis range.  Both scatter panels use an identical 0-800 by 0-1500 ms box so
+% the two conditions can be compared by eye.  The box is no longer square
+% because the two axes no longer span the same data: no requirement in either
+% panel exceeds 727 ms, while applied delays reach 2010 ms, so a square window
+% wide enough for the y data would leave more than half the x range empty --
+% which is what the previous 0-1500 square did.  The diagonal is consequently
+% not at 45 degrees; it is still the exact-calibration locus, which is what the
+% panel is read against.  Two of the 73 plotted points in (b) exceed 1500 ms on
+% the y axis (largest 2010 ms) and are clipped; no point in (a) is clipped.
+% Panel (c) keeps the 1500 ms window on the error axis, where 0.58% of the 24MP
+% transitions (largest error 1909 ms) fall outside it and none of the 12MP ones
+% do.
 %
 % Point counts: (a) 94 with a positive requirement (80 undemoted, 14 demoted)
-% and 277 on the axis, from 1,167 analyzed transitions -- the remaining 796 are
-% at the origin and carry no information, so they are not drawn.  (b) 73 (51 and
-% 22) and 278 from 1,034, with 683 at the origin.
+% of 1,167 analyzed transitions; the other 1,073 are the 277 with d* = 0 and
+% the 796 at the origin, and neither group is drawn here.  (b) 73 (51 and 22)
+% of 1,034, with 278 and 683.
 %
 % Data: data/rq3/calibration/, generated from
 % SM-S948U_metrics_{12MP_normal,24MP_memory}_0803.xlsx (ML commit 99aae0a).
@@ -72,9 +113,6 @@
     rq3cal demoted/.style={
       mark=triangle, mark size=1.9pt, only marks,
       draw=blue!70!black, fill=white, line width=0.5pt, draw opacity=0.9},
-    rq3cal zero/.style={
-      mark=o, mark size=1.15pt, only marks,
-      draw=gray!75!black, draw opacity=0.5, line width=0.3pt},
     rq3cal diag/.style={black, densely dashed, line width=0.6pt},
     rq3cal band/.style={gray!60, dotted, line width=0.45pt},
     rq3cal ecdf a/.style={black, solid, line width=1.0pt},
@@ -84,12 +122,9 @@
 
   % #1: file stem of the condition.
   \newcommand{\rqthreecalscatter}[1]{%
-    \addplot[rq3cal band,forget plot,domain=0:1400,samples=2] {x+100};
-    \addplot[rq3cal band,forget plot,domain=100:1500,samples=2] {x-100};
-    \addplot[rq3cal diag,forget plot,domain=0:1500,samples=2] {x};
-    \addplot[rq3cal zero,forget plot]
-      table[x=required_ms,y=applied_ms,col sep=comma]
-      {\rqThreeCalDir/scatter_#1_zero.csv};
+    \addplot[rq3cal band,forget plot,domain=0:800,samples=2] {x+100};
+    \addplot[rq3cal band,forget plot,domain=100:800,samples=2] {x-100};
+    \addplot[rq3cal diag,forget plot,domain=0:800,samples=2] {x};
     \addplot[rq3cal required,forget plot]
       table[x=required_ms,y=applied_ms,col sep=comma]
       {\rqThreeCalDir/scatter_#1_req_kept.csv};
@@ -123,20 +158,27 @@
       clip=true,
     ]
 
+      % The restriction to d* > 0 is stated on the x label rather than in the
+      % caption alone: a filter that is visible on the axis it applies to
+      % cannot be read as a hidden one.
       \nextgroupplot[
         title={(a) 12MP normal},
-        xlabel={Required delay \(d^{*}\) (ms)},
+        xlabel={Required delay \(d^{*}>0\) (ms)\\
+                {\tiny 277 with \(d^{*}=0\) omitted --- see (c)}},
+        xlabel style={align=center},
         ylabel={Applied delay \(d\) (ms)},
-        xmin=0,xmax=1500,ymin=0,ymax=1500,
-        xtick={0,500,1000,1500},ytick={0,500,1000,1500},
+        xmin=0,xmax=800,ymin=0,ymax=1500,
+        xtick={0,200,400,600,800},ytick={0,500,1000,1500},
       ]
       \rqthreecalscatter{12mp_normal}
 
       \nextgroupplot[
         title={(b) 24MP memory pressure},
-        xlabel={Required delay \(d^{*}\) (ms)},
-        xmin=0,xmax=1500,ymin=0,ymax=1500,
-        xtick={0,500,1000,1500},ytick={0,500,1000,1500},
+        xlabel={Required delay \(d^{*}>0\) (ms)\\
+                {\tiny 278 with \(d^{*}=0\) omitted --- see (c)}},
+        xlabel style={align=center},
+        xmin=0,xmax=800,ymin=0,ymax=1500,
+        xtick={0,200,400,600,800},ytick={0,500,1000,1500},
       ]
       \rqthreecalscatter{24mp_memory}
 
@@ -168,14 +210,14 @@
       column sep=2pt,
       row sep=0pt,
       anchor=north,
-    ] at ([yshift=-5.2ex]rqthreecallegend) {
+    % -7.4ex rather than -5.2ex: the scatter x labels now carry a second line
+    % declaring the d* = 0 omission, and the legend has to clear it.
+    ] at ([yshift=-7.4ex]rqthreecallegend) {
       \draw[draw=black,fill=black,fill opacity=0.55]
         (0,0) circle (1.25pt); & \(d^{*}>0\) &
       \draw[draw=blue!70!black,fill=white,line width=0.5pt]
         (90:1.9pt)--(210:1.9pt)--(330:1.9pt)--cycle;
         & \(d^{*}>0\), demoted &
-      \draw[draw=gray!75!black,line width=0.3pt]
-        (0,0) circle (1.15pt); & \(d^{*}=0\) &
       \draw[rq3cal ecdf a] (0,0)--(0.38,0); & 12MP normal &
       \draw[rq3cal ecdf b] (0,0)--(0.38,0); & 24MP mem.\ pressure \\
     };
@@ -183,20 +225,25 @@
   \end{lrbox}
   \resizebox{\textwidth}{!}{\usebox{\rqthreecalfigbox}}
 
-  \caption{RQ3 pacing calibration. Each point in (a) and (b) is one analyzed
-  transition; the dashed diagonal is exact calibration and the dotted guides
-  mark \(\pm100\)\,ms. Triangles mark transitions whose sequence admission
-  demoted after the pacing decision, so that the coordination effect on the
-  surplus is visible; it does not run one way, being adverse in (a) and neutral
-  in (b). Points on the vertical axis are transitions whose requirement,
-  measured on the realized trace, was zero --- 75.3\% of paced transitions in
-  (a) and 79.9\% in (b). They are not idle pacing: because the trace was already
-  shaped by pacing, the requirement of the unpaced trajectory is at or above
-  \(d^{*}\), and Table~\ref{tab:rq1_ablation} shows that removing pacing
-  reintroduces Capture Timeouts under the same conditions. Panel~(c) gives the
-  same error over all 1,167 and 1,034 analyzed transitions: 0.6\% and 1.1\% of
-  them lie left of zero, and the right tail is the surplus that
-  Table~\ref{tab:rq3_pacing_calibration} attributes to the Draft-duration
-  reserve. Transitions at the origin are omitted from (a) and (b) only.}
+  \caption{RQ3 pacing calibration. Panels (a) and (b) plot the \(94\) and
+  \(73\) analyzed transitions whose measured requirement is positive, one point
+  each; the dashed diagonal is exact calibration and the dotted guides mark
+  \(\pm100\)\,ms. Triangles mark transitions whose sequence admission demoted
+  after the pacing decision, so that the coordination effect on the surplus is
+  visible; it does not run one way, being adverse in (a) and neutral in (b). A
+  further \(277\) and \(278\) paced transitions have \(d^{*}=0\) on the realized
+  trace and are not plotted here; because their error \(d-d^{*}\) is exactly
+  \(d\), they are the part of panel~(c) between the step at zero and the right
+  tail. They are not idle pacing: every one of them had a positive measured
+  backlog, the median measured time until the Draft pipeline was next free was
+  \(3.2\) and \(3.1\)\,s, and the applied delay covered a median \(11\%\) and
+  \(7\%\) of that wait. Because the trace was already shaped by pacing, the
+  requirement of the unpaced trajectory is at or above \(d^{*}\), and
+  Table~\ref{tab:rq1_ablation} shows that removing pacing reintroduces Capture
+  Timeouts under the same conditions. Panel~(c) gives the calibration error over
+  all \(1{,}167\) and \(1{,}034\) analyzed transitions, the transitions at the
+  origin included: \(0.6\%\) and \(1.1\%\) of them lie left of zero, and the
+  right tail is the surplus that Table~\ref{tab:rq3_pacing_calibration}
+  attributes to the Draft-duration reserve.}
   \label{fig:rq3_pacing_calibration}
 \end{figure*}

@@ -212,13 +212,34 @@ three of the four conditions while retaining the least optional work of any
 arm, and Pacing only retains the most optional work and survives the least.
 Each row therefore also reports what the arm preserved and what it charged:
 
-| Column | Definition |
-|---|---|
-| `S(30)` | Runs completing 30 captures with no Capture Timeout, over included runs; the denominator carries `N` |
-| `E/M` | Earliest and median first-timeout capture index; `M` is censored when fewer than half the runs in the cell time out |
-| Slack P5 `(%)` | Inclusive fifth percentile of the per-capture normalized deadline margin; negative means the lower tail has already crossed the deadline |
-| \(M+S\) `(%)` | Per-run rate of `bokehCompleted && filterCompleted` over the first 30 captures, macro-averaged across runs |
-| \(\Sigma d\) `(s)` | Median across runs of the delay accumulated in the run; structurally zero when the pacer is off |
+| Column | Printed as | Definition |
+|---|---|---|
+| `S(30)` | Survived runs | Runs completing 30 captures with no Capture Timeout, over included runs; the denominator carries `N` |
+| `E/M` | E/M | Earliest and median first-timeout capture index; `M` is censored when fewer than half the runs in the cell time out |
+| Slack P5 `(%)` | Slack P5 (%) | Each run's own inclusive fifth percentile of the per-capture normalized deadline margin, macro-averaged **over the runs that survived**; censored when the cell has no surviving run |
+| Overrun P50 `(ms)` | Overrun P50 (ms) | Median, over the runs that timed out, of `-timeoutMarginMs` at the first timeout; censored when no run in the cell timed out |
+| \(M+S\) `(%)` | Draft completion | Per-run rate of `bokehCompleted && filterCompleted` over the first 30 captures, macro-averaged across runs |
+| \(\Sigma d\) `(s)` | Pacing cost | Median across runs of the delay accumulated in the run; structurally zero when the pacer is off |
+
+Slack P5 must be computed **per run and then averaged, over surviving runs
+only**. Two failure modes of the earlier pooled-over-all-captures form:
+
+- Pooling weighted the cell by capture count, so the longest-surviving runs
+  dominated it. That also weighted this column differently from \(M+S\) in the
+  next column, which is macro-averaged per run.
+- A run that ends at its first timeout contributes exactly one negative margin.
+  The count of negatives was therefore pinned to `N` while the pool size was `N`
+  times the mean surviving length, so the percentile fell inside the overruns
+  whenever that mean dropped below about 20 captures. The printed sign tracked
+  run length, not deadline safety: 12MP normal / Lv3 / Pacing only times out in
+  5 of its 9 runs, yet pooling printed `+5.4` for it against `+4.1` for Full,
+  because its runs survived 25.2 captures on average and its 5 overruns were
+  only 2.2% of the pool.
+
+Failure severity belongs in `Overrun P50` instead, where the run set it is
+defined over is stated rather than implied. Report it in **ms**, not as a
+percentage of the deadline: the smallest observed cell is 2 ms, which rounds to
+`0.0%` and reads as "did not overrun".
 
 `E/M` is what differentiates the arms that never complete 30 captures. A
 timeout-only table renders No control and Pacing only indistinguishable at
@@ -227,6 +248,15 @@ timeout-only table renders No control and Pacing only indistinguishable at
 24MP is a requested-mode label: only the first one or two captures are 24MP and
 the remaining captures are 12MP.  Starting-level 5--6 runs use the product's
 12MP fallback and must not be presented as 24MP ablation evidence.
+
+The Full 24MP / Lv3 cell excludes one session that contained a Capture Timeout,
+which is why it reads `7/7` and censors both `E/M` and `Overrun P50`. Under that
+exclusion its \(M+S\) is 44.3% and its \(\Sigma d\) is 4.4 s, both of which
+match the corresponding RQ1(a) cell exactly; retaining the session gives `7/8`,
+46.7% and 4.2 s. The exclusion criterion is not yet predeclared in the
+manuscript and is not applied to the other three arms -- it cannot be, since No
+control would then have no runs at all -- so it must either be stated as a
+per-cell operator-invalidity call with its reason, or dropped.
 
 Open collection gaps, recorded in the table file's header comment and marked in
 the table itself: no controller-off workbook exists for 12MP normal; 12MP
@@ -878,6 +908,23 @@ columns remain available in the CSVs and summary artifact, but queue depth is
 not repeated as a trajectory panel because it conveys the same accumulation
 pattern as backlog in the space-constrained `0.215\textwidth` panel. The
 pacing-activation panel instead exposes when a policy actually intervenes.
+
+**This rule is scoped to the cross-run trajectory panels and does not carry to
+the case-study figure.** Pooling medians over runs is what makes backlog and
+queue depth look alike: the two accumulate together on average. Within a single
+session they separate, because admission and pacing act on different terms.
+Backlog is the *time* queued and falls when admission makes each Draft cheaper;
+queue depth is the *count* queued and falls only when arrivals stop outrunning
+service. In the selected 12MP session the two part company over captures
+23--30, immediately after the \(S\) demotion: real backlog drops from 63.8% to
+27.6% of the deadline while `realQueueDepth` stays at four or five. Backlog
+alone reads as "the session recovered"; the pair shows that the queue never
+shortened and only became cheaper to serve, which is the coordination claim the
+case study exists to make. `figures/fig_casestudy_12mp.tex` therefore carries a
+queue-depth strip, sourced from the `queue_depth` column already emitted into
+`data/casestudy/<condition>_backlog.csv` by `scripts/export_casestudy.py`. Keep
+the strip in any case-study figure that shows a demotion; drop it only if a
+future session shows the two moving together throughout.
 The cumulative-delay panel draws policy medians and IQR bands for the arms
 whose traces are currently available because run-to-run pacing cost is central
 to its interpretation. After all four arms are populated, verify that four

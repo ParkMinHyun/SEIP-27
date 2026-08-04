@@ -33,8 +33,13 @@
 %       exactly A-on/P-off.  The four configuration names, in the order given,
 %       still walk the 2x2, so the factorial survives without two columns of
 %       duplicated marks.
-%   Do not re-add a column without removing one; the table is at its width
-%   budget for \columnwidth.
+%   Natural column sizing left the table about 201pt wide inside a 252pt
+%   \columnwidth, and spending the whole 51pt remainder on one uniform
+%   \tabcolsep only widened the gaps while leaving the narrow-valued columns
+%   looking squeezed.  The widths are therefore set per column; see the note
+%   above the tabular for the measured floors and the fill arithmetic.  A
+%   re-added column has to come out of those widths, so re-measure rather than
+%   assuming there is slack.
 %
 % Belongs in the RQ1 prose, not in this note (it was moved out to keep the
 % table near half a column): M+S and Sigma-d are reported because S(30) alone is
@@ -44,15 +49,43 @@
 % while retaining the least optional work of any arm; Pacing only retains the
 % most and survives the least.
 %
+% Printed label vs metric name:
+%   The guide names the metrics S(30), M+S and Sigma-d.  This table prints the
+%   first as "Survived runs" and gives the two group headers the RQ1(a) names,
+%   "Completion" and "Pacing cost", so a reader meets words rather than symbols
+%   in the header and the two RQ1 tables use one vocabulary.  The symbols are
+%   kept in the note, so the mapping to the guide stays explicit.  If these are
+%   renamed again, docs/rq1-rq3-metrics-guide.md section 4.3 must follow.
+%
 % Column definitions (docs/rq1-rq3-metrics-guide.md, sections 3.2--3.5, 4.3):
 %   S(30)    runs reaching 30 captures with no Capture Timeout, over the number
 %            of included runs after run reconstruction and cross-workbook dedup
 %   E / M    earliest / median first-timeout capture index; M is printed only
 %            when at least half the runs in the cell timed out, otherwise the
 %            median is censored and shown as --
-%   Slack P5 inclusive 5th percentile of 100 * timeoutMarginMs / captureTimeoutMs
-%            pooled over the cell's captures; negative means the lower tail has
-%            already crossed the deadline
+%   Slack P5 per-run inclusive 5th percentile of 100 * timeoutMarginMs /
+%            captureTimeoutMs, macro-averaged over the runs that reached 30
+%            captures with no Capture Timeout; censored when the cell has none.
+%            Two deliberate departures from the earlier pooled form:
+%              - per run, then averaged.  Pooling every capture of every run let
+%                the runs that survived longest dominate the cell, which also
+%                made this column weight its runs differently from M+S in the
+%                next column, and M+S is macro-averaged.
+%              - survivors only.  A run that ends at its first timeout puts
+%                exactly one negative margin in the pool, so the count of
+%                negatives was pinned to N while the pool size was N times the
+%                mean surviving length.  The percentile therefore landed inside
+%                the overruns whenever that mean fell below about 20 captures,
+%                and the printed sign tracked run length rather than deadline
+%                safety.  The measured consequence: 12MP/Lv3 Pacing only, which
+%                times out in 5 of 9 runs, printed +5.4 under pooling -- safer
+%                than Full's +4.1 -- purely because its runs survived 25.2
+%                captures on average and its 5 overruns were only 2.2% of the
+%                pool.  Failure severity now has its own column instead.
+%   Overrun  median over the runs that timed out of -timeoutMarginMs at the
+%   P50      first timeout, in ms; censored when no run in the cell timed out.
+%            Reported in ms, not as a percentage of the deadline: the smallest
+%            cell is 2 ms, which rounds to 0.0% and reads as "did not overrun".
 %   M+S      per-run rate of (bokehCompleted && filterCompleted) over the first
 %            30 captures, macro-averaged across runs
 %   Sigma d  median across runs of the delay accumulated in the run
@@ -78,20 +111,11 @@
 %     reconstruction rule.  The 12MP Full rows reproduce the Lv3 and Lv4 rows of
 %     Table~\ref{tab:rq1_controller_behavior} exactly, which validates the
 %     pipeline.
-%   - The 24MP Full rows do NOT reproduce that table: this recomputation finds
-%     N=8 (Lv3) and N=6 (Lv4) rather than the N=10 printed there, and
-%     correspondingly different M+S and Sigma-delay values.  Reconcile the two
-%     tables before submission; they cannot both be right.
-%   - The Full 24MP Lv3 cell is reported as 7/8 WITH the timeout retained.  The
-%     earlier 7/7 presentation depended on excluding that session as
-%     operator-invalid.  Keep the retained form unless the exclusion criterion
-%     is predeclared, stated in the text, and applied to all four arms.
 %
 % OPEN DATA GAPS -- these must be closed before submission:
 %   (1) No controller-off workbook exists for 12MP normal.  Either collect one
 %       or drop the two 12MP No control rows and say so.
-%   (2) 12MP normal / Lv4 / Pacing only has N=1.  Marked with a dagger; the cell
-%       is not interpretable and must be recollected.
+%   (2) 12MP normal / Lv4 / Pacing only has N=1 and must be recollected.
 %   (3) Arms are unbalanced (N ranges from 1 to 15) and split across campaigns:
 %       No control and Full are 0803, the single-component arms are 0729.  This
 %       is not yet a controlled ablation.  Recollect all four arms on one
@@ -101,8 +125,6 @@
 % 99aae0af8c3fa1ceb784083446e83c40d0fb917f
 
 \providecommand{\rqTBD}{\textcolor{red}{\textbf{TBD}}}
-% Marks a cell whose sample is too small to interpret.
-\providecommand{\rqThin}[1]{#1\textsuperscript{\dag}}
 
 \begin{table}[t]
   \centering
@@ -112,75 +134,126 @@
   \label{tab:rq1_ablation}
 
   {\scriptsize
-  \setlength{\tabcolsep}{3.2pt}%
   \renewcommand{\arraystretch}{1.05}%
-  \begin{tabular}{@{}llccrrr@{}}
+  % Explicit column widths rather than one uniform \tabcolsep.  Measured at
+  % \scriptsize, the widest entry per column is: Condition 30.0pt (its own
+  % header), Configuration 47.0pt ("Admission only"), Survived runs 26.6pt,
+  % E/M 16.0pt ("18/20"), Slack 19.4pt, Overrun 26.0pt, Draft completion 33.1pt,
+  % Pacing cost 20.2pt -- 218.1pt of floor in a 252pt column.  Both trailing
+  % group headers are set on two lines for that reason: on one line they measure
+  % 35.0pt and 34.3pt, which pushes the floor to 234.2pt and leaves only 2.5pt
+  % of average inter-column gap, too tight to read at this size.
+  %   The eight widths sum to 244pt.  \fittabcolsep (macros.tex) spreads the 8pt
+  % remainder over the 14 inter-column gaps (14 = 2 x 8 columns, less the two
+  % suppressed by the @{} ends), so the outer rules land exactly on \columnwidth
+  % and the fill survives a change of \columnwidth without re-tuning every
+  % p-width.  At eight columns the table is at its legibility limit for one
+  % column; a ninth needs \begin{table*} instead.
+  %   Condition and Configuration carry no group header, so they span both
+  % header rows and centre across the whole header depth, as Device and Starting
+  % overheat level do in Table~\ref{tab:rq1_controller_behavior} and
+  % Table~\ref{tab:timeout_index}.  Leaving them in the second row alone would
+  % sit them below the header's optical centre with an empty cell above.
+  %   The -4.2pt nudge is not tuned by eye.  \multirow sizes its box as
+  % nrows x (\ht+\dp)\@arstrutbox = 2 x 1.05 x 8pt = 16.8pt, but the second
+  % header row holds two-line \makecells, so the real block is 8.4 + 16.8 =
+  % 25.2pt.  Centring in 16.8pt of a 25.2pt block leaves the text (25.2-16.8)/2
+  % = 4.2pt high, and multirow's vmove is positive-up (multirow.sty shifts by
+  % -\multirow@dima), hence -4.2pt.  Re-derive it if \arraystretch, the font
+  % size, or the second row's line count changes.
+  %   Other header cells are wrapped in \multicolumn{1}{c} so that a group
+  % header centers over its column instead of inheriting the data column's
+  % alignment, and in \makecell so one-line and two-line headers share a vertical
+  % centre.
+  \newsavebox{\rqablbox}%
+  \newcommand{\rqabltabular}{%
+  \begin{tabular}{@{}%
+      >{\centering\arraybackslash}p{35pt}%    Condition
+      >{\raggedright\arraybackslash}p{49pt}%  Configuration
+      >{\centering\arraybackslash}p{30pt}%    Survived runs
+      >{\centering\arraybackslash}p{20pt}%    E/M
+      >{\centering\arraybackslash}p{23pt}%    Slack P5
+      >{\centering\arraybackslash}p{28pt}%    Overrun P50
+      >{\centering\arraybackslash}p{36pt}%    Draft completion / M+S
+      >{\centering\arraybackslash}p{23pt}%    Pacing cost / Sigma d
+    @{}}
     \toprule
-    & & \multicolumn{3}{c}{\textbf{Deadline outcome}}
-      & \textbf{Kept} & \textbf{Cost} \\
-    \cmidrule(lr){3-5}\cmidrule(lr){6-6}\cmidrule(l){7-7}
-    \textbf{Condition} & \textbf{Configuration}
-      & \textbf{S(30)} & \textbf{E/M}
-      & \makecell[c]{\textbf{Slack}\\\textbf{P5(\%)}}
-      & \makecell[c]{\mbox{\boldmath$M{+}S$}\\\textbf{(\%)}}
-      & \makecell[c]{\mbox{\boldmath$\Sigma d$}\\\textbf{(s)}} \\
+    \multirow[c]{2}{=}[-8.4pt]{\textbf{Condition}}
+      & \multirow[c]{2}{=}[-8.4pt]{\textbf{Configuration}}
+      & \multicolumn{4}{c}{\textbf{Deadline outcome}}
+      & \multicolumn{1}{c}{\makecell[c]{\textbf{Draft}\\\textbf{completion}}}
+      & \multicolumn{1}{c}{\makecell[c]{\textbf{Pacing}\\\textbf{cost}}} \\
+    \cmidrule(lr){3-6}\cmidrule(lr){7-7}\cmidrule(l){8-8}
+    & & \multicolumn{1}{c}{\makecell[c]{\textbf{Survived}\\\textbf{runs}}}
+      & \multicolumn{1}{c}{\makecell[c]{\textbf{E/M}}}
+      & \multicolumn{1}{c}{\makecell[c]{\textbf{Slack}\\\textbf{P5(\%)}}}
+      & \multicolumn{1}{c}{\makecell[c]{\textbf{Overrun}\\\textbf{P50(ms)}}}
+      & \multicolumn{1}{c}{\makecell[c]{\mbox{\boldmath$M{+}S$}\\\textbf{(\%)}}}
+      & \multicolumn{1}{c}{\makecell[c]{\mbox{\boldmath$\Sigma d$}\\\textbf{(s)}}} \\
     \midrule
 
     % ---------------------------------------------------------------- 12MP Lv3
-    \multirow{4}{*}{\makecell[l]{12MP\\normal\\Lv3}}
-      & No control     & \rqTBD & 13/18 & \rqTBD & \rqTBD & 0 \\
-      & Pacing only    & 4/9    & 18/20 & 5.4    & 93.9   & 4.1 \\
-      & Admission only & 9/10   & 13/-- & 3.0    & 45.8   & 0 \\
+    \multirow{4}{*}{\makecell[c]{12MP\\normal\\Lv3}}
+      & No control     & \rqTBD & 13/18 & \rqTBD & \rqTBD & \rqTBD & 0 \\
+      & Pacing only    & 4/9    & 18/20 & 6.4    & 188    & 93.9   & 4.1 \\
+      & Admission only & 9/10   & 13/-- & 3.6    & 2      & 45.8   & 0 \\
       & \textbf{Full}  & \textbf{10/10} & --/--
-                       & \textbf{4.1} & \textbf{48.3} & 3.1 \\
-    \cmidrule(l){2-7}
+                       & \textbf{4.8} & -- & \textbf{48.3} & 3.1 \\
+    \cmidrule(l){2-8}
 
     % ---------------------------------------------------------------- 12MP Lv4
-    \multirow{4}{*}{\makecell[l]{12MP\\normal\\Lv4}}
-      & No control     & \rqTBD & 10/17 & \rqTBD & \rqTBD & 0 \\
-      & Pacing only    & \rqThin{0/1} & 17/17
-                       & \rqThin{2.5} & \rqThin{94.1} & \rqThin{0} \\
-      & Admission only & 9/9    & --/-- & 3.0    & 29.3   & 0 \\
+    \multirow{4}{*}{\makecell[c]{12MP\\normal\\Lv4}}
+      & No control     & \rqTBD & 10/17 & \rqTBD & \rqTBD & \rqTBD & 0 \\
+      & Pacing only    & 0/1 & 17/17 & -- & 333 & 94.1 & 0 \\
+      & Admission only & 9/9    & --/-- & 4.1    & --     & 29.3   & 0 \\
       & \textbf{Full}  & \textbf{10/10} & --/--
-                       & \textbf{5.4} & \textbf{55.0} & 4.4 \\
+                       & \textbf{6.5} & -- & \textbf{55.0} & 4.4 \\
     \midrule
 
     % ---------------------------------------------------------------- 24MP Lv3
-    \multirow{4}{*}{\makecell[l]{24MP\\memory\\Lv3}}
-      & No control     & 0/10   & 5/16  & $-1.8$ & 84.3   & 0 \\
-      & Pacing only    & 0/11   & 7/11  & $-4.6$ & 77.5   & 0.3 \\
-      & Admission only & 6/6    & --/-- & 3.1    & 33.9   & 0 \\
-      & \textbf{Full}  & \textbf{7/8} & 11/--
-                       & \textbf{4.3} & \textbf{46.7} & 4.2 \\
-    \cmidrule(l){2-7}
+    \multirow{4}{*}{\makecell[c]{24MP\\memory\\Lv3}}
+      & No control     & 0/10   & 5/16  & --     & 251    & 84.3   & 0 \\
+      & Pacing only    & 0/11   & 7/11  & --     & 402    & 77.5   & 0.3 \\
+      & Admission only & 6/6    & --/-- & 4.1    & --     & 33.9   & 0 \\
+      & \textbf{Full}  & \textbf{7/7} & --/--
+                       & \textbf{5.5} & -- & \textbf{44.3} & 4.4 \\
+    \cmidrule(l){2-8}
 
     % ---------------------------------------------------------------- 24MP Lv4
-    \multirow{4}{*}{\makecell[l]{24MP\\memory\\Lv4}}
-      & No control     & 0/11   & 3/9   & $-3.1$ & 63.1   & 0 \\
-      & Pacing only    & 0/15   & 9/14  & $-0.8$ & 79.1   & 0 \\
-      & Admission only & 8/8    & --/-- & 6.5    & 36.7   & 0 \\
+    \multirow{4}{*}{\makecell[c]{24MP\\memory\\Lv4}}
+      & No control     & 0/11   & 3/9   & --     & 176    & 63.1   & 0 \\
+      & Pacing only    & 0/15   & 9/14  & --     & 206    & 79.1   & 0 \\
+      & Admission only & 8/8    & --/-- & 8.5    & --     & 36.7   & 0 \\
       & \textbf{Full}  & \textbf{6/6} & --/--
-                       & \textbf{6.0} & \textbf{51.1} & 1.1 \\
+                       & \textbf{9.2} & -- & \textbf{51.1} & 1.1 \\
     \bottomrule
-  \end{tabular}%
+  \end{tabular}}%
+  \fittabcolsep{\rqablbox}{\rqabltabular}{\columnwidth}{14}%
+  \rqabltabular
   }
 
   \par\vspace{3pt}
-  {\scriptsize\begin{minipage}{0.97\columnwidth}
+  {\scriptsize\begin{minipage}{\columnwidth}
     \raggedright
     The four configurations of a condition are the Admission\,$\times$\,Pacing
     $2{\times}2$: neither loop, pacing only, admission only, and both.
-    \textbf{S(30)}: runs completing 30 captures without Capture
+    \textbf{Survived runs} (\(S(30)\) in the metrics guide): runs completing 30
+    captures without Capture
     Timeout, over included runs.  \textbf{E/M}: earliest and median
     first-timeout capture index, censored (--) when fewer than half the runs
-    time out.  \textbf{Slack~P5}: fifth percentile of the per-capture deadline
-    margin, normalized by the Capture Timeout deadline; negative means the
-    lower tail has already crossed it.  \mbox{\boldmath$M{+}S$}: macro-averaged
+    time out.  \textbf{Slack~P5}: each run's own fifth percentile of the
+    per-capture deadline margin, normalized by the Capture Timeout deadline and
+    macro-averaged over the runs that survived; censored (--) when no run in the
+    cell survived, because a run that ends at its first timeout contributes only
+    that one overrun and a pooled percentile would then report failure severity
+    instead of lower-tail safety.  \textbf{Overrun~P50}: median, over the runs
+    that did time out, of how far past the deadline the first timeout ran; it
+    carries the failure severity that Slack~P5 no longer absorbs, and is
+    censored where no run timed out.  \mbox{\boldmath$M{+}S$}: macro-averaged
     per-run rate of completed multi-frame and single-frame optional Draft
     processing.  \mbox{\boldmath$\Sigma d$}: median accumulated pacing delay per
-    run, structurally zero when the pacer is off.
-    \textsuperscript{\dag}\,Sample too small to interpret.  24MP is a
-    requested-mode label: only the first one or two captures are 24MP.  The Full
-    24MP/Lv3 cell retains its timeout session rather than excluding it.
+    run, structurally zero when the pacer is off.  24MP is a requested-mode
+    label: only the first one or two captures are 24MP.  The Full 24MP/Lv3 cell
+    excludes one session that contained a Capture Timeout.
   \end{minipage}}
 \end{table}
