@@ -1,0 +1,187 @@
+% OPTIONAL / NOT INCLUDED IN THE BODY.  The body uses only the 12MP
+% normal-memory case study (figures/fig_casestudy_12mp.tex); the 24MP-mode
+% session is summarised numerically in tables/tab_casestudy_selection.tex.
+% Keep this figure for the appendix or for a reviewer response that asks
+% whether the coordination sequence also appears under memory pressure.
+%
+% Case study (b): coordinated admission and pacing in a 24MP capture-mode
+% session under external memory pressure.  Trace and session-selection
+% protocol are produced by scripts/export_casestudy.py; the selected session
+% is the unique one that satisfies the mechanism-coverage criteria among the
+% complete, timeout-free sessions that never enter the Lv5 MP12 fallback.
+\begin{figure}[t]
+  \centering
+  \setlength{\abovecaptionskip}{2pt}%
+  \setlength{\belowcaptionskip}{2pt}%
+  \providecommand{\caseStudyDataDir}{data/casestudy}
+  \providecommand{\csEvent}[1]{%
+    \draw[cs event] ({axis cs:#1,0}|-{rel axis cs:0,0})
+                 -- ({axis cs:#1,0}|-{rel axis cs:0,1});}
+  \providecommand{\csBand}[2]{%
+    \fill[cs band] ({axis cs:#1,0}|-{rel axis cs:0,0})
+      rectangle ({axis cs:#2,0}|-{rel axis cs:0,1});}
+  \providecommand{\csSizeBand}[2]{%
+    \fill[cs size] ({axis cs:#1,0}|-{rel axis cs:0,0})
+      rectangle ({axis cs:#2,0}|-{rel axis cs:0,1});}
+  \tikzset{
+    cs event/.style={red!65!black,densely dashed,line width=0.5pt},
+    cs band/.style={blue!55!black,opacity=0.08},
+    cs size/.style={black!70,opacity=0.10},
+    cs danger/.style={red!70!black,opacity=0.07},
+  }
+  \pgfplotsset{
+    cs executed/.style={
+      only marks,mark=square*,mark size=1.35pt,
+      draw=black,fill=black!72,line width=0.4pt,
+    },
+    cs skipped/.style={
+      only marks,mark=square,mark size=1.35pt,
+      draw=black!45,line width=0.4pt,
+    },
+    cs delay/.style={
+      ybar,bar width=2.1pt,
+      draw=blue!55!black,fill=blue!55!black,fill opacity=0.55,line width=0.35pt,
+    },
+    cs series/.style={
+      line width=0.7pt,mark=*,mark size=0.9pt,
+      mark options={draw=none,fill=black!80},
+    },
+    cs floor/.style={red!70!black,line width=0.6pt},
+  }
+
+  \begin{tikzpicture}
+    \begin{groupplot}[
+      group style={
+        group size=1 by 4,
+        vertical sep=3.5pt,
+        xticklabels at=edge bottom,
+      },
+      scale only axis=true,
+      width=0.80\columnwidth,
+      xmin=0.5,xmax=30.5,
+      xtick={5,10,15,20,25,30},
+      tick label style={font=\scriptsize},
+      label style={font=\scriptsize},
+      grid=major,
+      major grid style={gray!16,line width=0.2pt},
+      axis line style={line width=0.4pt},
+      tick style={line width=0.4pt},
+      tick align=outside,
+      tick pos=left,
+      ylabel style={align=center},
+    ]
+
+      % ---- stage execution strip -------------------------------------
+      \nextgroupplot[
+        height=0.115\columnwidth,
+        ymin=0.4,ymax=2.6,
+        ytick={1,2},
+        yticklabels={{\(S\): Filter},{\(M\): Bokeh}},
+        yticklabel style={font=\tiny},
+        grid=none,
+      ]
+      \csSizeBand{0.5}{2.5}
+      \csBand{5.5}{8.5}
+      \csEvent{4}\csEvent{6}\csEvent{9}\csEvent{17}
+      \addplot[cs executed] table[x=shot,y=lane,col sep=comma]
+        {\caseStudyDataDir/24mp_memory_bokeh_exec.csv};
+      \addplot[cs skipped] table[x=shot,y=lane,col sep=comma]
+        {\caseStudyDataDir/24mp_memory_bokeh_skip.csv};
+      \addplot[cs executed] table[x=shot,y=lane,col sep=comma]
+        {\caseStudyDataDir/24mp_memory_filter_exec.csv};
+      \addplot[cs skipped] table[x=shot,y=lane,col sep=comma]
+        {\caseStudyDataDir/24mp_memory_filter_skip.csv};
+
+      % ---- applied pacing delay --------------------------------------
+      \nextgroupplot[
+        height=0.30\columnwidth,
+        ylabel={Applied delay\\(ms)},
+        ymin=0,ymax=1500,
+        ytick={0,500,1000,1500},
+      ]
+      \csSizeBand{0.5}{2.5}
+      \csBand{5.5}{8.5}
+      \csEvent{4}\csEvent{6}\csEvent{9}\csEvent{17}
+      \addplot[cs delay] table[x=shot,y=delay_ms,col sep=comma]
+        {\caseStudyDataDir/24mp_memory_delay.csv};
+      \node[anchor=north,font=\tiny,inner sep=1pt] at (axis cs:1.5,1470)
+        {MP24};
+      \node[anchor=north,font=\tiny,inner sep=1pt,align=center,
+            text=blue!45!black] at (axis cs:7.4,1470) {pacing\\relaxed};
+      \node[anchor=north east,font=\tiny,inner sep=1pt]
+        at (axis cs:30.3,1470) {\(\sum_i d_i=4{,}388\)~ms};
+
+      % ---- real Draft backlog ----------------------------------------
+      \nextgroupplot[
+        height=0.30\columnwidth,
+        ylabel={Draft backlog\\(ms)},
+        ymin=0,ymax=5200,
+        ytick={0,2000,4000},
+      ]
+      \csSizeBand{0.5}{2.5}
+      \csBand{5.5}{8.5}
+      \csEvent{4}\csEvent{6}\csEvent{9}\csEvent{17}
+      \addplot[cs series] table[x=shot,y=backlog_ms,col sep=comma]
+        {\caseStudyDataDir/24mp_memory_backlog.csv};
+      \node[anchor=north,font=\tiny,inner sep=1pt]
+        at (axis cs:13,5150) {backlog rebuilds};
+
+      % ---- deadline margin -------------------------------------------
+      \nextgroupplot[
+        height=0.30\columnwidth,
+        xlabel={Capture index within the 30-shot burst},
+        ylabel={Deadline margin\\(ms)},
+        ymin=-420,ymax=4800,
+        ytick={0,1500,3000,4500},
+      ]
+      \fill[cs danger] ({rel axis cs:0,0}) rectangle ({axis cs:30.5,0});
+      \csSizeBand{0.5}{2.5}
+      \csBand{5.5}{8.5}
+      \csEvent{4}\csEvent{6}\csEvent{9}\csEvent{17}
+      \addplot[cs floor] coordinates {(0.5,0) (30.5,0)};
+      \node[anchor=north east,font=\tiny,text=red!70!black,inner sep=1.5pt]
+        at (axis cs:30.3,-20) {Capture Timeout};
+      \addplot[cs series] table[x=shot,y=margin_ms,col sep=comma]
+        {\caseStudyDataDir/24mp_memory_margin.csv};
+      \node[anchor=west,font=\tiny,inner sep=1.5pt] at (axis cs:11.3,245)
+        {245~ms};
+      \node[anchor=south,font=\tiny,inner sep=1.5pt] at (axis cs:18,430)
+        {283~ms};
+    \end{groupplot}
+
+    % ---- transition legend above the strip ---------------------------
+    \node[anchor=south west,font=\tiny,align=left,inner sep=0pt]
+      at ([yshift=1.5pt]group c1r1.north west)
+      {\textcolor{red!65!black}{\(\mathbf{4}\)}~pacing on\quad
+       \textcolor{red!65!black}{\(\mathbf{6}\)}~\(M\) demoted\quad
+       \textcolor{red!65!black}{\(\mathbf{9}\)}~pacing back\quad
+       \textcolor{red!65!black}{\(\mathbf{17}\)}~\(S\) demoted};
+
+    % ---- stage legend below the axes ---------------------------------
+    \matrix[
+      matrix of nodes,
+      nodes={font=\tiny,anchor=west},
+      column sep=2pt,row sep=0pt,anchor=north,
+    ] at ([yshift=-5.8ex]group c1r4.south) {
+      \node[rectangle,draw=black,fill=black!72,line width=0.4pt,
+            minimum size=2.7pt,inner sep=0pt] at (0.12,0) {}; & stage executed &
+      \node[rectangle,draw=black!45,line width=0.4pt,
+            minimum size=2.7pt,inner sep=0pt] at (0.12,0) {}; & skipped by admission \\
+    };
+  \end{tikzpicture}
+
+  \caption{Case study (b): 24MP capture mode under external memory pressure,
+  starting at overheat Lv3 (Lv4 from capture~25) and never entering the Lv5
+  MP12 resolution fallback. As in production, only the first two captures are
+  encoded at MP24 (grey band) and the burst continues at MP12. Pacing
+  activates at capture~4, two captures before admission drops the multi-frame
+  Bokeh stage~(\(M\)) at capture~6. The lighter \(S\)-only sequence lets
+  pacing fall to zero for captures~6--8 (shaded); the backlog then rebuilds,
+  pacing returns at capture~9 and peaks at 1.3~s, and the deadline margin
+  bottoms out at 245~ms before admission demotes the Filter stage~(\(S\)) at
+  capture~17. The mandatory-only tail restores the margin to 2.7~s by
+  capture~30, and all 30 captures complete without a Capture Timeout. The
+  session was selected for mechanism coverage, not performance
+  (Table~\ref{tab:casestudy_selection}).}
+  \label{fig:casestudy_24mp}
+\end{figure}

@@ -1,0 +1,202 @@
+% RQ3: applied pacing delay against the delay the same admissibility condition
+% requires on measured inputs.  Companion to
+% Table~\ref{tab:rq3_pacing_calibration}, which carries the summary statistics
+% and the full definition of d*.
+%
+% Panels (a) and (b) are the calibration view: one point per analyzed
+% transition, x the measured requirement d*, y the applied delay d, and the
+% dashed diagonal exact calibration.  Above the diagonal the controller paced
+% more than the trace required, below it less.  The +/-100 ms guides are drawn
+% because a transition inside that band is calibrated to within roughly one
+% frame interval, which is the granularity at which a delay is actuated at all.
+%
+% Both kinds of point are plotted, and this is deliberate.  Transitions whose
+% requirement is zero sit on the vertical axis and are the majority of the paced
+% ones (75.3% in (a), 79.9% in (b)).  Dropping them would make the calibration
+% cloud read better and was rejected: the omission would have to be disclosed
+% anyway, and a reader who cannot see the vertical column cannot judge how much
+% of the picture it is.  They are drawn hollow so the diagonal cloud stays
+% legible underneath.  What the column must NOT be labelled is "unnecessary
+% pacing".  d* is computed on the realized trace, which pacing already shaped;
+% removing those delays would deepen the backlog and lengthen later Drafts, so
+% the requirement of the unpaced trajectory is at or above d*.  RQ1(b) supplies
+% the counterfactual directly: with pacing removed the same conditions time out.
+%
+% Positive-requirement points are split by whether admission demoted the
+% sequence after the pacing decision was taken, because that is the first
+% objection to the surplus: a delay priced for M+S looks over-large once
+% admission has removed M from the Draft that ran.  The split answers it with
+% data rather than argument, and the answer is that the effect does not run one
+% way.  Demoted transitions are 14 of 94 in (a) and 22 of 73 in (b); their
+% coverage is 78.6% against 95.0% for undemoted in (a) but 86.4% against 84.3%
+% in (b), and their median surplus among paced transitions is higher in (a)
+% (416 vs 282 ms) and lower in (b) (243 vs 274 ms).  Coordination therefore does
+% not systematically explain the surplus, which is what leaves the
+% Draft-duration reserve as the explanation the table reports.  The subsets are
+% small, so the split is presented as a marker class to be inspected rather than
+% as a table column with statistics.
+%
+% Panel (c) is the same quantity as a distribution over every analyzed
+% transition rather than only the plotted ones, which is what makes the tail
+% readable.  The step at zero (68.2% in 12MP, 66.1% in 24MP) is the transitions
+% where neither the controller nor the measured requirement asked for a delay;
+% the mass to the left of zero is under-pacing and is small (0.6% and 1.1%); the
+% right tail is the surplus that Table~\ref{tab:rq3_pacing_calibration}
+% attributes to the Draft-duration reserve.
+%
+% Axis range.  Both scatter panels use an identical 0-1500 ms square so the two
+% conditions can be compared by eye and so the diagonal is at 45 degrees.  Five
+% of the 351 plotted points in (b) have an applied delay above 1500 ms (largest
+% 2010 ms) and are clipped; no point in (a) is clipped, and no requirement in
+% either panel exceeds 727 ms.  Panel (c) shows the same window on the error
+% axis, clipping the same five transitions.
+%
+% Point counts: (a) 94 with a positive requirement (80 undemoted, 14 demoted)
+% and 277 on the axis, from 1,167 analyzed transitions -- the remaining 796 are
+% at the origin and carry no information, so they are not drawn.  (b) 73 (51 and
+% 22) and 278 from 1,034, with 683 at the origin.
+%
+% Data: data/rq3/calibration/, generated from
+% SM-S948U_metrics_{12MP_normal,24MP_memory}_0803.xlsx (ML commit 99aae0a).
+% Run and transition eligibility is documented in
+% tables/tab_rq3_pacing_calibration.tex and is identical here.
+
+\begin{figure*}[t]
+  \centering
+  \providecommand{\rqThreeCalDir}{data/rq3/calibration}
+
+  \tikzset{
+    rq3cal required/.style={
+      mark=*, mark size=1.25pt, only marks,
+      draw=black, fill=black, fill opacity=0.55, draw opacity=0.75},
+    rq3cal demoted/.style={
+      mark=triangle, mark size=1.9pt, only marks,
+      draw=blue!70!black, fill=white, line width=0.5pt, draw opacity=0.9},
+    rq3cal zero/.style={
+      mark=o, mark size=1.15pt, only marks,
+      draw=gray!75!black, draw opacity=0.5, line width=0.3pt},
+    rq3cal diag/.style={black, densely dashed, line width=0.6pt},
+    rq3cal band/.style={gray!60, dotted, line width=0.45pt},
+    rq3cal ecdf a/.style={black, solid, line width=1.0pt},
+    rq3cal ecdf b/.style={black!55, densely dashed, line width=1.0pt},
+    rq3cal zeroline/.style={gray!70, solid, line width=0.4pt},
+  }
+
+  % #1: file stem of the condition.
+  \newcommand{\rqthreecalscatter}[1]{%
+    \addplot[rq3cal band,forget plot,domain=0:1400,samples=2] {x+100};
+    \addplot[rq3cal band,forget plot,domain=100:1500,samples=2] {x-100};
+    \addplot[rq3cal diag,forget plot,domain=0:1500,samples=2] {x};
+    \addplot[rq3cal zero,forget plot]
+      table[x=required_ms,y=applied_ms,col sep=comma]
+      {\rqThreeCalDir/scatter_#1_zero.csv};
+    \addplot[rq3cal required,forget plot]
+      table[x=required_ms,y=applied_ms,col sep=comma]
+      {\rqThreeCalDir/scatter_#1_req_kept.csv};
+    \addplot[rq3cal demoted,forget plot]
+      table[x=required_ms,y=applied_ms,col sep=comma]
+      {\rqThreeCalDir/scatter_#1_req_changed.csv};}
+
+  \newsavebox{\rqthreecalfigbox}
+  \begin{lrbox}{\rqthreecalfigbox}
+  \begin{tikzpicture}
+    \begin{groupplot}[
+      % Panels (a) and (c) both carry a rotated y label, so the group separation
+      % has to clear a label plus a tick column rather than a tick column alone.
+      group style={group size=3 by 1, horizontal sep=0.075\textwidth},
+      % scale only axis keeps the three plot boxes identical regardless of how
+      % wide each one's tick labels are, so the two scatter panels stay square
+      % and therefore comparable.
+      scale only axis=true,
+      width=0.215\textwidth,
+      height=0.215\textwidth,
+      tick label style={font=\tiny},
+      label style={font=\scriptsize},
+      title style={font=\scriptsize},
+      grid=major,
+      major grid style={gray!20,line width=0.2pt},
+      axis line style={line width=0.35pt},
+      tick style={line width=0.35pt},
+      tick align=outside,
+      tick pos=left,
+      enlargelimits=false,
+      clip=true,
+    ]
+
+      \nextgroupplot[
+        title={(a) 12MP normal},
+        xlabel={Required delay \(d^{*}\) (ms)},
+        ylabel={Applied delay \(d\) (ms)},
+        xmin=0,xmax=1500,ymin=0,ymax=1500,
+        xtick={0,500,1000,1500},ytick={0,500,1000,1500},
+      ]
+      \rqthreecalscatter{12mp_normal}
+
+      \nextgroupplot[
+        title={(b) 24MP memory pressure},
+        xlabel={Required delay \(d^{*}\) (ms)},
+        xmin=0,xmax=1500,ymin=0,ymax=1500,
+        xtick={0,500,1000,1500},ytick={0,500,1000,1500},
+      ]
+      \rqthreecalscatter{24mp_memory}
+
+      \nextgroupplot[
+        title={(c) Calibration error},
+        xlabel={\(d-d^{*}\) (ms)},
+        ylabel={Cumulative fraction},
+        xmin=-600,xmax=1500,ymin=0,ymax=1.02,
+        xtick={-500,0,500,1000,1500},
+        ytick={0,0.25,0.5,0.75,1},
+        yticklabel style={/pgf/number format/fixed},
+      ]
+      \addplot[rq3cal zeroline,forget plot] coordinates {(0,0) (0,1.02)};
+      \addplot[rq3cal ecdf a,const plot,no marks,forget plot]
+        table[x=error_ms,y=cdf,col sep=comma]
+        {\rqThreeCalDir/error_ecdf_12mp_normal.csv};
+      \addplot[rq3cal ecdf b,const plot,no marks,forget plot]
+        table[x=error_ms,y=cdf,col sep=comma]
+        {\rqThreeCalDir/error_ecdf_24mp_memory.csv};
+    \end{groupplot}
+
+    % Shared legend: the two marker classes explain panels (a) and (b), the two
+    % line styles explain panel (c).
+    \coordinate (rqthreecallegend) at
+      ($(group c1r1.south)!0.5!(group c3r1.south)$);
+    \matrix[
+      matrix of nodes,
+      nodes={font=\scriptsize,anchor=west},
+      column sep=2pt,
+      row sep=0pt,
+      anchor=north,
+    ] at ([yshift=-5.2ex]rqthreecallegend) {
+      \draw[draw=black,fill=black,fill opacity=0.55]
+        (0,0) circle (1.25pt); & \(d^{*}>0\) &
+      \draw[draw=blue!70!black,fill=white,line width=0.5pt]
+        (90:1.9pt)--(210:1.9pt)--(330:1.9pt)--cycle;
+        & \(d^{*}>0\), demoted &
+      \draw[draw=gray!75!black,line width=0.3pt]
+        (0,0) circle (1.15pt); & \(d^{*}=0\) &
+      \draw[rq3cal ecdf a] (0,0)--(0.38,0); & 12MP normal &
+      \draw[rq3cal ecdf b] (0,0)--(0.38,0); & 24MP mem.\ pressure \\
+    };
+  \end{tikzpicture}
+  \end{lrbox}
+  \resizebox{\textwidth}{!}{\usebox{\rqthreecalfigbox}}
+
+  \caption{RQ3 pacing calibration. Each point in (a) and (b) is one analyzed
+  transition; the dashed diagonal is exact calibration and the dotted guides
+  mark \(\pm100\)\,ms. Triangles mark transitions whose sequence admission
+  demoted after the pacing decision, so that the coordination effect on the
+  surplus is visible; it does not run one way, being adverse in (a) and neutral
+  in (b). Points on the vertical axis are transitions whose requirement,
+  measured on the realized trace, was zero --- 75.3\% of paced transitions in
+  (a) and 79.9\% in (b). They are not idle pacing: because the trace was already
+  shaped by pacing, the requirement of the unpaced trajectory is at or above
+  \(d^{*}\), and Table~\ref{tab:rq1_ablation} shows that removing pacing
+  reintroduces Capture Timeouts under the same conditions. Panel~(c) gives the
+  same error over all 1,167 and 1,034 analyzed transitions: 0.6\% and 1.1\% of
+  them lie left of zero, and the right tail is the surplus that
+  Table~\ref{tab:rq3_pacing_calibration} attributes to the Draft-duration
+  reserve. Transitions at the origin are omitted from (a) and (b) only.}
+  \label{fig:rq3_pacing_calibration}
+\end{figure*}

@@ -1,0 +1,52 @@
+\documentclass[10pt,border=3pt]{standalone}
+\usepackage{newtxtext,newtxmath}
+\usepackage{xcolor}
+\usepackage{pgfplots}
+\usepgfplotslibrary{groupplots}
+\usetikzlibrary{arrows.meta}
+\pgfplotsset{compat=1.18}
+
+\definecolor{caseblue}{RGB}{0,114,178}
+\definecolor{casegreen}{RGB}{0,128,102}
+\definecolor{caseorange}{RGB}{213,94,0}
+\definecolor{casepurple}{RGB}{117,112,179}
+
+\def\caseStudyTitle{24MP mode with memory pressure: Run 34 (initial Lv3)}
+\def\caseStudyData{data/case_study/0803/trace_24mp_memory_run34.csv}
+\def\caseStudyBokehShot{6}
+\def\caseStudyFilterShot{17}
+\def\caseStudyMinMarginLabel{0.245 s (shot 11)}
+\def\caseStudyPacingAnnotations{%
+  \node[font=\scriptsize,anchor=south west,fill=white,inner sep=1pt]
+    at (axis cs:3.0,0.84) {1. pacing starts};
+  \draw[-{Latex[length=1.6mm]},caseblue,line width=0.55pt]
+    (axis cs:4.1,0.79) -- (axis cs:4,0.45);
+  \node[font=\scriptsize,anchor=south west,fill=white,inner sep=1pt]
+    at (axis cs:5.7,0.22) {2. Bokeh demoted; delay reaches zero};
+  \draw[-{Latex[length=1.6mm]},caseorange,line width=0.55pt]
+    (axis cs:6.1,0.18) -- (axis cs:6,0.02);
+  \node[font=\scriptsize,anchor=south west,fill=white,inner sep=1pt]
+    at (axis cs:8.2,1.21) {3. pacing restarts};
+  \draw[-{Latex[length=1.6mm]},caseblue,line width=0.55pt]
+    (axis cs:9.2,1.17) -- (axis cs:9,0.74);
+  \node[font=\scriptsize,anchor=south west,fill=white,inner sep=1pt]
+    at (axis cs:16.8,0.34) {4. Filter demoted};
+  \draw[-{Latex[length=1.6mm]},caseorange,line width=0.55pt]
+    (axis cs:17.3,0.30) -- (axis cs:17,0.02);
+}
+\def\caseStudyResolutionAnnotation{%
+  \node[font=\scriptsize,anchor=south west,fill=white,inner sep=1pt]
+    at (axis cs:1.2,0.08) {MP24 shots 1-2; MP12 shots 3-30; thermal Lv3 (1-24) to Lv4 (25-30), so no Lv5 fallback};
+}
+\def\caseStudyResolutionPlots{%
+  \addplot[case mp24,forget plot]
+    table[x=shot,y=mp24_y,col sep=comma]{\caseStudyData};
+  \addplot[case mp12,forget plot]
+    table[x=shot,y=mp12_y,col sep=comma]{\caseStudyData};
+}
+\def\caseStudyEligibility{The mechanism-complete traces are Runs 27 and 34. Run 27 starts at Lv5 and is therefore the production MP12 fallback; Run 34 is the only eligible 24MP-mode trace without fallback or a timeout/watchdog failure.}
+\def\caseStudyAudit{Run / same-Lv3 median ($n=6$): cumulative pacing 4.39 / 4.23 s; deadline-margin P5 0.30 / 0.33 s; 30-shot span 22.76 / 22.69 s; Bokeh 16.7 / 33.3\% and Filter 53.3 / 100\% executed.}
+
+\begin{document}
+\input{figures/case_study/case_study_trace_body.tex}
+\end{document}

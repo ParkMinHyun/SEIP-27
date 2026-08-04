@@ -1,157 +1,186 @@
-% RQ1(a): Four-arm controller ablation.
+% RQ1(b): Two-factor controller ablation across four stress conditions.
+% This is the second RQ1 table: RQ1(a) characterizes the full controller across
+% starting levels, and this one isolates what each control loop contributes.
 %
-% Baseline timeout values are copied from Table~\ref{tab:timeout_index}, using
-% its M+S columns for the two endpoint scenarios.
-% Pacing-only values for 12MP normal were aggregated from
-% SM-S948U_metrics_12MP_normal_0729_PacingOnly_{1,2}.xlsx: 48 attempted runs;
-% 47 included (27 timeout-terminated and 20 right-censored at shot 30).
-% Workbook 1 source run 24 (Lv5, 23 shots, no timeout) was invalid/incomplete;
-% shots after 30 were also excluded.  Included n: Lv0=3, Lv1=1, Lv2=3,
-% Lv3=7, Lv4=11, Lv5=15, and Lv6=7.
-% Admission-only values for 12MP normal were aggregated from
-% 48U_metrics_12MP_normal_0729_AdmitOnly_{1,2}.xlsx (No-Pacing): 42 attempted
-% runs, 38 included (one timeout/watchdog-bearing run and 37 runs observed
-% through at least shot 30).  Workbook 1 source runs 16 and 19 and workbook 2
-% source runs 10 and 15 were incomplete without timeout or watchdog failure and
-% excluded; shots after 30 were also excluded.  No exact cross-workbook
-% duplicate was found.  Included n: Lv0=4, Lv1=3, Lv2=2, Lv3=10, Lv4=9,
-% Lv5=5, and Lv6=5.
-% Pacing-only values for 24MP memory pressure were aggregated from
-% SM-S948U_metrics_24MP_memory_0729_PacingOnly_{1,2}.xlsx (always execute;
-% shadow admission only).  Together, the workbooks contain 54 attempted runs:
-% 53 included (51 timeout-terminated and two 30-shot right-censored runs).
-% Workbook 1 source run 16 (8 shots, no timeout) was invalid/incomplete and
-% excluded; shots after 30 were also excluded.  Included n: Lv0=2, Lv1=4,
-% Lv2=5, Lv3=10, Lv4=15, Lv5=8, and Lv6=9.  Per operator instruction, Lv0 M
-% is displayed as -- although the conventional KM threshold gives M=27.
-% Admission-only values for 24MP memory pressure were aggregated from
-% 48U_metrics_24MP_memory_0729_AdmitOnly_{1,2}.xlsx (No-Pacing): 44 attempted
-% runs, 40 included (two timeout-terminated runs and 38 runs observed through at
-% least shot 30).  Workbook 1 source runs 22, 23, and 26 and workbook 2 source
-% run 11 were incomplete without timeout or watchdog failure and excluded;
-% shots after 30 were also excluded.  No exact cross-workbook duplicate was
-% found.  This audit uses the unfiltered RQ3Pacing rows.  Included n: Lv0=4,
-% Lv1=3, Lv2=4, Lv3=7, Lv4=8, Lv5=7, and Lv6=7.
+% Reviewer-facing structure:
+%   - Admission and Pacing remain the two axes of a factorial design; the 2x2 is
+%     unrolled into four rows per condition so that four conditions fit one
+%     table.
+%   - S(30) alone is not reported.  An arm can trivially reach zero timeouts by
+%     discarding optional Draft work or by pacing arbitrarily slowly, so each
+%     row also reports what the arm preserved (M+S) and what it charged the user
+%     (Sigma delay).  This is the column set that answers the "trivial solution"
+%     objection.
+%   - Failure timing (E/M) differentiates the arms that never complete 30
+%     captures, which a timeout-only table would render indistinguishable.
+%
+% Condition definition:
+%   Each condition is one (capture condition, starting overheat level) pair.
+%   12MP normal and 24MP memory pressure are each reported at starting levels
+%   3 and 4, the regime where the deployed static guard is closest to its
+%   decision boundary and where the baseline already fails.
+%   The 24MP workbooks are a requested-mode label: only the first one or two
+%   captures are 24MP and the remainder are 12MP.
+%
+% Layout:
+%   Single-column \begin{table}, about half a page.  Compression relative to the
+%   earlier full-width version, with no loss of reported quantity:
+%     - the separate N column is dropped, because N is the denominator of S(30);
+%     - the S(30) percentage is dropped, because the fraction carries it;
+%     - E and M share one "E/M" column;
+%     - the Admission and Pacing On/Off columns are dropped entirely.  They
+%       restated what the Configuration name already says: "Admission only" is
+%       exactly A-on/P-off.  The four configuration names, in the order given,
+%       still walk the 2x2, so the factorial survives without two columns of
+%       duplicated marks.
+%   Do not re-add a column without removing one; the table is at its width
+%   budget for \columnwidth.
+%
+% Belongs in the RQ1 prose, not in this note (it was moved out to keep the
+% table near half a column): M+S and Sigma-d are reported because S(30) alone is
+% trivially maximized either by discarding optional work or by pacing without
+% bound, and the two single-component arms occupy exactly those two degenerate
+% corners.  Admission only reaches 100% S(30) in three of the four conditions
+% while retaining the least optional work of any arm; Pacing only retains the
+% most and survives the least.
+%
+% Column definitions (docs/rq1-rq3-metrics-guide.md, sections 3.2--3.5, 4.3):
+%   S(30)    runs reaching 30 captures with no Capture Timeout, over the number
+%            of included runs after run reconstruction and cross-workbook dedup
+%   E / M    earliest / median first-timeout capture index; M is printed only
+%            when at least half the runs in the cell timed out, otherwise the
+%            median is censored and shown as --
+%   Slack P5 inclusive 5th percentile of 100 * timeoutMarginMs / captureTimeoutMs
+%            pooled over the cell's captures; negative means the lower tail has
+%            already crossed the deadline
+%   M+S      per-run rate of (bokehCompleted && filterCompleted) over the first
+%            30 captures, macro-averaged across runs
+%   Sigma d  median across runs of the delay accumulated in the run
+%            (RQ3Summary.totalDelayMs); structurally 0 when the pacer is off
+%
+% Sources per cell:
+%   No control:
+%     24MP  ML/data/0803_FULL/SM-S948U_metrics_24MP_memory_baseline_0803.xlsx
+%     12MP  NO ACCESSIBLE WORKBOOK.  The E/M pair carried in the row is the
+%           controller-off reference already published in
+%           Table~\ref{tab:timeout_index} (12MP normal, M+S column).  N, S(30),
+%           Slack P5 and M+S cannot be derived from it and are marked TBD.
+%   Admission only:
+%     48U_metrics_{12MP_normal,24MP_memory}_0729_AdmitOnly_{1,2}.xlsx
+%   Pacing only:
+%     48U_metrics_{12MP_normal,24MP_memory}_0729_PacingOnly_{1,2}.xlsx
+%   Full:
+%     ML/data/0803_FULL/SM-S948U_metrics_12MP_normal_0803.xlsx
+%     ML/data/0803_FULL/SM-S948U_metrics_24MP_memory_0803.xlsx
+%
+% Recomputation notes:
+%   - Values were recomputed directly from the workbooks with the guide's run
+%     reconstruction rule.  The 12MP Full rows reproduce the Lv3 and Lv4 rows of
+%     Table~\ref{tab:rq1_controller_behavior} exactly, which validates the
+%     pipeline.
+%   - The 24MP Full rows do NOT reproduce that table: this recomputation finds
+%     N=8 (Lv3) and N=6 (Lv4) rather than the N=10 printed there, and
+%     correspondingly different M+S and Sigma-delay values.  Reconcile the two
+%     tables before submission; they cannot both be right.
+%   - The Full 24MP Lv3 cell is reported as 7/8 WITH the timeout retained.  The
+%     earlier 7/7 presentation depended on excluding that session as
+%     operator-invalid.  Keep the retained form unless the exclusion criterion
+%     is predeclared, stated in the text, and applied to all four arms.
+%
+% OPEN DATA GAPS -- these must be closed before submission:
+%   (1) No controller-off workbook exists for 12MP normal.  Either collect one
+%       or drop the two 12MP No control rows and say so.
+%   (2) 12MP normal / Lv4 / Pacing only has N=1.  Marked with a dagger; the cell
+%       is not interpretable and must be recollected.
+%   (3) Arms are unbalanced (N ranges from 1 to 15) and split across campaigns:
+%       No control and Full are 0803, the single-component arms are 0729.  This
+%       is not yet a controlled ablation.  Recollect all four arms on one
+%       software build with a counterbalanced protocol.
+%
 % Implementation reference inspected at commit:
-% 267a29c769428df16c7b96bd18956764da7c37db
+% 99aae0af8c3fa1ceb784083446e83c40d0fb917f
+
+\providecommand{\rqTBD}{\textcolor{red}{\textbf{TBD}}}
+% Marks a cell whose sample is too small to interpret.
+\providecommand{\rqThin}[1]{#1\textsuperscript{\dag}}
 
 \begin{table}[t]
   \centering
   \setlength{\abovecaptionskip}{2pt}%
   \setlength{\belowcaptionskip}{3pt}%
-  % The device is now a column, so it no longer belongs in the caption.
-  \caption{RQ1(a) end-to-end controller ablation (first-timeout shot).}
+  \caption{RQ1(b) two-factor controller ablation across four stress conditions.}
   \label{tab:rq1_ablation}
 
   {\scriptsize
-  % E and M get their own columns, as in Table~\ref{tab:rq1_controller_behavior},
-  % so the shot indices line up down each column instead of hiding behind a
-  % slash.  Every cell is set in one fixed-width box: a \multicolumn wider than
-  % the columns it spans dumps the whole excess into the last spanned column,
-  % which would push M away from its header, and the four groups have headers of
-  % very different widths.  Sizing every cell to half the widest header line
-  % makes all eight data columns equal, so each label sits centred over its own
-  % column while the digits stay right aligned inside the box.
-  \newlength{\abCellW}\settowidth{\abCellW}{\textbf{Admission}}%
-  \setlength{\abCellW}{0.5\abCellW}%
-  \newcommand{\abCell}[1]{\makebox[\abCellW][r]{#1}}%
-  \newcommand{\abHd}[1]{\makebox[\abCellW][c]{#1}}%
-  \setlength{\arrayrulewidth}{0.35pt}%
-  \setlength{\doublerulesep}{0.8pt}%
-  \renewcommand{\arraystretch}{1.08}%
-  % \fittabcolsep (macros.tex) solves for the \tabcolsep that makes the outer
-  % rules land exactly on \columnwidth.
-  \newsavebox{\rqonebbox}%
-  \newcommand{\rqonebtabular}{%
-  \begin{tabular}{|c|c|c||cc|cc|cc|cc|}
-    \hline\hline
-    \multirow{3}{*}[-1.2ex]{\textbf{Device}} &
-    \multirow{3}{*}[-1.2ex]{\textbf{Condition}} &
-    \multirow{3}{*}[-1.2ex]{\makecell[c]{\textbf{Starting}\\\textbf{overheat}\\\textbf{level}}} &
-    \multicolumn{8}{c|}{\textbf{Timeout onset}} \\
-    \cline{4-11}
-    & & &
-    \multicolumn{2}{c|}{\textbf{Baseline}} &
-    \multicolumn{2}{c|}{\makecell[c]{\textbf{Admission}\\\textbf{only}}} &
-    \multicolumn{2}{c|}{\makecell[c]{\textbf{Pacing}\\\textbf{only}}} &
-    \multicolumn{2}{c|}{\textbf{Ours}} \\
-    \cline{4-11}
-    & & &
-    \multicolumn{1}{c}{\abHd{\textbf{E}}} & \multicolumn{1}{c|}{\abHd{\textbf{M}}} &
-    \multicolumn{1}{c}{\abHd{\textbf{E}}} & \multicolumn{1}{c|}{\abHd{\textbf{M}}} &
-    \multicolumn{1}{c}{\abHd{\textbf{E}}} & \multicolumn{1}{c|}{\abHd{\textbf{M}}} &
-    \multicolumn{1}{c}{\abHd{\textbf{E}}} & \multicolumn{1}{c|}{\abHd{\textbf{M}}} \\
-    \hline\hline
-    % A cell that was a bare -- carried both statistics, so it expands to -- in
-    % each of the two columns.
-    % One device is measured, so the Device cell spans all fourteen data rows;
-    % the block separator below is \cline{2-11} so it does not cut through it.
-    \multirow{14}{*}{\makecell[c]{S26\\Ultra}}
-      & \multirow{7}{*}{\makecell[c]{12MP\\normal}}
-      & Lv0 & \abCell{--} & \abCell{--} & \abCell{--} & \abCell{--}
-             & \abCell{--} & \abCell{--}
-             & \abCell{\textbf{--}} & \abCell{\textbf{--}} \\
-    \cline{3-11}
-      & & Lv1 & \abCell{--} & \abCell{--} & \abCell{--} & \abCell{--}
-             & \abCell{--} & \abCell{--}
-             & \abCell{\textbf{--}} & \abCell{\textbf{--}} \\
-    \cline{3-11}
-      & & Lv2 & \abCell{24} & \abCell{27} & \abCell{--} & \abCell{--}
-             & \abCell{30} & \abCell{--}
-             & \abCell{\textbf{--}} & \abCell{\textbf{--}} \\
-    \cline{3-11}
-      & & Lv3 & \abCell{13} & \abCell{18} & \abCell{13} & \abCell{--}
-             & \abCell{20} & \abCell{--}
-             & \abCell{\textbf{--}} & \abCell{\textbf{--}} \\
-    \cline{3-11}
-      & & Lv4 & \abCell{10} & \abCell{17} & \abCell{--} & \abCell{--}
-             & \abCell{9}  & \abCell{24}
-             & \abCell{\textbf{--}} & \abCell{\textbf{--}} \\
-    \cline{3-11}
-      & & Lv5 & \abCell{8}  & \abCell{10} & \abCell{--} & \abCell{--}
-             & \abCell{8}  & \abCell{9}
-             & \abCell{\textbf{--}} & \abCell{\textbf{--}} \\
-    \cline{3-11}
-      & & Lv6 & \abCell{7}  & \abCell{10} & \abCell{--} & \abCell{--}
-             & \abCell{9}  & \abCell{18}
-             & \abCell{\textbf{--}} & \abCell{\textbf{--}} \\
-    \cline{2-11}
-      & \multirow{7}{*}{\makecell[c]{24MP\\memory\\pressure}}
-      & Lv0 & \abCell{26} & \abCell{30} & \abCell{--} & \abCell{--}
-             & \abCell{27} & \abCell{--}
-             & \abCell{\textbf{--}} & \abCell{\textbf{--}} \\
-    \cline{3-11}
-      & & Lv1 & \abCell{19} & \abCell{22} & \abCell{--} & \abCell{--}
-             & \abCell{20} & \abCell{23}
-             & \abCell{\textbf{--}} & \abCell{\textbf{--}} \\
-    \cline{3-11}
-      & & Lv2 & \abCell{14} & \abCell{21} & \abCell{21} & \abCell{--}
-             & \abCell{15} & \abCell{24}
-             & \abCell{\textbf{--}} & \abCell{\textbf{--}} \\
-    \cline{3-11}
-      & & Lv3 & \abCell{7}  & \abCell{10} & \abCell{14} & \abCell{--}
-             & \abCell{7}  & \abCell{9}
-             & \abCell{\textbf{--}} & \abCell{\textbf{--}} \\
-    \cline{3-11}
-      & & Lv4 & \abCell{5}  & \abCell{9}  & \abCell{--} & \abCell{--}
-             & \abCell{9}  & \abCell{14}
-             & \abCell{\textbf{--}} & \abCell{\textbf{--}} \\
-    \cline{3-11}
-      & & Lv5 & \abCell{4}  & \abCell{8}  & \abCell{--} & \abCell{--}
-             & \abCell{7}  & \abCell{12}
-             & \abCell{\textbf{--}} & \abCell{\textbf{--}} \\
-    \cline{3-11}
-      & & Lv6 & \abCell{4}  & \abCell{8}  & \abCell{--} & \abCell{--}
-             & \abCell{7}  & \abCell{11}
-             & \abCell{\textbf{--}} & \abCell{\textbf{--}} \\
-    \hline\hline
-  \end{tabular}}%
-  \fittabcolsep{\rqonebbox}{\rqonebtabular}{\columnwidth}{22}%
-  \rqonebtabular
+  \setlength{\tabcolsep}{3.2pt}%
+  \renewcommand{\arraystretch}{1.05}%
+  \begin{tabular}{@{}llccrrr@{}}
+    \toprule
+    & & \multicolumn{3}{c}{\textbf{Deadline outcome}}
+      & \textbf{Kept} & \textbf{Cost} \\
+    \cmidrule(lr){3-5}\cmidrule(lr){6-6}\cmidrule(l){7-7}
+    \textbf{Condition} & \textbf{Configuration}
+      & \textbf{S(30)} & \textbf{E/M}
+      & \makecell[c]{\textbf{Slack}\\\textbf{P5(\%)}}
+      & \makecell[c]{\mbox{\boldmath$M{+}S$}\\\textbf{(\%)}}
+      & \makecell[c]{\mbox{\boldmath$\Sigma d$}\\\textbf{(s)}} \\
+    \midrule
+
+    % ---------------------------------------------------------------- 12MP Lv3
+    \multirow{4}{*}{\makecell[l]{12MP\\normal\\Lv3}}
+      & No control     & \rqTBD & 13/18 & \rqTBD & \rqTBD & 0 \\
+      & Pacing only    & 4/9    & 18/20 & 5.4    & 93.9   & 4.1 \\
+      & Admission only & 9/10   & 13/-- & 3.0    & 45.8   & 0 \\
+      & \textbf{Full}  & \textbf{10/10} & --/--
+                       & \textbf{4.1} & \textbf{48.3} & 3.1 \\
+    \cmidrule(l){2-7}
+
+    % ---------------------------------------------------------------- 12MP Lv4
+    \multirow{4}{*}{\makecell[l]{12MP\\normal\\Lv4}}
+      & No control     & \rqTBD & 10/17 & \rqTBD & \rqTBD & 0 \\
+      & Pacing only    & \rqThin{0/1} & 17/17
+                       & \rqThin{2.5} & \rqThin{94.1} & \rqThin{0} \\
+      & Admission only & 9/9    & --/-- & 3.0    & 29.3   & 0 \\
+      & \textbf{Full}  & \textbf{10/10} & --/--
+                       & \textbf{5.4} & \textbf{55.0} & 4.4 \\
+    \midrule
+
+    % ---------------------------------------------------------------- 24MP Lv3
+    \multirow{4}{*}{\makecell[l]{24MP\\memory\\Lv3}}
+      & No control     & 0/10   & 5/16  & $-1.8$ & 84.3   & 0 \\
+      & Pacing only    & 0/11   & 7/11  & $-4.6$ & 77.5   & 0.3 \\
+      & Admission only & 6/6    & --/-- & 3.1    & 33.9   & 0 \\
+      & \textbf{Full}  & \textbf{7/8} & 11/--
+                       & \textbf{4.3} & \textbf{46.7} & 4.2 \\
+    \cmidrule(l){2-7}
+
+    % ---------------------------------------------------------------- 24MP Lv4
+    \multirow{4}{*}{\makecell[l]{24MP\\memory\\Lv4}}
+      & No control     & 0/11   & 3/9   & $-3.1$ & 63.1   & 0 \\
+      & Pacing only    & 0/15   & 9/14  & $-0.8$ & 79.1   & 0 \\
+      & Admission only & 8/8    & --/-- & 6.5    & 36.7   & 0 \\
+      & \textbf{Full}  & \textbf{6/6} & --/--
+                       & \textbf{6.0} & \textbf{51.1} & 1.1 \\
+    \bottomrule
+  \end{tabular}%
   }
 
-  \par\vspace{2pt}
-  {\scriptsize E is the earliest first-timeout shot and M is the
-  Kaplan--Meier median.  -- indicates that the statistic was not reached
-  within the 30-shot burst.}
+  \par\vspace{3pt}
+  {\scriptsize\begin{minipage}{0.97\columnwidth}
+    \raggedright
+    The four configurations of a condition are the Admission\,$\times$\,Pacing
+    $2{\times}2$: neither loop, pacing only, admission only, and both.
+    \textbf{S(30)}: runs completing 30 captures without Capture
+    Timeout, over included runs.  \textbf{E/M}: earliest and median
+    first-timeout capture index, censored (--) when fewer than half the runs
+    time out.  \textbf{Slack~P5}: fifth percentile of the per-capture deadline
+    margin, normalized by the Capture Timeout deadline; negative means the
+    lower tail has already crossed it.  \mbox{\boldmath$M{+}S$}: macro-averaged
+    per-run rate of completed multi-frame and single-frame optional Draft
+    processing.  \mbox{\boldmath$\Sigma d$}: median accumulated pacing delay per
+    run, structurally zero when the pacer is off.
+    \textsuperscript{\dag}\,Sample too small to interpret.  24MP is a
+    requested-mode label: only the first one or two captures are 24MP.  The Full
+    24MP/Lv3 cell retains its timeout session rather than excluding it.
+  \end{minipage}}
 \end{table}

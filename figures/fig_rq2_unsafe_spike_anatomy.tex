@@ -1,4 +1,4 @@
-% RQ2: what changed at each of the eight unsafe fresh-model admits, as ratios to
+% RQ2: what changed at each of the five unsafe fresh-model admits, as ratios to
 % the capture immediately before it, and which shipped safeguard would have
 % prevented each overrun.
 %
@@ -12,12 +12,9 @@
 %   id  latency  CPU time  busy cores   prevented by
 %   M1     2.32      1.41        0.60   watchdog
 %   M2     1.95      1.15        0.59   watchdog
-%   M3     1.93      1.35        0.69   watchdog
-%   M4     1.30      1.10        0.85   skipped work
-%   M5     1.14      1.23        1.08   skipped work
-%   S1     1.60      1.24        0.76   both
-%   S2     1.42      1.37        0.96   skipped work
-%   S3     1.16      1.49        1.28   both
+%   M3     1.14      1.23        1.08   later single-frame skip
+%   S1     1.60      1.24        0.76   earlier multi-frame skip (+ watchdog)
+%   S2     1.42      1.37        0.96   earlier multi-frame skip
 %
 % The right-hand column is the interpretation layer, kept outside the plot box
 % so the measured ratios stay the measured ratios:
@@ -25,25 +22,23 @@
 %   watchdog   the per-node watchdog, suppressed by the audit build so that admitted
 %      work could be measured to completion, would have cut the decision node at
 %      its own budget:
-%        M1 1460/1202 (+258)   M2 1648/889 (+759)   M3 1670/1300 (+370)
-%        S1  389/ 371 ( +18)   S3  200/173 ( +27)
-%   skipped work  the model's remaining skips in the same capture leave the
+%        M1 1460/1202 (+258)   M2 1648/889 (+759)
+%        S1  389/ 371 ( +18)
+%   model skips  the model's remaining skips in the same capture leave the
 %      decision inside its budget.  Work rejected AFTER the decision leaves the
 %      cost; a node rejected BEFORE it frees budget by shortening the path to
 %      it.  Both directions occur, so neither "prior" nor "later" alone would
 %      label these rows correctly -- and a Multi-frame decision is nodeOrder 1,
 %      so nothing can precede it at all:
 %        id  before(budget+)  after(cost-)   C_model/B_model
-%        M4        0              174          603 /  746
-%        M5        0               22          833 /  844
+%        M3        0               22          833 /  844
 %        S1      460               18          961 / 1435
 %        S2      330                0          713 /  983
-%        S3        0               22          461 /  472
 %
-% Every row carries at least one, so none of the eight would have reached a
-% shipped build as a Capture Timeout.  M1-M3 are covered only by the watchdog:
+% Every row carries at least one, so none of the five would have reached a
+% shipped build as a Capture Timeout.  M1-M2 are covered only by the watchdog:
 % they are over budget even on their own decision set, which is why they are the
-% three genuine model errors.
+% two genuine model errors.
 %
 % The row pitch is set by the value labels, not the bars: three labels per row
 % need about 6.5pt of vertical separation at \tiny, so the bar shift, the bar
@@ -66,6 +61,12 @@
   \newcommand{\rqtwosg}[2]{%
     \node[font=\tiny,inner sep=0pt,anchor=west] at (axis cs:1.66,#1)
       {\ding{51}\,\textsf{#2}};}%
+  \newcommand{\rqtwosgtwo}[3]{%
+    \node[font=\tiny,inner sep=0pt,anchor=west] at (axis cs:1.66,#1)
+      {\begin{tabular}[c]{@{}c@{\hspace{2pt}}l@{}}
+        \multirow{2}{*}{\ding{51}} & \textsf{#2} \\[-1pt]
+        & \textsf{#3}
+      \end{tabular}};}%
   \begin{tikzpicture}
     % Value labels: one macro per side so the anchor and its matching nudge stay
     % literal. A conditional inside a TikZ key value is not worth the fragility.
@@ -92,10 +93,10 @@
       % labels, so the bars get the column's full width instead of sharing it
       % with the row names.
       scale only axis=true,
-      width=0.775\columnwidth,
-      ymin=0.4, ymax=8.6,
-      ytick={1,2,3,4,5,6,7,8},
-      yticklabels={S3,S2,S1,M5,M4,M3,M2,M1},
+      width=0.720\columnwidth,
+      ymin=0.4, ymax=5.6,
+      ytick={1,2,3,4,5},
+      yticklabels={S2,S1,M3,M2,M1},
       % Plotted values are ratio - 1 so that the bars grow out of 1.0; the tick
       % labels put them back into ratio units.  The limits leave room for a
       % value label past either end of the longest bar and for the key.
@@ -123,7 +124,7 @@
         line width=0.2pt,
         inner sep=2pt,
         row sep=-1pt,
-        at={(axis cs:1.56,4.5)},
+        at={(axis cs:1.56,1.5)},
         anchor=east,
         legend columns=1,
         /tikz/every even column/.append style={column sep=3pt},
@@ -138,70 +139,58 @@
     % 1.0: no change from the preceding capture.  Bars leave this line, so it is
     % drawn over the grid rather than as one more gridline.
     \draw[black!60,densely dashed,line width=0.5pt]
-      (axis cs:0,0.4) -- (axis cs:0,8.6);
+      (axis cs:0,0.4) -- (axis cs:0,5.6);
     % Multi-frame / single-frame boundary.
     \draw[black!70,line width=0.6pt]
-      (axis cs:-0.65,3.5) -- (axis cs:1.60,3.5);
+      (axis cs:-0.65,2.5) -- (axis cs:1.60,2.5);
 
     % Explicit shifts: pgfplots would otherwise put the first plot at the bottom
     % of each group, reversing the legend's reading order.
     \addplot[draw=black,fill=black,line width=0.3pt,bar shift=6.5pt]
-      coordinates {(1.32,8) (0.95,7) (0.93,6) (0.30,5)
-                   (0.14,4) (0.60,3) (0.42,2) (0.16,1)};
+      coordinates {(1.32,5) (0.95,4) (0.14,3)
+                   (0.60,2) (0.42,1)};
     \addlegendentry{Latency}
 
     \addplot[draw=black,fill=black!35,line width=0.3pt,bar shift=0pt]
-      coordinates {(0.41,8) (0.15,7) (0.35,6) (0.10,5)
-                   (0.23,4) (0.24,3) (0.37,2) (0.49,1)};
+      coordinates {(0.41,5) (0.15,4) (0.23,3)
+                   (0.24,2) (0.37,1)};
     \addlegendentry{CPU time}
 
     \addplot[draw=black,fill=white,line width=0.35pt,bar shift=-6.5pt]
-      coordinates {(-0.40,8) (-0.41,7) (-0.31,6) (-0.15,5)
-                   (0.08,4) (-0.24,3) (-0.04,2) (0.28,1)};
+      coordinates {(-0.40,5) (-0.41,4) (0.08,3)
+                   (-0.24,2) (-0.04,1)};
     \addlegendentry{Busy cores}
 
     % Value labels sit past the end of their bar, so they fall right of an
     % increase and left of a decrease and never cover the bar.
-    \rqtwovalr{6.5pt}{1.32}{8}{2.32}
-    \rqtwovalr{6.5pt}{0.95}{7}{1.95}
-    \rqtwovalr{6.5pt}{0.93}{6}{1.93}
-    \rqtwovalr{6.5pt}{0.30}{5}{1.30}
-    \rqtwovalr{6.5pt}{0.14}{4}{1.14}
-    \rqtwovalr{6.5pt}{0.60}{3}{1.60}
-    \rqtwovalr{6.5pt}{0.42}{2}{1.42}
-    \rqtwovalr{6.5pt}{0.16}{1}{1.16}
+    \rqtwovalr{6.5pt}{1.32}{5}{2.32}
+    \rqtwovalr{6.5pt}{0.95}{4}{1.95}
+    \rqtwovalr{6.5pt}{0.14}{3}{1.14}
+    \rqtwovalr{6.5pt}{0.60}{2}{1.60}
+    \rqtwovalr{6.5pt}{0.42}{1}{1.42}
 
-    \rqtwovalr{0pt}{0.41}{8}{1.41}
-    \rqtwovalr{0pt}{0.15}{7}{1.15}
-    \rqtwovalr{0pt}{0.35}{6}{1.35}
-    \rqtwovalr{0pt}{0.10}{5}{1.10}
-    \rqtwovalr{0pt}{0.23}{4}{1.23}
-    \rqtwovalr{0pt}{0.24}{3}{1.24}
-    \rqtwovalr{0pt}{0.37}{2}{1.37}
-    \rqtwovalr{0pt}{0.49}{1}{1.49}
+    \rqtwovalr{0pt}{0.41}{5}{1.41}
+    \rqtwovalr{0pt}{0.15}{4}{1.15}
+    \rqtwovalr{0pt}{0.23}{3}{1.23}
+    \rqtwovalr{0pt}{0.24}{2}{1.24}
+    \rqtwovalr{0pt}{0.37}{1}{1.37}
 
-    \rqtwovall{-6.5pt}{-0.40}{8}{0.60}
-    \rqtwovall{-6.5pt}{-0.41}{7}{0.59}
-    \rqtwovall{-6.5pt}{-0.31}{6}{0.69}
-    \rqtwovall{-6.5pt}{-0.15}{5}{0.85}
-    \rqtwovalr{-6.5pt}{0.08}{4}{1.08}
-    \rqtwovall{-6.5pt}{-0.24}{3}{0.76}
-    \rqtwovall{-6.5pt}{-0.04}{2}{0.96}
-    \rqtwovalr{-6.5pt}{0.28}{1}{1.28}
+    \rqtwovall{-6.5pt}{-0.40}{5}{0.60}
+    \rqtwovall{-6.5pt}{-0.41}{4}{0.59}
+    \rqtwovalr{-6.5pt}{0.08}{3}{1.08}
+    \rqtwovall{-6.5pt}{-0.24}{2}{0.76}
+    \rqtwovall{-6.5pt}{-0.04}{1}{0.96}
 
     % Safeguard column, outside the plot box. The header sits on the box edge so
     % it reads as this column's heading rather than as a floating note, and it
     % states the outcome so the panel carries the conclusion without the caption.
     \node[font=\tiny,inner sep=0pt,anchor=south west]
-      at (axis cs:1.66,8.62) {\textsf{no timeout reason}};
-    \rqtwosg{8}{watchdog occur}
-    \rqtwosg{7}{watchdog occur}
-    \rqtwosg{6}{watchdog occur}
-    \rqtwosg{5}{skipped work}
-    \rqtwosg{4}{skipped work}
-    \rqtwosg{3}{skipped work}
-    \rqtwosg{2}{skipped work}
-    \rqtwosg{1}{skipped work}
+      at (axis cs:1.66,5.62) {\textsf{prevented by}};
+    \rqtwosg{5}{watchdog}
+    \rqtwosg{4}{watchdog}
+    \rqtwosgtwo{3}{later single-frame}{skip}
+    \rqtwosgtwo{2}{earlier multi-frame}{skip}
+    \rqtwosgtwo{1}{earlier multi-frame}{skip}
 
     \end{axis}
   \end{tikzpicture}
@@ -209,20 +198,20 @@
   \caption{What changed at each unsafe admit of
   Table~\ref{tab:rq2_unsafe_spike_anatomy}, relative to the capture immediately
   before it.  Bars grow out of \(1.0\), so a bar reaching left is a decrease.
-  Latency and CPU time rose in all eight cases, but the CPU-time bar is the
-  shorter of the two everywhere except M5 and S3; the difference is taken up by
-  busy cores, which fell in six cases and rose in exactly the two where latency
-  barely moved.  Latency is CPU time divided by busy cores, a multiplicative
+  Latency and CPU time rose in all five cases, but the CPU-time bar is the
+  shorter of the two everywhere except M3; the difference is taken up by busy
+  cores, which fell in four cases and rose only where M3's latency barely
+  moved.  Latency is CPU time divided by busy cores, a multiplicative
   relation, so the bars do not add on this scale.
   The right-hand column names the safeguard the audit build removes and that a
-  shipped build would have applied.  \textsf{watchdog occurs}: the per-node
+  shipped build would have applied.  \textsf{watchdog}: the per-node
   watchdog would have cut the decision node at its own budget.
-  \textsf{skipped work}: the work this same model skipped elsewhere in the
-  capture would have left the decision inside its budget --- what it rejected
-  after the decision leaves the cost, and a node it rejected before the decision
-  frees budget by shortening the path to it.  Every row carries a reason, so
-  none of the eight reaches a shipped build as a Capture Timeout; M1--M3 are the
-  three the skipped work alone does not cover, and so the three that stay over
+  \textsf{later single-frame skip}: omitting the later Decoration work reduces
+  the remaining cost; \textsf{earlier multi-frame skip}: omitting the earlier
+  Bokeh work frees budget by shortening the path to the decision.  Every row
+  carries a reason, so
+  none of the five reaches a shipped build as a Capture Timeout; M1--M2 are the
+  two the model's skips alone do not cover, and so the two that stay over
   budget even on the model's own decision set.}
   \label{fig:rq2_unsafe_spike_anatomy}
 \end{figure}

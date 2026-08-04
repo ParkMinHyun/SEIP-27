@@ -1,0 +1,104 @@
+% Case study: pre-registered session-selection protocol and the position of the
+% selected sessions within their own condition.
+%
+% Implementation source: private ML repository commit
+% 99aae0af8c3fa1ceb784083446e83c40d0fb917f (2026-08-04).
+% Workbooks (implementation-repository relative):
+%   data/0803_FULL/SM-S948U_metrics_12MP_normal_0803.xlsx
+%   data/0803_FULL/SM-S948U_metrics_24MP_memory_0803.xlsx
+%
+% Both panels are produced by scripts/export_casestudy.py, which fails unless
+% the criteria leave exactly one session per condition.  Per-shot traces are in
+% data/casestudy/*.csv; the peer statistics are in
+% data/casestudy/*_peer_comparison.csv.
+
+\begin{table}[t]
+  \centering
+  \setlength{\abovecaptionskip}{2pt}%
+  \setlength{\belowcaptionskip}{3pt}%
+  \caption{Case-study session selection. The criteria are applied before
+  inspecting outcomes and leave exactly one session in each condition; the
+  12MP session is the one shown in Fig.~\ref{fig:casestudy_12mp}.}
+  \label{tab:casestudy_selection}
+
+  {\scriptsize
+  \renewcommand{\arraystretch}{1.06}%
+  \setlength{\tabcolsep}{3.5pt}%
+  \begin{tabular}{|l||r|r|}
+    \hline\hline
+    \multicolumn{1}{|c||}{\multirow{2}{*}{\textbf{Selection step}}} &
+    \multicolumn{2}{c|}{\textbf{Sessions remaining}} \\
+    \cline{2-3}
+    & \multicolumn{1}{c|}{\makecell[c]{\textbf{12MP}\\\textbf{normal}}}
+    & \multicolumn{1}{c|}{\makecell[c]{\textbf{24MP mode +}\\\textbf{memory}}} \\
+    \hline\hline
+    Recorded sessions & 44 & 44 \\
+    \hline
+    C1~~30 captures, no Capture Timeout & 43 & 38 \\
+    \hline
+    C2~~pacing precedes the first demotion & 28 & 20 \\
+    \hline
+    C3~~\(M\) and \(S\) demoted at distinct captures & 4 & 4 \\
+    \hline
+    C4~~pacing relaxes to \(0\) for \(\ge 2\) captures & 1 & 2 \\
+    \hline
+    C5~~pacing reactivates before the \(S\) demotion & 1 & 2 \\
+    \hline
+    C6~~no Lv5 MP12 resolution fallback\rlap{$^{\dagger}$} & 1 & 1 \\
+    \hline\hline
+    \textbf{Selected session} &
+    \makecell[r]{Run 30\\(Lv4)} & \makecell[r]{Run 34\\(Lv3)} \\
+    \hline\hline
+    \multicolumn{3}{c}{} \\[-7pt]
+    \hline\hline
+    \multicolumn{1}{|c||}{\multirow{2}{*}{\textbf{Outcome vs.\ same-condition sessions}}} &
+    \multicolumn{2}{c|}{\textbf{Selected / median [min--max]}} \\
+    \cline{2-3}
+    & \multicolumn{1}{c|}{\(n_p=10\)} & \multicolumn{1}{c|}{\(n_p=6\)} \\
+    \hline\hline
+    Cumulative applied delay (s) &
+      \makecell[r]{5.21 / 4.41\\{}[2.93--8.38]} &
+      \makecell[r]{4.39 / 4.23\\{}[2.69--6.62]} \\
+    \hline
+    Paced transitions (\%) &
+      \makecell[r]{55.2 / 43.1\\{}[20.7--75.9]} &
+      \makecell[r]{31.0 / 39.7\\{}[13.8--58.6]} \\
+    \hline
+    Deadline margin \(P_5\) (ms) &
+      \makecell[r]{366 / 429\\{}[209--718]} &
+      \makecell[r]{302 / 332\\{}[157--769]} \\
+    \hline
+    Burst span (s) &
+      \makecell[r]{21.7 / 20.8\\{}[16.9--22.5]} &
+      \makecell[r]{22.8 / 22.7\\{}[19.7--27.3]} \\
+    \hline
+    \(M\)~executed (\%) &
+      \makecell[r]{26.7 / 38.3\\{}[23.3--100]} &
+      \makecell[r]{16.7 / 33.3\\{}[10.0--73.3]} \\
+    \hline
+    \(S\)~executed (\%) &
+      \makecell[r]{73.3 / 100\\{}[73.3--100]} &
+      \makecell[r]{53.3 / 100\\{}[53.3--100]} \\
+    \hline\hline
+  \end{tabular}}
+
+  \par\vspace{2pt}
+  \begin{minipage}{0.98\columnwidth}
+  {\scriptsize \(^{\dagger}\)Binding only in 24MP mode, where Lv5--6 sessions
+  use the production MP12 fallback; the 12MP condition has no such fallback.
+  Peer sets hold the condition, the starting overheat level, and the capture
+  size bucket of the selected session fixed, keep only complete timeout-free
+  sessions, and include the selected session itself. In both conditions the
+  selected session pays more cumulative pacing delay, holds a smaller
+  fifth-percentile deadline margin, spans a longer burst, and completes less
+  optional work than its peer median, and it sits at the bottom of its peer set
+  for Filter completion; the only metric on the favourable side of the median
+  is the paced-transition share of the 24MP session. The sessions were selected
+  for mechanism coverage, not for performance. The 24MP-mode column is retained
+  to show that the same criteria, applied to a different capture condition,
+  again converge on a single session that reproduces the same coordination
+  sequence (pacing at capture~4, \(M\) demoted at~6, pacing relaxed over
+  captures~6--8, reactivated at~9, \(S\) demoted at~17, no Capture Timeout).
+  \par}
+  \end{minipage}
+\end{table}

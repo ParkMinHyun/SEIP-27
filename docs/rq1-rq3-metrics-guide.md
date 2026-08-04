@@ -148,52 +148,30 @@ column.
 
 RQ1 has two parts.
 
-### 4.2 RQ1(a): Controller ablation
-
-The four configurations are:
-
-| Configuration | Admission | Pacing | Interpretation |
-|---|---:|---:|---|
-| Baseline | Off | Off | No controller |
-| Admission only | On | Off | Controls current service demand only |
-| Pacing only | Off | On | Controls future arrivals only |
-| Ours | On | On | Coordinated workload and arrival control |
-
-Each table cell reports the first Capture Timeout onset as `E/M`:
-
-- `E`: earliest first-timeout shot across repeated runs;
-- `M`: Kaplan--Meier median first-timeout shot, with runs without a timeout
-  right-censored at shot 30;
-- `--`: the statistic was not reached within 30 shots.
-
-For example, `13/18` means that the earliest run first timed out at shot 13
-and the median first-timeout onset was shot 18.
-
-This ablation determines whether either control loop is sufficient alone or
-whether their coordination is necessary.
-
-### 4.3 RQ1(b): Full-controller behavior
+### 4.2 RQ1(a): Full-controller behavior
 
 This table explains when the full controller intervenes and what it preserves.
 
 | Metric | Definition | Interpretation |
 |---|---|---|
-| Controller-off baseline `(E/M)` | Earliest and Kaplan--Meier median first-timeout shot without the controller | Reference failure point, visually separated from the proposed implementation |
-| Admission-skip onset `(E/M)` | First shot with `bokehAdmitted != true` or `filterAdmitted != true` | Whether workload reduction begins before baseline failure |
-| Pacing-delay onset `(E/M)` | Shot following the first transition decision with applied delay \(>0\) | Whether arrival control begins before baseline failure |
-| Full-controller timeout outcome | Capture Timeout count among included full-controller runs through shot 30 | Direct deadline-safety outcome established by RQ1(a) |
+| Controller-off baseline `(E/M)` | Earliest and Kaplan--Meier median first-timeout shot without the controller | Historical failure reference, visually separated from the proposed implementation |
+| Full-controller timeout outcome | Capture Timeout count among retained full-controller runs through shot 30 | Deadline-safety audit after applying the predeclared invalid-run manifest |
 | Slack P5 `(%)` | Inclusive fifth percentile of `timeoutMarginMs`, normalized by the product Capture Timeout deadline | Lower-tail deadline safety margin |
 | \(M+S\) completed `(%)` | Per-run rate of `bokehCompleted && filterCompleted`, then macro-averaged across runs | Retention of the full optional Draft configuration |
 | \(M\) completed `(%)` | Per-run rate of `bokehCompleted`, then macro-averaged across runs | Retention of the target multi-frame stage |
+| \(S\) completed `(%)` | Per-run rate of `filterCompleted`, then macro-averaged across runs | Retention of optional single-frame Draft processing |
 | Pacing activated `(%)` | Positive transition delays divided by all eligible transitions | Frequency of user-visible pacing |
 | Pacing delay `(ms)` | Median of positive applied delays, following the RQ1 run-level aggregation protocol | Typical nonzero intervention magnitude |
+| Cumulative pacing delay `(s)` | Median across runs of the delay accumulated within the reported prefix | Total responsiveness cost paid by a burst |
 
 The controller-off baseline is a reference and must not share a top-level
-header with the full-controller columns.  Because every included full-controller
-run is timeout-free within the 30-shot horizon, RQ1(b) states this once beside
-the Slack P5 explanation instead of adding an all-zero column.  This repetition
-is intentional: RQ1(a) establishes the comparative outcome, whereas RQ1(b)
-anchors the continuous lower-tail safety margin to that outcome.
+header with the full-controller columns.  RQ1(a) explains retained Draft
+functionality and intervention cost across starting levels, whereas RQ1(b)
+establishes the comparative outcome.  Do not reintroduce signed differences
+between a
+controller-off timeout shot and a full-controller action onset: admission and
+pacing alter one another's later trajectories, and capture indices do not imply
+timestamp order under overlapping deadlines.
 
 For the current percentage-form Slack column, calculate each eligible
 capture's normalized margin before taking P5:
@@ -207,6 +185,58 @@ printed as a product constant in the manuscript.
 
 `@5/@30` reports the same metric over the first 5 and first 30 shots. For a
 prefix of \(k\) shots, pacing metrics use at most \(k-1\) transitions.
+
+### 4.3 RQ1(b): Controller ablation
+
+The four configurations are:
+
+| Configuration | Admission | Pacing | Interpretation |
+|---|---:|---:|---|
+| No control | Off | Off | No controller |
+| Pacing only | Off | On | Controls future arrivals only |
+| Admission only | On | Off | Controls current service demand only |
+| Ours (Full) | On | On | Coordinated workload and arrival control |
+
+The ablation table reports four conditions, each a (capture condition, starting
+overheat level) pair: 12MP normal and 24MP memory pressure at starting levels 3
+and 4.  Within a condition the four configurations are listed in the order
+above, so the listing itself walks the Admission-by-Pacing factorial; the table
+does not carry separate On/Off columns, because the configuration name already
+states them.
+
+`S(30)` alone is **not** sufficient and must never be the only reported column.
+An arm can reach zero timeouts trivially, either by discarding optional Draft
+work or by pacing without bound, and the two single-component arms occupy
+exactly those two degenerate corners: Admission only reaches 100% `S(30)` in
+three of the four conditions while retaining the least optional work of any
+arm, and Pacing only retains the most optional work and survives the least.
+Each row therefore also reports what the arm preserved and what it charged:
+
+| Column | Definition |
+|---|---|
+| `S(30)` | Runs completing 30 captures with no Capture Timeout, over included runs; the denominator carries `N` |
+| `E/M` | Earliest and median first-timeout capture index; `M` is censored when fewer than half the runs in the cell time out |
+| Slack P5 `(%)` | Inclusive fifth percentile of the per-capture normalized deadline margin; negative means the lower tail has already crossed the deadline |
+| \(M+S\) `(%)` | Per-run rate of `bokehCompleted && filterCompleted` over the first 30 captures, macro-averaged across runs |
+| \(\Sigma d\) `(s)` | Median across runs of the delay accumulated in the run; structurally zero when the pacer is off |
+
+`E/M` is what differentiates the arms that never complete 30 captures. A
+timeout-only table renders No control and Pacing only indistinguishable at
+`0/N`, which understates pacing's contribution.
+
+24MP is a requested-mode label: only the first one or two captures are 24MP and
+the remaining captures are 12MP.  Starting-level 5--6 runs use the product's
+12MP fallback and must not be presented as 24MP ablation evidence.
+
+Open collection gaps, recorded in the table file's header comment and marked in
+the table itself: no controller-off workbook exists for 12MP normal; 12MP
+normal / Lv4 / Pacing only has one run; and the arms are split across the 0729
+and 0803 campaigns.  Before submission, all four arms must use the same
+software build and a matched, counterbalanced collection protocol.
+
+The values are recomputed from the workbooks by
+`scripts/rq1_ablation_metrics.py`, which applies section 3.2 run
+reconstruction, section 3.4 percentiles, and section 3.5 dedup.
 
 ### 4.4 RQ1 workbook mapping
 

@@ -1,271 +1,119 @@
-% RQ3: Per-shot pacing behavior and run-level cost--tail trade-off for S26 Ultra.
-%
-% The figure currently renders the collected No-pacing and Ours series; empty
-% policy CSVs add no curve until their factual traces arrive.
-%
-% Baseline naming follows the implementation
-% (CaptureAvailableDelayPolicyFactory.PolicyType): NO_PACING, OURS,
-% THERMAL_LUT, CODEL.  The earlier Queue-EWMA, "Static LUT", and "Queue
-% dynamic" labels are retired.  The CSV stems stay no_pacing / ours /
-% thermal_lut / codel_inspired.
-%
-% Each policy CSV contains one row per shot with realized backlog, queue depth,
-% applied delay, pacing activation, and cumulative delay.  Panel (a) retains
-% the median backlog, panel (b) shows the share of runs whose outgoing
-% transition is paced, and panel (c) plots every policy's cumulative-delay
-% median; only the two collected policies currently contribute IQR bands.
-%
-% Panel (d) complements rather than repeats the thresholded risk table.  Its
-% x-axis is each run's total transition delay and its y-axis is that run's
-% backlog P95.  One point represents one complete 30-shot run.  This
-% continuous view remains informative when every paced policy has zero timeout
-% or near-timeout exposure.
-%
-% The S26 Ultra series use the same included runs as
-% tables/tab_rq3_pacing_summary.tex: No-pacing from
-% 48U_metrics_12MP_normal_0729_AdmitOnly_{1,2}.xlsx (nine runs) and Ours from
-% 48U_metrics_12MP_normal_0729.xlsx (eight runs), starting Lv3, 12MP normal.
-% Cumulative cost at shot i sums delays on shots 1..i-1, because the delay
-% recorded on shot j gates shot j+1.  It starts at zero and its shot-30 endpoint
-% equals the full 29-transition run total.  Panel (d) uses the same 29 delays.
-% The current figure remains provisional because the collected No-pacing and
-% Ours runs did not match admitted workload.
+% RQ3: applied-delay calibration against the executed-work trace target.
+% Data and inclusion protocol are documented in
+% tables/tab_rq3_pacing_summary.tex and data/rq3/calibration/summary.csv.
+% Only positive-target decisions are plotted; zero-target paced decisions are
+% reported explicitly in Table~\ref{tab:rq3_pacing_summary}.  Marker shape
+% exposes, rather than filters away, captures whose admission outcome changed
+% the configured workload.
 
 \begin{figure*}[t]
   \centering
-  \newif\ifrqthreeultrahasdata
-  \providecommand{\rqThreeUltraDataSwitch}{\rqthreeultrahasdatatrue}
-  \providecommand{\rqThreeDataDir}{data/rq3}
-  \providecommand{\rqThreeUltraDataDir}{\rqThreeDataDir/s26_ultra}
-  \rqThreeUltraDataSwitch
-
-  % Apply explicit bounds after data collection.
-  \providecommand{\rqThreeShotAxis}{xmin=1,xmax=30,xtick={1,10,20,30}}
-  \providecommand{\rqThreeBacklogAxis}{ymin=0}
-  \providecommand{\rqThreeActivationAxis}{ymin=0,ymax=105,ytick={0,50,100}}
-  \providecommand{\rqThreeCumulativeDelayAxis}{ymin=-0.25}
-  % Explicit bounds so the nine No-pacing runs, which all sit at zero total
-  % delay, are drawn clear of the left axis line instead of on top of it.
-  \providecommand{\rqThreeTradeoffAxis}{%
-    xmin=-0.8,xmax=7.9,xtick={0,2,4,6},
-    ymin=5.0,ymax=6.4,ytick={5.0,5.5,6.0}}
-
-  \tikzset{
-    rq3 no pacing/.style={gray, densely dotted, line width=0.8pt},
-    rq3 thermal lut/.style={blue!70!black, dashed, line width=0.8pt},
-    rq3 codel inspired/.style={red!75!black, dash dot, line width=0.8pt},
-    rq3 ours/.style={black, solid, line width=1.15pt},
+  \setlength{\abovecaptionskip}{2pt}%
+  \setlength{\belowcaptionskip}{2pt}%
+  \providecommand{\rqThreeCalibrationDataDir}{data/rq3/calibration}
+  \pgfplotsset{
+    rq3 unchanged/.style={
+      only marks,mark=*,mark size=1.25pt,
+      draw=black,fill=black,opacity=0.50,
+    },
+    rq3 admission changed/.style={
+      only marks,mark=triangle,mark size=1.8pt,
+      draw=blue!70!black,fill=white,line width=0.55pt,opacity=0.85,
+    },
+    rq3 equality/.style={black!65,densely dashed,line width=0.75pt},
   }
 
-  \newcommand{\rqthreepending}{%
-    \node[font=\scriptsize,text=gray] at (rel axis cs:0.5,0.5)
-      {Data pending};}
-
-  % #1: device data directory; #2: metric column prefix.
-  % Medians only; see the header comment for why the P10/P90 edges were dropped.
-  \newcommand{\rqthreepolicycurves}[2]{%
-    \addplot[rq3 no pacing,forget plot]
-      table[x=shot,y=#2_median,col sep=comma]
-      {#1/no_pacing.csv};
-    \addplot[rq3 thermal lut,forget plot]
-      table[x=shot,y=#2_median,col sep=comma]
-      {#1/thermal_lut.csv};
-    \addplot[rq3 codel inspired,forget plot]
-      table[x=shot,y=#2_median,col sep=comma]
-      {#1/codel_inspired.csv};
-    \addplot[rq3 ours,forget plot]
-      table[x=shot,y=#2_median,col sep=comma]
-      {#1/ours.csv};
-  }
-
-  % Panel (b): percentage of complete runs with a positive transition delay.
-  % Shot 30 is blank because its outgoing transition lies outside the window.
-  \newcommand{\rqthreeactivationcurves}[1]{%
-    \addplot[rq3 no pacing,forget plot]
-      table[x=shot,y=activation_rate_percent,col sep=comma]
-      {#1/no_pacing.csv};
-    \addplot[rq3 thermal lut,forget plot]
-      table[x=shot,y=activation_rate_percent,col sep=comma]
-      {#1/thermal_lut.csv};
-    \addplot[rq3 codel inspired,forget plot]
-      table[x=shot,y=activation_rate_percent,col sep=comma]
-      {#1/codel_inspired.csv};
-    \addplot[rq3 ours,forget plot]
-      table[x=shot,y=activation_rate_percent,col sep=comma]
-      {#1/ours.csv};
-  }
-
-  % Panel (c): cumulative cost is computed within runs before aggregation.
-  % The IQR is shown only here because it directly communicates run-to-run
-  % variation in the policy's total user-visible cost.
-  \newcommand{\rqthreecumulativecurves}[1]{%
-    \addplot[name path=rq3nopacinglower,draw=none,forget plot]
-      table[x=shot,y=cumulative_delay_p25,col sep=comma]
-      {#1/no_pacing.csv};
-    \addplot[name path=rq3nopacingupper,draw=none,forget plot]
-      table[x=shot,y=cumulative_delay_p75,col sep=comma]
-      {#1/no_pacing.csv};
-    \addplot[gray!25,forget plot]
-      fill between[of=rq3nopacinglower and rq3nopacingupper];
-    \addplot[rq3 no pacing,forget plot]
-      table[x=shot,y=cumulative_delay_median,col sep=comma]
-      {#1/no_pacing.csv};
-    \addplot[rq3 thermal lut,forget plot]
-      table[x=shot,y=cumulative_delay_median,col sep=comma]
-      {#1/thermal_lut.csv};
-    \addplot[rq3 codel inspired,forget plot]
-      table[x=shot,y=cumulative_delay_median,col sep=comma]
-      {#1/codel_inspired.csv};
-    \addplot[name path=rq3ourslower,draw=none,forget plot]
-      table[x=shot,y=cumulative_delay_p25,col sep=comma]
-      {#1/ours.csv};
-    \addplot[name path=rq3oursupper,draw=none,forget plot]
-      table[x=shot,y=cumulative_delay_p75,col sep=comma]
-      {#1/ours.csv};
-    \addplot[black!15,forget plot]
-      fill between[of=rq3ourslower and rq3oursupper];
-    \addplot[rq3 ours,forget plot]
-      table[x=shot,y=cumulative_delay_median,col sep=comma]
-      {#1/ours.csv};}
-
-  \newcommand{\rqthreetradeoffpoints}[1]{%
-    \addplot[
-      only marks,mark=o,mark size=1.7pt,
-      draw=gray!85!black,fill=white,forget plot
-    ] table[
-      x=total_delay_s,y=backlog_p95_s,col sep=comma
-    ] {#1/no_pacing_tradeoff.csv};
-    \addplot[
-      only marks,mark=triangle*,mark size=1.8pt,
-      draw=blue!70!black,fill=blue!70!black,forget plot
-    ] table[
-      x=total_delay_s,y=backlog_p95_s,col sep=comma
-    ] {#1/thermal_lut_tradeoff.csv};
-    \addplot[
-      only marks,mark=square*,mark size=1.6pt,
-      draw=red!75!black,fill=red!75!black,forget plot
-    ] table[
-      x=total_delay_s,y=backlog_p95_s,col sep=comma
-    ] {#1/codel_inspired_tradeoff.csv};
-    \addplot[
-      only marks,mark=*,mark size=1.7pt,
-      draw=black,fill=black,forget plot
-    ] table[
-      x=total_delay_s,y=backlog_p95_s,col sep=comma
-    ] {#1/ours_tradeoff.csv};}
-
-  % Keep conditionals outside pgfplots axis bodies: \addplot scans its input,
-  % so a conditional spanning a plot command can be both slow and fragile.
-  \ifrqthreeultrahasdata
-    \newcommand{\rqthreeultrapendingaxis}{}
-    \newcommand{\rqthreeultrapendingtradeoffaxis}{}
-    \newcommand{\rqthreeultrapaneldata}[1]{%
-      \rqthreepolicycurves{\rqThreeUltraDataDir}{#1}}
-    \newcommand{\rqthreeultraactivationdata}{%
-      \rqthreeactivationcurves{\rqThreeUltraDataDir}}
-    \newcommand{\rqthreeultracumulativedata}{%
-      \rqthreecumulativecurves{\rqThreeUltraDataDir}}
-    \newcommand{\rqthreeultratradeoffdata}{%
-      \rqthreetradeoffpoints{\rqThreeUltraDataDir}}
-  \else
-    \newcommand{\rqthreeultrapendingaxis}{%
-      ymin=0,ymax=1,yticklabels=\empty}
-    \newcommand{\rqthreeultrapendingtradeoffaxis}{%
-      xmax=1,ymin=0,ymax=1,xticklabels=\empty,yticklabels=\empty}
-    \newcommand{\rqthreeultrapaneldata}[1]{\rqthreepending}
-    \newcommand{\rqthreeultraactivationdata}{\rqthreepending}
-    \newcommand{\rqthreeultracumulativedata}{\rqthreepending}
-    \newcommand{\rqthreeultratradeoffdata}{\rqthreepending}
-  \fi
-
-  \newsavebox{\rqthreefigurebox}
-  \begin{lrbox}{\rqthreefigurebox}
   \begin{tikzpicture}
     \begin{groupplot}[
-      group style={
-        group size=4 by 1,
-        horizontal sep=0.042\textwidth,
-      },
-      % scale only axis makes width/height describe the plot box itself rather
-      % than the box plus its tick labels, so all four boxes are identical and
-      % the group separation between them is uniform.  Panel (d) would
-      % otherwise be squeezed by its wider "5.5" tick labels.
+      group style={group size=2 by 1,horizontal sep=0.075\textwidth},
       scale only axis=true,
-      width=0.215\textwidth,
-      height=0.190\textwidth,
-      tick label style={font=\tiny},
+      width=0.385\textwidth,
+      height=0.245\textwidth,
+      xlabel={Trace target \(d_i^{\mathrm{tr}}\) (ms)},
+      ylabel={Applied delay \(d_i\) (ms)},
+      tick label style={font=\scriptsize},
       label style={font=\scriptsize},
-      title style={font=\scriptsize},
+      title style={font=\small},
       grid=major,
-      major grid style={gray!20,line width=0.2pt},
-      axis line style={line width=0.35pt},
-      tick style={line width=0.35pt},
+      major grid style={gray!18,line width=0.2pt},
+      axis line style={line width=0.4pt},
+      tick style={line width=0.4pt},
       tick align=outside,
       tick pos=left,
+      xmin=0,
+      ymin=0,
       unbounded coords=discard,
-      enlarge y limits=0.08,
     ]
 
-      % The CSVs store backlog in milliseconds.  Convert on the axis rather than
-      % in the data so panels (a), (c), and (d) all read in seconds; (a) and (d)
-      % show the same quantity under two aggregations and must share a unit.
       \nextgroupplot[
-        title={(a) Backlog (s)},
-        xlabel={Shot index},
-        y filter/.expression={y/1000},
-        \rqThreeShotAxis,
-        \rqThreeBacklogAxis,
-        \rqthreeultrapendingaxis
+        title={(a) 12MP normal},
+        xmax=650,
+        ymax=1050,
+        xtick={0,200,400,600},
+        ytick={0,250,500,750,1000},
       ]
-      \rqthreeultrapaneldata{backlog}
+      \addplot[rq3 equality] coordinates {(0,0) (650,650)};
+      \addplot[rq3 unchanged]
+        table[x=required_delay_ms,y=applied_delay_ms,col sep=comma]
+        {\rqThreeCalibrationDataDir/12mp_normal_unchanged.csv};
+      \addplot[rq3 admission changed]
+        table[x=required_delay_ms,y=applied_delay_ms,col sep=comma]
+        {\rqThreeCalibrationDataDir/12mp_normal_admission_changed.csv};
+      \node[
+        anchor=north east,align=right,font=\scriptsize,
+        fill=white,fill opacity=0.88,text opacity=1,inner sep=2pt,
+      ] at (rel axis cs:0.975,0.975)
+        {\(n_+=94\)\\covered: 92.6\%};
 
       \nextgroupplot[
-        title={(b) Pacing activation (\%)},
-        xlabel={Shot index},
-        \rqThreeShotAxis,
-        \rqThreeActivationAxis,
-        \rqthreeultrapendingaxis
+        title={(b) 24MP mode + memory pressure},
+        xmax=800,
+        ymax=2100,
+        xtick={0,200,400,600,800},
+        ytick={0,500,1000,1500,2000},
       ]
-      \rqthreeultraactivationdata
-
-      \nextgroupplot[
-        title={(c) Cumulative delay (s)},
-        xlabel={Shot index},
-        \rqThreeShotAxis,
-        \rqThreeCumulativeDelayAxis,
-        \rqthreeultrapendingaxis
-      ]
-      \rqthreeultracumulativedata
-
-      % Every panel names its y quantity in the title and its x quantity in the
-      % x label, so panel (d) carries no rotated y label either and needs no
-      % extra separation; the group's horizontal sep applies uniformly.
-      \nextgroupplot[
-        title={(d) Run backlog P95 (s)},
-        xlabel={Total delay (s)},
-        \rqThreeTradeoffAxis,
-        \rqthreeultrapendingtradeoffaxis
-      ]
-      \rqthreeultratradeoffdata
+      \addplot[rq3 equality] coordinates {(0,0) (800,800)};
+      \addplot[rq3 unchanged]
+        table[x=required_delay_ms,y=applied_delay_ms,col sep=comma]
+        {\rqThreeCalibrationDataDir/24mp_memory_unchanged.csv};
+      \addplot[rq3 admission changed]
+        table[x=required_delay_ms,y=applied_delay_ms,col sep=comma]
+        {\rqThreeCalibrationDataDir/24mp_memory_admission_changed.csv};
+      \node[
+        anchor=north east,align=right,font=\scriptsize,
+        fill=white,fill opacity=0.88,text opacity=1,inner sep=2pt,
+      ] at (rel axis cs:0.975,0.975)
+        {\(n_+=73\)\\covered: 84.9\%};
     \end{groupplot}
 
-    % One shared policy legend applies to all panels.
-    \coordinate (rqthreelegendpos) at
-      ($(group c1r1.south)!0.5!(group c4r1.south)$);
+    \coordinate (rqthreecalibrationlegend) at
+      ($(group c1r1.south)!0.5!(group c2r1.south)$);
     \matrix[
       matrix of nodes,
       nodes={font=\scriptsize,anchor=west},
-      column sep=2pt,
+      column sep=3pt,
       row sep=0pt,
       anchor=north,
-    ] at ([yshift=-6.0ex]rqthreelegendpos) {
-      \draw[rq3 no pacing] (0,0)--(0.38,0); & No pacing &
-      \draw[rq3 thermal lut] (0,0)--(0.38,0); & Thermal LUT &
-      \draw[rq3 codel inspired] (0,0)--(0.38,0); & CoDel-inspired &
-      \draw[rq3 ours] (0,0)--(0.38,0); & Ours \\
+    ] at ([yshift=-5.7ex]rqthreecalibrationlegend) {
+      \draw[black!65,densely dashed,line width=0.75pt] (0,0)--(0.38,0); & Exact calibration &
+      \fill[black,opacity=0.50] (0.19,0) circle[radius=1.25pt]; & No admission change &
+      \node[
+        regular polygon,regular polygon sides=3,draw=blue!70!black,fill=white,
+        line width=0.55pt,minimum size=4.2pt,inner sep=0pt,
+      ] at (0.19,0) {}; & Admission changed execution \\
     };
   \end{tikzpicture}
-  \end{lrbox}
-  \resizebox{\textwidth}{!}{\usebox{\rqthreefigurebox}}
-  \label{fig:rq3_pacing_trajectories}
+
+  \caption{RQ3 calibration for decisions with a positive executed-work trace
+  target. Each point is one valid decision from a non-timeout 30-shot session;
+  the dashed line denotes \(d_i=d_i^{\mathrm{tr}}\). Points below the line are
+  insufficient for the executed sequence, whereas points above it are locally
+  conservative. Filled circles retain the configured workload; open triangles
+  identify decisions whose admission outcome changed it. Zero-target decisions
+  are omitted to keep the positive-target calibration legible and are reported
+  separately in Table~\ref{tab:rq3_pacing_summary}. Panel (b) uses the actual
+  per-capture resolution: Lv0--4 start with two MP24 captures and continue at
+  MP12, while Lv5--6 use the production MP12 fallback. The target holds the
+  observed trace fixed and is not a global counterfactual optimum.}
+  \label{fig:rq3_pacing_calibration}
 \end{figure*}

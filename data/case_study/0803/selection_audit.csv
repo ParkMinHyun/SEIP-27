@@ -1,0 +1,11 @@
+condition,selected_run,mechanism_complete_runs,mode_specific_exclusion,same_condition_peer_count,metric,selected_value,peer_median,preferred_direction
+"12MP normal, initial Lv4",30,30,none,10,Cumulative pacing (s),5.212,4.412,lower is better
+"12MP normal, initial Lv4",30,30,none,10,Deadline margin P5 (s),0.366,0.429,higher is better
+"12MP normal, initial Lv4",30,30,none,10,30-shot span (s),21.717,20.840,lower is better
+"12MP normal, initial Lv4",30,30,none,10,Bokeh executed (%),26.667,38.333,higher is better
+"12MP normal, initial Lv4",30,30,none,10,Filter executed (%),73.333,100.000,higher is better
+"24MP mode + memory pressure, initial Lv3",34,27;34,Run 27 starts at Lv5 and is MP12 fallback; excluded from the 24MP-mode case study,6,Cumulative pacing (s),4.388,4.225,lower is better
+"24MP mode + memory pressure, initial Lv3",34,27;34,Run 27 starts at Lv5 and is MP12 fallback; excluded from the 24MP-mode case study,6,Deadline margin P5 (s),0.302,0.332,higher is better
+"24MP mode + memory pressure, initial Lv3",34,27;34,Run 27 starts at Lv5 and is MP12 fallback; excluded from the 24MP-mode case study,6,30-shot span (s),22.755,22.695,lower is better
+"24MP mode + memory pressure, initial Lv3",34,27;34,Run 27 starts at Lv5 and is MP12 fallback; excluded from the 24MP-mode case study,6,Bokeh executed (%),16.667,33.333,higher is better
+"24MP mode + memory pressure, initial Lv3",34,27;34,Run 27 starts at Lv5 and is MP12 fallback; excluded from the 24MP-mode case study,6,Filter executed (%),53.333,100.000,higher is better

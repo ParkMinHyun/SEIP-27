@@ -1,0 +1,184 @@
+% RQ1(a): Baseline failure, full-controller Draft availability, and pacing
+% cost.
+% This is the first RQ1 table; the per-loop ablation follows as RQ1(b) in
+% tables/tab_rq1_ablation.tex.
+%
+% Controller-off Timeout onset retains the previously reported baseline
+% reference.  Full-controller values are reconstructed from:
+%   - SM-S948U_metrics_12MP_normal_0803.xlsx
+%   - SM-S948U_metrics_24MP_memory_0803.xlsx
+% Both workbooks were exported by CaptureMetricsExcelExporter.  The
+% implementation reference was inspected at commit:
+% 99aae0af8c3fa1ceb784083446e83c40d0fb917f
+%
+% Per the collection correction, sessions containing Capture Timeout are
+% excluded: run 9 in the 12MP workbook and runs 35 and 36 in the 24MP workbook.
+% Incomplete non-timeout sessions remain outside the exporter's RQ1 inclusion
+% set.  The retained samples contain 43 and 40 complete runs, respectively.
+%
+% The 24MP/memory-pressure workbook is treated as one requested-mode scenario
+% rather than regrouped by exported Draft sizeBucket.  This preserves its mixed
+% MP24-to-MP12 execution and the MP12 fallback traces at Lv5--6.
+%
+% Slack P5 pools normalized per-capture margins.  Completion and activation
+% percentages are computed within each run and macro-averaged across retained
+% runs.  Delay P50 pools positive transition-delay events.  Sigma-delay P50 is
+% the median across the within-run summed delay already paid before shot 5 or
+% shot 30; it is reported in seconds.
+
+\begin{table*}[t]
+  \centering
+  \setlength{\abovecaptionskip}{2pt}%
+  \setlength{\belowcaptionskip}{3pt}%
+  \caption{RQ1(a) controller-off failure reference and retained
+  full-controller behavior.}
+  \label{tab:rq1_preventive_alignment}
+  \label{tab:rq1_controller_behavior}
+
+  {\scriptsize
+  % Controller-off E and M hold two characters, but their merged header is far
+  % wider.  Sizing both cells to half the header width keeps the labels centred
+  % while the shot indices remain right aligned.
+  \newlength{\rqShotW}\settowidth{\rqShotW}{\textbf{Timeout onset}}%
+  \setlength{\rqShotW}{0.5\rqShotW}%
+  \newcommand{\rqShot}[1]{\makebox[\rqShotW][r]{#1}}%
+  \newcommand{\rqShotHd}[1]{\makebox[\rqShotW][c]{#1}}%
+  \setlength{\arrayrulewidth}{0.35pt}%
+  \setlength{\doublerulesep}{0.8pt}%
+  \renewcommand{\arraystretch}{1.08}%
+  % \fittabcolsep (macros.tex) solves for the \tabcolsep that makes the outer
+  % rules land exactly on \textwidth.
+  \newsavebox{\rqtabbox}%
+  \newcommand{\rqtabular}{%
+  \begin{tabular}{|c|c|c|r||cc||r|r||rr|rr|rr||rr|rr|rr|}
+    \hline\hline
+    \multirow{4}{*}[-1.8ex]{\textbf{Device}} &
+    \multirow{4}{*}[-1.8ex]{\textbf{Condition}} &
+    \multirow{4}{*}[-1.8ex]{\makecell[c]{\textbf{Starting}\\\textbf{overheat}\\\textbf{level}}} &
+    \multirow{4}{*}[-1.8ex]{\textbf{N}} &
+    \multicolumn{2}{c||}{\multirow{2}{*}{\makecell[c]{%
+      \textbf{Controller-off}\\\textbf{reference}}}} &
+    \multicolumn{14}{c|}{\textbf{Full-controller behavior}} \\
+    \cline{7-20}
+    & & & &
+    \multicolumn{2}{c||}{} &
+    \multicolumn{2}{c||}{\textbf{Deadline safety}} &
+    \multicolumn{6}{c||}{\textbf{Draft work completion}} &
+    \multicolumn{6}{c|}{\textbf{Pacing cost}} \\
+    \cline{5-6}\cline{7-20}
+    & & & &
+    \multicolumn{2}{c||}{\textbf{Timeout onset}} &
+    \multicolumn{1}{c|}{\multirow{2}{*}[-0.4ex]{%
+      \makecell[c]{\textbf{Timeout}\\\textbf{count}}}} &
+    \multicolumn{1}{c||}{\multirow{2}{*}[-0.4ex]{%
+      \makecell[c]{\textbf{Slack P5}\\\textbf{(\%)}}}} &
+    \multicolumn{2}{c|}{\makecell[c]{\mbox{\boldmath$M{+}S$}\\\textbf{(\%)}}} &
+    \multicolumn{2}{c|}{\makecell[c]{\mbox{\boldmath$M$}\\\textbf{(\%)}}} &
+    \multicolumn{2}{c||}{\makecell[c]{\mbox{\boldmath$S$}\\\textbf{(\%)}}} &
+    \multicolumn{2}{c|}{\makecell[c]{\textbf{Activated}\\\textbf{(\%)}}} &
+    \multicolumn{2}{c|}{\makecell[c]{\textbf{Delay (}%
+      \raisebox{0.22ex}{\scalebox{0.68}{\textbf{\textgreater}}}\ \textbf{0)}\\\textbf{P50 (ms)}}} &
+    \multicolumn{2}{c|}{\makecell[c]{\mbox{\boldmath$\Sigma$}\textbf{ Delay}\\\textbf{P50 (s)}}} \\
+    \cline{5-6}\cline{9-20}
+    & & & &
+    \multicolumn{1}{c}{\rqShotHd{\textbf{E}}} &
+    \multicolumn{1}{c||}{\rqShotHd{\textbf{M}}} &
+    & &
+    \multicolumn{1}{c}{\textbf{@5}} & \multicolumn{1}{c|}{@30} &
+    \multicolumn{1}{c}{\textbf{@5}} & \multicolumn{1}{c|}{@30} &
+    \multicolumn{1}{c}{\textbf{@5}} & \multicolumn{1}{c||}{@30} &
+    \multicolumn{1}{c}{\textbf{@5}} & \multicolumn{1}{c|}{@30} &
+    \multicolumn{1}{c}{\textbf{@5}} & \multicolumn{1}{c|}{@30} &
+    \multicolumn{1}{c}{\textbf{@5}} & \multicolumn{1}{c|}{@30} \\
+    \hline\hline
+    \multirow{14}{*}{\makecell[c]{S26\\Ultra}}
+      & \multirow{7}{*}{\makecell[c]{12MP\\normal}}
+      & Lv0 & 5 & \rqShot{--} & \rqShot{--} & 0 & 37.2
+        & \textbf{100} & 100 & \textbf{100} & 100
+        & \textbf{100} & 100 & \textbf{0} & \textbf{0}
+        & \textbf{--} & -- & \textbf{0} & 0 \\
+    \cline{3-20}
+      & & Lv1 & 2 & \rqShot{--} & \rqShot{--} & 0 & 22.6
+        & \textbf{100} & 100 & \textbf{100} & 100
+        & \textbf{100} & 100 & \textbf{0} & 0
+        & \textbf{--} & -- & \textbf{0} & 0 \\
+    \cline{3-20}
+      & & Lv2 & 4 & \rqShot{24} & \rqShot{27} & 0 & 4.7
+        & \textbf{100} & 92.5 & \textbf{100} & 92.5
+        & \textbf{100} & 100 & \textbf{0} & 17.2
+        & \textbf{--} & 197.5 & \textbf{0} & 1.1 \\
+    \cline{3-20}
+      & & Lv3 & 10 & \rqShot{13} & \rqShot{18} & 0 & 4.1
+        & \textbf{100} & 48.3 & \textbf{100} & 48.7
+        & \textbf{100} & 87.7 & \textbf{0} & 32.8
+        & \textbf{--} & 390 & \textbf{0} & 3.1 \\
+    \cline{3-20}
+      & & Lv4 & 10 & \rqShot{10} & \rqShot{17} & 0 & 5.4
+        & \textbf{100} & 55.0 & \textbf{100} & 55.0
+        & \textbf{100} & 97.3 & \textbf{2.5} & 46.6
+        & \textbf{291} & 383 & \textbf{0} & 4.4 \\
+    \cline{3-20}
+      & & Lv5 & 5 & \rqShot{8} & \rqShot{10} & 0 & 5.3
+        & \textbf{100} & 26.0 & \textbf{100} & 26.0
+        & \textbf{100} & 71.3 & \textbf{0} & 32.4
+        & \textbf{--} & 448 & \textbf{0} & 4.1 \\
+    \cline{3-20}
+      & & Lv6 & 7 & \rqShot{7} & \rqShot{10} & 0 & 5.6
+        & \textbf{100} & 30.0 & \textbf{100} & 30.0
+        & \textbf{100} & 84.3 & \textbf{3.6} & 29.6
+        & \textbf{539} & 461 & \textbf{0} & 4.4 \\
+    % Emphasize the scenario boundary only after the final 12MP row.
+    \Xcline{2-20}{0.7pt}
+      & \multirow{7}{*}{\makecell[c]{24MP\\memory\\pressure}}
+      & Lv0 & 6 & \rqShot{26} & \rqShot{30} & 0 & 12.9
+        & \textbf{100} & 98.9 & \textbf{100} & 98.9
+        & \textbf{100} & 100 & \textbf{0} & 14.9
+        & \textbf{--} & 200 & \textbf{0} & 0.5 \\
+    \cline{3-20}
+      & & Lv1 & 4 & \rqShot{19} & \rqShot{22} & 0 & 9.2
+        & \textbf{100} & 98.3 & \textbf{100} & 98.3
+        & \textbf{100} & 100 & \textbf{0} & 6.0
+        & \textbf{--} & 79 & \textbf{0} & 0.1 \\
+    \cline{3-20}
+      & & Lv2 & 3 & \rqShot{14} & \rqShot{21} & 0 & 6.5
+        & \textbf{100} & 58.3 & \textbf{100} & 58.3
+        & \textbf{100} & 75.0 & \textbf{8.3} & 25.3
+        & \textbf{83} & 231 & \textbf{0} & 1.4 \\
+    \cline{3-20}
+      & & Lv3 & 7 & \rqShot{7} & \rqShot{10} & 0 & 4.4
+        & \textbf{91.4} & 44.3 & \textbf{91.4} & 44.3
+        & \textbf{100} & 89.0 & \textbf{17.9} & 40.9
+        & \textbf{448} & 304 & \textbf{0} & 4.4 \\
+    \cline{3-20}
+      & & Lv4 & 6 & \rqShot{5} & \rqShot{9} & 0 & 6.0
+        & \textbf{100} & 48.7 & \textbf{100} & 48.7
+        & \textbf{100} & 88.7 & \textbf{15.8} & 12.1
+        & \textbf{360} & 287 & \textbf{0} & 4.6 \\
+    \cline{3-20}
+      & & Lv5 & 7 & \rqShot{4} & \rqShot{8} & 0 & 6.3
+        & \textbf{100} & 43.8 & \textbf{100} & 43.8
+        & \textbf{100} & 96.2 & \textbf{35.7} & 55.2
+        & \textbf{383.5} & 373 & \textbf{0.7} & 5.9 \\
+    \cline{3-20}
+      & & Lv6 & 7 & \rqShot{4} & \rqShot{8} & 0 & 6.1
+        & \textbf{94.3} & 21.9 & \textbf{94.3} & 30.5
+        & \textbf{100} & 80.5 & \textbf{17.9} & 46.8
+        & \textbf{436} & 294 & \textbf{0} & 5.6 \\
+    \hline\hline
+  \end{tabular}}%
+  \fittabcolsep{\rqtabbox}{\rqtabular}{\textwidth}{40}%
+  \rqtabular
+  }
+
+  \par\vspace{2pt}
+  {\scriptsize Bold @5 values characterize the first five shots as a
+  short-burst usability proxy; @30 values characterize the full burst.
+  The controller-off Timeout onset columns retain the earlier reference; all
+  columns to their right use the two 0803 full-controller workbooks after
+  excluding sessions that contain Capture Timeout.  Timeout count therefore
+  reports zero over the retained sessions.  Slack P5 is the lower-tail
+  normalized deadline margin.  Completion percentages are macro-averaged
+  across runs.  Delay P50 is pooled over positive applied delays;
+  \(\Sigma\)-delay P50 is the median within-run summed delay.  -- indicates
+  that an event was not observed within the corresponding horizon.}
+\end{table*}

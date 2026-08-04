@@ -1,0 +1,269 @@
+% RQ3: is the applied pacing delay objectively well calibrated?
+%
+% Merged from two candidate revisions.  What each contributed is recorded at the
+% end of this block so neither line of reasoning is lost.
+%
+% Scope change from the baseline-comparison revision.  That table asked "is Ours
+% better than another pacing policy" against Thermal LUT and CoDel-inspired
+% arms.  Two problems retired it.  First, every collected cell for those arms
+% stayed TBD.  Second, and decisively, a policy comparison is the wrong
+% instrument for RQ3: RQ1(b) already establishes that pacing is necessary --
+% the Admission-only and Pacing-only arms time out where the full controller
+% does not -- so the remaining unanswered question is whether the delay the
+% controller computes is the right *size*.  A baseline that paces differently
+% cannot answer that; a requirement derived from the trace can.
+%
+% ---------------------------------------------------------------------------
+% The measured requirement
+% ---------------------------------------------------------------------------
+% The deployed pacer (CaptureAvailablePacer.computePacingDelayMs) applies
+%
+%   d = ceil( max(0, Bhat + 2*Chat - max(0,T)) / 2 )
+%
+% with Bhat the backlog clock, Chat the reserved Draft duration, and T the
+% window left on the newest committed capture's deadline.  The factor two is the
+% two-Draft prospective horizon (the Draft that starts after the decision and
+% the Draft of the capture the delay releases); the division by two is because
+% one millisecond of delay both drains one millisecond of backlog and moves the
+% next deadline out by one millisecond.  Verified against the workbook: the
+% formula reproduces beforeAppliedDelayMs on 100% of recorded decisions in both
+% conditions.
+%
+% The requirement keeps that condition and replaces only its two estimated
+% inputs with their measured counterparts:
+%
+%   d* = ceil( max(0, B + 2*C - max(0,T)) / 2 )
+%
+%   B = RQ3Pacing.realBacklogMs        (max draftEndUptimeMs over unfinished
+%                                       earlier Drafts, minus the decision time)
+%   C = PacingReplay.draftSequenceDurationMs  (the Draft as it actually ran)
+%   T = PacingReplay.beforeTimeToDeadlineMs
+%
+% This is deliberately not a different policy.  Because d and d* share the
+% horizon model, the deadline, and the arithmetic, their difference isolates one
+% thing only -- the delay attributable to the controller mispricing its own
+% inputs -- rather than confounding estimator error with policy structure.
+%
+% Two variants of C:
+%   C_mand = DynamicFunctionNode.durationMs + SecImageCodecNode ENCODING
+%            durationMs + (draftSequenceDurationMs - workloadSequenceDurationMs)
+%     The suffix admission can never skip, plus the non-node Draft overhead.
+%     Verified exactly: on the 223 captures whose executed sequence demoted all
+%     the way to DYNAMIC_FUNCTION>ENCODING (129 in 12MP, 94 in 24MP),
+%     DynamicFunction + Encoding equals workloadSequenceDurationMs to the
+%     millisecond on every row.  d*_mand is a safety floor -- below it not even
+%     mandatory work is protected.
+%   C_exec = draftSequenceDurationMs, the configuration that actually ran.
+%     d*_exec is the calibration target and is what "requirement" means below.
+%
+% The mandatory floor is reported in the caption rather than as a column,
+% because it does not vary: it is breached in 0 of the 2,201 pooled transitions,
+% and it is positive at all on only 6 of them -- all in 24MP (runs 7, 21x2,
+% 32x2, 34), each covered with margin (applied 271 vs 56, 279 vs 136, 318 vs 77,
+% 319 vs 203, 426 vs 270, 423 vs 140 ms).  A constant belongs in the caption; a
+% column of zeros invites the reader to look for variation that is not there.
+% The reading is that admission carries almost all of the mandatory-work safety
+% burden, which is what leaves pacing to be judged on the optional work it
+% preserves.
+%
+% ---------------------------------------------------------------------------
+% Why the surplus decomposition is exact
+% ---------------------------------------------------------------------------
+% Away from the max(0,.) clip -- transitions where both d > 0 and d* > 0 -- the
+% two ceilings differ by at most half a millisecond and
+%
+%   d - d*  =  (Chat - C)  +  (Bhat - B)/2
+%
+% identically.  Those two terms are the Reserve and Backlog columns.  Checked on
+% the 161 pooled transitions in that subset: residual mean 0.00 ms and
+% |residual| < 1 ms on every row, i.e. rounding only.  Chat - C is
+% PacingReplay.draftSequenceReserveErrorMs and Bhat - B is
+% RQ3Pacing.backlogEstimateErrorMs, so both columns are also directly readable
+% from the workbook without recomputation.
+%
+% This is the finding of the table.  The Backlog term is at or below zero in
+% every row (-18 to -74 ms), so the backlog clock is essentially unbiased and
+% occasionally optimistic, while the Reserve term carries the whole surplus
+% (+226 to +584 ms).  That is by construction:
+% CaptureAvailablePacingSession.getMaxDraftSequenceDurationMs prices Chat at the
+% burst's observed *maximum* Draft duration for the capture's size bucket,
+% floored by the whole-Draft estimate.  A max-based reserve against a
+% tail-latency deadline is the intended design; this table is what it costs, and
+% it names the one estimator to attack if the cost is to come down.
+%
+% Cross-size contamination was investigated as an alternative explanation for
+% the larger 24MP reserve term and rejected.  In the 24MP condition shots 1-2
+% capture MP24 and shots 3+ MP12, so a heavy MP24 Draft can seed the reserve of
+% a later MP12 capture (draftSequenceReserveCrossSizeContaminationMs > 0 on
+% 17.0% of paced transitions).  But those transitions have a *smaller* median
+% reserve term than the clean ones (352 vs 647 ms), so contamination is not the
+% driver and is not claimed as one.
+%
+% ---------------------------------------------------------------------------
+% Interpretation limit -- state it, do not hide it
+% ---------------------------------------------------------------------------
+% d* is computed on the realized trace, which pacing already shaped.  Removing
+% the delay would deepen the backlog and lengthen later Drafts, so the true
+% requirement of the unpaced trajectory is at or above d*.  The Surplus columns
+% are therefore an UPPER bound on the delay that could have been removed, and
+% the deficits are a LOWER bound.  Both directions are self-critical, which is
+% what makes the estimator usable.
+%
+% The same limit is why "requirement" is never reported as "how often pacing was
+% needed", and why the zero-requirement share is kept out of this table.  On the
+% realized trace, 75.3% (12MP) and 79.9% (24MP) of paced transitions have
+% d* = 0.  Read naively that is "most pacing was unnecessary", which is the
+% closed-loop fallacy -- a regulator that holds the state away from the
+% constraint makes every individual action look locally dispensable.  RQ1(b)
+% supplies the counterfactual this local estimator cannot: with pacing removed,
+% the same conditions time out.  Necessity is RQ1's question; RQ3 is scoped to
+% size.  The two percentages appear in the caption of
+% Figure~\ref{fig:rq3_pacing_calibration}, where the vertical-axis column they
+% describe is visible and can be read together with its explanation.
+%
+% ---------------------------------------------------------------------------
+% Data
+% ---------------------------------------------------------------------------
+% SM-S948U_metrics_12MP_normal_0803.xlsx and
+% SM-S948U_metrics_24MP_memory_0803.xlsx (ML implementation commit 99aae0a,
+% exported by CaptureMetricsExcelExporter), both with admission and pacing
+% enabled.
+%
+% Run eligibility: complete 30-shot runs (RQ3Summary.isComplete30ShotRun),
+% excluding runs that recorded a Capture Timeout -- 12MP run 9 and 24MP runs 35
+% and 36, all three also short runs.  In the 24MP condition a run captures MP24
+% on shots 1-2 and MP12 from shot 3, and the Lv5-6 runs are the production MP12
+% fallback and belong to the condition; 24MP run 3 captures MP12 from shot 1 at
+% Lv3, which is neither shape, and is excluded.  This leaves 43 and 39 runs.
+% Transition eligibility: shots 2-30 with a recorded pacing decision and a
+% complete prior-Draft timeline (pacingDecisionRecorded and
+% realTraceCompleteBeforeDelay).  The two watchdog-truncated captures (24MP runs
+% 24 and 37) are dropped as transitions -- a truncated node has no clean
+% executed-Draft duration -- while their runs are retained, consistent with
+% RQ1(a) counting them among the zero-timeout runs.  Dropping those two runs
+% whole instead, as the alternative revision did, leaves the required-transition
+% set identical (73 positive, 84.9% covered) and moves only the cumulative
+% surplus, 2.69 to 2.72 s.  This yields 1,167 and 1,034 analyzed transitions.
+%
+% Values quoted in the notes or held for prose (12MP / 24MP, pooled):
+%   paced share            31.5 / 33.7 percent of transitions
+%   requirement > 0        94 / 73 transitions
+%   surplus P95            786 / 998 ms
+%   burst surplus P50      3.11 / 2.69 s   (burst total delay 3.29 / 2.73 s)
+%   required delay, d*>0   P50 81 / 197 ms   P95 301 / 538 ms
+%   calibration error      P(< 0) 0.6 / 1.1 percent, P(= 0) 68.2 / 66.1
+%   realized slack         P5 345 / 410 ms, min 19 / 14 ms, budget 7,000 ms
+% Regenerate from data/rq3/calibration/.
+%
+% Under-pacing does not track the tight realized margins: the smallest margin at
+% an under-paced transition is 134 ms (12MP) and 36 ms (24MP), while the
+% smallest margin overall is 19 ms and 14 ms.  The transitions that came closest
+% to the deadline are therefore not the ones this estimator flags, which is
+% consistent with d*_exec being a conservative target rather than a failure
+% predictor.  Worth one sentence in prose.
+%
+% ---------------------------------------------------------------------------
+% Layout, and what the merge kept from each revision
+% ---------------------------------------------------------------------------
+% Single-column float.  Ten candidate columns do not fit \columnwidth at a
+% readable size, so the set was cut to what carries row-to-row variation:
+% coverage with its denominator, the worst shortfall, the surplus, and the two
+% terms it decomposes into.  Reserve and Backlog share one cell because the
+% point is their comparison, not their separate magnitudes.  Constants and
+% single-number-per-condition quantities -- the mandatory floor, the per-burst
+% surplus, realized slack -- moved to the caption and notes.  The band split at
+% Lv3/Lv4 is the production-guard boundary of Section~\ref{sec:guard-limit} and
+% is kept because the rows disagree: 12MP coverage is 82.9% below the boundary
+% and 100% above it, while the Reserve term grows with level in both conditions.
+%
+% From the compact revision: the Lv0-4 / Lv5-6 resolution note, the run and
+% session exclusions, and the discipline of stating that the target is
+% trace-conditioned rather than a global counterfactual optimum.
+% From the banded revision: the thermal-band rows, the surplus attribution, the
+% worst-deficit and realized-slack anchors, and keeping the zero-requirement
+% share out of the table.
+% Not carried over: the P5/P50/P95 error triple, which mixes the under- and
+% over-pacing tails of one distribution into a cell that has to be read in two
+% directions; coverage plus worst deficit states the same two tails
+% unambiguously.
+
+\begin{table}[t]
+  \centering
+  \setlength{\abovecaptionskip}{2pt}%
+  \setlength{\belowcaptionskip}{3pt}%
+  \caption{RQ3 pacing calibration on the S26 Ultra: the applied delay against
+  the delay the controller's own condition requires on measured inputs. No
+  transition fell below the mandatory-work floor, which was positive on 6 of
+  2,201 transitions and covered on all 6.}
+  \label{tab:rq3_pacing_calibration}
+
+  {\scriptsize
+  \renewcommand{\arraystretch}{1.08}%
+  \setlength{\arrayrulewidth}{0.35pt}%
+  \setlength{\doublerulesep}{0.8pt}%
+  \newsavebox{\rqthreecalbox}%
+  \newcommand{\rqthreecaltabular}{%
+  \begin{tabular}{|c|c||r|r||r|r|}
+    \hline\hline
+    \multirow{2}{*}[-0.6ex]{\textbf{Cond.}} &
+    \multirow{2}{*}[-0.6ex]{\makecell[c]{\textbf{Levels}\\\textbf{[\(n\)]}}} &
+    \multicolumn{2}{c||}{\textbf{Sufficiency}} &
+    \multicolumn{2}{c|}{\textbf{Surplus}} \\
+    \cline{3-6}
+    & &
+    \multicolumn{1}{c|}{\makecell[c]{\textbf{Requirement}\\\textbf{met}}} &
+    \multicolumn{1}{c||}{\makecell[c]{\textbf{Worst}\\\textbf{deficit}}} &
+    \multicolumn{1}{c|}{\makecell[c]{\textbf{P50}\\\textbf{(ms)}}} &
+    \multicolumn{1}{c|}{\makecell[c]{\textbf{Reserve /}\\\textbf{backlog (ms)}}} \\
+    \hline\hline
+    \multirow{3}{*}{\makecell[c]{12MP\\normal}}
+      & \makecell[c]{Lv0--3\\{\scriptsize [578]}}
+      & \makecell[r]{82.9\%\\{\scriptsize [34 of 41]}} & 206
+      & 276 & $+234$ / $-18$ \\
+    \cline{2-6}
+      & \makecell[c]{Lv4--6\\{\scriptsize [589]}}
+      & \makecell[r]{100.0\%\\{\scriptsize [53 of 53]}} & --
+      & 352 & $+339$ / $-19$ \\
+    \cline{2-6}
+      & \makecell[c]{\textit{All}\\{\scriptsize [1,167]}}
+      & \makecell[r]{92.6\%\\{\scriptsize [87 of 94]}} & 206
+      & 329 & $+296$ / $-19$ \\
+    \hline
+    \multirow{3}{*}{\makecell[c]{24MP\\memory\\pressure}}
+      & \makecell[c]{Lv0--3\\{\scriptsize [508]}}
+      & \makecell[r]{83.3\%\\{\scriptsize [20 of 24]}} & 514
+      & 235 & $+226$ / $-40$ \\
+    \cline{2-6}
+      & \makecell[c]{Lv4--6\\{\scriptsize [526]}}
+      & \makecell[r]{85.7\%\\{\scriptsize [42 of 49]}} & 322
+      & 294 & $+584$ / $-74$ \\
+    \cline{2-6}
+      & \makecell[c]{\textit{All}\\{\scriptsize [1,034]}}
+      & \makecell[r]{84.9\%\\{\scriptsize [62 of 73]}} & 514
+      & 258 & $+450$ / $-61$ \\
+    \hline\hline
+  \end{tabular}}%
+  \fittabcolsep{\rqthreecalbox}{\rqthreecaltabular}{\columnwidth}{12}%
+  \rqthreecaltabular
+  }
+
+  \par\vspace{2pt}
+  \begin{minipage}{0.97\columnwidth}
+    \scriptsize\emph{Notes:} \(d^{*}\) is the deployed pacing condition
+    evaluated on measured inputs --- reconstructed real backlog and the Draft
+    duration as it ran --- against the same deadline and two-Draft horizon.
+    \emph{Requirement met} covers the transitions with \(d^{*}>0\);
+    \emph{Worst deficit} is the largest shortfall in ms among those not met.
+    \emph{Surplus} is \(\max(0,d-d^{*})\) over paced transitions, with a
+    per-burst median of \(3.11\) and \(2.69\)\,s. Where \(d\) and \(d^{*}\) are
+    both positive, \(d-d^{*}=(\hat{C}-C)+(\hat{B}-B)/2\) holds identically, so
+    the last column splits the surplus: the backlog clock is unbiased and the
+    Draft reserve carries the cost. No Capture Timeout occurred, and the
+    smallest realized margin --- \(19\) and \(14\)\,ms of a \(7{,}000\)\,ms
+    budget --- belongs to no under-paced transition. Measured on a trace pacing
+    already shaped, \(d^{*}\) is a local target rather than a global
+    counterfactual optimum, so the surplus bounds removable delay from above and
+    the deficits from below; whether pacing was needed at all is
+    Table~\ref{tab:rq1_ablation}'s question.
+  \end{minipage}
+\end{table}
