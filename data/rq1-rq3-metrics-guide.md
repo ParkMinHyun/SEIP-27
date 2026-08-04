@@ -14,10 +14,18 @@ The definitions were checked against:
 - `data/rq1_metrics_aggregation.md`;
 - `data/rq2_metrics_aggregation.md`.
 
-The exporter intentionally does not store an RQ3 policy name. The experiment
-operator must identify each workbook as `no_pacing`, `static_lut`,
-`queue_dynamic`, or `ours` when supplying it for aggregation. That
-operator-provided mapping is the authoritative policy label.
+The exporter records the active `PolicyType` in the `pacingPolicy` column of
+both `RQ3Pacing` and `RQ3Summary`. This exported value is the authoritative
+policy identity. Aggregation maps it to the artifact keys `no_pacing`,
+`thermal_lut`, `codel_inspired`, and `ours`; the operator-supplied workbook
+mapping only locates inputs and must agree with the exported policy. Legacy
+workbooks without `pacingPolicy` require an explicit operator mapping.
+
+The policy keys match the implementation's `PolicyType` enum
+(`NO_PACING`, `THERMAL_LUT`, `CODEL_INSPIRED`, `OURS`). Manuscript labels are
+No pacing, Thermal LUT, CoDel-inspired, and Ours. The earlier Queue-EWMA and
+`static_lut` / `queue_dynamic` keys and the "Static LUT" / "Queue dynamic"
+labels are retired; do not reintroduce them.
 
 ## 2. Research-question overview
 
@@ -259,13 +267,14 @@ quality even if the watchdog prevents the end-to-end Capture Timeout.
 ### 5.3 Always-admit audit metrics
 
 The audit forces optional work to execute while a shadow controller records
-the decision it would have made. This supplies factual outcomes for work the
-controller would normally skip.
+the fresh model decision it would make before applying session-sticky
+demotion. This supplies factual outcomes for both model-admitted and
+model-skipped work without attributing later policy-carried skips to the model.
 
 #### All-decision confusion matrix
 
 ```text
-                         Shadow decision
+                      Shadow model decision
                      admit             skip
 Factual feasible     feasible-admit    feasible-skip
 Factual unsafe       unsafe-admit      unsafe-skip
@@ -284,52 +293,167 @@ unsafe-rejection rate
     = unsafe-skip / (unsafe-admit + unsafe-skip)
 ```
 
-The confusion matrix uses every capture-level selected Bokeh or Filter
-decision; it is not restricted to the first skip in a run.
+The confusion matrix uses `afterModelAdmit` for every capture-level selected
+Bokeh or Filter decision; it is not restricted to the first skip in a run.
+It does not use `afterEffectiveAdmit`, because that field carries an earlier
+group demotion through the remainder of the burst and would attribute
+session-policy state to the fresh model decision.
 
-#### P50 effect of skipped work
+#### Median margin and overrun for model-skipped work
 
-Use the same capture-level shadow-skipped decisions reported by the confusion
-matrix. Let \(D\) denote the product Capture Timeout deadline. For a feasible
-skip, calculate the normalized unused-budget magnitude:
+Use the same capture-level model-skipped decisions
+(`afterModelAdmit == false`) reported by the confusion matrix. Let \(D\)
+denote the product Capture Timeout deadline. For a feasible skip, calculate
+the normalized remaining-margin magnitude:
 
 ```text
-unusedPercent = 100 * (B - C) / D
+feasibleSkipMarginPercent = 100 * (B - C) / D
 ```
 
-For an unsafe skip, calculate the normalized avoided-overrun magnitude:
+For an unsafe skip, calculate the normalized budget-overrun magnitude:
 
 ```text
-avoidedPercent = 100 * (C - B) / D
+unsafeSkipOverrunPercent = 100 * (C - B) / D
 ```
 
 The table reports the median (P50) within each positive-magnitude class, then
-prefixes `+` to unused budget and `-` to avoided overrun to expose their
-opposite directions. A large positive value indicates severe
-over-conservatism, whereas a larger-magnitude negative value indicates that
+prefixes `+` to the feasible-skip margin and `-` to the unsafe-skip overrun to
+expose their opposite directions. A large positive margin indicates severe
+over-conservatism, whereas a larger-magnitude negative overrun indicates that
 the rejection prevented a substantial deadline violation. The deadline
 constant is internal and must not appear in the manuscript; report only the
 normalized percentage, consistently with RQ1's Slack P5.
 
 Because the confusion matrix already reports the feasible and unsafe skip
-counts, the table does not repeat their proportions or sample sizes in the P50
-cells. These P50 values describe the typical capture-level decision effect; they
+counts, the table does not repeat their proportions or sample sizes in the
+median cells. These median values describe the typical capture-level decision effect; they
 are not inferential estimates over independent runs.
 
-### 5.4 RQ2 workbook mapping
+### 5.4 RQ2 figure metrics: unsafe-admit spike anatomy
+
+`figures/fig_rq2_unsafe_spike.tex` characterizes every decision in the
+unsafe-admit cell of the confusion matrix: factually unsafe, model-admitted,
+drawn from the included runs only. It answers two questions per decision — how
+far the measured cost exceeded what recent behavior predicted, and which
+`PostExecutionMetrics` quantity accounts for that excess.
+
+#### Recent-safe baseline
+
+For each unsafe admit, take the selected decisions from the same workbook,
+`runId`, and optional-work group that are model-admitted, factually feasible,
+and have a smaller `runShotIndex`; keep the last three by `runShotIndex`. Every
+baseline value is the unweighted mean over those three decisions. Holding the
+run and group fixed also holds the device, resolution, and memory condition
+fixed, so the comparison isolates within-burst variation. Do not substitute a
+pooled or global average.
+
+#### Node suffix
+
+Every per-node quantity is summed over the *remaining* nodes of the capture:
+node rows whose `nodeOrder` is at least the selected decision's `nodeOrder`,
+taken in `nodeOrder` order. This is the work that the admission decision
+actually committed to, and it is the same suffix that \(C\) measures in wall
+time.
+
+#### Panel (a): overshoot against the budget
+
+Plot three x values per decision, each divided by that decision's own
+`beforeBudgetMs`:
+
+```text
+baseline = mean(C) over the three recent-safe decisions
+bound    = beforeSequencePredictedUpperBoundMs
+event    = C
+```
+
+with \(C\) as defined in section 5.2. Normalize by \(B\), not by the deadline
+\(D\): this places the admission criterion at exactly 1.0 and keeps the
+internal deadline constant out of the figure. The annotated growth factor is
+`event C / baseline mean C`.
+
+#### Panel (b): decomposition of the increase
+
+`cpuUtilizationRatio` is recorded as `cpuTimeMs / (wallTimeMs * cores)`, so
+over the node suffix
+
+```text
+cpu  = sum(cpuTimeMs)
+wall = sum(wallTimeMs)
+util = cpu / (wall * cores)
+wall = cpu / (util * cores)      identically
+```
+
+Recover the core count from any node row with a nonzero ratio,
+`cores = round(cpuTimeMs / (wallTimeMs * cpuUtilizationRatio))`; the S26 Ultra
+workbooks give 8. Writing `b` for the recent-safe baseline and `e` for the
+event, the latency increase splits additively and exactly:
+
+```text
+cpuTerm  = (cpu_e - cpu_b) / (util_b * cores)
+utilTerm = cpu_e / cores * (1 / util_e - 1 / util_b)
+
+cpuTerm + utilTerm = wall_e - wall_b
+```
+
+or equivalently, in multiplicative form,
+`wall_e / wall_b = (cpu_e / cpu_b) / (util_e / util_b)`. `cpuTerm` is the part
+of the increase attributable to more CPU time being consumed at the baseline
+service rate; `utilTerm` is the part attributable to the process obtaining a
+smaller share of the cores at the event's CPU demand. `utilTerm` is negative
+when utilization improved; the figure draws those segments as an open dashed
+box running back from the bar end, so every bar still terminates at the
+measured total.
+
+#### What `cpuTimeMs` covers
+
+`CpuProcessingTracker` documents its run-queue and context-switch counters as
+thread-level and its CPU-usage counter as not thread-level. Consistently with
+that, `cpuTimeMs` regularly exceeds `wallTimeMs` for the same node (2,117 ms of
+CPU over a 1,669 ms window in the largest Multi-frame spike). Read `cpuTimeMs`
+as the camera process's total CPU consumption during the node window, not as
+the node thread's own work, and read `cpuTerm` as added CPU demand inside the
+process — which includes concurrently executing Draft work.
+
+#### Control signals to recompute, not assume
+
+Report the same baseline-versus-event comparison for `overheatLevel`,
+`thermalStatus`, `blockingGcTimeMs`, `runQueueWaitMs`, and
+`nonvoluntaryCtxSwitches`. In the current workbooks the first three separate
+nothing — thermal state is identical to the baseline in all eight cases and
+blocking GC time is zero throughout — while the last two move in both
+directions. That asymmetry is the figure's argument and the reason a static
+thermal threshold cannot anticipate these decisions, so it must be recomputed
+whenever the workbooks change rather than carried forward.
+
+#### Row labels
+
+Rows are `M1`--`Mn` for Multi-frame and `S1`--`Sn` for Single-frame decisions,
+ordered by growth factor descending within each group. The labels are
+positional and will move if the data changes, so record the
+(workbook, `runId`, `runShotIndex`) triple for each label in the figure's
+comment header, together with the implementation commit the workbooks came
+from.
+
+### 5.5 RQ2 workbook mapping
 
 Primary sheet:
 
 - `AdmissionReplay`
 
-Supporting completion timestamps may also be read from `PacingReplay`.
+Supporting completion timestamps may also be read from `PacingReplay`. The
+section 5.4 figure additionally reads the per-node sheets, one per node class
+(`SecDualBokehNode`, `DynamicFunctionNode`, `SecFilterNode`,
+`SecImageCodecNode`, `WatermarkNode`) — that is, every sheet other than
+`AdmissionReplay`, `PacingReplay`, `RQ3Pacing`, `RQ3Summary`, `ReplayNotes`,
+and `Capture`.
 
 | Purpose | Sheet | Columns |
 |---|---|---|
 | Run and capture identity | `AdmissionReplay` | `captureIndex`, `ppSequenceId` |
 | Selected decision row | `AdmissionReplay` | `admissionStage` (`Bokeh` or `Filter`), `nodeOrder`, `workloadKey` |
 | Factual decision | `AdmissionReplay` | `beforeEffectiveAdmit` |
-| Shadow/audit decision | `AdmissionReplay` | `afterEffectiveAdmit` |
+| Shadow model decision | `AdmissionReplay` | `afterModelAdmit` |
+| Shadow effective-policy decision (not used by the RQ2 audit) | `AdmissionReplay` | `afterEffectiveAdmit` |
 | Remaining budget \(B\) | `AdmissionReplay` | `beforeBudgetMs` |
 | Selected decision time | `AdmissionReplay` | `nodeStartUptimeMs` |
 | Timeout deadline | `AdmissionReplay` | `timeoutDeadlineUptimeMs` |
@@ -337,6 +461,10 @@ Supporting completion timestamps may also be read from `PacingReplay`.
 | Capture Timeout outcome | `AdmissionReplay` | `beforeCaptureTimedOut` |
 | Decision audit labels | `AdmissionReplay` | `beforeDecisionOutcome`, `beforeDecisionObservationStatus`, `afterDecisionOutcome`, `afterObservationStatus` |
 | Draft completion | `PacingReplay` | `captureIndex`, `draftEndUptimeMs` |
+| Predicted bound, section 5.4 panel (a) | `AdmissionReplay` | `beforeSequencePredictedUpperBoundMs` |
+| Node suffix selection, section 5.4 | per-node sheets | `captureIndex`, `nodeOrder`, `nodeName` |
+| Latency decomposition, section 5.4 panel (b) | per-node sheets | `wallTimeMs`, `cpuTimeMs`, `cpuUtilizationRatio` |
+| Control signals, section 5.4 | per-node sheets | `runQueueWaitMs`, `nonvoluntaryCtxSwitches`, `blockingGcTimeMs`, `overheatLevel`, `thermalStatus` |
 
 Do not use `beforeSequenceActualDurationMs` as \(C\). It sums node durations
 and does not include the whole remaining wall-clock path to Draft completion.
@@ -358,14 +486,29 @@ The controlled setup is:
 - starting thermal level 3;
 - 30 shots per run;
 - the same admitted workload across policies;
-- separate factual runs for `no_pacing`, `static_lut`, `queue_dynamic`, and
+- separate factual runs for `no_pacing`, `thermal_lut`, `codel_inspired`, and
   `ours`;
 - results stratified by device.
 
-RQ3 deliberately excludes First Timeout, Slack, shot-to-shot time,
-M-retained, safe-burst, and drain metrics. Those either belong to the
-end-to-end evaluation or require admission to interpret. RQ3 isolates pacing
-cost and backlog control.
+RQ3 excludes First Timeout, M-retained, safe-burst, and drain metrics. Those
+either belong to the end-to-end evaluation or require admission to interpret.
+
+Slack P5 and shot-to-shot P95 are still computed for every RQ3 arm, but they
+are reported through RQ1 rather than duplicated as RQ3 summary-table columns.
+An earlier revision repeated them next to the pacing-cost columns so that cost
+and benefit could be read together; both column groups were then removed,
+because the RQ3 figure already shows pacing activation, cumulative cost, and a
+continuous cost--tail trade-off, while the deadline margin is an RQ1 column.
+Keep the values in `rq3_metrics.json` and cite them from prose; a reader who
+needs the deadline benefit alongside backlog reduction is pointed at RQ1.
+
+The two main-paper RQ3 artifacts divide the question as follows, and the division should
+be preserved when adding data:
+
+| Artifact | Answers |
+|---|---|
+| `tab_rq3_pacing_summary.tex` | What backlog and queue depth resulted |
+| `fig_rq3_pacing_trajectories.tex` | How backlog, pacing activation, and cumulative cost evolve, and how each run trades total delay for backlog P95 |
 
 ### 6.2 RQ3 summary-table metrics
 
@@ -401,7 +544,7 @@ total delay (s) = sum(transitionDelayMs) / 1000
 For a device-policy table row with repeated complete runs, report the median
 of the run-level totals. Retain the full run-level distribution for audit.
 
-#### \(B_{\max}\) (s)
+#### Real backlog
 
 At a decision timestamp \(t_i\), the exporter reconstructs:
 
@@ -410,12 +553,13 @@ realBacklogMs_i
     = max(draftEndUptimeMs of unfinished earlier Drafts) - t_i
 ```
 
-If no earlier Draft is unfinished, backlog is zero. \(B_{\max}\) is the
-maximum valid `realBacklogMs` observed across all included runs for that
-device-policy pair, converted to seconds.
+If no earlier Draft is unfinished, backlog is zero. Use measured Draft
+timestamps, not `controllerBacklogMs`, for the paper outcome.
 
-Use measured Draft timestamps, not `controllerBacklogMs`, for the paper
-outcome.
+The artifact retains \(B_{\max}\), the maximum valid `realBacklogMs` across all
+included runs, for audit. The main table omits it because a non-failing run
+cannot exceed the Capture Timeout budget and therefore forces the maximum to
+saturate just below that budget.
 
 #### \(Q_{\max}\)
 
@@ -429,6 +573,91 @@ included runs for that device-policy pair.
 `realOutstandingDraftCount` includes the running Draft as well, but it is an
 audit column rather than the paper's \(Q\) metric.
 
+#### \(\bar{B}\), \(B_{50}\), \(B_{95}\), \(\bar{Q}\), and deadline-risk exposure
+
+\(B_{\max}\) and \(Q_{\max}\) are extreme-value statistics. With eight or nine
+runs per policy each is decided by one run, and real backlog cannot exceed the
+Capture Timeout budget without the capture failing. The main table therefore
+replaces \(B_{\max}\) with \(B_{50}\). It retains \(Q_{\max}\) because the
+maximum number of waiting Drafts is a direct integer-valued queue bound.
+
+Report the backlog distribution pooled over every included shot of a
+device-policy pair:
+
+```text
+Bmean = mean(realBacklogMs)
+B50   = PERCENTILE.INC(realBacklogMs, 0.50)
+B95   = PERCENTILE.INC(realBacklogMs, 0.95)
+Qmean = mean(realQueueDepth)
+RiskExposure = 100 * count(realBacklogMs > 0.8 * captureTimeoutMs)
+                   / count(realBacklogMs)
+```
+
+Report \(B_{\mathrm{mean}}\), \(B_{50}\), and \(B_{95}\) in milliseconds in
+the main table.
+
+`RiskExposure` is the share of the burst spent in the deadline-risk region.
+Take
+`captureTimeoutMs` from `PacingReplay`; do not hard-code the budget. State the
+0.8 fraction in the table notes because it is a reporting choice, not a
+measured constant.
+
+#### Slack P5 and S2S P95
+
+```text
+Slack P5 = PERCENTILE.INC(timeoutMarginMs, 0.05)
+S2S P95  = PERCENTILE.INC(shotToShotTimeMs, 0.95)   # shots 2..30
+```
+
+Also record the 30-shot span, `sum(shotToShotTimeMs)` over shots 2..30 per run,
+as a run-level median. Comparing the span difference against the median `sum d`
+separates delay from any other source of slowdown: if the two agree, the whole
+measured responsiveness cost is the pacing delay itself.
+
+### 6.2a Audit-only pacing diagnostics
+
+The following diagnostics are retained in `rq3_metrics.json` for artifact
+inspection. They are not reported in a main-paper table because they do not
+provide a baseline comparison and require substantial explanation to interpret.
+
+**Targeting.** Split the transitions of one policy by `transitionDelayMs > 0`
+and compare the state each group saw:
+
+```text
+B paced/unpaced = median(realBacklogMs | paced),
+                  median(realBacklogMs | unpaced)
+sum d at B>=P75 = 100 * sum(transitionDelayMs where realBacklogMs >= P75)
+                       / sum(transitionDelayMs)
+trigger B/L     = count of beforeDominantDeficit over paced transitions
+```
+
+A state-blind policy produces equal paced and unpaced medians and spreads its
+delay evenly across backlog quartiles.
+
+**Magnitude.** `realQueueWaitMs` is the measured time until the Draft pipeline
+is next free, so it is the physical quantity the delay is trying to cover:
+
+```text
+d/w = PERCENTILE.INC(transitionDelayMs / realQueueWaitMs, 0.50)
+      over paced transitions
+```
+
+A value below one means the policy defers the next capture by less than the
+pipeline actually needs, which is the direct evidence against over-pacing.
+
+**Estimator calibration.** The delay is derived from the controller's own
+occupancy estimate, so report that estimate's error against the measured value:
+
+```text
+clock error = beforeBacklogMs + beforeShutterElapsedMs - realQueueWaitMs
+```
+
+A positive median means the estimate is conservative. **A build whose pacer does
+not run never maintains `beforeBacklogMs`** — every AdmitOnly transition records
+0 — so leave the calibration cells undefined for such an arm rather than
+reporting a disabled estimator as a policy property. Check
+`beforeBacklogMs` for all-zero before computing this row.
+
 ### 6.3 RQ3 figure metrics
 
 For every `(device, policy, shot)` group, compute the inclusive P10, median,
@@ -438,48 +667,108 @@ and P90 of:
 - `realQueueDepth`;
 - `transitionDelayMs`.
 
+For the pacing-activation panel, compute one percentage per shot:
+
+```text
+activationRate_i
+    = 100 * count(transitionDelayMs_i > 0)
+            / count(nonblank transitionDelayMs_i)
+```
+
+Zeros remain in the denominator. This is a cross-run rate for one outgoing
+shot transition, not the magnitude of the applied delay.
+
+For cumulative delay, first compute the cost experienced within each run:
+
+```text
+cumulativeDelay_i = sum(transitionDelayMs_j) / 1000
+                    for j = 1, ..., i - 1
+```
+
+The shot-\(i\) value excludes the delay recorded on shot \(i\), because that
+delay gates shot \(i+1\). After this within-run accumulation, compute the
+cross-run median, P25, and P75 for each shot.
+
 The policy CSV schema is:
 
 ```text
 shot,
 backlog_median,backlog_p10,backlog_p90,
 queue_depth_median,queue_depth_p10,queue_depth_p90,
-delay_median,delay_p10,delay_p90
+delay_median,delay_p10,delay_p90,
+activation_rate_percent,
+cumulative_delay_median,cumulative_delay_p25,cumulative_delay_p75
 ```
 
 The panels mean:
 
 | Panel | Metric | Interpretation |
 |---|---|---|
-| Backlog vs. shot | Per-shot real-backlog distribution | Whether queued processing time accumulates during the burst |
-| Queue depth vs. shot | Per-shot waiting-Draft distribution | How many Drafts are waiting for service |
-| Pacing delay vs. shot | Per-shot applied-delay distribution | When and how strongly each policy intervenes |
-| Backlog vs. cumulative delay | Session pacing cost against maximum real backlog | Whether backlog reduction justifies the added delay |
+| Backlog vs. shot | Per-shot real-backlog median | Whether queued processing time accumulates during the burst |
+| Pacing activation vs. shot | Per-shot share of runs with positive delay | When and how consistently each policy intervenes |
+| Cumulative delay vs. shot | Within-run cumulative applied delay | How much user-visible pacing cost has accumulated by each shot |
+| Total delay vs. backlog P95 | One point per complete run | Whether lower tail backlog requires excessive pacing cost |
 
-The current LaTeX plot reads only each `*_median` series even though the CSV
-schema retains P10 and P90. Add bands or error bars before claiming that the
-figure displays variability.
+The backlog panel draws medians only. Queue-depth and applied-delay P10/P50/P90
+columns remain available in the CSVs and summary artifact, but queue depth is
+not repeated as a trajectory panel because it conveys the same accumulation
+pattern as backlog in the space-constrained `0.215\textwidth` panel. The
+pacing-activation panel instead exposes when a policy actually intervenes.
+The cumulative-delay panel draws policy medians and IQR bands for the arms
+whose traces are currently available because run-to-run pacing cost is central
+to its interpretation. After all four arms are populated, verify that four
+bands remain legible; if they do not, retain all policy medians in the figure
+and move every policy's IQR to the artifact rather than showing uncertainty
+for only a subset of policies.
 
-### 6.4 Cost--backlog panel
+`transitionDelayMs` and `activation_rate_percent` are blank at shot 30, because
+the delay recorded on shot i gates shot i+1 and shot 30's outgoing transition
+falls outside the 30-shot window. Only over-length runs carry a delay there, so
+emit `nan` for both shot-30 fields rather than pooling a different set of runs
+at the last point. The cumulative-delay value at shot 30 nevertheless remains
+defined: it is the sum of the 29 eligible delays on shots 1--29. Backlog and
+queue depth also remain defined at shot 30.
 
-With exactly one calibrated configuration per policy, this panel contains one
-point per policy:
+### 6.4 Run-level cost--tail trade-off panel
+
+This panel reports one point per included complete run:
 
 ```text
-x = median run-level cumulative delay (s)
-y = maximum observed real backlog (s)
+RunTotalDelay
+    = sum(transitionDelayMs_i, i = 1, ..., 29) / 1000
+
+RunBacklogP95
+    = PERCENTILE.INC({realBacklogMs_i | i = 1, ..., 30}, 0.95) / 1000
 ```
 
-This is a cost--backlog scatter comparison, not a frontier. Calling it a
-frontier requires multiple parameter settings per policy and separate factual
-runs for each setting.
+Use the same run inclusion and deduplication rules as the summary table. Every
+point must therefore contain 30 real-backlog observations and exactly 29
+eligible outgoing-transition delays.
 
-The current `backlog_cost.csv` schema is:
+The per-policy artifact schema is:
+
+```text
+run,total_delay_s,backlog_p95_s
+```
+
+Plot total delay in seconds on the x-axis and run backlog P95 in seconds on the
+y-axis. Movement toward the lower left indicates a better cost--tail trade-off.
+Do not claim policy dominance from an arbitrary scalarization of the two axes,
+or from unmatched admitted workloads.
+
+This continuous panel remains discriminative when timeout and fixed-threshold
+risk rates collapse to zero for every paced policy. The pooled thresholded
+deadline-risk metric remains in Table VI, and its per-run values remain in
+`risk_exposure_runs.csv` and the generated JSON under `nearDeadlinePercent` for
+artifact compatibility and run-level statistical analysis.
+
+`backlog_cost.csv` remains in the artifact for secondary cost--backlog
+inspection, but it is not plotted in the main paper figure. Its schema is:
 
 ```text
 no_pacing_delay_s,no_pacing_max_backlog_s,
-static_delay_s,static_max_backlog_s,
-queue_dynamic_delay_s,queue_dynamic_max_backlog_s,
+thermal_lut_delay_s,thermal_lut_max_backlog_s,
+codel_inspired_delay_s,codel_inspired_max_backlog_s,
 ours_delay_s,ours_max_backlog_s
 ```
 
@@ -488,7 +777,9 @@ ours_delay_s,ours_max_backlog_s
 Primary sheets:
 
 - `RQ3Pacing`: per-shot and per-transition values;
-- `RQ3Summary`: run-level audit and preliminary summaries.
+- `RQ3Summary`: run-level audit and preliminary summaries;
+- `PacingReplay`: decision-time context, joined to `RQ3Pacing` by
+  `captureIndex`, for the outcome and decision-quality metrics.
 
 | Paper/figure value | Preferred source |
 |---|---|
@@ -508,6 +799,12 @@ Primary sheets:
 | Run-level delay audit | `RQ3Summary.totalDelayMs`, `positiveDelayP50Ms`, `positiveDelayP95Ms` |
 | Run-level maxima | `RQ3Summary.maxRealBacklogMs`, `maxRealQueueDepth` |
 | Coverage audit | `RQ3Summary.pacingDecisionCoveragePercent`, `realTraceCoveragePercent` |
+| Deadline budget | `PacingReplay.captureTimeoutMs` |
+| Delivered margin | `PacingReplay.timeoutMarginMs` |
+| Measured time-to-free | `PacingReplay.realQueueWaitMs` |
+| Controller occupancy estimate | `PacingReplay.beforeBacklogMs`, `beforeShutterElapsedMs` |
+| Delay trigger | `PacingReplay.beforeDominantDeficit` |
+| Shot-to-shot time | `RQ3Pacing.shotToShotTimeMs` |
 
 Use `RQ3Pacing` to produce final cross-run percentiles. `RQ3Summary` is useful
 for validation, but its run-level P50/P95 values must not be pooled or averaged
@@ -581,14 +878,37 @@ removed more work, and RQ3 would no longer isolate pacing ability.
 - `tables/tab_rq2_admission_summary.tex`
 - `tables/tab_rq3_pacing_summary.tex`
 
+### RQ2 figure
+
+- `figures/fig_rq2_unsafe_spike.tex` — self-contained; the per-decision
+  values and the decomposition inputs are recorded in its comment header, so no
+  companion CSV is emitted. Regenerate it from section 5.4 whenever the RQ2
+  workbook set changes.
+
 ### RQ3 figure
 
 - `figures/fig_rq3_pacing_trajectories.tex`
 - `data/rq3/<device>/no_pacing.csv`
-- `data/rq3/<device>/static_lut.csv`
-- `data/rq3/<device>/queue_dynamic.csv`
+- `data/rq3/<device>/thermal_lut.csv`
+- `data/rq3/<device>/codel_inspired.csv`
 - `data/rq3/<device>/ours.csv`
-- `data/rq3/<device>/backlog_cost.csv`
+- `data/rq3/<device>/<policy>_tradeoff.csv` — panel (d), one row per run
+- `data/rq3/<device>/risk_exposure_runs.csv` — threshold-risk audit, not plotted
+- `data/rq3/<device>/backlog_cost.csv` — secondary max-backlog audit
+
+### RQ3 audit record
+
+- `data/rq3/rq3_metrics.json` — every unrounded pooled cell, the per-run values
+  behind it, and the run-level Mann--Whitney comparison.
+
+All of the above are produced by `data/rq3_aggregate.py` in the ML
+implementation repository, which encodes section 6 of this guide. Update the arm
+to workbook mapping at the top of that script and rerun it rather than editing
+cells by hand:
+
+```text
+uv run --with openpyxl --with pandas --with scipy python data/rq3_aggregate.py
+```
 
 ## 9. Current manuscript issues to resolve before final submission
 
@@ -598,16 +918,14 @@ removed more work, and RQ3 would no longer isolate pacing ability.
 2. The current RQ3 table and figure name S26 Ultra and S26. If the evaluation
    uses Device A/B/C, both artifacts and their data directories must be
    updated consistently.
-3. The RQ3 CSVs contain P10/P90 columns, but the current plot renders median
-   lines only.
-4. The current figure caption calls the cost--backlog panel a frontier. With
-   one configuration per policy it must instead be described as a scatter
-   comparison, or the experiment must add parameter sweeps.
-5. The historical RQ1 aggregation note describes Slack P5 in milliseconds,
+3. The RQ3 CSVs retain backlog, queue-depth, and delay P10/P90 columns even
+   when only medians or activation rates are rendered. This is a decided
+   reporting choice so the full spread remains available in the artifact.
+4. The historical RQ1 aggregation note describes Slack P5 in milliseconds,
    whereas the current paper table labels and comments define a
    deadline-normalized percentage. This guide follows the current paper:
    normalize each event first and then calculate P5.
-6. Any deviation from the aggregation rules in this document must be recorded
+5. Any deviation from the aggregation rules in this document must be recorded
    before inspecting comparative outcomes.
 
 ## 10. Data handoff checklist
