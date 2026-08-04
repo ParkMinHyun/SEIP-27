@@ -23,6 +23,7 @@ This repository is a LaTeX paper project for SEIP 2027.
 - The work targets enabling a lightweight multi-frame Draft workload in Portrait mode, whose heavy final composition can then be deferred until the camera app enters the background.
 - The proposed system is currently framed as the Context-Aware Draft Sequence Controller, comprising remaining-sequence admission and capture-availability pacing.
 - The paper studies coordinated workload and arrival control for tail-latency-based Capture Timeout, not average-latency optimization for a single image-processing stage.
+- RQ3 evaluates whether the proposed controller computes an appropriately sized pacing delay for the Draft backlog and Capture Timeout budget. Do not frame RQ3 as a comparison against pacing methods transplanted from other domains unless the user explicitly requests that comparison.
 - Preserve the core research framing unless the user explicitly asks to change the problem statement, contribution, or terminology.
 
 ## Implementation Reference
