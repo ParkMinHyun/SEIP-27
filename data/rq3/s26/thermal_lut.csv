@@ -1,1 +1,1 @@
-shot,backlog_median,backlog_p10,backlog_p90,queue_depth_median,queue_depth_p10,queue_depth_p90,delay_median,delay_p10,delay_p90
+shot,backlog_median,backlog_p10,backlog_p90,queue_depth_median,queue_depth_p10,queue_depth_p90,delay_median,delay_p10,delay_p90,activation_rate_percent,cumulative_delay_median,cumulative_delay_p25,cumulative_delay_p75
