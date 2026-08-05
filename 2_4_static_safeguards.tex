@@ -32,57 +32,6 @@ Reliable multi-frame composition therefore requires coordinated runtime control 
 \input{tables/tab_rq1_ablation.tex}
 \input{tables/tab_rq2_admission_summary.tex}
 \input{figures/fig_rq2_unsafe_spike_anatomy.tex}
-% Provisional placement: this paragraph belongs in the experiments section once
-% that section is written, next to the RQ3 results it sets up.  It is parked
-% here because the RQ3 float pair is parked here.  Without it the table and the
-% figure present d* with no stated justification, which reads as the controller
-% grading its own homework; the point of the paragraph is that d* is the
-% deployed condition with measured inputs, so what it grades is the estimator,
-% not the policy.
-\smallskip\noindent\textbf{What the pacing delay is measured against.}
-The controller admits the next capture only when the work already committed to
-the Draft worker still leaves the deadline reachable.
-Writing \(\hat{B}\) for the estimated backlog, \(\hat{C}\) for the reserved
-Draft duration, and \(T\) for the window remaining on the newest committed
-capture's deadline, it charges a delay of
-\(d=\lceil\max(0,\hat{B}+2\hat{C}-T)/2\rceil\).
-Two Draft reserves appear because a pacing decision has to cover both the Draft
-that starts once the queue drains and the Draft belonging to the capture the
-delay itself releases.
-The halving is what makes the delay self-correcting: one millisecond of delay
-both drains one millisecond of backlog and moves the released capture's deadline
-one millisecond later, so it closes twice its own length of deficit.
-Evaluating that same condition on measured rather than estimated inputs --- the
-reconstructed backlog and the Draft duration as it actually ran --- yields the
-requirement \(d^{*}\) that Table~\ref{tab:rq3_pacing_calibration} and
-Figure~\ref{fig:rq3_pacing_calibration} compare the applied delay against.
-Because \(d\) and \(d^{*}\) share the horizon, the deadline, and the arithmetic,
-their difference isolates the cost of mispricing the inputs rather than any
-property of the policy, and it decomposes exactly into the two estimators that
-produced them.
-What that comparison asks is whether the applied delay \emph{covered} the
-requirement, not whether it equalled it.
-The reserve \(\hat{C}\) is the burst's observed maximum Draft duration rather
-than a prediction of the Draft that follows, so \(d\) holds an envelope over
-Draft cost instead of tracking any single transition's need: fitted against the
-measured requirement it moves by roughly a third of it, over a floor of a few
-hundred milliseconds.
-That is the intended trade for a hard deadline, where under-provisioning costs a
-user-visible failure and over-provisioning costs bounded delay, and it is what
-the surplus reported below prices.
-The comparison is also trace-conditioned: \(d^{*}\) is computed on a trace that
-pacing already shaped, so it bounds how much delay could have been removed from
-above and how often the delay fell short from below.
-We therefore call a pacing delay appropriately sized on three conditions: that
-it never falls below what the mandatory Draft workload alone requires, that it
-covers the requirement of the configuration actually executed on the large
-majority of transitions, and that its cost is bounded against the Capture
-Timeout budget and attributable to a named estimator rather than to the policy.
-Minimality is deliberately not among them.
-A trace-conditioned comparison cannot establish it, and the evidence that the
-delay is needed at all is the ablation of Table~\ref{tab:rq1_ablation} rather
-than anything in this section.
-
 \input{tables/tab_rq3_pacing_calibration.tex}
 \input{figures/fig_rq3_pacing_calibration.tex}
 \input{figures/fig_casestudy_12mp.tex}

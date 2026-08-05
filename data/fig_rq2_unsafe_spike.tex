@@ -1,0 +1,358 @@
+% RQ2: anatomy of the eight unsafe fresh-model admits.
+%
+% Built per section 5.4 of docs/rq1-rq3-metrics-guide.md from the workbooks
+% below (ML implementation commit c871d3a); same decision set as the
+% unsafe-admit cell of Table~\ref{tab:rq2_admission_audit}.  Rows are ordered
+% by spike size within each optional-work group, so the labels are positional.
+%
+%   A = 48U_metrics_12MP_normal_0729_PacingOnly_1.xlsx
+%   B = 48U_metrics_24MP_memory_0729_PacingOnly_1.xlsx
+%   C = 48U_metrics_24MP_memory_0729_PacingOnly_2.xlsx
+%
+%   id  book  runId  shot     B     Cbar      C      UB   C/Cbar  overrun
+%   M1    A     30     21   1516    861.7   2033   903.8   2.36      517
+%   M2    A     11      9   1308   1123.7   2367  1229.1   2.11     1059
+%   M3    A      9     26   1749   1189.3   2357  1222.5   1.98      608
+%   M4    A     31     29    746    607.0    777   682.8   1.28       31
+%   M5    C     18     20    844    684.7    855   765.1   1.25       11
+%   S1    C      6     11    975    625.7    979   915.0   1.56        4
+%   S2    B     29     14    653    544.0    713   593.0   1.31       60
+%   S3    C     18     20    472    397.3    483   467.7   1.22       11
+%
+% Panel (b) decomposition.  PostExecutionMetrics reports, per node,
+% cpuTimeMs and cpuUtilizationRatio = cpuTimeMs / (wallTimeMs * cores);
+% the device reports 8 cores, which the recorded triples confirm.  Summing
+% over the remaining nodes gives wall = cpu / (util * cores) exactly, so
+%   wall_e - wall_b = (cpu_e - cpu_b)/(util_b * cores)      <- CPU-time growth
+%                   + cpu_e/(cores) * (1/util_e - 1/util_b) <- utilization loss
+% Values (ms), CPU-time growth / utilization loss / total:
+%   M1  372 /  799 / 1171     M5  181 /   -9 /  172
+%   M2  380 /  854 / 1235     S1   34 /  321 /  354
+%   M3  581 /  579 / 1159     S2  284 / -122 /  162
+%   M4   59 /  107 /  167     S3  101 /  -15 /   87
+% CPU-time factor 1.05-1.53x; utilization factor 0.60-1.18x.
+% Blocking GC time was 0 ms in every baseline and every event; overheat level
+% and thermal status were identical to the recent-safe baseline in all eight.
+
+% Final compact layout: both panels share one row and panel (b) uses the
+% reviewer-oriented, order-dependent accounting terminology.
+\begingroup
+\def\rqtwoUnsafeSpikeSideBySide{1}
+\def\rqtwoReviewerAccounting{1}
+
+\begin{figure}[!t]
+  \centering
+  \begin{tikzpicture}
+    \tikzset{
+      cpubar/.style={fill=black!60,draw=black!60,line width=0.3pt},
+      utilbar/.style={pattern=north east lines,pattern color=black!55,
+                      draw=black!55,line width=0.3pt},
+      givebackbar/.style={fill=white,draw=black!55,line width=0.3pt,
+                          densely dashed},
+      totaltick/.style={draw=black,line width=0.8pt},
+      glabel/.style={font=\tiny,inner sep=1pt},
+    }
+    \pgfplotsset{
+      spikepanel/.style={
+        ymin=0.35,
+        ymax=8.65,
+        ytick={1,2,3,4,5,6,7,8},
+        yticklabels={S3,S2,S1,M5,M4,M3,M2,M1},
+        axis x line*=bottom,
+        axis y line*=left,
+        xmajorgrids,
+        grid style={black!14,line width=0.3pt},
+        axis line style={line width=0.35pt},
+        tick style={line width=0.35pt},
+        clip=false,
+        legend cell align=left,
+      },
+    }
+    \ifdefined\rqtwoUnsafeSpikeSideBySide
+      \pgfplotsset{
+        spikepanel/.append style={
+          width=0.42\columnwidth,
+          height=4.15cm,
+          tick label style={font=\tiny},
+          yticklabel style={font=\tiny},
+          label style={font=\tiny},
+          legend style={
+            font=\tiny,
+            draw=black!25,
+            fill=white,
+            line width=0.2pt,
+            inner sep=1pt,
+            row sep=-1pt,
+            legend columns=1,
+            at={(axis description cs:0.98,0.04)},
+            anchor=south east,
+          },
+        },
+      }
+      \ifdefined\rqtwoReviewerAccounting
+        \def\rqtwoBaselineLegend{Recent-safe avg.}
+        \def\rqtwoBoundLegend{Predicted bound}
+        \def\rqtwoEventLegend{Unsafe admit}
+        \def\rqtwoCpuLegend{CPU time growth}
+        \def\rqtwoUtilLossLegend{CPU Util. loss}
+        \def\rqtwoUtilGainLegend{CPU Util. gain}
+      \else
+        \def\rqtwoBaselineLegend{Baseline}
+        \def\rqtwoBoundLegend{Bound}
+        \def\rqtwoEventLegend{Event}
+        \def\rqtwoCpuLegend{CPU growth}
+        \def\rqtwoUtilLossLegend{Util. loss}
+        \def\rqtwoUtilGainLegend{Util. gain}
+      \fi
+    \else
+      \pgfplotsset{
+        spikepanel/.append style={
+          width=0.92\columnwidth,
+          height=4.15cm,
+          tick label style={font=\scriptsize},
+          yticklabel style={font=\scriptsize},
+          label style={font=\scriptsize},
+          legend style={
+            font=\tiny,
+            draw=none,
+            fill=none,
+            inner sep=0pt,
+            row sep=-1pt,
+            column sep=2pt,
+            legend columns=-1,
+            at={(axis description cs:0.5,1.03)},
+            anchor=south,
+          },
+        },
+      }
+      \def\rqtwoBaselineLegend{Recent-safe baseline}
+      \def\rqtwoBoundLegend{Predicted bound}
+      \def\rqtwoEventLegend{Unsafe event}
+      \def\rqtwoCpuLegend{CPU-time growth}
+      \def\rqtwoUtilLossLegend{Utilization loss}
+      \def\rqtwoUtilGainLegend{Utilization gain}
+    \fi
+
+    \ifdefined\rqtwoUnsafeSpikeSideBySide
+      \begin{groupplot}[
+        group style={
+          group size=2 by 1,
+          horizontal sep=0.055\columnwidth,
+        },
+        spikepanel,
+      ]
+    \else
+      \begin{groupplot}[
+        group style={
+          group size=1 by 2,
+          vertical sep=1.15cm,
+        },
+        spikepanel,
+      ]
+    \fi
+
+    %% ---------------------------------------------------------------- (a)
+    \ifdefined\rqtwoUnsafeSpikeSideBySide
+      \nextgroupplot[
+        xmin=0.50,
+        xmax=2.08,
+        xtick={0.5,1.0,1.5,2.0},
+        xticklabels={0.5,1.0,1.5,2.0},
+        xlabel={\shortstack{Cost $/$ admission budget\\[-1pt]
+          \textnormal{(a) Budget overrun}}},
+      ]
+    \else
+      \nextgroupplot[
+        xmin=0.50,
+        xmax=2.08,
+        xtick={0.5,0.75,1.0,1.25,1.5,1.75,2.0},
+        xticklabels={0.50,0.75,1.00,1.25,1.50,1.75,2.00},
+        xlabel={\shortstack{Remaining-sequence cost $/$ admission budget\\[-1pt]
+          \textnormal{(a) How far each admitted group overran its budget}}},
+      ]
+    \fi
+      % Admission budget and the multi-frame / single-frame separator.
+      \draw[black!60,densely dashed,line width=0.5pt]
+        (axis cs:1,0.35) -- (axis cs:1,8.65);
+      \node[glabel,anchor=south,text=black!65] at (axis cs:1,8.65) {budget};
+      \draw[black!70,line width=0.6pt] (axis cs:0.50,3.5) -- (axis cs:2.08,3.5);
+
+      % Recent-safe baseline -> unsafe event.
+      \addplot[black!45,->,>=stealth,line width=0.6pt,forget plot]
+        coordinates {(0.568,8) (1.341,8)};
+      \addplot[black!45,->,>=stealth,line width=0.6pt,forget plot]
+        coordinates {(0.859,7) (1.810,7)};
+      \addplot[black!45,->,>=stealth,line width=0.6pt,forget plot]
+        coordinates {(0.680,6) (1.348,6)};
+      \addplot[black!45,->,>=stealth,line width=0.6pt,forget plot]
+        coordinates {(0.814,5) (1.042,5)};
+      \addplot[black!45,->,>=stealth,line width=0.6pt,forget plot]
+        coordinates {(0.811,4) (1.013,4)};
+      \addplot[black!45,->,>=stealth,line width=0.6pt,forget plot]
+        coordinates {(0.642,3) (1.004,3)};
+      \addplot[black!45,->,>=stealth,line width=0.6pt,forget plot]
+        coordinates {(0.833,2) (1.092,2)};
+      \addplot[black!45,->,>=stealth,line width=0.6pt,forget plot]
+        coordinates {(0.842,1) (1.023,1)};
+
+      \addplot[only marks,mark=o,mark size=2.0pt,draw=black,fill=white,
+               line width=0.5pt]
+        coordinates {(0.568,8) (0.859,7) (0.680,6) (0.814,5)
+                     (0.811,4) (0.642,3) (0.833,2) (0.842,1)};
+      \addlegendentry{\rqtwoBaselineLegend}
+
+      \addplot[only marks,mark=|,mark size=2.7pt,draw=black!60,
+               line width=0.7pt]
+        coordinates {(0.596,8) (0.940,7) (0.699,6) (0.915,5)
+                     (0.907,4) (0.938,3) (0.908,2) (0.991,1)};
+      \addlegendentry{\rqtwoBoundLegend}
+
+      \addplot[only marks,mark=square*,mark size=1.9pt,draw=black,fill=black]
+        coordinates {(1.341,8) (1.810,7) (1.348,6) (1.042,5)
+                     (1.013,4) (1.004,3) (1.092,2) (1.023,1)};
+      \addlegendentry{\rqtwoEventLegend}
+
+      % Growth over the recent-safe baseline.
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.341,8) {$\times$2.36};
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.810,7) {$\times$2.11};
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.348,6) {$\times$1.98};
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.042,5) {$\times$1.28};
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.013,4) {$\times$1.25};
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.004,3) {$\times$1.56};
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.092,2) {$\times$1.31};
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1.023,1) {$\times$1.22};
+
+    %% ---------------------------------------------------------------- (b)
+    \ifdefined\rqtwoUnsafeSpikeSideBySide
+      \ifdefined\rqtwoReviewerAccounting
+        \nextgroupplot[
+          xmin=0,
+          xmax=1320,
+          xtick={0,600,1200},
+          xlabel={\shortstack{Contribution to $\Delta$ wall time (ms)\\[-1pt]
+            \textnormal{(b) Accounting decomposition}}},
+        ]
+      \else
+        \nextgroupplot[
+          xmin=0,
+          xmax=1320,
+          xtick={0,600,1200},
+          yticklabels={},
+          xlabel={\shortstack{Latency increase (ms)\\[-1pt]
+            \textnormal{(b) Increase decomposition}}},
+        ]
+      \fi
+    \else
+      \nextgroupplot[
+        xmin=0,
+        xmax=1320,
+        xtick={0,300,600,900,1200},
+        xlabel={\shortstack{Increase in remaining-sequence latency (ms)\\[-1pt]
+          \textnormal{(b) What the increase decomposes into}}},
+      ]
+    \fi
+      \addplot[draw=none,forget plot] coordinates {(0,1)};
+
+      \addlegendimage{area legend,cpubar}
+      \addlegendentry{\rqtwoCpuLegend}
+      \addlegendimage{area legend,utilbar}
+      \addlegendentry{\rqtwoUtilLossLegend}
+      \addlegendimage{area legend,givebackbar}
+      \addlegendentry{\rqtwoUtilGainLegend}
+      \ifdefined\rqtwoReviewerAccounting
+        \addlegendimage{only marks,mark=|,mark size=2.5pt,draw=black,
+                        line width=0.8pt}
+        \addlegendentry{$\Delta$ wall time}
+      \fi
+
+      \draw[black!70,line width=0.6pt] (axis cs:0,3.5) -- (axis cs:1320,3.5);
+
+      % M1
+      \draw[cpubar]      (axis cs:0,7.7)      rectangle (axis cs:371.6,8.3);
+      \draw[utilbar]     (axis cs:371.6,7.7)  rectangle (axis cs:1170.7,8.3);
+      \draw[totaltick]   (axis cs:1170.7,7.66) -- (axis cs:1170.7,8.34);
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1170.7,8) {1,171};
+      % M2
+      \draw[cpubar]      (axis cs:0,6.7)      rectangle (axis cs:380.2,7.3);
+      \draw[utilbar]     (axis cs:380.2,6.7)  rectangle (axis cs:1234.7,7.3);
+      \draw[totaltick]   (axis cs:1234.7,6.66) -- (axis cs:1234.7,7.34);
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1234.7,7) {1,235};
+      % M3
+      \draw[cpubar]      (axis cs:0,5.7)      rectangle (axis cs:580.6,6.3);
+      \draw[utilbar]     (axis cs:580.6,5.7)  rectangle (axis cs:1159.3,6.3);
+      \draw[totaltick]   (axis cs:1159.3,5.66) -- (axis cs:1159.3,6.34);
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:1159.3,6) {1,159};
+      % M4
+      \draw[cpubar]      (axis cs:0,4.7)      rectangle (axis cs:59.2,5.3);
+      \draw[utilbar]     (axis cs:59.2,4.7)   rectangle (axis cs:166.7,5.3);
+      \draw[totaltick]   (axis cs:166.7,4.66) -- (axis cs:166.7,5.34);
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:166.7,5) {167};
+      % M5 (utilization improved slightly)
+      \draw[cpubar]      (axis cs:0,3.7)      rectangle (axis cs:181.2,4.3);
+      \draw[givebackbar] (axis cs:172.0,3.7)  rectangle (axis cs:181.2,4.3);
+      \draw[totaltick]   (axis cs:172.0,3.66) -- (axis cs:172.0,4.34);
+      \node[glabel,anchor=west,xshift=11pt] at (axis cs:181.2,4) {172};
+      % S1
+      \draw[cpubar]      (axis cs:0,2.7)      rectangle (axis cs:33.6,3.3);
+      \draw[utilbar]     (axis cs:33.6,2.7)   rectangle (axis cs:354.3,3.3);
+      \draw[totaltick]   (axis cs:354.3,2.66) -- (axis cs:354.3,3.34);
+      \node[glabel,anchor=west,xshift=2.5pt] at (axis cs:354.3,3) {354};
+      % S2 (utilization improved)
+      \draw[cpubar]      (axis cs:0,1.7)      rectangle (axis cs:284.0,2.3);
+      \draw[givebackbar] (axis cs:161.7,1.7)  rectangle (axis cs:284.0,2.3);
+      \draw[totaltick]   (axis cs:161.7,1.66) -- (axis cs:161.7,2.34);
+      \node[glabel,anchor=west,xshift=11pt] at (axis cs:284.0,2) {162};
+      % S3 (utilization improved slightly)
+      \draw[cpubar]      (axis cs:0,0.7)      rectangle (axis cs:101.2,1.3);
+      \draw[givebackbar] (axis cs:86.7,0.7)   rectangle (axis cs:101.2,1.3);
+      \draw[totaltick]   (axis cs:86.7,0.66)  -- (axis cs:86.7,1.34);
+      \node[glabel,anchor=west,xshift=11pt] at (axis cs:101.2,1) {87};
+
+    \end{groupplot}
+  \end{tikzpicture}
+
+  \ifdefined\rqtwoReviewerAccounting
+    \caption{Anatomy of the eight unsafe fresh-model admits. Rows M1--M5 are
+    Multi-frame decisions and S1--S3 are Single-frame decisions; each baseline
+    averages the three preceding safe admits from the same run and group.
+    (a)~Remaining-sequence cost normalized by the decision's admission budget.
+    Although every predicted bound was below the budget, all eight measured
+    costs crossed it. (b)~A baseline-first accounting of the observed increase
+    in remaining-node wall time. The CPU time growth term changes process CPU
+    time while holding the baseline \texttt{cpuUtilizationRatio}; the CPU
+    utilization term then changes that ratio at the event's CPU demand. Hatched
+    segments increase wall time, whereas open dashed segments offset the CPU
+    time growth term. The vertical tick and adjacent value mark
+    $\Delta$ wall time. The terms sum exactly
+    to the measured increase, but their allocation is order-dependent and does
+    not identify a scheduling cause. CPU demand increased in all eight events;
+    the four largest spikes (M1--M3, S1) also had the largest utilization losses.}
+    \label{fig:rq2_unsafe_spike_reviewer_accounting}
+  \else
+    \caption{Anatomy of the eight unsafe fresh-model admits.  Rows M1--M5 are
+    Multi-frame decisions and S1--S3 are Single-frame decisions, ordered by
+    spike size within each group; each baseline averages the three preceding
+    safe admits from the same run and group.  (a)~Remaining-sequence cost,
+    normalized by the admission budget of the same decision.  Every group was
+    admitted because its predicted upper bound fell below the budget, and every
+    one still crossed it, growing $1.22\times$--$2.36\times$ over its
+    recent-safe baseline.  (b)~The same increase decomposed through
+    \texttt{PostExecutionMetrics}: because a node's wall time equals its CPU
+    time divided by \texttt{cpuUtilizationRatio} and the core count, the
+    increase splits exactly into the part explained by additional CPU time and
+    the part explained by the process obtaining a smaller share of the cores.
+    All eight consumed more CPU time ($1.05\times$--$1.53\times$), but the four
+    that also lost at least a quarter of their CPU service (M1--M3, S1) are
+    exactly the four that grew by more than $1.5\times$; the other four stayed
+    within $1.31\times$.  Blocking GC time was zero in every baseline and every
+    event, and the overheat level and thermal status were identical to the
+    recent-safe baseline in all eight cases, so neither signal could have
+    separated these decisions at admission time.}
+    \ifdefined\rqtwoUnsafeSpikeSideBySide
+      \label{fig:rq2_unsafe_spike_anatomy_side_by_side}
+    \else
+      \label{fig:rq2_unsafe_spike_anatomy}
+    \fi
+  \fi
+\end{figure}
+\endgroup
