@@ -1,0 +1,71 @@
+condition,metric,value,denominator
+12mp_normal,analyzedTransitions,1920,
+12mp_normal,bursts,70,
+12mp_normal,pacedTransitions,411,
+12mp_normal,activationPercent,21.41,1920
+12mp_normal,activationPercent band spare_over_40,1.38,652
+12mp_normal,activationPercent band spare_20_40,11.83,676
+12mp_normal,activationPercent band spare_0_20,50.88,513
+12mp_normal,activationPercent band projected_overrun,77.22,79
+12mp_normal,safeButPaced,9,652
+12mp_normal,overrunButUnpaced,18,79
+12mp_normal,delayFormulaMatches,1920,1920
+12mp_normal,backlogDrainingDelaySharePercent,100.0,
+12mp_normal,waitsOutlastingBacklog,0,411
+12mp_normal,delayOverBacklogPercent P50,10.45,411
+12mp_normal,delayOverBacklogPercent P95,32.16,411
+12mp_normal,appliedDelayMs P50,381.0,411
+12mp_normal,appliedDelayMs P95,823.0,411
+12mp_normal,burstDelaySharePercent P50,18.11,70
+12mp_normal,burstDelaySharePercent P95,24.49,70
+12mp_normal,burstsNeverPaced,19,70
+24mp_memory,analyzedTransitions,1861,
+24mp_memory,bursts,69,
+24mp_memory,pacedTransitions,471,
+24mp_memory,activationPercent,25.31,1861
+24mp_memory,activationPercent band spare_over_40,0.96,623
+24mp_memory,activationPercent band spare_20_40,17.55,564
+24mp_memory,activationPercent band spare_0_20,50.47,533
+24mp_memory,activationPercent band projected_overrun,68.79,141
+24mp_memory,safeButPaced,6,623
+24mp_memory,overrunButUnpaced,44,141
+24mp_memory,delayFormulaMatches,1861,1861
+24mp_memory,backlogDrainingDelaySharePercent,98.72,
+24mp_memory,waitsOutlastingBacklog,8,471
+24mp_memory,delayOverBacklogPercent P50,8.57,471
+24mp_memory,delayOverBacklogPercent P95,56.53,471
+24mp_memory,appliedDelayMs P50,278.0,471
+24mp_memory,appliedDelayMs P95,1179.5,471
+24mp_memory,burstDelaySharePercent P50,9.83,69
+24mp_memory,burstDelaySharePercent P95,29.74,69
+24mp_memory,burstsNeverPaced,13,69
+pooled,safeButPaced cases,15,
+pooled,safeButPaced targetDemoted,15,15
+pooled,safeButPaced aheadTasksDemoted,55,58
+pooled,safeButPaced backlogOverEstimated,15,15
+pooled,safeButPaced backlogUnderEstimated,0,15
+pooled,safeButPaced medianBacklogErrorBudgetPoints,29.44,15
+pooled,safeButPaced medianAdmittedReserveErrorMs,1029.0,15
+pooled,safeButPaced medianAheadReserveErrorMs,3534.0,15
+pooled,safeButPaced medianDecisionToDraftStartMs,1605.0,15
+pooled,safeButPaced headroomRose,4,14
+pooled,safeButPaced medianHeadroomDelta,0.0,14
+pooled,safeButPaced thermalStatusRose,0,15
+pooled,safeButPaced overheatLevelRose,0,15
+pooled,safeButPaced within10BudgetPointsOfBoundary,0,15
+pooled,safeButPaced medianRetrospectivePressurePct,-45.61,15
+pooled,overrunButUnpaced cases,62,
+pooled,overrunButUnpaced targetDemoted,29,62
+pooled,overrunButUnpaced aheadTasksDemoted,64,396
+pooled,overrunButUnpaced backlogOverEstimated,1,62
+pooled,overrunButUnpaced backlogUnderEstimated,61,62
+pooled,overrunButUnpaced medianBacklogErrorBudgetPoints,-15.32,62
+pooled,overrunButUnpaced medianAdmittedReserveErrorMs,10.5,62
+pooled,overrunButUnpaced medianAheadReserveErrorMs,-335.5,62
+pooled,overrunButUnpaced medianDecisionToDraftStartMs,5140.0,62
+pooled,overrunButUnpaced headroomRose,53,62
+pooled,overrunButUnpaced medianHeadroomDelta,0.01,62
+pooled,overrunButUnpaced thermalStatusRose,17,62
+pooled,overrunButUnpaced overheatLevelRose,8,62
+pooled,overrunButUnpaced within10BudgetPointsOfBoundary,55,62
+pooled,overrunButUnpaced medianRetrospectivePressurePct,3.04,62

@@ -1,0 +1,5 @@
+slot,band_index,band,n,n_paced,activation_pct,act_lo_pct,act_hi_pct,err_lo_pct,err_hi_pct
+3,0,spare_over_40,652,9,1.38,0.51,2.39,0.87,1.01
+2,1,spare_20_40,676,80,11.83,8.31,15.83,3.53,4.0
+1,2,spare_0_20,513,261,50.88,44.68,56.55,6.2,5.67
+0,3,projected_overrun,79,61,77.22,68.0,87.3,9.22,10.09

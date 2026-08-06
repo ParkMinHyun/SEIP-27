@@ -1,0 +1,7 @@
+slot,group,mechanism,rate_pct,numerator,denominator
+6,safe,target_sequence_demoted,100.0,15,15
+5,safe,queued_ahead_work_demoted,94.83,55,58
+4,safe,backlog_over_estimated,100.0,15,15
+3,overrun,backlog_under_estimated,98.39,61,62
+2,overrun,thermal_headroom_rose,85.48,53,62
+1,overrun,thermal_status_rose,27.42,17,62

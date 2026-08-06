@@ -1,0 +1,286 @@
+% RQ3: does pacing intervene near the deadline, is the delay it applies the right
+% size for what admission left behind, and what does that cost?
+%
+% Companion to Figure~\ref{fig:rq3_pacing_policy}, which plots the four readings
+% this table reports as point estimates.  Read the header of that file for the
+% panel-by-panel reasoning; this one carries the population, the definitions, the
+% provenance and the limits.
+%
+% ---------------------------------------------------------------------------
+% Why this pair exists beside the selectivity pair
+% ---------------------------------------------------------------------------
+% Table~\ref{tab:rq3_pacing_selectivity} establishes that the pacer fires
+% selectively and prices the intervention.  It does not answer either half of
+% RQ3's actual question -- whether the delay is the right SIZE for the Draft
+% backlog and the remaining Capture Timeout budget -- and it cannot explain its
+% own two boundary mismatches.  This table adds both:
+%
+%   1. Boundary diagnosis.  Of 3,781 analyzed transitions, 15 were paced although
+%      the retrospective trace later showed more than 40% of the budget spare,
+%      and 62 projected an overrun retrospectively yet received no delay.  Both
+%      groups are diagnosed here against the controller's own estimation error.
+%   2. Admission-aware sizing.  d is the least integer delay that closes the
+%      predicted deficit under the deployed two-Draft model, computed on the
+%      sequence admission actually selected.  The table reports that the recorded
+%      delay matched that minimum on every transition, and that the wait is spent
+%      draining outstanding work rather than idling.
+%
+% Panels (a) and (d) of the companion figure, and this table's Selectivity and
+% Responsiveness-cost groups, overlap the selectivity pair on purpose so that the
+% new pair can stand alone.  The two pairs are alternatives, not complements.
+%
+% ---------------------------------------------------------------------------
+% DISCLOSURE -- do not ship this table together with
+% Table~\ref{tab:rq3_pacing_selectivity}'s backlog rows
+% ---------------------------------------------------------------------------
+% Every RQ3 exhibit keeps risk quantities in shares of the Capture Timeout budget
+% and never in milliseconds, so that no rendered cell, axis or caption discloses
+% the budget; docs/rq1-rq3-metrics-guide.md states the rule for captureTimeoutMs.
+% This table obeys it row by row -- the backlog errors below are in points of
+% budget for exactly that reason -- but two of its rows combine with one row of
+% the selectivity table to recover the budget by division:
+%
+%   applied delay P50                        381 ms      (this table)
+%   delay / backlog P50                      10.4%       (this table, and the
+%                                                        companion figure's (c))
+%   measured backlog P50, paced              52.5% of budget
+%                                                       (selectivity table)
+%
+% 381 / 0.104 = 3.65 s of backlog, and 3.65 s / 0.525 recovers the budget to
+% within 1%.  Composing three medians of different populations is not an exact
+% inversion, but on this data it lands close enough to count as disclosure.
+%
+% Two ways out, and the choice is editorial rather than technical.  Retire the
+% selectivity pair, which is the intent of this pair and removes the third term.
+% Or keep both and drop the applied-delay milliseconds from this table, quoting
+% the delay only as a share of the backlog it drains.  What must not happen is
+% both tables shipping unchanged.
+%
+% ---------------------------------------------------------------------------
+% Definitions
+% ---------------------------------------------------------------------------
+%   B           measured backlog at the pacing decision (RQ3Pacing.realBacklogMs)
+%   C           realized duration of the admitted Draft sequence
+%   T           window left on the newest committed capture's deadline
+%   Bhat        the controller's backlog estimate at the decision
+%   Chat_adm    reserved duration of the sequence admission selected, i.e. the
+%               post-admission reserve rather than the reserve of the sequence
+%               originally planned
+%   retrospective pressure   B + 2C - max(0,T), as a share of the budget.
+%               Negative is spare time.  At zero the queue plus the next two
+%               Drafts are projected to exhaust the budget exactly.
+%   safe but paced        pressure < -40% of budget with d > 0
+%   overrun, unpaced      pressure >= 0 with d = 0
+%
+% Every estimation-error row is signed the same way, estimate minus realized, so
+% a positive number always means the controller reserved more than it turned out
+% to need.  Two of the source quantities are recorded with the opposite sign
+% (targetReserveErrorSignedMs and aheadReserveErrorSumMs are realized minus
+% reserved) and are negated here; the CSV keeps the recorded sign.
+%
+% ---------------------------------------------------------------------------
+% What the numbers say
+% ---------------------------------------------------------------------------
+% Selectivity is a threshold claim on this table, not a shape claim.  Activation
+% is 1.4 and 1.0% while more than 40% of the budget is projected to remain spare,
+% about half in the last fifth, and 77.2 and 68.8% once the projection reaches the
+% deadline.  The pooled rates of 21.4 and 25.3% are the mean of a policy that is
+% idle in a quarter of the bursts and active in half the captures of the worst
+% ones, and must not be read as "the controller delays one capture in four".
+%
+% Safe but paced: 15 cases, and the mechanism is an admission-demotion cascade.
+% All 15 target sequences were demoted by admission and 55 of 58 reconstructed
+% queued-ahead tasks were demoted with them, so the reservations the pacing
+% decision carried had been priced before the shorter realized sequences drained
+% the queue.  The backlog estimate was conservative in 15 of 15 cases by a median
+% 29.4 points of budget, the target's own reserve by a median 1.03 s, and the
+% queued-ahead reserves by a median 3.53 s in aggregate.  Thermal headroom was
+% flat across the decision-to-execution interval (rose in 4 of 14 comparable
+% cases, median delta zero), so thermal drift is not this group's explanation.
+%
+% These are NOT to be called false positives without qualification.  The online
+% controller did not have the realized durations the retrospective diagnostic
+% uses; it paced against the work it had been told to expect.
+%
+% Overrun, unpaced: 62 cases, and the mechanism is queue-residence backlog
+% underestimation.  The backlog was under-estimated in 61 of 62 cases by a median
+% 15.3 points of budget, and the crossings are shallow -- 55 of 62 within 10
+% points of budget of the projection.  The target waited a median 5.14 s between
+% the pacing decision and its own Draft execution.  Over that residence, thermal
+% headroom rose in 53 of 62 cases (median delta 0.010) while the coarser thermal
+% status rose in only 17 and the overheat level in 8, which is why headroom is the
+% field reported: it reacts earlier and therefore exposes drift the levels hide.
+% Queued-ahead work overran its aggregate reserve by a median 336 ms while the
+% target sequence's own reserve was calibrated to a median 11 ms, so the mismatch
+% belongs to stale reservations for work ahead of the target rather than to a
+% large error on the target Draft itself.
+%
+% Say "associated with" or "consistent with", never "caused by".  The
+% decision-time thermal value is a trace-derived proxy -- the thermal snapshot of
+% the most recently started Draft sequence at the decision timestamp -- and this
+% is an observational split of recorded traces, not a controlled replay that fixes
+% the arrival stream and varies only thermal state.
+%
+% Admission-aware sizing.  Waiting d milliseconds does two things at once: it
+% drains d milliseconds of outstanding backlog and it shifts the next capture's
+% deadline by d milliseconds, so the residual predicted deficit falls by 2d and
+% ceil(deficit/2) is the least integer delay that closes it under the deployed
+% two-Draft model.  The recorded delay matched that value on 3,781 of 3,781
+% transitions.  Because Chat_adm is the reserve of the sequence admission
+% selected, the delay does not repay optional work that admission already
+% removed.
+%
+% What this establishes, and what it does not.  Established: the delay is minimal
+% with respect to the post-admission predicted deficit, and it is empirically
+% work-conserving -- 100.0 and 98.7% of applied delay overlapped outstanding
+% backlog, and only 0 and 8 waits outlasted it.  NOT established: that admission
+% saved a specific amount of delay relative to pacing the sequence originally
+% planned.  That needs a shadow Chat_full and the counterfactual d_full for every
+% decision, and neither is recorded.  Do not write "globally optimal" or "optimal
+% under every counterfactual".
+%
+% ---------------------------------------------------------------------------
+% Population, provenance, and what this repository still owes
+% ---------------------------------------------------------------------------
+% Source: data/ablation_sampling/48U_metrics_12MP_normal_0803_{1,2}.xlsx and
+% 48U_metrics_24MP_memory_0803_{1,2}.xlsx (ML implementation commit 99aae0a,
+% exported by CaptureMetricsExcelExporter), both arms with admission and pacing
+% enabled.  Run and transition eligibility are identical to
+% Table~\ref{tab:rq3_pacing_selectivity} and are documented there: 70 and 69
+% eligible bursts, 1,920 and 1,861 analyzed transitions, and the same two limits
+% -- the population is survival-conditioned because the export filtered the
+% Capture-Timeout sessions out, and the 12MP thermal rows carry the RQ1(a)
+% balancing-trim bias.  Both limits apply here unchanged.
+%
+% Derived data: data/rq3/policy/.  summary.csv holds every cell printed below,
+% boundary_case_details.csv the 77 auditable boundary cases, and the remaining
+% files the series the figure plots.
+%
+% Regenerate every number with scripts/rq3_policy_metrics.py, which writes
+% data/rq3/policy/ and prints each value quoted above and in
+% figures/fig_rq3_pacing_policy.tex.  It imports the loader from
+% scripts/rq3_calibration_metrics.py and the binning, cluster bootstrap and ECDF
+% from scripts/rq3_selectivity_metrics.py rather than reimplementing any of them,
+% so the populations here are the sibling exhibits' populations by construction
+% and the band intervals are the same numbers, not merely compatible ones.
+%
+% One definition in that script does not come from the loader and must not be
+% swapped for the loader's.  Demotion here is a drop in the executed sequence's
+% optional-work class, on Bokeh+Filter > Filter only > Encoding only.  load()
+% carries a 'demoted' field that instead compares the two workload keys for
+% equality, and the keys also differ on watermark and image-format changes that
+% remove no optional work; the two definitions disagree on 19 of the 3,781
+% analyzed transitions.  The rank form is the one that supports the demotion-
+% cascade reading, so the script computes it and ignores load()'s field.
+%
+% ---------------------------------------------------------------------------
+% Layout
+% ---------------------------------------------------------------------------
+% Single-column float, metrics down the rows and conditions across the columns,
+% following Table~\ref{tab:rq3_pacing_selectivity}.  The two boundary groups hold
+% 15 and 62 cases pooled over both conditions: splitting a 15-case group four ways
+% would print counts no reader could use, so only the case counts are per
+% condition and the mechanism rows span both value columns.  Group headers span
+% the full width rather than occupying a fourth column, which buys the metric
+% column the width its longest labels need.
+
+\begin{table}[t]
+  \centering
+  \setlength{\abovecaptionskip}{2pt}%
+  \setlength{\belowcaptionskip}{3pt}%
+  \caption{RQ3 pacing policy evidence on the S26 Ultra}
+  \label{tab:rq3_pacing_policy}
+
+  {\scriptsize
+  \renewcommand{\arraystretch}{1.08}%
+  \setlength{\arrayrulewidth}{0.35pt}%
+  \setlength{\doublerulesep}{0.8pt}%
+  \newsavebox{\rqthreepolbox}%
+  \newcommand{\rqthreepolgroup}[1]{\multicolumn{3}{|l|}{\textbf{#1}}}%
+  % Mechanism rows are pooled over both conditions; the cell spans the two value
+  % columns rather than repeating one number twice, which would read as two
+  % independent measurements.
+  \newcommand{\rqthreepolboth}[1]{\multicolumn{2}{c|}{#1}}%
+  \newcommand{\rqthreepoltabular}{%
+  \begin{tabular}{|>{\raggedright\arraybackslash}m{112pt}%
+                   |>{\raggedleft\arraybackslash}m{58pt}%
+                   |>{\raggedleft\arraybackslash}m{58pt}|}
+    \hline\hline
+    \textbf{Condition} &
+    \multicolumn{1}{c|}{\makecell[c]{\textbf{12MP}\\\textbf{normal}}} &
+    \multicolumn{1}{c|}{\makecell[c]{\textbf{24MP}\\\textbf{memory pressure}}} \\
+    \hline\hline
+    \rqthreepolgroup{Selectivity} \\
+    \hline
+    Analyzed transitions / paced & 1{,}920 / 411 & 1{,}861 / 471 \\
+    \cline{1-3}
+    Activation rate, all (\%) & 21.4 & 25.3 \\
+    \cline{1-3}
+    \quad spare \(>40\%\) of budget & 1.4 \,[652] & 1.0 \,[623] \\
+    \cline{1-3}
+    \quad spare 20--40\% & 11.8 \,[676] & 17.6 \,[564] \\
+    \cline{1-3}
+    \quad spare 0--20\% & 50.9 \,[513] & 50.5 \,[533] \\
+    \cline{1-3}
+    \quad projected overrun & 77.2 \,[79] & 68.8 \,[141] \\
+    \hline\hline
+    \rqthreepolgroup{Retrospectively safe, yet paced} \\
+    \hline
+    Cases & 9 of 652 & 6 of 623 \\
+    \cline{1-3}
+    \quad target sequence demoted & \rqthreepolboth{15 of 15} \\
+    \cline{1-3}
+    \quad queued-ahead tasks demoted & \rqthreepolboth{55 of 58} \\
+    \cline{1-3}
+    \quad backlog \(\widehat B-B\) P50 (points) & \rqthreepolboth{\(+29.4\)} \\
+    \cline{1-3}
+    \quad target reserve \(\widehat C_{\mathrm{adm}}-C\) P50 (ms)
+      & \rqthreepolboth{\(+1{,}029\)} \\
+    \cline{1-3}
+    \quad queued-ahead reserve error P50 (ms) & \rqthreepolboth{\(+3{,}534\)} \\
+    \cline{1-3}
+    \quad thermal headroom rose while queued & \rqthreepolboth{4 of 14} \\
+    \hline\hline
+    \rqthreepolgroup{Projected overrun, yet unpaced} \\
+    \hline
+    Cases & 18 of 79 & 44 of 141 \\
+    \cline{1-3}
+    \quad within 10 points of the projection & \rqthreepolboth{55 of 62} \\
+    \cline{1-3}
+    \quad backlog \(\widehat B-B\) P50 (points) & \rqthreepolboth{\(-15.3\)} \\
+    \cline{1-3}
+    \quad target reserve \(\widehat C_{\mathrm{adm}}-C\) P50 (ms)
+      & \rqthreepolboth{\(+11\)} \\
+    \cline{1-3}
+    \quad queued-ahead reserve error P50 (ms) & \rqthreepolboth{\(-336\)} \\
+    \cline{1-3}
+    \quad decision-to-Draft-start wait P50 (s) & \rqthreepolboth{5.14} \\
+    \cline{1-3}
+    \quad thermal headroom rose while queued & \rqthreepolboth{53 of 62} \\
+    \cline{1-3}
+    \quad \dots\ status / level rose & \rqthreepolboth{17 / 8 of 62} \\
+    \hline\hline
+    \rqthreepolgroup{Admission-aware sizing:
+      \(d=\ceil{[\widehat B+2\widehat C_{\mathrm{adm}}-T]^{+}/2}\)} \\
+    \hline
+    Delays matching the minimum & 1{,}920 of 1{,}920 & 1{,}861 of 1{,}861 \\
+    \cline{1-3}
+    Delay spent draining backlog (\%) & 100.0 & 98.7 \\
+    \cline{1-3}
+    \quad waits that outlast the backlog & 0 of 411 & 8 of 471 \\
+    \cline{1-3}
+    Delay / backlog P50 / P95 (\%) & 10.4 / 32.2 & 8.6 / 56.5 \\
+    \hline\hline
+    \rqthreepolgroup{Responsiveness cost} \\
+    \hline
+    Applied delay P50 / P95 (ms) & 381 / 823 & 278 / 1{,}180 \\
+    \cline{1-3}
+    Per burst, \% of elapsed time P50 / P95 & 18.1 / 24.5 & 9.8 / 29.7 \\
+    \cline{1-3}
+    Bursts that never paced & 19 of 70 & 13 of 69 \\
+    \hline\hline
+  \end{tabular}}%
+  \fittabcolsep{\rqthreepolbox}{\rqthreepoltabular}{\columnwidth}{6}%
+  \rqthreepoltabular
+  }
+\end{table}

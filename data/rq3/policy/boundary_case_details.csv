@@ -1,0 +1,78 @@
+boundaryClass,condition,run,shot,captureIndex,level,plannedClass,executedClass,seqDemoted,riskPct,d,B,Bhat,backlogError,backlogErrorPct,C,Chat,reserveError,wait,headroom,headroomDelta,statusDelta,overheatDelta,aheadCount,aheadDemotedCount,aheadReserveError,aheadCaptureIndices
+safe_but_paced,12mp_normal,1#12,12,333,6,Bokeh+Filter,Encoding only,True,-41.7714,470,1597,3402,1805,25.7857,397,1426,1029,1664,1.047,0.004,0,0,3,3,2624,330|331|332
+safe_but_paced,12mp_normal,1#24,16,709,3,Bokeh+Filter,Encoding only,True,-47.4714,207,1748,3835,2087,29.8143,296,1120,824,1766,0.927,0.0,0,0,5,5,5103,704|705|706|707|708
+safe_but_paced,12mp_normal,1#30,29,910,4,Bokeh+Filter,Encoding only,True,-46.2429,13,2228,4039,1811,25.8714,349,1075,726,2246,1.0,0.0,0,0,6,6,3999,904|905|906|907|908|909
+safe_but_paced,12mp_normal,1#31,12,925,5,Bokeh+Filter,Encoding only,True,-47.3286,604,1296,3505,2209,31.5571,449,1605,1156,1325,1.003,0.0,0,0,3,3,3534,922|923|924
+safe_but_paced,12mp_normal,1#32,13,957,5,Bokeh+Filter,Encoding only,True,-40.9,668,1544,3605,2061,29.4429,421,1490,1069,1583,1.02,0.003,0,0,4,3,3467,953|954|955|956
+safe_but_paced,12mp_normal,1#40,20,1226,3,Bokeh+Filter,Encoding only,True,-46.6143,211,1940,4203,2263,32.3286,340,1051,711,1966,0.887,0.004,0,0,6,5,3723,1220|1221|1222|1223|1224|1225
+safe_but_paced,12mp_normal,1#40,21,1227,3,Bokeh+Filter,Encoding only,True,-54.7286,182,1702,4377,2675,38.2143,291,1051,760,1717,0.887,0.0,0,0,6,6,4184,1221|1222|1223|1224|1225|1226
+safe_but_paced,12mp_normal,2#10,12,309,5,Bokeh+Filter,Encoding only,True,-44.0429,537,1319,3554,2235,31.9286,452,1413,961,1385,1.007,0.0,0,0,3,3,2994,306|307|308
+safe_but_paced,12mp_normal,2#14,18,439,6,Bokeh+Filter,Encoding only,True,-42.2286,686,1566,3718,2152,30.7429,458,1546,1088,1605,1.05,0.0,0,0,4,4,4140,435|436|437|438
+safe_but_paced,24mp_memory,1#27,28,773,5,Bokeh+Filter,Encoding only,True,-40.9714,196,2332,3926,1594,22.7714,354,1187,833,2363,1.01,0.0,0,0,6,6,4224,767|768|769|770|771|772
+safe_but_paced,24mp_memory,2#11,3,270,6,Bokeh+Filter,Filter only,True,-40.5714,1492,996,2578,1582,22.6,942,3063,2121,1043,1.03,,,,0,0,0,
+safe_but_paced,24mp_memory,2#11,6,273,6,Bokeh+Filter,Encoding only,True,-45.6143,268,84,321,237,3.3857,840,2585,1745,121,1.03,0.0,0,0,1,1,1783,272
+safe_but_paced,24mp_memory,2#11,28,295,6,Bokeh+Filter,Encoding only,True,-46.2857,128,1225,1296,71,1.0143,569,2281,1712,1255,1.037,0.0,0,0,2,2,3064,293|294
+safe_but_paced,24mp_memory,2#11,29,296,6,Bokeh+Filter,Encoding only,True,-53.4571,67,580,811,231,3.3,459,2281,1822,596,1.037,0.0,0,0,1,1,1712,295
+safe_but_paced,24mp_memory,2#30,26,848,2,Bokeh+Filter,Encoding only,True,-42.8714,458,2946,5533,2587,36.9571,358,1023,665,2968,0.923,0.006,0,0,8,7,4219,840|841|842|843|844|845|846|847
+overrun_but_unpaced,12mp_normal,1#2,22,53,2,Bokeh+Filter,Bokeh+Filter,False,2.6857,0,5095,4043,-1052,-15.0286,735,820,85,5108,0.9,0.023,1,0,7,0,625,46|47|48|49|50|51|52
+overrun_but_unpaced,12mp_normal,1#2,24,55,2,Bokeh+Filter,Filter only,True,0.1857,0,5514,4530,-984,-14.0571,448,820,372,5530,0.897,0.01,1,0,8,1,890,47|48|49|50|51|52|53|54
+overrun_but_unpaced,12mp_normal,1#27,16,805,3,Bokeh+Filter,Bokeh+Filter,False,2.0143,0,4848,4013,-835,-11.9286,800,897,97,4863,0.923,0.006,0,0,6,0,180,799|800|801|802|803|804
+overrun_but_unpaced,12mp_normal,2#3,22,86,2,Bokeh+Filter,Bokeh+Filter,False,2.3286,0,5052,3843,-1209,-17.2714,739,748,9,5066,0.903,0.01,1,0,7,0,-2,79|80|81|82|83|84|85
+overrun_but_unpaced,12mp_normal,2#4,18,113,3,Bokeh+Filter,Bokeh+Filter,False,5.9571,0,5090,3648,-1442,-20.6,781,919,138,5114,0.903,0.0,0,0,6,0,-556,107|108|109|110|111|112
+overrun_but_unpaced,12mp_normal,2#4,19,114,3,Bokeh+Filter,Filter only,True,1.7,0,5407,3821,-1586,-22.6571,464,919,455,5423,0.903,0.0,0,0,7,0,-418,107|108|109|110|111|112|113
+overrun_but_unpaced,12mp_normal,2#4,20,115,3,Bokeh+Filter,Filter only,True,1.5571,0,5503,4098,-1405,-20.0714,453,919,466,5525,0.903,0.0,0,0,8,1,37,107|108|109|110|111|112|113|114
+overrun_but_unpaced,12mp_normal,2#8,8,237,4,Bokeh+Filter,Bokeh+Filter,False,16.6143,0,2978,3130,152,2.1714,2217,1155,-1062,3005,0.983,0.003,0,0,4,0,947,233|234|235|236
+overrun_but_unpaced,12mp_normal,2#27,25,865,2,Bokeh+Filter,Bokeh+Filter,False,3.6286,0,5221,4284,-937,-13.3857,705,715,10,5233,0.903,0.01,1,0,8,0,-125,857|858|859|860|861|862|863|864
+overrun_but_unpaced,12mp_normal,2#27,26,866,2,Bokeh+Filter,Filter only,True,0.4857,0,5584,4579,-1005,-14.3571,424,715,291,5604,0.903,0.01,1,0,8,0,-181,858|859|860|861|862|863|864|865
+overrun_but_unpaced,12mp_normal,2#27,27,867,2,Bokeh+Filter,Filter only,True,1.4429,0,5600,4747,-853,-12.1857,422,715,293,5617,0.903,0.01,1,0,9,1,110,858|859|860|861|862|863|864|865|866
+overrun_but_unpaced,12mp_normal,2#30,24,956,2,Bokeh+Filter,Bokeh+Filter,False,2.0571,0,5123,4497,-626,-8.9429,673,735,62,5136,0.92,0.017,0,0,8,0,-16,948|949|950|951|952|953|954|955
+overrun_but_unpaced,12mp_normal,2#31,24,987,2,Bokeh+Filter,Bokeh+Filter,False,1.3143,0,5158,4467,-691,-9.8714,622,801,179,5170,0.92,0.013,0,0,8,0,360,979|980|981|982|983|984|985|986
+overrun_but_unpaced,12mp_normal,2#33,28,1053,1,Bokeh+Filter,Bokeh+Filter,False,3.2143,0,4878,4393,-485,-6.9286,875,685,-190,4890,0.857,0.017,0,0,8,0,614,1045|1046|1047|1048|1049|1050|1051|1052
+overrun_but_unpaced,12mp_normal,2#33,29,1054,1,Bokeh+Filter,Bokeh+Filter,False,5.8571,0,5333,4540,-793,-11.3286,711,685,-26,5350,0.857,0.017,0,0,9,0,424,1045|1046|1047|1048|1049|1050|1051|1052|1053
+overrun_but_unpaced,12mp_normal,2#34,30,1085,1,Bokeh+Filter,Bokeh+Filter,False,1.6286,0,5095,4871,-224,-3.2,680,699,19,5107,0.87,0.013,0,1,9,0,1019,1076|1077|1078|1079|1080|1081|1082|1083|1084
+overrun_but_unpaced,12mp_normal,2#36,30,1147,1,Bokeh+Filter,Bokeh+Filter,False,5.4286,0,5089,4951,-138,-1.9714,841,702,-139,5103,0.883,0.023,0,1,9,0,880,1138|1139|1140|1141|1142|1143|1144|1145|1146
+overrun_but_unpaced,12mp_normal,2#37,19,1168,1,Bokeh+Filter,Bokeh+Filter,False,2.7571,0,3106,2801,-305,-4.3571,1732,717,-1015,3117,0.877,0.02,0,1,6,0,722,1162|1163|1164|1165|1166|1167
+overrun_but_unpaced,24mp_memory,1#7,19,205,4,Bokeh+Filter,Filter only,True,1.6286,0,4984,4191,-793,-11.3286,845,992,147,5009,0.987,0.007,0,0,6,1,237,199|200|201|202|203|204
+overrun_but_unpaced,24mp_memory,1#19,5,531,6,Bokeh+Filter,Bokeh+Filter,False,2.0857,0,3200,1386,-1814,-25.9143,1300,2033,733,3229,1.11,0.007,0,0,3,0,-3919,528|529|530
+overrun_but_unpaced,24mp_memory,1#28,6,781,5,Bokeh+Filter,Bokeh+Filter,False,5.2286,0,4018,2530,-1488,-21.2571,1243,1746,503,4050,1.007,0.007,0,0,4,0,-3274,777|778|779|780
+overrun_but_unpaced,24mp_memory,2#4,17,106,3,Bokeh+Filter,Filter only,True,1.0429,0,3846,3562,-284,-4.0571,1114,1054,-60,3877,0.923,0.013,0,0,5,5,899,101|102|103|104|105
+overrun_but_unpaced,24mp_memory,2#6,19,175,4,Bokeh+Filter,Filter only,True,4.3571,0,3512,2848,-664,-9.4857,1282,979,-303,3590,0.987,0.0,0,0,4,4,-552,171|172|173|174
+overrun_but_unpaced,24mp_memory,2#10,14,250,5,Bokeh+Filter,Bokeh+Filter,False,3.5429,0,1924,1434,-490,-7.0,2271,2288,17,1978,1.02,0.0,0,0,2,0,826,248|249
+overrun_but_unpaced,24mp_memory,2#15,11,377,4,Bokeh+Filter,Bokeh+Filter,False,15.1429,0,4101,3121,-980,-14.0,1295,1168,-127,4117,1.01,0.017,0,0,4,0,-812,373|374|375|376
+overrun_but_unpaced,24mp_memory,2#15,19,385,4,Bokeh+Filter,Filter only,True,20.5429,0,3881,3371,-510,-7.2857,1392,905,-487,3915,1.02,0.007,0,0,4,4,465,381|382|383|384
+overrun_but_unpaced,24mp_memory,2#15,20,386,4,Bokeh+Filter,Filter only,True,12.2571,0,4123,2761,-1362,-19.4571,967,907,-60,4148,1.02,0.003,0,0,4,4,-476,382|383|384|385
+overrun_but_unpaced,24mp_memory,2#15,21,387,4,Bokeh+Filter,Filter only,True,21.4857,0,3990,2868,-1122,-16.0286,1283,978,-305,4014,1.023,0.006,0,0,4,4,-428,383|384|385|386
+overrun_but_unpaced,24mp_memory,2#15,22,388,4,Bokeh+Filter,Filter only,True,26.2714,0,4266,3134,-1132,-16.1714,1426,973,-453,4358,1.023,0.006,0,0,4,4,-937,384|385|386|387
+overrun_but_unpaced,24mp_memory,2#15,23,389,4,Bokeh+Filter,Encoding only,True,9.2143,0,4770,3287,-1483,-21.1857,1056,986,-70,4844,1.023,0.003,0,0,4,4,-1305,385|386|387|388
+overrun_but_unpaced,24mp_memory,2#15,25,391,4,Bokeh+Filter,Encoding only,True,1.6571,0,4555,3721,-834,-11.9143,844,1014,170,4584,1.023,0.0,0,0,4,4,-670,387|388|389|390
+overrun_but_unpaced,24mp_memory,2#17,28,457,1,Bokeh+Filter,Bokeh+Filter,False,1.8286,0,4626,4328,-298,-4.2571,846,837,-9,4647,0.873,0.023,0,1,8,0,702,449|450|451|452|453|454|455|456
+overrun_but_unpaced,24mp_memory,2#18,14,475,3,Bokeh+Filter,Filter only,True,2.8571,0,3464,2991,-473,-6.7571,1352,1158,-194,3502,0.903,-0.004,0,0,4,4,1449,471|472|473|474
+overrun_but_unpaced,24mp_memory,2#18,15,476,3,Bokeh+Filter,Filter only,True,5.1857,0,4142,3223,-919,-13.1286,1099,1150,51,4167,0.903,-0.004,0,0,4,4,376,472|473|474|475
+overrun_but_unpaced,24mp_memory,2#22,16,592,2,Bokeh+Filter,Bokeh+Filter,False,9.7714,0,4535,2991,-1544,-22.0571,1421,776,-645,4564,0.907,0.024,1,0,5,0,-1077,587|588|589|590|591
+overrun_but_unpaced,24mp_memory,2#22,17,593,2,Bokeh+Filter,Filter only,True,3.8286,0,5380,3061,-2319,-33.1286,796,776,-20,5396,0.907,0.014,1,0,5,0,-1760,588|589|590|591|592
+overrun_but_unpaced,24mp_memory,2#22,19,595,2,Bokeh+Filter,Encoding only,True,2.2286,0,5493,3268,-2225,-31.7857,606,776,170,5522,0.907,0.014,1,0,6,2,-1495,589|590|591|592|593|594
+overrun_but_unpaced,24mp_memory,2#22,20,596,2,Bokeh+Filter,Encoding only,True,2.5,0,5443,3622,-1821,-26.0143,651,971,320,5461,0.91,0.007,0,0,6,3,-1130,590|591|592|593|594|595
+overrun_but_unpaced,24mp_memory,2#22,21,597,2,Bokeh+Filter,Encoding only,True,15.7714,0,5462,3705,-1757,-25.1,781,971,190,5528,0.91,0.007,0,0,7,4,-810,590|591|592|593|594|595|596
+overrun_but_unpaced,24mp_memory,2#23,20,626,3,Bokeh+Filter,Bokeh+Filter,False,4.1143,0,5166,4238,-928,-13.2571,914,790,-124,5179,0.937,0.014,0,1,7,0,-17,619|620|621|622|623|624|625
+overrun_but_unpaced,24mp_memory,2#23,21,627,3,Bokeh+Filter,Bokeh+Filter,False,8.0,0,5501,4490,-1011,-14.4429,884,798,-86,5515,0.937,0.014,0,1,7,0,-133,620|621|622|623|624|625|626
+overrun_but_unpaced,24mp_memory,2#23,22,628,3,Bokeh+Filter,Filter only,True,3.8429,0,5846,4745,-1101,-15.7286,574,798,224,5876,0.94,0.017,0,1,7,0,-254,621|622|623|624|625|626|627
+overrun_but_unpaced,24mp_memory,2#23,23,629,3,Bokeh+Filter,Filter only,True,5.3143,0,5968,4989,-979,-13.9857,557,798,241,5980,0.94,0.017,0,1,8,1,-30,621|622|623|624|625|626|627|628
+overrun_but_unpaced,24mp_memory,2#24,28,665,1,Bokeh+Filter,Bokeh+Filter,False,2.7714,0,4920,4801,-119,-1.7,938,854,-84,4958,0.9,0.02,1,0,7,0,581,658|659|660|661|662|663|664
+overrun_but_unpaced,24mp_memory,2#24,29,666,1,Bokeh+Filter,Bokeh+Filter,False,5.1429,0,5376,4993,-383,-5.4714,844,854,10,5401,0.897,0.017,1,0,8,0,497,658|659|660|661|662|663|664|665
+overrun_but_unpaced,24mp_memory,2#27,28,756,2,Bokeh+Filter,Bokeh+Filter,False,0.0,0,5129,4036,-1093,-15.6143,792,738,-54,5144,0.917,0.01,0,0,7,0,-345,749|750|751|752|753|754|755
+overrun_but_unpaced,24mp_memory,2#27,29,757,2,Bokeh+Filter,Bokeh+Filter,False,5.0429,0,5457,4455,-1002,-14.3143,788,768,-20,5474,0.917,0.01,0,0,7,0,-326,750|751|752|753|754|755|756
+overrun_but_unpaced,24mp_memory,2#27,30,758,2,Bokeh+Filter,Bokeh+Filter,False,7.2,0,5653,4533,-1120,-16.0,752,768,16,5666,0.917,0.01,0,0,8,0,-346,750|751|752|753|754|755|756|757
+overrun_but_unpaced,24mp_memory,2#28,25,785,2,Bokeh+Filter,Bokeh+Filter,False,2.0,0,5110,3284,-1826,-26.0857,877,609,-268,5134,0.913,0.02,1,0,6,0,-1399,779|780|781|782|783|784
+overrun_but_unpaced,24mp_memory,2#28,26,786,2,Bokeh+Filter,Bokeh+Filter,False,5.9286,0,5496,3343,-2153,-30.7571,825,609,-216,5509,0.91,0.017,1,0,7,0,-1667,779|780|781|782|783|784|785
+overrun_but_unpaced,24mp_memory,2#29,25,815,2,Bokeh+Filter,Bokeh+Filter,False,1.5857,0,5275,3386,-1889,-26.9857,777,648,-129,5290,0.91,0.013,1,0,7,0,-1105,808|809|810|811|812|813|814
+overrun_but_unpaced,24mp_memory,2#29,26,816,2,Bokeh+Filter,Filter only,True,8.3571,0,5560,3423,-2137,-30.5286,618,648,30,5574,0.91,0.013,1,0,7,0,-1328,809|810|811|812|813|814|815
+overrun_but_unpaced,24mp_memory,2#29,27,817,2,Bokeh+Filter,Filter only,True,1.4,0,5762,3634,-2128,-30.4,520,648,128,5783,0.91,0.013,0,0,7,1,-1325,810|811|812|813|814|815|816
+overrun_but_unpaced,24mp_memory,2#29,28,818,2,Bokeh+Filter,Filter only,True,0.3143,0,5820,3705,-2115,-30.2143,462,648,186,5835,0.907,0.01,0,0,8,2,-1197,810|811|812|813|814|815|816|817
+overrun_but_unpaced,24mp_memory,2#29,29,819,2,Bokeh+Filter,Filter only,True,0.1143,0,5684,3990,-1694,-24.2,498,802,304,5703,0.907,0.0,0,0,8,3,-855,811|812|813|814|815|816|817|818
+overrun_but_unpaced,24mp_memory,2#30,16,838,2,Bokeh+Filter,Bokeh+Filter,False,2.3286,0,4503,2877,-1626,-23.2286,958,943,-15,4544,0.917,0.01,0,0,5,0,-1110,833|834|835|836|837
+overrun_but_unpaced,24mp_memory,2#30,18,840,2,Bokeh+Filter,Bokeh+Filter,False,9.2286,0,5266,3544,-1722,-24.6,1025,943,-82,5311,0.917,0.01,0,0,6,0,-712,834|835|836|837|838|839
+overrun_but_unpaced,24mp_memory,2#30,19,841,2,Bokeh+Filter,Filter only,True,0.7429,0,5726,3667,-2059,-29.4143,501,943,442,5750,0.92,0.013,0,0,7,0,-794,834|835|836|837|838|839|840
+overrun_but_unpaced,24mp_memory,2#31,23,876,2,Bokeh+Filter,Bokeh+Filter,False,2.8571,0,5464,3941,-1523,-21.7571,741,621,-120,5477,0.913,0.016,1,0,7,0,-1179,869|870|871|872|873|874|875
+overrun_but_unpaced,24mp_memory,2#31,25,878,2,Bokeh+Filter,Filter only,True,3.7429,0,5757,4069,-1688,-24.1143,610,621,11,5772,0.917,0.02,1,0,8,1,-1262,870|871|872|873|874|875|876|877
+overrun_but_unpaced,24mp_memory,2#31,26,879,2,Bokeh+Filter,Encoding only,True,5.9,0,5990,4568,-1422,-20.3143,373,821,448,6009,0.917,0.02,0,0,8,2,-1043,871|872|873|874|875|876|877|878
+overrun_but_unpaced,24mp_memory,2#33,29,943,0,Bokeh+Filter,Bokeh+Filter,False,0.3143,0,4756,4453,-303,-4.3286,738,818,80,4778,0.843,0.02,0,0,7,0,1030,936|937|938|939|940|941|942

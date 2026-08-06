@@ -238,6 +238,20 @@
 % bootstrap would imply a precision the run count does not support.
 %
 % ---------------------------------------------------------------------------
+% Corrected -- do not restore from earlier drafts
+% ---------------------------------------------------------------------------
+% The 24MP interval on the "overrun >= 0% of budget" row read [58.8, 78.8] and is
+% now [51.9, 82.8].  The printed cell had been left behind by a data revision:
+% data/rq3/selectivity/{overrun_bins_24mp_memory,summary}.csv have carried
+% [51.91, 82.82] since the current source was adopted, and re-running
+% scripts/rq3_selectivity_metrics.py on data/ablation_sampling/ reproduces that
+% pair exactly.  The point estimate, 68.8%, was already correct, as is every other
+% interval in this table -- all of them were checked against summary.csv when the
+% correction was made, and the 12MP interval on the same row, [68.0, 87.3], is
+% unchanged.  The band is 31 points wide rather than 20 because the 24MP bin holds
+% 141 transitions spread over 69 bursts; do not narrow it back.
+%
+% ---------------------------------------------------------------------------
 % Retracted -- do not reintroduce from earlier drafts
 % ---------------------------------------------------------------------------
 % "53% / 51% of the applied delay was unremovable" was computed as a ratio of
@@ -299,7 +313,7 @@
     \quad Lv0--2 / Lv3--4 / Lv5--6 & 6.2 / 32.6 / 33.5 & 10.1 / 25.4 / 48.2 \\
     \cline{1-3}
     \quad overrun \(\geq 0\%\) of budget
-      & \rqthreeselci{77.2}{68.0, 87.3} & \rqthreeselci{68.8}{58.8, 78.8} \\
+      & \rqthreeselci{77.2}{68.0, 87.3} & \rqthreeselci{68.8}{51.9, 82.8} \\
     \cline{1-3}
     \quad margin \(\geq 50\%\) of budget & 0.0 \,[600] & 0.4 \,[496] \\
     \cline{1-3}
