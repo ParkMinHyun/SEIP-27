@@ -40,6 +40,7 @@ condition,metric,value,denominator
 24mp_memory,burstDelaySharePercent P95,29.74,69
 24mp_memory,burstsNeverPaced,13,69
 pooled,safeButPaced cases,15,
+pooled,safeButPaced ratePercentOfBand,1.18,1275
 pooled,safeButPaced targetDemoted,15,15
 pooled,safeButPaced aheadTasksDemoted,55,58
 pooled,safeButPaced backlogOverEstimated,15,15
@@ -55,6 +56,7 @@ pooled,safeButPaced overheatLevelRose,0,15
 pooled,safeButPaced within10BudgetPointsOfBoundary,0,15
 pooled,safeButPaced medianRetrospectivePressurePct,-45.61,15
 pooled,overrunButUnpaced cases,62,
+pooled,overrunButUnpaced ratePercentOfBand,28.18,220
 pooled,overrunButUnpaced targetDemoted,29,62
 pooled,overrunButUnpaced aheadTasksDemoted,64,396
 pooled,overrunButUnpaced backlogOverEstimated,1,62

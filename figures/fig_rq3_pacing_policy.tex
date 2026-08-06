@@ -22,10 +22,21 @@
 % Panels (a) and (d) therefore overlap the earlier pair on purpose, so that this
 % figure can stand alone: (a) is the same activation ordering as
 % Figure~\ref{fig:rq3_pacing_selectivity}(a) at four bands instead of ten
-% ten-point bins, and (d) is that figure's panel (c) unchanged, reading the same
-% CSV.  Ship one pair or the other, not both -- see the DISCLOSURE note in
-% tables/tab_rq3_pacing_policy.tex for the reason this is not merely a matter of
-% taste.
+% ten-point bins, and (d) is the same per-burst cost quantity as that figure's
+% panel (c) drawn one burst at a time.  Ship one pair or the other, not both --
+% see the DISCLOSURE note in tables/tab_rq3_pacing_policy.tex.
+%
+% ---------------------------------------------------------------------------
+% Grammar
+% ---------------------------------------------------------------------------
+% Three of the four panels are "one mark per unit of analysis", which is what
+% makes the figure readable as one argument rather than four exhibits: (b) is one
+% mark per boundary case, (c) one per paced transition, (d) one per eligible
+% burst.  Only (a) aggregates, because a rate per band is what a threshold claim
+% needs.  An earlier revision drew (c) and (d) as cumulative distributions; they
+% carried the same numbers but asked the reader to convert a curve height into a
+% count, and neither the 8 waits that outlast their backlog nor the 32 bursts
+% that never paced were visible as objects.
 %
 % ---------------------------------------------------------------------------
 % What each panel is, and why it is not circular
@@ -55,15 +66,17 @@
 %     reaches the deadline.  The shaded horizontal band is the pooled activation
 %     rate of the two conditions (21.4 and 25.3%), drawn as a band rather than as
 %     two rules because they differ by 3.9 points and two rules that close
-%     together read as one thick rule at this scale.
+%     together read as one thick rule at this scale.  The outer two bands are also
+%     the two boundary classes of (b): the loosest band with d > 0 is
+%     safe-but-paced, the overrun band with d = 0 is overrun-but-unpaced.
 %
 %     The whiskers are 95% percentile bootstrap over 2,000 replicates resampling
 %     bursts, not transitions: the 29 transitions of one 30-shot run share a
 %     thermal trajectory and a queue, so a transition-level resample would
 %     overstate precision by roughly the square root of the cluster size.
 %     scripts/rq3_policy_metrics.py imports the bootstrap, the binning and the
-%     loader from the sibling scripts rather than reimplementing them, so the
-%     seed and the resampling order are shared and the intervals are identical to
+%     loader from the sibling scripts rather than reimplementing them, so the seed
+%     and the resampling order are shared and the intervals are identical to
 %     Table~\ref{tab:rq3_pacing_selectivity}'s rather than merely compatible with
 %     it -- the top band here IS that table's "overrun >= 0% of budget" row, and
 %     both give [68.0, 87.3] and [51.9, 82.8].
@@ -76,8 +89,8 @@
 %
 % (b) Why the boundary cases occur.  One mark per boundary case, in two classes:
 %
-%       safe but paced      retrospective pressure < -40% of budget and d > 0
-%       overrun, unpaced    retrospective pressure >= 0 and d = 0
+%       safe but paced      pressure < -40% of budget and d > 0
+%       overrun, unpaced    pressure >= 0 and d = 0
 %
 %     x is the controller's backlog estimation error Bhat - B in points of
 %     budget, y the retrospective pressure.  The two classes separate cleanly on
@@ -87,6 +100,15 @@
 %     an estimation error at the decision, not a policy that fires in the wrong
 %     place.  The unpaced overruns also hug y = 0 -- 55 of 62 are within 10 points
 %     of budget of the projection -- so they are shallow crossings.
+%
+%     Each class is labelled with a rate as well as a count, because the two
+%     counts are not comparable on their own: 15 of the 1,275 transitions in the
+%     loosest band is 1.2%, while 62 of the 220 in the overrun band is 28.2%.  The
+%     denominators are the band populations of (a), pooled over both conditions,
+%     and are in data/rq3/policy/summary.csv as ratePercentOfBand.  The labels sit
+%     beside their own class instead of in a legend: a legend carrying both a count
+%     and a rate needs two lines per entry and half the panel, and there is no
+%     corner of this panel it can occupy without covering one of the two clusters.
 %
 %     The strip in the gutter is the same error over all 3,781 analyzed
 %     transitions (P5--P95 whisker, P25--P75 box, median rule): -11.0, -3.4, -0.5,
@@ -118,106 +140,132 @@
 %     Frame: x [-42, 40], y [-80, 32].  Every boundary case is inside it, so
 %     nothing is clipped.
 %
-% (c) The applied delay against the outstanding backlog it drains, over paced
-%     transitions.  This is the work-conservation reading of the delay: waiting d
-%     milliseconds while at least d milliseconds of Draft work is still
-%     outstanding spends the wait draining the queue rather than idling, so the
-%     100% rule is the locus where the wait would start to outlast the work.  The
-%     delay is well inside it -- P50 10.4 and 8.6%, P95 32.2 and 56.5% -- and only
-%     0 and 8 of 411 and 471 waits cross it.
+% (c) The applied delay against the outstanding backlog it drains, one mark per
+%     paced transition.  This is the work-conservation reading of the delay:
+%     waiting d while at least d of Draft work is still outstanding spends the
+%     wait draining the queue rather than idling, so the shaded triangle above the
+%     d = B line is the region a wait would have to reach to outlast its own work.
+%     The mass sits far below it -- the delay is a median 10.4 and 8.6% of the
+%     backlog -- and only 0 and 8 of 411 and 471 waits enter it.
 %
-%     The 24MP curve leaves the frame at 0.983 and reaches 1 at 319%, which is
-%     why the 8 crossings are named on the panel and the curve carries an arrow
-%     head at the right edge.  Plotting to 319% would compress the mass that
-%     every other wait sits in into a twentieth of the panel; a log x would fix
-%     that at the cost of an axis no other exhibit in the paper uses.  Do not
-%     describe this panel without stating the 8 crossings.
+%     Both axes are in seconds, and NOT in points of budget.  The applied delay is
+%     also printed in milliseconds in the table, and a budget-relative delay
+%     beside a millisecond one recovers the budget by division in a single step;
+%     the same is not true of two absolute forms.  This is the one place in the
+%     RQ3 exhibits where the budget-relative unit is the disclosing one.
+%
+%     The frame stops at d = 2.5 s while B runs to 6.3 s, so the triangle is
+%     bounded on the right by the frame rather than by the data.  Nothing hides
+%     above it: the largest applied delay in either condition is 2.20 s, so every
+%     transition with d > B is inside the plotted triangle by construction.  An
+%     equal-range frame would put the whole population in the bottom third and
+%     spend two thirds of the panel proving that an empty region is empty.
 %
 %     What this panel is NOT.  It does not show that the delay is optimal.  The
 %     minimality claim is arithmetic and belongs in the table: d is the least
 %     integer that closes the predicted deficit under the deployed two-Draft
 %     model, and it matched the recorded delay on 3,781 of 3,781 transitions.
 %
-% (d) The cost, as a share of the burst's elapsed time.  Identical to
-%     Figure~\ref{fig:rq3_pacing_selectivity}(c) and reading the same file: one
-%     point per eligible 30-shot burst, the sum of applied delays over the burst
-%     divided by the sum of its shot-to-shot intervals.  Read the left intercept
-%     first -- 19 of 70 and 13 of 69 bursts paid nothing at all -- and the right
-%     tail second: the P95 burst spends 24.5 and 29.7% of its elapsed time
-%     waiting on the pacer.  The share is not the time a burst would save without
-%     pacing: the queued Drafts would still have to drain, and admission would
-%     meet a deeper backlog.  The panel prices the intervention, not its absence.
+% (d) The cost, one mark per eligible 30-shot burst: the sum of applied delays
+%     over the burst divided by the sum of its shot-to-shot intervals.  Marks are
+%     offset perpendicular to the value axis only as far as they must be to stay
+%     countable, which is what makes the 19 and 13 bursts that paid nothing read
+%     as a column at zero rather than as a single mark.  The offsets are computed
+%     in scripts/rq3_policy_metrics.py from the sorted values, so they do not move
+%     when the loader does.
+%
+%     Read the column at zero first, the median second, and the right tail third:
+%     the P95 burst spends 24.5 and 29.7% of its elapsed time waiting on the
+%     pacer, and the worst 24MP burst spends 52.9%.  Share, not seconds: in
+%     seconds the medians are 3.09 and 2.36 s and the distributions are
+%     comparable, but the 24MP tail reaches 18.5 s on a single burst, which either
+%     clips that mark or compresses every other burst into a quarter of the panel.
+%
+%     The share is not the time a burst would save without pacing: the queued
+%     Drafts would still have to drain, and admission would meet a deeper backlog.
+%     The panel prices the intervention, not its absence.
 %
 % ---------------------------------------------------------------------------
 % Encoding
 % ---------------------------------------------------------------------------
 % Condition is one encoding, inherited from
-% Figure~\ref{fig:rq3_pacing_selectivity}: 12MP is dark and solid, 24MP is
-% lightened and dashed.  It carries across the bars of (a) and the curves of (c)
-% and (d), so the legend is needed once and sits in (a), whose upper left is
-% empty because activation is near zero in the loosest band.  The legend swatch
-% is a rectangle rather than pgfplots' default line-plus-mark, which is what makes
-% a bar legend read as bars.
+% Figure~\ref{fig:rq3_pacing_selectivity}: 12MP is dark and filled, 24MP is
+% lightened and open.  It carries across the bars of (a) and the marks of (c) and
+% (d).  The legend for it sits in (a), whose upper left is empty because
+% activation is near zero in the loosest band; the legend swatch is a rectangle
+% rather than pgfplots' default line-plus-mark, which is what makes a bar legend
+% read as bars.  (d) names its two conditions on the y axis instead, which is why
+% its legend is free to key the median and P95 markers.
 %
 % (b) spends its own encoding on the boundary class, since condition is not
 % plotted there: filled dot for safe-but-paced, open diamond for the unpaced
-% overruns.  Its legend sits in the band between the two classes, which by
-% construction holds no case at all -- every safe-but-paced case is below -40% of
-% budget and every unpaced overrun is at or above zero.
+% overruns.  It carries no legend; both classes are labelled in place, which the
+% geometry allows because each class occupies one corner and leaves the opposite
+% one free.
 %
 % The figure is monochrome and there is no second visual channel to spend.  A
 % revision that put the boundary mechanism rates -- target demoted, ahead tasks
 % demoted, headroom rose -- in this figure as a bar panel was built and removed:
 % they are six rates with no ordering to show, four of them within 15 points of
-% each other, which is a table and not a plot.  They are the two mismatch groups
-% of Table~\ref{tab:rq3_pacing_policy}.
+% each other, which is a table and not a plot.  They are the boundary group of
+% Table~\ref{tab:rq3_pacing_policy}.
 %
 % ---------------------------------------------------------------------------
 % Data
 % ---------------------------------------------------------------------------
-% data/rq3/policy/ for (a), (b) and (c); data/rq3/selectivity/ for (d).  Both
-% derive from data/ablation_sampling/48U_metrics_{12MP_normal,24MP_memory}_0803_{1,2}.xlsx
-% (ML commit 99aae0a), and the populations are identical to
-% Table~\ref{tab:rq3_pacing_selectivity}: 70 and 69 eligible bursts, 1,920 and
-% 1,861 analyzed transitions.  The provenance of the boundary enrichment -- the
-% demotion classes, the queued-ahead reconstruction and the decision-proximal
-% thermal snapshot -- is recorded in tables/tab_rq3_pacing_policy.tex, together
-% with the regeneration step this repository still owes.
+% data/rq3/policy/, regenerated by scripts/rq3_policy_metrics.py from
+% data/ablation_sampling/48U_metrics_{12MP_normal,24MP_memory}_0803_{1,2}.xlsx
+% (ML commit 99aae0a).  Populations are identical to
+% Table~\ref{tab:rq3_pacing_selectivity} by construction, because that script
+% imports this one's loader: 70 and 69 eligible bursts, 1,920 and 1,861 analyzed
+% transitions, 411 and 471 of them paced.
 %
 % Layout: single-column float, two by two.  (a) and (b) are the two readings of
 % "is the intervention in the right place"; (c) and (d) are the two readings of
-% "is it the right size", share the cumulative-fraction scale, and so (d) drops
-% the axis label while keeping its tick labels.  The separations are wide because
-% pgfplots sizes a groupplot from its axis boxes and does not reserve room for
-% the labels between them: (b) and (d) each carry a full set of left-hand labels,
+% "is it the right size and what does it cost".  The separations are wide because
+% pgfplots sizes a groupplot from its axis boxes and does not reserve room for the
+% labels between them: (b), (c) and (d) each carry a full set of left-hand labels,
 % and the upper row carries a full set of x labels under it.
 
 \begin{figure}[t]
   \centering
   \providecommand{\rqThreePolDir}{data/rq3/policy}
-  \providecommand{\rqThreePolSelDir}{data/rq3/selectivity}
 
   \tikzset{
     % Condition, shared with Figure~\ref{fig:rq3_pacing_selectivity}: 12MP dark
-    % and solid, 24MP lightened and dashed.  The bar styles repeat the same two
-    % outlines so the legend swatch in (a) reads as the curves in (c) and (d).
-    rq3pol a/.style={black, solid, line width=0.7pt,
-      line join=round, line cap=round},
-    rq3pol b/.style={black!55, line width=0.7pt,
-      line join=round, line cap=round,
-      dash pattern=on 2pt off 1.1pt},
+    % and filled, 24MP lightened and open.  The bar outlines in (a) repeat the
+    % same two weights so the legend swatch reads as the marks in (c) and (d).
     rq3pol bar a/.style={draw=black, line width=0.4pt, fill=black!22},
     rq3pol bar b/.style={draw=black!55, line width=0.4pt, fill=black!7,
       dash pattern=on 1.5pt off 1pt},
+    % (c) carries 411 and 471 marks in eighty points of width, so the marks are
+    % small enough that the mass reads as a density rather than as a block.
+    rq3pol scatter a/.style={only marks, mark=*, mark size=0.62pt,
+      mark options={fill=black, draw=none}},
+    rq3pol scatter b/.style={only marks, mark=diamond*, mark size=0.85pt,
+      mark options={fill=white, draw=black!60, line width=0.28pt}},
+    % (d) carries 70 and 69, so its marks can be larger.
+    rq3pol strip a/.style={only marks, mark=*, mark size=0.72pt,
+      mark options={fill=black, draw=none}},
+    rq3pol strip b/.style={only marks, mark=diamond*, mark size=1.0pt,
+      mark options={fill=white, draw=black!60, line width=0.3pt}},
+    % The per-row median and P95 of (d).  Rules rather than markers: a marker
+    % has to sit outside its own row to stay visible, and there it reads as
+    % belonging to whichever row it drifts toward.
+    rq3pol quant p50/.style={black!50, line width=0.5pt},
+    rq3pol quant p95/.style={black!50, densely dotted, line width=0.5pt},
     % The pooled activation rate of the two conditions, as a band rather than as
     % two rules: they differ by 3.9 points and would read as one thick rule.
     rq3pol baseline/.style={fill=black, fill opacity=0.07, draw=none},
-    % Marked loci: zero backlog error and the deadline projection in (b).
+    % Marked loci: zero backlog error and the deadline projection in (b), the
+    % d = B line in (c).
     rq3pol zero/.style={black!50, densely dashed, line width=0.5pt},
-    % Reporting thresholds: the -40% spare cut in (b), the 100% cut in (c).
+    % Reporting thresholds: the -40% spare cut in (b).
     rq3pol thresh/.style={black!45, densely dotted, line width=0.5pt},
-    % The two boundary classes.  The dots carry a hairline white halo so that
-    % overlapping cases stay countable.
+    % The region a wait would have to reach to outlast the work it drains.
+    rq3pol region/.style={fill=black!7, draw=none},
+    % The two boundary classes of (b).  The dots carry a hairline white halo so
+    % that overlapping cases stay countable.
     rq3pol safe/.style={only marks, mark=*, mark size=1.2pt,
       mark options={fill=black, draw=white, line width=0.25pt}},
     rq3pol over/.style={only marks, mark=diamond*, mark size=1.5pt,
@@ -287,7 +335,7 @@
         rq3pol legend,
         legend style={at={(0.03,0.97)}, anchor=north west},
         % A rectangle, not pgfplots' line-plus-mark: a bar legend has to look
-        % like a bar or it reads as the curves of (c) and (d).
+        % like a bar or it reads as the marks of (c) and (d).
         legend image code/.code={\draw[#1] (0cm,-0.055cm) rectangle (0.17cm,0.055cm);},
       ]
       \draw[rq3pol baseline]
@@ -316,10 +364,6 @@
         % gridline is gutter and that gridline doubles as the fence under which
         % the marginal strip sits.
         ymin=-80,ymax=32,ytick={-60,-40,-20,0,20},
-        rq3pol legend,
-        % The band between the two classes holds no case by construction, which
-        % makes it the one place a legend cannot cover data.
-        legend style={at={(0.03,0.55)}, anchor=west},
       ]
       % Zero backlog error, and the deadline projection.  The zero rule stops at
       % the fence: continued into the gutter it would sit on the marginal
@@ -328,14 +372,21 @@
       \addplot[rq3pol zero,forget plot] coordinates {(-42,0) (40,0)};
       % The -40% spare cut that defines the safe-but-paced class.
       \addplot[rq3pol thresh,forget plot] coordinates {(-42,-40) (40,-40)};
-      \addplot[rq3pol safe]
+      \addplot[rq3pol safe,forget plot]
         table[x=backlog_error_pts,y=pressure_pct,col sep=comma]
         {\rqThreePolDir/boundary_safe_paced.csv};
-      \addlegendentry{safe, paced (15)}
-      \addplot[rq3pol over]
+      \addplot[rq3pol over,forget plot]
         table[x=backlog_error_pts,y=pressure_pct,col sep=comma]
         {\rqThreePolDir/boundary_overrun_unpaced.csv};
-      \addlegendentry{overrun, unpaced (62)}
+      % Labelled where each class sits rather than through a legend: a legend
+      % carrying both the count and the rate needs two lines per entry and half
+      % the panel, and there is no corner it can occupy without covering one of
+      % the two clusters.  Each label sits beside its own class, on the far side
+      % from the cluster's own x range, so neither can be misread for the other.
+      \node[rq3pol note,anchor=north east,align=right] at (axis cs:39,30)
+        {overrun, unpaced\\62/220 (28\%)};
+      \node[rq3pol note,anchor=south west,align=left] at (axis cs:-41,-60)
+        {safe, paced\\15/1{,}275 (1.2\%)};
       % Marginal strip, in the gutter below the plotted pressure range so it
       % cannot read as cases at that pressure.  Quantiles of the same backlog
       % error over all 3,781 analyzed transitions, from
@@ -355,59 +406,80 @@
       % ---------------------------------------------------------------------
       \nextgroupplot[
         title={(c) Delay vs.\ backlog},
-        xlabel={Delay (\% of backlog)},
-        ylabel={Cumulative fraction},
-        xmin=0,xmax=112,ymin=0,ymax=1.02,
-        xtick={0,25,50,75,100},
-        ytick={0,0.5,1},
+        xlabel={Backlog $B$ (s)},
+        ylabel={Applied delay $d$ (s)},
+        xmin=0,xmax=6.3,ymin=0,ymax=2.5,
+        xtick={0,2,4,6},
+        ytick={0,1,2},
         yticklabel style={/pgf/number format/fixed},
       ]
-      % Where the wait would start to outlast the work it drains.
-      \addplot[rq3pol thresh,forget plot] coordinates {(100,0) (100,1.02)};
-      \addplot[rq3pol a,no marks,forget plot]
-        table[x=delay_backlog_pct,y=cdf,col sep=comma]
-        {\rqThreePolDir/delay_backlog_ecdf_12mp_normal.csv};
-      \addplot[rq3pol b,no marks,forget plot]
-        table[x=delay_backlog_pct,y=cdf,col sep=comma]
-        {\rqThreePolDir/delay_backlog_ecdf_24mp_memory.csv};
-      % The 24MP curve leaves the frame at 0.983 and reaches 1 at 319%.  The
-      % arrow head says the curve continues; the note says by how many waits.
-      \draw[rq3pol b,-{Latex[length=1.6pt,width=1.6pt]}]
-        (axis cs:100,0.983) -- (axis cs:111,0.983);
-      \node[rq3pol note,anchor=south east,align=right] at (axis cs:96,0.04)
-        {0 and 8 waits\\past 100\%};
+      % The region a wait would have to reach to outlast the work it drains.  It
+      % is bounded on the right by the frame, not by the data: the largest
+      % applied delay is 2.20 s, so no transition with d > B falls outside it.
+      \path[rq3pol region]
+        (axis cs:0,0) -- (axis cs:2.5,2.5) -- (axis cs:0,2.5) -- cycle;
+      \addplot[rq3pol zero,forget plot] coordinates {(0,0) (2.5,2.5)};
+      \addplot[rq3pol scatter a,forget plot]
+        table[x=backlog_s,y=delay_s,col sep=comma]
+        {\rqThreePolDir/delay_vs_backlog_12mp_normal.csv};
+      \addplot[rq3pol scatter b,forget plot]
+        table[x=backlog_s,y=delay_s,col sep=comma]
+        {\rqThreePolDir/delay_vs_backlog_24mp_memory.csv};
+      % The region carries the label, so the rule bounding it needs none.  A
+      % second node on the rule itself was tried and removed: the only place it
+      % fits is over the 24MP mass, where it has to be boxed in opaque white to
+      % stay legible and then reads as a hole in the panel.  No mark reaches this
+      % strip -- the largest applied delay is 2.20 s -- so the label needs no fill.
+      % Three short lines rather than one: the region narrows toward its apex, and
+      % a single line long enough to hold the count runs out through the rule.
+      \node[rq3pol note,anchor=north west,align=left] at (axis cs:0.12,2.47)
+        {$d>B$\\0 and 8\\waits};
 
       % ---------------------------------------------------------------------
-      % (d) the cost per burst.  Shares (c)'s cumulative-fraction scale, so it
-      % keeps the tick labels and drops the axis label.
+      % (d) the cost, one mark per burst.  The conditions are named on the y
+      % axis, so the legend is free to key the two summary markers.
       % ---------------------------------------------------------------------
       \nextgroupplot[
         title={(d) Cost per burst},
         xlabel={Delay (\% of burst)},
-        xmin=0,xmax=55,ymin=0,ymax=1.02,
+        xmin=-1.5,xmax=56,ymin=-0.55,ymax=1.72,
         xtick={0,10,20,30,40,50},
-        ytick={0,0.5,1},
-        yticklabel style={/pgf/number format/fixed},
+        ytick={0,1},
+        yticklabels={{24MP mem.},{12MP}},
+        ymajorgrids=false,
+        rq3pol legend,
+        legend style={at={(0.98,0.98)}, anchor=north east},
       ]
-      \addplot[rq3pol a,no marks,forget plot]
-        table[x=delay_share_pct,y=cdf,col sep=comma]
-        {\rqThreePolSelDir/burst_share_ecdf_12mp_normal.csv};
-      \addplot[rq3pol b,no marks,forget plot]
-        table[x=delay_share_pct,y=cdf,col sep=comma]
-        {\rqThreePolSelDir/burst_share_ecdf_24mp_memory.csv};
-      % The curves do not start at zero because 19 of 70 and 13 of 69 bursts
-      % never paced; the note sits below both intercepts (0.271 and 0.188).
-      \node[rq3pol note,anchor=west] at (axis cs:2.5,0.085) {never paced};
+      % Summary rules, drawn behind the marks and spanning only their own row so
+      % that neither can be read against the other condition.  Values from
+      % data/rq3/policy/summary.csv: burstDelaySharePercent P50 / P95 is
+      % 18.11 / 24.49 for 12MP and 9.83 / 29.74 for 24MP.
+      \draw[rq3pol quant p50] (axis cs:18.11,0.55) -- (axis cs:18.11,1.45);
+      \draw[rq3pol quant p95] (axis cs:24.49,0.55) -- (axis cs:24.49,1.45);
+      \draw[rq3pol quant p50] (axis cs:9.83,-0.45) -- (axis cs:9.83,0.45);
+      \draw[rq3pol quant p95] (axis cs:29.74,-0.45) -- (axis cs:29.74,0.45);
+      \addplot[rq3pol strip a,forget plot]
+        table[x=share_pct,y=y,col sep=comma]
+        {\rqThreePolDir/burst_share_swarm_12mp_normal.csv};
+      \addplot[rq3pol strip b,forget plot]
+        table[x=share_pct,y=y,col sep=comma]
+        {\rqThreePolDir/burst_share_swarm_24mp_memory.csv};
+      \addlegendimage{rq3pol quant p50}
+      \addlegendentry{P50}
+      \addlegendimage{rq3pol quant p95}
+      \addlegendentry{P95}
+      \node[rq3pol note,anchor=south west] at (axis cs:1.2,1.50) {never paced};
     \end{groupplot}
   \end{tikzpicture}
   \caption{RQ3 pacing policy evidence. (a) Activation against the retrospective
-  pressure the controller never observed; the band is the pooled rate. (b) The
-  two boundary mismatches against the controller's backlog estimation error:
-  every safe-but-paced decision over-estimated the backlog and 61 of 62 unpaced
-  overruns under-estimated it, 55 of them within 10 points of budget of the
-  projection; the strip below is the same error over all 3,781 transitions.
-  (c) The applied delay against the outstanding backlog it drains; 0 and 8 waits
-  pass 100\%, the 24MP tail reaching 319\%. (d) The resulting responsiveness cost
-  per 30-shot burst.}
+  pressure the controller never observed; the band is the pooled rate and the
+  whiskers are a burst-cluster bootstrap. (b) The two boundary mismatches against
+  the controller's backlog estimation error: every safe-but-paced decision
+  over-estimated the backlog and 61 of 62 unpaced overruns under-estimated it, 55
+  of them within 10 points of budget of the projection; the strip below is the
+  same error over all 3,781 transitions. (c) One mark per paced transition: the
+  shaded region is where a wait would outlast the backlog it drains, and 0 and 8
+  waits reach it. (d) One mark per 30-shot burst; the column at zero is the 19 and
+  13 bursts that never paced.}
   \label{fig:rq3_pacing_policy}
 \end{figure}

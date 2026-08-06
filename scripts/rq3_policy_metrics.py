@@ -104,7 +104,7 @@ warnings.filterwarnings('ignore')
 
 from rq3_calibration_metrics import (CONDITIONS, SOURCES, load, med, pct_inc,
                                      read)
-from rq3_selectivity_metrics import bin_stats, boot_bins, bursts, ecdf
+from rq3_selectivity_metrics import bin_stats, boot_bins, bursts
 
 PAPER = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(PAPER, 'data', 'rq3', 'policy')
@@ -128,6 +128,41 @@ SAFE_SPARE_PCT = -40.0
 BOUNDARY_NEAR_PCT = 10.0
 # Quantiles of the backlog error drawn as the marginal strip in panel (b).
 MARGINAL_QUANTILES = (0.05, 0.25, 0.50, 0.75, 0.95)
+
+# Panel (d) is a strip plot, one mark per burst, so the marks have to be offset
+# perpendicular to the value axis far enough to stay countable and no further.
+# The offsets are what make the 19 and 13 bursts that never paced read as a
+# column at zero rather than as a single mark.
+SWARM_DX = 1.0      # x-units (points of the burst's elapsed time) that overlap
+SWARM_STEP = 0.040  # y-units between adjacent slots; 10 slots each way fits the
+                    # 0.45-wide band the figure gives each condition
+
+
+def slot_order():
+    """0, +1, -1, +2, -2, ... -- nearest the row axis first."""
+    yield 0
+    k = 1
+    while True:
+        yield k
+        yield -k
+        k += 1
+
+
+def swarm(values, row):
+    """Deterministic beeswarm placement for a strip plot.
+
+    Each value takes the slot nearest its row axis that no already-placed value
+    within SWARM_DX occupies.  Placing in sorted order makes the result
+    independent of the order the bursts were loaded in, so the figure does not
+    move when the loader does.
+    """
+    placed, out = [], []
+    for v in sorted(values):
+        used = {s for u, s in placed if abs(u - v) < SWARM_DX}
+        slot = next(s for s in slot_order() if s not in used)
+        placed.append((v, slot))
+        out.append((v, row + slot * SWARM_STEP))
+    return out
 
 # Optional-work ranking of a workload sequence.  Bokeh is the multi-frame stage
 # admission drops first, Filter the single-frame stage it drops next; the encoding
@@ -281,7 +316,7 @@ def analyse(condition, files):
 
     return {
         'condition': condition, 'tx': tx, 'audit': audit, 'runs': runs,
-        'bands': bands,
+        'bands': bands, 'paced': paced,
         'nAnalyzed': len(tx), 'nBursts': len(runs), 'nPaced': len(paced),
         'activation': 100 * len(paced) / len(tx),
         'formulaMatches': matches,
@@ -441,6 +476,10 @@ def write_all(results, safe, overrun):
     os.makedirs(OUT, exist_ok=True)
     every = [t for res in results.values() for t in res['tx']]
 
+    # Panel (d) puts 12MP on the upper row.  The row index is the mark's y before
+    # the swarm offset, so it belongs here rather than in the figure.
+    ROW = {'12mp_normal': 1, '24mp_memory': 0}
+
     for cond, res in results.items():
         slug = cond
         # slot descends so the loosest band sits at the top of a horizontal
@@ -454,8 +493,16 @@ def write_all(results, safe, overrun):
                 round(b['activation'] - b['actLo'], 2),
                 round(b['actHi'] - b['activation'], 2)]
                for i, (b, name) in enumerate(zip(res['bands'], BAND_NAMES))])
-        write(f'delay_backlog_ecdf_{slug}.csv', ['delay_backlog_pct', 'cdf'],
-              [[round(x, 4), round(c, 5)] for x, c in ecdf(res['ratio'])])
+        # (c) plots the applied delay against the backlog it drains, both in
+        # seconds.  Seconds and not points of budget: the delay is also printed in
+        # milliseconds in the table, and a budget-relative delay beside a
+        # millisecond one recovers the budget by division in a single step.
+        write(f'delay_vs_backlog_{slug}.csv', ['backlog_s', 'delay_s'],
+              [[round(t['B'] / 1000, 4), round(t['d'] / 1000, 4)]
+               for t in sorted(res['paced'], key=lambda t: (t['B'], t['d']))])
+        # (d) plots one mark per burst.
+        write(f'burst_share_swarm_{slug}.csv', ['share_pct', 'y'],
+              [[round(v, 4), round(y, 4)] for v, y in swarm(res['shares'], ROW[cond])])
 
     # slot descends from the top so the first mechanism listed reads first.
     mech = [('safe', row) for row in mechanism(safe, 'safe')]
@@ -508,10 +555,17 @@ def write_summary(results, safe, overrun):
         put('burstDelaySharePercent P95', round(res['shareP95'], 2), res['nBursts'])
         put('burstsNeverPaced', res['neverPaced'], res['nBursts'])
 
+    # The two boundary classes are defined on the outer two pressure bands, so the
+    # band populations are the denominators that make them rates rather than raw
+    # counts.  Pooled over both conditions, as the classes themselves are.
+    band_pop = {'safeButPaced': sum(res['bands'][0]['n'] for res in results.values()),
+                'overrunButUnpaced': sum(res['bands'][-1]['n'] for res in results.values())}
+
     for name, cases in (('safeButPaced', safe), ('overrunButUnpaced', overrun)):
         s = boundary_stats(cases)
         for metric, value, den in (
                 ('cases', s['n'], ''),
+                ('ratePercentOfBand', round(100 * s['n'] / band_pop[name], 2), band_pop[name]),
                 ('targetDemoted', s['demoted'], s['n']),
                 ('aheadTasksDemoted', s['aheadDemoted'], s['aheadTasks']),
                 ('backlogOverEstimated', s['backlogOver'], s['n']),
