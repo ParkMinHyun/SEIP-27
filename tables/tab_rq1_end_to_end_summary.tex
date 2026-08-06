@@ -4,27 +4,56 @@
 % tables/tab_rq1_ablation.tex.
 %
 % Controller-off Timeout onset retains the previously reported baseline
-% reference.  Full-controller values are reconstructed from:
-%   - SM-S948U_metrics_12MP_normal_0803_1.xlsx
-%   - SM-S948U_metrics_12MP_normal_0803_2.xlsx
-%   - SM-S948U_metrics_24MP_memory_0803_1.xlsx
-%   - SM-S948U_metrics_24MP_memory_0803_2.xlsx
+% reference.  Full-controller values are reconstructed from the balanced copy in
+% data/ablation_sampling/:
+%   - 48U_metrics_12MP_normal_0803_1.xlsx
+%   - 48U_metrics_12MP_normal_0803_2.xlsx
+%   - 48U_metrics_24MP_memory_0803_1.xlsx
+%   - 48U_metrics_24MP_memory_0803_2.xlsx
 % The workbooks were exported by CaptureMetricsExcelExporter.  The
 % implementation reference was inspected at commit:
 % 99aae0af8c3fa1ceb784083446e83c40d0fb917f
 %
 % Per the collection correction, sessions containing Capture Timeout are
 % excluded and incomplete non-timeout sessions remain outside the exporter's
-% RQ1 inclusion set.  The four input workbooks contribute 84 and 72 complete,
-% timeout-free runs to the 12MP and 24MP conditions, respectively.
+% RQ1 inclusion set.  On the unbalanced source in data/ablation_original/, the four
+% workbooks contribute 84 and 72 complete, timeout-free runs to the 12MP and
+% 24MP conditions.
 %
-% This table reports all exporter-eligible complete, timeout-free runs.  The
-% run-level N therefore varies by (condition, starting-level) cell.  The
-% separate post-hoc balanced-N=10 sensitivity result remains available in
-% data/rq1/all_vs_balanced_n10_summary.csv, with its run-level selection in
-% data/rq1/balanced_n10_selection_audit.csv; it is not used in this table.
-% Some watchdog-only traces remain in N but are omitted from a completion
-% percentage when the exporter marks that prefix ineligible.
+% BALANCED DESIGN.  Every cell now reports exactly ten runs.  The unbalanced
+% source gave 10-14 runs per cell (12MP Lv2-6 and 24MP Lv1/Lv3 were oversized),
+% and 16 runs were dropped to level them.  Selection rule, per oversized cell:
+% each run is scored by the Euclidean norm of its robust z across M+S@30,
+% Sigma-d, Slack P5 and burst span, z = (x - median)/(1.4826 MAD) with a
+% zero-MAD metric contributing nothing, and the N-10 highest-scoring runs are
+% removed.  data/ablation_sampling/sampling_selection_audit.csv lists every run
+% of every trimmed cell with its metrics, z values, score and KEEP/DROP, and the
+% folder README states the protocol and its bias.
+%
+% BIAS TO DISCLOSE IF THIS TABLE IS PUBLISHED.  The score is computed on
+% reported outcome metrics, so the trim is not outcome-neutral.  At 12MP/Lv4 the
+% M+S distribution is bimodal -- four of fourteen runs retained all optional
+% Draft work at 100% while the rest sat at 23-40% -- and those four are the
+% furthest from the median, so the cell moves 53.1 to 34.3.  The same effect,
+% smaller, applies at Lv3 (53.6 to 44.3).  That is a real mode of the
+% phenomenon, not measurement error.  Two outcome-neutral alternatives were
+% computed: first-ten-by-collection-order gives 12MP Lv3/Lv4 M+S of 48.3/55.0,
+% and scoring deviation on Slack P5 alone gives 54.3/56.3.
+%
+% Cells that did not change, because they already held ten runs: 12MP Lv0, Lv1
+% and 24MP Lv0, Lv2, Lv4, Lv5, Lv6.
+%
+% Aggregation conventions, each verified by reproducing the previous version of
+% this table from data/ablation_original exactly, on all 14 rows and all 20 columns:
+%   - N, Slack P5 and every pacing column use all retained runs;
+%   - M+S, M and S drop a watchdog-bearing run from the average for the horizon
+%     the watchdog falls inside, while the run stays in N.  A watchdog at shot
+%     13 therefore leaves @5 eligible and @30 ineligible.  This affects the two
+%     24MP cells that contain one such run, Lv2 and Lv4.
+%   - retention is measured by EXECUTION (the node has a positive observed
+%     duration).  In this arm that agrees with the exporter's Completed flag;
+%     the two diverge only in the forced-execution arms of
+%     Table~\ref{tab:rq1_ablation}.
 %
 % The 24MP/memory-pressure workbook is treated as one requested-mode scenario
 % rather than regrouped by exported Draft sizeBucket.  This preserves its mixed
@@ -113,30 +142,30 @@
         & \textbf{100} & 100 & \textbf{0} & 0.3
         & \textbf{--} & 74 & \textbf{0} & 0 \\
     \cline{3-20}
-      & & Lv2 & 13 & \rqShot{24} & \rqShot{27} & 0 & 5.1
-        & \textbf{100} & 88.7 & \textbf{100} & 88.7
-        & \textbf{100} & 100 & \textbf{0} & 15.1
-        & \textbf{--} & 286 & \textbf{0} & 1.3 \\
+      & & Lv2 & 10 & \rqShot{24} & \rqShot{27} & 0 & 4.3
+        & \textbf{100} & 89.3 & \textbf{100} & 89.3
+        & \textbf{100} & 100 & \textbf{0} & 13.8
+        & \textbf{--} & 234 & \textbf{0} & 1.1 \\
     \cline{3-20}
-      & & Lv3 & 12 & \rqShot{13} & \rqShot{18} & 0 & 4.1
-        & \textbf{100} & 53.6 & \textbf{100} & 53.9
-        & \textbf{100} & 89.7 & \textbf{0} & 35.3
-        & \textbf{--} & 381 & \textbf{0} & 3.2 \\
+      & & Lv3 & 10 & \rqShot{13} & \rqShot{18} & 0 & 4.0
+        & \textbf{100} & 44.3 & \textbf{100} & 44.7
+        & \textbf{100} & 87.7 & \textbf{0} & 27.9
+        & \textbf{--} & 385 & \textbf{0} & 3.1 \\
     \cline{3-20}
-      & & Lv4 & 14 & \rqShot{10} & \rqShot{17} & 0 & 5.7
-        & \textbf{100} & 53.1 & \textbf{100} & 53.1
-        & \textbf{100} & 98.1 & \textbf{1.8} & 44.8
-        & \textbf{291} & 383 & \textbf{0} & 4.5 \\
+      & & Lv4 & 10 & \rqShot{10} & \rqShot{17} & 0 & 5.0
+        & \textbf{100} & 34.3 & \textbf{100} & 34.3
+        & \textbf{100} & 97.3 & \textbf{2.5} & 33.8
+        & \textbf{291} & 387 & \textbf{0} & 3.5 \\
     \cline{3-20}
-      & & Lv5 & 14 & \rqShot{8} & \rqShot{10} & 0 & 3.9
-        & \textbf{100} & 32.9 & \textbf{100} & 32.9
-        & \textbf{100} & 75.5 & \textbf{1.8} & 32.8
-        & \textbf{611} & 546 & \textbf{0} & 3.9 \\
+      & & Lv5 & 10 & \rqShot{8} & \rqShot{10} & 0 & 3.4
+        & \textbf{100} & 27.3 & \textbf{100} & 27.3
+        & \textbf{100} & 72.7 & \textbf{0} & 29.3
+        & \textbf{--} & 467 & \textbf{0} & 3.9 \\
     \cline{3-20}
-      & & Lv6 & 11 & \rqShot{7} & \rqShot{10} & 0 & 5.2
-        & \textbf{100} & 30.3 & \textbf{100} & 30.3
-        & \textbf{100} & 85.2 & \textbf{11.4} & 32.0
-        & \textbf{78} & 448 & \textbf{0} & 4.4 \\
+      & & Lv6 & 10 & \rqShot{7} & \rqShot{10} & 0 & 5.3
+        & \textbf{100} & 27.7 & \textbf{100} & 27.7
+        & \textbf{100} & 87.7 & \textbf{12.5} & 32.8
+        & \textbf{78} & 446 & \textbf{0} & 4.3 \\
     % Emphasize the scenario boundary only after the final 12MP row.
     \Xcline{2-20}{0.7pt}
       & \multirow{7}{*}{\makecell[c]{24MP\\memory\\pressure}}
@@ -145,9 +174,9 @@
         & \textbf{100} & 100 & \textbf{0} & 9.0
         & \textbf{--} & 200 & \textbf{0} & 0 \\
     \cline{3-20}
-      & & Lv1 & 11 & \rqShot{19} & \rqShot{22} & 0 & 8.3
-        & \textbf{100} & 97.3 & \textbf{100} & 97.3
-        & \textbf{100} & 100 & \textbf{0} & 6.3
+      & & Lv1 & 10 & \rqShot{19} & \rqShot{22} & 0 & 7.7
+        & \textbf{100} & 97.0 & \textbf{100} & 97.0
+        & \textbf{100} & 100 & \textbf{0} & 6.9
         & \textbf{--} & 150 & \textbf{0} & 0.2 \\
     \cline{3-20}
       & & Lv2 & 10 & \rqShot{14} & \rqShot{21} & 0 & 5.9
@@ -155,10 +184,10 @@
         & \textbf{100} & 81.1 & \textbf{2.5} & 12.8
         & \textbf{83} & 257 & \textbf{0} & 1.1 \\
     \cline{3-20}
-      & & Lv3 & 11 & \rqShot{7} & \rqShot{10} & 0 & 4.4
-        & \textbf{92.7} & 43.6 & \textbf{92.7} & 43.6
-        & \textbf{100} & 82.7 & \textbf{15.9} & 34.8
-        & \textbf{448} & 301 & \textbf{0} & 4.1 \\
+      & & Lv3 & 10 & \rqShot{7} & \rqShot{10} & 0 & 4.3
+        & \textbf{94.0} & 46.7 & \textbf{94.0} & 46.7
+        & \textbf{100} & 81.0 & \textbf{10.0} & 36.9
+        & \textbf{404.5} & 296 & \textbf{0} & 4.2 \\
     \cline{3-20}
       & & Lv4 & 10 & \rqShot{5} & \rqShot{9} & 0 & 4.7
         & \textbf{94.0} & 39.3 & \textbf{94.0} & 39.3
@@ -190,7 +219,11 @@
   normalized deadline margin.  Completion percentages are macro-averaged
   across runs.  Delay P50 is pooled over positive applied delays;
   \(\Sigma\)-delay P50 is the median within-run summed delay.  -- indicates
-  that an event was not observed within the corresponding horizon.  The
-  full-controller columns report all retained runs; the separate balanced
-  sensitivity comparison is not used in these cells.}
+  that an event was not observed within the corresponding horizon.  Every cell
+  reports a balanced \(N=10\); cells that held more runs were levelled by
+  dropping the ones furthest from the cell centre, scored on the reported
+  run-level metrics.  Because that score reads the outcomes the trim is not
+  outcome-neutral, and at 12MP/Lv4 it removes the four runs that retained all
+  optional Draft work, so \(M{+}S\)@30 falls from \(53.1\) to \(34.3\); the
+  selection is audited run by run in \texttt{data/ablation\_sampling/}.}
 \end{table*}

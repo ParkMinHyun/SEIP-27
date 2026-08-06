@@ -186,6 +186,23 @@ printed as a product constant in the manuscript.
 `@5/@30` reports the same metric over the first 5 and first 30 shots. For a
 prefix of \(k\) shots, pacing metrics use at most \(k-1\) transitions.
 
+Two aggregation rules that the cells depend on, each verified by reproducing the
+whole table (14 rows, 20 columns) from the workbooks:
+
+- `N`, Slack P5 and every pacing column use **all** retained runs.
+- Completion percentages drop a watchdog-bearing run from the average for the
+  horizon the watchdog falls inside, while the run stays in `N`. The exclusion
+  is therefore horizon-aware: a watchdog at shot 13 leaves `@5` eligible and
+  `@30` ineligible. Two 24MP cells (Lv2, Lv4) contain one such run each, so
+  their `@30` completion averages run over 9 of the 10 runs.
+
+Retention is measured by **execution**, as in section 4.3. In this arm that
+agrees with the exporter's `Completed` flag; the two diverge only in the
+forced-execution arms of RQ1(b).
+
+Every cell reports a balanced `N = 10`; the protocol and its bias are in
+section 4.3.1.
+
 ### 4.3 RQ1(b): Controller ablation
 
 The four configurations are:
@@ -208,8 +225,8 @@ states them.
 An arm can reach zero timeouts trivially, either by discarding optional Draft
 work or by pacing without bound, and the two single-component arms occupy
 exactly those two degenerate corners: Admission only reaches 100% `S(30)` in
-three of the four conditions while retaining the least optional work of any
-arm, and Pacing only retains the most optional work and survives the least.
+two of the four conditions while retaining the least optional work of any
+arm, and Pacing only retains all of it (100%) and survives the least.
 Each row therefore also reports what the arm preserved and what it charged:
 
 | Column | Printed as | Definition |
@@ -218,7 +235,7 @@ Each row therefore also reports what the arm preserved and what it charged:
 | `E/M` | E/M | Earliest and median first-timeout capture index; `M` is censored when fewer than half the runs in the cell time out |
 | Slack P5 `(%)` | Slack P5 (%) | Each run's own inclusive fifth percentile of the per-capture normalized deadline margin, macro-averaged **over the runs that survived**; censored when the cell has no surviving run |
 | Overrun P50 `(ms)` | Overrun P50 (ms) | Median, over the runs that timed out, of `-timeoutMarginMs` at the first timeout; censored when no run in the cell timed out |
-| \(M+S\) `(%)` | Draft completion | Per-run rate of `bokehCompleted && filterCompleted` over the first 30 captures, macro-averaged across runs |
+| \(M+S\) `(%)` | Draft completion | Per-run rate of Bokeh **and** Filter having *executed* over the first 30 captures, macro-averaged across runs |
 | \(\Sigma d\) `(s)` | Pacing cost | Median across runs of the delay accumulated in the run; structurally zero when the pacer is off |
 
 Slack P5 must be computed **per run and then averaged, over surviving runs
@@ -232,9 +249,17 @@ only**. Two failure modes of the earlier pooled-over-all-captures form:
   times the mean surviving length, so the percentile fell inside the overruns
   whenever that mean dropped below about 20 captures. The printed sign tracked
   run length, not deadline safety: 12MP normal / Lv3 / Pacing only times out in
-  5 of its 9 runs, yet pooling printed `+5.4` for it against `+4.1` for Full,
-  because its runs survived 25.2 captures on average and its 5 overruns were
-  only 2.2% of the pool.
+  9 of its 11 runs, yet pooling all captures still gives `+1.6` for it, because
+  the nine terminal overruns are only 4.1% of the 217 samples.
+
+\(M+S\) must be measured by **execution** — the node has a positive observed
+duration — and *not* by the exporter's `bokehCompleted`/`filterCompleted` flags.
+Per ReplayNotes "Recommendation vs execution", `Completed` additionally requires
+`recommendedAdmit = true`, and the recommendation is still recorded in the two
+forced-execution arms. Using the flag there reports work that demonstrably ran
+as not completed: it prints 91.0/82.9 (12MP Lv3/Lv4) and 84.3/69.5 (24MP) for No
+control, where in fact both nodes ran on every capture and the correct value is
+100.0. The two definitions agree in the admission-on arms.
 
 Failure severity belongs in `Overrun P50` instead, where the run set it is
 defined over is stated rather than implied. Report it in **ms**, not as a
@@ -249,24 +274,62 @@ timeout-only table renders No control and Pacing only indistinguishable at
 the remaining captures are 12MP.  Starting-level 5--6 runs use the product's
 12MP fallback and must not be presented as 24MP ablation evidence.
 
-The Full 24MP / Lv3 cell excludes one session that contained a Capture Timeout,
-which is why it reads `7/7` and censors both `E/M` and `Overrun P50`. Under that
-exclusion its \(M+S\) is 44.3% and its \(\Sigma d\) is 4.4 s, both of which
-match the corresponding RQ1(a) cell exactly; retaining the session gives `7/8`,
-46.7% and 4.2 s. The exclusion criterion is not yet predeclared in the
-manuscript and is not applied to the other three arms -- it cannot be, since No
-control would then have no runs at all -- so it must either be stated as a
-per-cell operator-invalidity call with its reason, or dropped.
+The predeclared per-cell exclusion of one Capture-Timeout session from the Full
+24MP / Lv3 cell is **retired**. It could not be applied symmetrically — No
+control would have had no runs left — and the current Full exports contain no
+Capture-Timeout session to exclude. See the collection gap below before reading
+that as "no attempt timed out".
 
-Open collection gaps, recorded in the table file's header comment and marked in
-the table itself: no controller-off workbook exists for 12MP normal; 12MP
-normal / Lv4 / Pacing only has one run; and the arms are split across the 0729
-and 0803 campaigns.  Before submission, all four arms must use the same
-software build and a matched, counterbalanced collection protocol.
+### 4.3.1 Data sources and balancing
 
-The values are recomputed from the workbooks by
-`scripts/rq1_ablation_metrics.py`, which applies section 3.2 run
-reconstruction, section 3.4 percentiles, and section 3.5 dedup.
+All four arms live in this repository. `data/ablation_original/` is the untouched source
+of record; `data/ablation_sampling/` is the balanced copy the tables read.
+
+| Arm | Workbooks (`48U_metrics_<condition>_…`) |
+|---|---|
+| No control | `…_baseline_0803.xlsx` |
+| Pacing only | `…_pacing_only_0803.xlsx` |
+| Admission only | `…_admit_only_0803.xlsx` |
+| Full | `…_0803_1.xlsx` **and** `…_0803_2.xlsx` |
+
+The Full arm pools both parts, which is the run set RQ1(a) has always used. Both
+parts carry the same policy label (`ReplayScope`: `RECORDED_RUNTIME` /
+`FACTUAL_RECORDED_TARGET` / `M+S`) and the deployed pacing formula reproduces
+`beforeAppliedDelayMs` on 100% of recorded decisions in each, so they are one
+arm.
+
+**Balancing protocol.** RQ1(a) cells held 10–14 runs. Oversized cells (12MP
+Lv2–Lv6, 24MP Lv1 and Lv3) are levelled to `N = 10` by scoring each run with the
+Euclidean norm of its robust z across \(M+S\)@30, \(\Sigma d\), Slack P5 and
+burst span — `z = (x − median) / (1.4826 · MAD)`, a zero-MAD metric contributing
+nothing — and dropping the `N − 10` highest. 16 runs are removed;
+`data/ablation_sampling/sampling_selection_audit.csv` records every run with its
+metrics, z values, score and KEEP/DROP.
+
+**The protocol is not outcome-neutral and this must be disclosed.** The score
+reads reported outcomes, so where a cell is bimodal it deletes a mode rather
+than measurement error. At 12MP / Lv4 four of fourteen runs retained all
+optional Draft work (100%) against 23–40% for the rest; all four are dropped and
+the cell moves 53.1% → 34.3%. Lv3 moves 53.6% → 44.3%. Outcome-neutral
+alternatives, for reference: first-ten-by-collection-order gives 48.3/55.0 and
+scoring on Slack P5 alone gives 54.3/56.3.
+
+Only the Full arm was balanced. Two Pacing-only cells remain uneven — 12MP / Lv3
+(11 runs) and 24MP / Lv4 (13) — so a factorial read across those rows still
+compares 10 against 11 or 13.
+
+**Collection gap to resolve before submission.** The Full exports omit the run
+ids that the RQ3 notes identify as this arm's Capture-Timeout sessions (12MP run
+9; 24MP runs 35 and 36); `RQ1Runs` jumps over them. The Full denominators
+therefore count only the sessions present in the export, so `10/10` is not by
+itself evidence that no attempt timed out. The other three arms retain their
+timeout sessions. Either re-export the arm without that filter or state the
+number of excluded sessions in the caption.
+
+`scripts/rq1_ablation_metrics.py` predates this reorganization: its workbook
+paths point at a different machine and at the retired 0729 campaign, and it
+computes \(M+S\) from the `Completed` flags. Re-point it at
+`data/ablation_sampling/` and switch it to execution before reusing it.
 
 ### 4.4 RQ1 workbook mapping
 
@@ -1146,6 +1209,13 @@ uv run --with openpyxl --with pandas --with scipy python data/rq3_aggregate.py
    normalize each event first and then calculate P5.
 5. Any deviation from the aggregation rules in this document must be recorded
    before inspecting comparative outcomes.
+6. The RQ1 `N = 10` balancing protocol (section 4.3.1) was applied *after* the
+   outcomes were known and scores runs on those outcomes. It must be presented
+   as a post-hoc balancing choice with its direction of bias stated, not as a
+   predeclared exclusion — or replaced with an outcome-neutral rule.
+7. The Full-arm exports omit this arm's Capture-Timeout sessions, so its
+   `S(30)` denominators are pre-filtered while the other three arms' are not.
+   Resolve by re-export or by stating the count (section 4.3.1).
 
 ## 10. Data handoff checklist
 

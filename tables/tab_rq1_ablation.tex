@@ -90,43 +90,95 @@
 %   Sigma d  median across runs of the delay accumulated in the run
 %            (RQ3Summary.totalDelayMs); structurally 0 when the pacer is off
 %
-% Sources per cell:
-%   No control:
-%     SM-S948U_metrics_12MP_normal_baseline_0803.xlsx
-%     SM-S948U_metrics_24MP_memory_baseline_0803.xlsx
-%   Admission only:
-%     SM-S948U_metrics_12MP_normal_admit_only_0803.xlsx
-%     SM-S948U_metrics_24MP_memory_admit_only_0803.xlsx
-%   Pacing only:
-%     SM-S948U_metrics_12MP_normal_pacing_only_0803.xlsx
-%     SM-S948U_metrics_24MP_memory_pacing_only_0803.xlsx
-%   Full:
-%     ML/data/0803_FULL/SM-S948U_metrics_12MP_normal_0803.xlsx
-%     ML/data/0803_FULL/SM-S948U_metrics_24MP_memory_0803.xlsx
+% Sources per cell -- all four arms now live in this repository, so the table no
+% longer depends on a path in the private implementation clone.  Values are read
+% from data/ablation_sampling/ (the N=10-balanced copy; the No-control,
+% Pacing-only and Admission-only workbooks there are byte-for-byte copies of
+% data/ablation_original/, which stays the untouched source of record):
+%   No control:      48U_metrics_12MP_normal_baseline_0803.xlsx
+%                    48U_metrics_24MP_memory_baseline_0803.xlsx
+%   Pacing only:     48U_metrics_12MP_normal_pacing_only_0803.xlsx
+%                    48U_metrics_24MP_memory_pacing_only_0803.xlsx
+%   Admission only:  48U_metrics_12MP_normal_admit_only_0803.xlsx
+%                    48U_metrics_24MP_memory_admit_only_0803.xlsx
+%   Full:            48U_metrics_12MP_normal_0803_{1,2}.xlsx
+%                    48U_metrics_24MP_memory_0803_{1,2}.xlsx
 %
 % Recomputation notes:
-%   - Values were recomputed directly from the workbooks with the guide's run
-%     reconstruction rule.  The 12MP Full rows reproduce the Lv3 and Lv4 rows of
-%     Table~\ref{tab:rq1_controller_behavior} exactly, which validates the
-%     pipeline.
-%   - The 0803 Pacing-only rows use the workbooks' includedForRq1 manifest.  In
+%   - Values are recomputed directly from the workbooks with the guide's run
+%     reconstruction rule.  The 12MP Full rows still reproduce the Lv3 and Lv4
+%     rows of Table~\ref{tab:rq1_controller_behavior} exactly, which validates
+%     the pipeline.
+%   - The Full arm now pools BOTH parts of each condition's collection, which is
+%     the run set Table~\ref{tab:rq1_controller_behavior} has always used, and
+%     reads the balanced copy in data/ablation_sampling/.  The earlier version of
+%     this table read only the first part of one workbook, so its Full cells
+%     rested on 10/10/7/6 runs; pooling gives 12/14/11/10 and the N=10 balancing
+%     protocol then levels every cell to ten.  The other three arms are unchanged
+%     and reproduce their previous values exactly.
+%     Full cells on the unbalanced pooled source, for reference:
+%       12MP Lv3  12/12  Slack 4.7  M+S 53.6  Sigma-d 3.2
+%       12MP Lv4  14/14  Slack 6.9  M+S 53.1  Sigma-d 4.5
+%       24MP Lv3  11/11  Slack 6.1  M+S 43.6  Sigma-d 4.1
+%       24MP Lv4  10/10  Slack 8.5  M+S 41.7  Sigma-d 1.4
+%     The 12MP Lv3/Lv4 gap is the bimodality the balancing protocol prunes; see
+%     data/ablation_sampling/README.md before quoting either number.
+%   - The two Pacing-only cells with 11 and 13 runs were NOT balanced.  Only the
+%     Full arm was in the balancing scope, so those denominators stay as
+%     collected and the design remains uneven across arms within a condition.
+%   - The predeclared per-cell exclusion is retired.  It removed one 24MP/Lv3
+%     Full session containing a Capture Timeout, and the guide flagged that it
+%     could not be applied symmetrically.  The data/ablation_original Full exports contain
+%     no Capture-Timeout session at all, so nothing is excluded here.  BUT SEE
+%     THE COLLECTION GAP BELOW -- that is not the same as none having occurred.
+%   - M and S retention is measured by EXECUTION (the node has a positive
+%     observed duration), not by the legacy Completed flag.  ReplayNotes
+%     "Recommendation vs execution" states that Completed additionally requires
+%     recommendedAdmit = true, so in the two forced-execution arms it reports
+%     work that demonstrably ran as not completed: it prints 91.0/82.9 (12MP) and
+%     84.3/69.5 (24MP) for No control, where the nodes in fact ran on every
+%     capture.  The 24MP No-control cells previously carried those two legacy
+%     values and now read 100.0 like the other three No-control/Pacing-only
+%     cells.  The distinction does not arise in the admission-on arms, where the
+%     two definitions agree.
+%   - One consequence to state if a reviewer diffs the two RQ1 tables: the 24MP
+%     Lv4 Full M+S is 41.7 here and 39.3 in
+%     Table~\ref{tab:rq1_controller_behavior}, over the same ten runs.  That
+%     table follows the exporter, which drops the watchdog-truncated prefix of
+%     one run from the completion denominator; this table keeps every capture.
+%   - The Pacing-only rows use the workbooks' includedForRq1 manifest.  In
 %     particular, 12MP/Lv4 Run 21 is an incomplete, non-timeout run and is not
 %     included in that cell's denominator.
-%   - In the 0803 Admission-only collection, pacing decisions were left enabled
-%     for observation but not applied to shutter cadence.  Actual shot-to-shot
-%     intervals remain below recorded delay values, so those fields are shadow
-%     outputs and Sigma d is structurally 0 for this arm.
-%   - The 0803 baseline workbooks likewise retain controller calculations for
-%     observation, but neither admission nor pacing is applied.  The table uses
-%     actual completion and cadence, and Sigma d is structurally 0.  The 24MP
-%     workbook predates RQ1Runs, so its 59 runs are reconstructed by ppSequenceId
-%     reset and joined positionally to RQ3Summary; all relevant Lv3/Lv4 runs are
-%     valid timeout or 30-capture sessions.
+%   - In the Admission-only collection, pacing decisions were left enabled for
+%     observation but not applied to shutter cadence.  Median shot-to-shot on the
+%     transitions carrying a positive recorded delay (449 ms in 12MP, 886 ms in
+%     24MP) matches the unpaced median (434 and 839 ms) and is far below the
+%     recorded delay itself (median 1,709 and 1,080 ms), so those fields are
+%     shadow outputs and Sigma d is structurally 0 for this arm.  The baseline
+%     workbooks behave the same way; the 24MP baseline records no pacing decision
+%     at all.
+%   - The 24MP baseline workbook predates RQ1Runs, so its 59 runs are
+%     reconstructed by ppSequenceId reset; all relevant Lv3/Lv4 runs are valid
+%     timeout or 30-capture sessions.
+%
+% COLLECTION GAP -- resolve before submission:
+%   The Full exports are missing the run ids that the RQ3 notes identify as the
+%   Capture-Timeout sessions of this arm (12MP run 9; 24MP runs 35 and 36).
+%   RQ1Runs jumps over them.  The Full denominators above therefore count only
+%   the sessions present in the export, and "12/12" is not by itself evidence
+%   that no attempt timed out.  Either re-export the arm without that filter, or
+%   state the number of excluded sessions in the caption.  The other three arms
+%   retain their timeout sessions, so the comparison is conservative against the
+%   Full arm only in the sense that its denominator is smaller, not larger.
 %
 % DATA BALANCE NOTE:
-%   Arms are unbalanced (N ranges from 6 to 13 across the observed cells),
-%   although all accessible workbooks now carry the 0803 campaign label.
-%   Report the imbalance or apply a predeclared balancing protocol.
+%   Fourteen of the sixteen cells now hold N=10.  The two exceptions are
+%   Pacing-only at 12MP/Lv3 (11) and 24MP/Lv4 (13), which were outside the
+%   balancing scope.  Either extend the protocol to them or state the remaining
+%   imbalance; a 2x2 factorial read across a row still compares 10 against 11 or
+%   13 in those two conditions.
+%   All workbooks carry the 0803 campaign label and the same policy label
+%   (ReplayScope: RECORDED_RUNTIME / FACTUAL_RECORDED_TARGET / M+S).
 %
 % Implementation reference inspected at commit:
 % 99aae0af8c3fa1ceb784083446e83c40d0fb917f
@@ -203,7 +255,7 @@
       & Pacing only    & 2/11   & 12/19 & 7.3    & 270    & 100.0  & 0 \\
       & Admission only & 10/10  & --/-- & 4.3    & --     & 41.7   & 0 \\
       & \textbf{Full}  & \textbf{10/10} & --/--
-                       & \textbf{4.8} & -- & \textbf{48.3} & 3.1 \\
+                       & \textbf{4.7} & -- & \textbf{44.3} & 3.1 \\
     \cmidrule(l){2-8}
 
     % ---------------------------------------------------------------- 12MP Lv4
@@ -212,25 +264,25 @@
       & Pacing only    & 1/10 & 9/10 & 5.8 & 267 & 100.0 & 1.2 \\
       & Admission only & 10/10  & --/-- & 3.6    & --     & 29.0   & 0 \\
       & \textbf{Full}  & \textbf{10/10} & --/--
-                       & \textbf{6.5} & -- & \textbf{55.0} & 4.4 \\
+                       & \textbf{6.6} & -- & \textbf{34.3} & 3.5 \\
     \midrule
 
     % ---------------------------------------------------------------- 24MP Lv3
     \multirow{4}{*}{\makecell[c]{24MP\\memory\\Lv3}}
-      & No control     & 0/10   & 5/16  & --     & 251    & 84.3   & 0 \\
+      & No control     & 0/10   & 5/16  & --     & 251    & 100.0  & 0 \\
       & Pacing only    & 0/10   & 5/12  & --     & 258    & 100.0  & 1.9 \\
       & Admission only & 8/10   & 20/-- & 6.1    & 86     & 25.2   & 0 \\
-      & \textbf{Full}  & \textbf{7/7} & --/--
-                       & \textbf{5.5} & -- & \textbf{44.3} & 4.4 \\
+      & \textbf{Full}  & \textbf{10/10} & --/--
+                       & \textbf{5.6} & -- & \textbf{46.7} & 4.2 \\
     \cmidrule(l){2-8}
 
     % ---------------------------------------------------------------- 24MP Lv4
     \multirow{4}{*}{\makecell[c]{24MP\\memory\\Lv4}}
-      & No control     & 0/10   & 3/8.5 & --     & 176    & 69.5   & 0 \\
+      & No control     & 0/10   & 3/8.5 & --     & 176    & 100.0  & 0 \\
       & Pacing only    & 1/13   & 3/4.5 & 4.7    & 327    & 100.0  & 1.5 \\
       & Admission only & 8/10   & 3/--  & 8.2    & 160    & 30.1   & 0 \\
-      & \textbf{Full}  & \textbf{6/6} & --/--
-                       & \textbf{9.2} & -- & \textbf{51.1} & 1.1 \\
+      & \textbf{Full}  & \textbf{10/10} & --/--
+                       & \textbf{8.5} & -- & \textbf{41.7} & 1.4 \\
     \bottomrule
   \end{tabular}}%
   \fittabcolsep{\rqablbox}{\rqabltabular}{\columnwidth}{14}%
@@ -255,10 +307,9 @@
     that did time out, of how far past the deadline the first timeout ran; it
     carries the failure severity that Slack~P5 no longer absorbs, and is
     censored where no run timed out.  \mbox{\boldmath$M{+}S$}: macro-averaged
-    per-run rate of completed multi-frame and single-frame optional Draft
+    per-run rate of executed multi-frame and single-frame optional Draft
     processing.  \mbox{\boldmath$\Sigma d$}: median accumulated pacing delay per
     run, structurally zero when the pacer is off.  24MP is a requested-mode
-    label: only the first one or two captures are 24MP.  The Full 24MP/Lv3 cell
-    excludes one session that contained a Capture Timeout.
+    label: only the first one or two captures are 24MP.
   \end{minipage}}
 \end{table}
