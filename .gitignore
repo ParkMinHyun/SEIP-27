@@ -31,5 +31,4 @@ _minted-*/
 /.claude/worktrees/
 
 # Codex
-/.codex
-/.codex_tmp/
+/.codex*

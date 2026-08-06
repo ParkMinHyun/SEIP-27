@@ -7,19 +7,27 @@
 % transition with a positive requirement, x the measured requirement d*, y the
 % applied delay d, and the dashed diagonal exact calibration.  Above the
 % diagonal the controller paced more than the trace required, below it less.
-% The +/-100 ms guides are drawn because the caption reports against them: 88%
-% and 77% of points clear the diagonal by more than 100 ms, and all but 1 and 5
-% of the points below it fall inside them.  100 ms is a fifth of the 497 ms
-% median shot-to-shot interval, so it is a tolerance a user could plausibly not
-% notice.  An earlier version of this note justified the same number as "roughly
-% one frame interval", which is wrong by an order of magnitude -- a frame is
-% about 33 ms -- and is corrected here rather than repeated.
+% The +/-100 ms guides are drawn because the caption reports against them: 57%
+% and 54% of points clear the diagonal by more than 100 ms, and 9 of the 26 and
+% 35 of the 57 points below it fall outside them.  100 ms is a fifth of the
+% 456 ms (12MP) and 655 ms (24MP) median shot-to-shot interval, so it is a
+% tolerance a user could plausibly not notice.  An earlier version of this note
+% justified the same number as "roughly one frame interval", which is wrong by an
+% order of magnitude -- a frame is about 33 ms -- and is corrected here rather
+% than repeated.
+%
+% Both numbers moved a long way from the previous run set, where 88% and 77% of
+% points cleared the diagonal and only 1 and 5 points fell outside the guides.
+% The tinted under-paced triangle is no longer close to empty, and any sentence
+% written against the old figure -- "the tinted region is nearly empty", "all but
+% a handful of deficits are within a tolerance the user cannot notice" -- is now
+% false.  See tables/tab_rq3_pacing_calibration.tex for what drives the change.
 %
 % ---------------------------------------------------------------------------
 % Why the d* = 0 transitions are not plotted here
 % ---------------------------------------------------------------------------
-% An earlier revision drew them as a hollow column on the vertical axis -- 277
-% points in (a) and 278 in (b), 75.3% and 79.9% of the paced transitions -- on
+% An earlier revision drew them as a hollow column on the vertical axis -- 350
+% points in (a) and 374 in (b), 85.2% and 79.4% of the paced transitions -- on
 % the reasoning that a reader who cannot see the column cannot judge how much
 % of the picture it is.  That reasoning was right about disclosure and wrong
 % about where the disclosure belongs.  Two things settle it:
@@ -27,7 +35,7 @@
 %   1. Those points carry no calibration information.  The grammar of these
 %      panels is distance from the diagonal, and a point at x = 0 has no such
 %      distance; all it shows is the marginal distribution of d.  Rendered at
-%      277 overplotted marks on one x it also saturates into a solid bar, so
+%      350 overplotted marks on one x it also saturates into a solid bar, so
 %      even that marginal cannot be read off it.
 %   2. Panel (c) already contains every one of them, quantitatively.  For a
 %      transition with d* = 0 the error d - d* is exactly d, so the column makes
@@ -45,52 +53,57 @@
 % conditions time out.
 %
 % The caption now makes that case with a measurement rather than with the
-% closed-loop argument alone.  On the same eligible set, every one of the 277
-% and 278 zero-requirement paced transitions had a positive measured backlog
+% closed-loop argument alone.  On the same eligible set, every one of the 350
+% and 374 zero-requirement paced transitions had a positive measured backlog
 % (RQ3Pacing.realBacklogMs), a measured time-to-free
-% (PacingReplay.realQueueWaitMs) with P10/P50/P90 of 1,925/3,197/4,006 ms in
-% 12MP and 1,589/3,069/4,258 ms in 24MP, and realQueueDepth >= 1 on 100% and
-% 99.6% of them (median 4 waiting Drafts).  The applied delay covered a median
-% 11% and 7% of that measured wait, and stayed below it on 100% and 96.8%.
+% (PacingReplay.realQueueWaitMs) with P10/P50/P90 of 1,815/3,091/4,092 ms in
+% 12MP and 1,123/3,024/4,472 ms in 24MP, and realQueueDepth >= 1 on 100% and
+% 94.1% of them (median 4 waiting Drafts).  The applied delay covered a median
+% 12% and 8% of that measured wait, and stayed below it on 99.4% and 95.4%.
 % d* = 0 therefore does not mean the pipeline was idle; it means the newest
 % committed capture's deadline was not yet threatened on a trace pacing had
 % already flattened.  Recomputed from the same workbooks and the same run and
 % transition eligibility as Table~\ref{tab:rq3_pacing_calibration}; the 12MP
-% figures reproduce that table's 1,167 analyzed / 368 paced / 94 required
-% exactly, and the 24MP figures come from 1,036 analyzed before the two
+% figures reproduce that table's 1,920 analyzed / 411 paced / 79 required
+% exactly, and the 24MP figures come from 1,863 analyzed before the two
 % watchdog-truncated transitions are dropped, which do not fall in this subset
-% (278 either way).
+% (374 either way).
 %
 % Positive-requirement points are split by whether admission demoted the
 % sequence after the pacing decision was taken, because that is the first
 % objection to the surplus: a delay priced for M+S looks over-large once
 % admission has removed M from the Draft that ran.  The split answers it with
 % data rather than argument, and the answer is that the effect does not run one
-% way.  Demoted transitions are 14 of 94 in (a) and 22 of 73 in (b); their
-% coverage is 78.6% against 95.0% for undemoted in (a) but 86.4% against 84.3%
-% in (b), and their median surplus among paced transitions is higher in (a)
-% (416 vs 282 ms) and lower in (b) (243 vs 274 ms).  Coordination therefore does
-% not systematically explain the surplus, which is what leaves the
-% Draft-duration reserve as the explanation the table reports.  The subsets are
-% small, so the split is presented as a marker class to be inspected rather than
-% as a table column with statistics.
+% way.  Demoted transitions are 30 of 79 in (a) and 61 of 140 in (b); their
+% coverage is 73.3% against 63.3% for undemoted in (a) but 49.2% against 67.1%
+% in (b), and their median surplus among paced transitions is lower in both
+% (260 vs 306 ms and 218 vs 400 ms).  The objection predicts the opposite sign:
+% if the surplus were an artefact of admission removing M after the delay was
+% priced, demoted transitions would carry the LARGER surplus.  They carry the
+% smaller one in both conditions, so coordination does not explain the surplus,
+% and the Draft-duration reserve remains the explanation the table reports.
+% Coverage is the weaker half of this comparison -- 73.3 vs 63.3 in (a) against
+% 49.2 vs 67.1 in (b), and on the previous run set both ran the other way round
+% (78.6 vs 95.0 and 86.4 vs 84.3) -- so quote the surplus comparison, not the
+% coverage one.  The split is presented as a marker class to be inspected rather
+% than as a table column with statistics.
 %
-% Panel (c) is the same quantity as a distribution, over the 371 and 351
+% Panel (c) is the same quantity as a distribution, over the 429 and 514
 % transitions where pacing was in play -- the controller applied a delay, or the
 % measured requirement was positive, or both.  Two earlier choices were changed
 % here and the reasons matter, because both changes are the kind that can be
 % mistaken for flattering the data.
 %
-% Population.  The panel previously ran over all 1,167 and 1,034 transitions.
-% Two thirds of those have d = 0 and d* = 0: nothing was applied and nothing was
-% required.  They contributed a vertical step at the origin that occupied 69% of
-% the y range and recorded only that most captures need no pacing at all, which
-% is Table~\ref{tab:rq1_ablation}'s subject rather than this panel's.  Dropping
-% them compresses no information about calibration.  Every transition where
-% either side is non-zero is kept, including d = 0 with d* > 0 -- the worst
-% under-pacing there is, three cases in each condition.  The change moves the
-% reported under-pacing rate UP, from 0.6% and 1.1% of all transitions to 1.9%
-% and 3.1% of those in play, and makes it visible on the plot instead of a
+% Population.  The panel previously ran over all 1,920 and 1,861 transitions.
+% Three quarters of those have d = 0 and d* = 0: nothing was applied and nothing
+% was required.  They contributed a vertical step at the origin that occupied
+% most of the y range and recorded only that most captures need no pacing at all,
+% which is Table~\ref{tab:rq1_ablation}'s subject rather than this panel's.
+% Dropping them compresses no information about calibration.  Every transition
+% where either side is non-zero is kept, including d = 0 with d* > 0 -- the worst
+% under-pacing there is, 18 cases in (a) and 43 in (b).  The change moves the
+% reported under-pacing rate UP, from 1.4% and 3.1% of all transitions to 6.1%
+% and 11.1% of those in play, and makes it visible on the plot instead of a
 % hairline against the axis.  That is the honest direction and is the reason the
 % smaller denominator is defensible.
 %
@@ -101,44 +114,54 @@
 % column of Table~\ref{tab:rq3_pacing_calibration}, the backlog and margin axes
 % of Figure~\ref{fig:casestudy_12mp}, and RQ1's Slack P5 are all shares of the
 % same budget.  Distribution over the in-play population, as a share of budget:
-%   12MP  min -2.9  P50 +4.7  P90 +9.6  P95 +11.2  max +17.1  under-paced 1.9%
-%   24MP  min -7.3  P50 +3.7  P90 +10.5 P95 +14.1  max +27.3  under-paced 3.1%
-% The -10..30 window clips nothing in either condition.
+%   12MP  min -8.3  P50 +4.8  P90 +10.6 P95 +11.7  max +31.5  under-paced 6.1%
+%   24MP  min -13.1 P50 +3.5  P90 +11.6 P95 +15.3  max +27.3  under-paced 11.1%
+% The window was -10..30 and now clipped both tails -- three points below -10 in
+% 24MP and one above +30 in 12MP -- so it is widened to -15..35, which clips
+% nothing.  The tick set is unchanged so the zero and +10% band edges still land
+% on labelled values.
 %
-% Axis range.  Both scatter panels use an identical 0-800 by 0-1500 ms box so
-% the two conditions can be compared by eye.  The box is no longer square
-% because the two axes no longer span the same data: no requirement in either
-% panel exceeds 727 ms, while applied delays reach 2010 ms, so a square window
-% wide enough for the y data would leave more than half the x range empty --
-% which is what the previous 0-1500 square did.  The diagonal is consequently
-% not at 45 degrees; it is still the exact-calibration locus, which is what the
-% panel is read against.  Two of the 73 plotted points in (b) exceed 1500 ms on
-% the y axis (largest 2010 ms) and are clipped; no point in (a) is clipped.
+% Axis range.  Both scatter panels use an identical 0-1100 by 0-1500 ms box so
+% the two conditions can be compared by eye.  The box is not square because the
+% two axes do not span the same data: no requirement in either panel exceeds
+% 1038 ms, while applied delays reach 2022 ms, so a square window wide enough
+% for the y data would leave a third of the x range empty.  The diagonal is
+% consequently not at 45 degrees; it is still the exact-calibration locus, which
+% is what the panel is read against.  The x range was 0-800 on the previous run
+% set, where the largest requirement was 727 ms; it is widened here because two
+% 24MP points now sit beyond 800, and widening is the only option that does not
+% drop data.  Three of the 140 plotted points in (b) exceed 1500 ms on the y
+% axis (largest 2022 ms) and are clipped; no point in (a) is clipped and no
+% point in either is clipped in x.
 % Panel (c) no longer shares that unit: its axis is a share of the Capture
-% Timeout budget over -10..30%, which clips nothing in either condition.
+% Timeout budget over -15..35%.
 %
 % In-plot annotation.  The panels are annotated so that a reader who skims the
 % figure gets the reading without the caption.  (a) and (b) carry n and the
 % covered percentage in the corner, the diagonal is labelled d = d* on itself,
 % and the region below it is tinted and named "under-paced" -- a tint rather
-% than a per-region legend, because the direction then needs no decoding and the
-% reader can see at a glance that the tinted triangle is nearly empty.  Both
-% panels are empty above x = 400, so one placement serves both.
+% than a per-region legend, because the direction then needs no decoding.  On
+% the previous run set the point of the tint was that the reader could see the
+% triangle was nearly empty; it is no longer empty, holding 26 of 79 points in
+% (a) and 57 of 140 in (b), and the tint now does the opposite work.  Keep it:
+% the region it marks is the figure's main negative finding and it should be the
+% first thing the eye lands on.  Both panels are sparse above x = 600, so one
+% placement serves both.
 % (c) is deliberately NOT tinted the same way.  There the under-paced region is
-% a full-height band left of zero holding 1.9% and 3.1% of the mass, so a tint
-% would give it visual weight the data does not have; the arrow in its label
-% carries the direction instead.  Its two annotations are the under-paced share
-% and the +10%-of-budget guide, which is where 91% and 88% of the distribution
-% has been reached.
+% a full-height band left of zero holding 6.1% and 11.1% of the mass, so a tint
+% would give it more visual weight than the share warrants; the arrow in its
+% label carries the direction instead.  Its two annotations are the under-paced
+% share and the +10%-of-budget guide, which is where 86% and 87% of the
+% distribution has been reached.
 %
-% Point counts: (a) 94 with a positive requirement (80 undemoted, 14 demoted)
-% of 1,167 analyzed transitions; the other 1,073 are the 277 with d* = 0 and
-% the 796 at the origin, and neither group is drawn here.  (b) 73 (51 and 22)
-% of 1,034, with 278 and 683.
+% Point counts: (a) 79 with a positive requirement (49 undemoted, 30 demoted)
+% of 1,920 analyzed transitions; the other 1,841 are the 350 with d* = 0 and
+% the 1,491 at the origin, and neither group is drawn here.  (b) 140 (79 and 61)
+% of 1,861, with 374 and 1,347.
 %
-% Data: data/rq3/calibration/, generated from
-% SM-S948U_metrics_{12MP_normal,24MP_memory}_0803.xlsx (ML commit 99aae0a).
-% Run and transition eligibility is documented in
+% Data: data/rq3/calibration/, generated by scripts/rq3_calibration_metrics.py
+% from data/ablation_sampling/48U_metrics_{12MP_normal,24MP_memory}_0803_{1,2}.xlsx
+% (ML commit 99aae0a).  Run and transition eligibility is documented in
 % tables/tab_rq3_pacing_calibration.tex and is identical here.
 
 % Layout: single-column float.  A three-panel row across \textwidth was tried
@@ -164,15 +187,19 @@
     % There is no second marker class.  An earlier revision split the points by
     % whether admission demoted the sequence after the pacing decision, to answer
     % the first objection to the surplus -- that a delay priced for M+S only
-    % looks over-large once admission has removed M.  The split is retired
-    % because the objection's answer is a null result and a scatter cannot show
-    % one: on the quantity these panels plot, distance from the diagonal, the two
-    % subsets are indistinguishable (Mann-Whitney p = 0.62 and 0.66; medians +253
-    % vs +290 ms and +250 vs +340 ms).  The only apparent difference, 21.4% of
-    % demoted points below the diagonal against 5.0% in 12MP, rests on 3 of 14
-    % points and reverses in 24MP (13.6% against 15.7%).  A reader given a second
-    % marker class hunts for a pattern that is not there; the finding is one
-    % sentence and belongs in the caption, which is where it now is.
+    % looks over-large once admission has removed M.  The split stays retired,
+    % but the reason has changed with the run set and the note is rewritten
+    % rather than left to rot.  It was retired as a null result (Mann-Whitney
+    % p = 0.62 and 0.66 on distance from the diagonal).  On the balanced run set
+    % the difference is larger and one-directional -- p = 0.25 and 0.06, medians
+    % +216 vs +199 ms and -4 vs +251 ms -- but it points AGAINST the objection:
+    % demoted transitions carry the smaller surplus, where the objection
+    % predicts the larger.  A second marker class would therefore invite the
+    % reader to look for a confound that the data rules out.  The share of
+    % demoted points below the diagonal is 26.7% against 36.7% in 12MP and 50.8%
+    % against 32.9% in 24MP, which does not agree in sign between conditions and
+    % is another reason not to draw it.  The finding is one sentence and belongs
+    % in the caption, which is where it now is.
     rq3cal diag/.style={black, densely dashed, line width=0.6pt},
     rq3cal band/.style={gray!60, dotted, line width=0.45pt},
     % 0.7pt, not the 1.0pt these curves carried while the figure spanned
@@ -215,10 +242,10 @@
   % direction, so no tint means two things across the figure.
   \newcommand{\rqthreecalscatter}[3]{%
     \draw[fill=red,fill opacity=0.07,draw=none]
-      (axis cs:0,0) -- (axis cs:800,800) -- (axis cs:800,0) -- cycle;
-    \addplot[rq3cal band,forget plot,domain=0:800,samples=2] {x+100};
-    \addplot[rq3cal band,forget plot,domain=100:800,samples=2] {x-100};
-    \addplot[rq3cal diag,forget plot,domain=0:800,samples=2] {x};
+      (axis cs:0,0) -- (axis cs:1100,1100) -- (axis cs:1100,0) -- cycle;
+    \addplot[rq3cal band,forget plot,domain=0:1100,samples=2] {x+100};
+    \addplot[rq3cal band,forget plot,domain=100:1100,samples=2] {x-100};
+    \addplot[rq3cal diag,forget plot,domain=0:1100,samples=2] {x};
     % Two files, one style: the split they encode is no longer drawn, and the
     % files are left alone so the subset stays available for the audit.
     \addplot[rq3cal required,forget plot]
@@ -227,11 +254,11 @@
     \addplot[rq3cal required,forget plot]
       table[x=required_ms,y=applied_ms,col sep=comma]
       {\rqThreeCalDir/scatter_#1_req_changed.csv};
-    % Both panels are empty above x = 400, so one placement serves both.
+    % Both panels are sparse above x = 600, so one placement serves both.
     \node[anchor=north east,font=\tiny,align=right,inner sep=1.5pt]
       at (rel axis cs:0.98,0.98) {\(n=#2\)\\covered #3\%};
     \node[anchor=south east,font=\tiny,text=red!45!black,inner sep=1.5pt]
-      at (axis cs:790,60) {under-paced};}
+      at (axis cs:1085,60) {under-paced};}
 
   \pgfplotsset{
     rq3cal axis/.style={
@@ -258,8 +285,8 @@
       group style={group size=2 by 1, horizontal sep=0.05\columnwidth},
       width=0.35\columnwidth,
       height=0.35\columnwidth,
-      xmin=0,xmax=800,ymin=0,ymax=1500,
-      xtick={0,400,800},ytick={0,500,1000,1500},
+      xmin=0,xmax=1100,ymin=0,ymax=1500,
+      xtick={0,500,1000},ytick={0,500,1000,1500},
     ]
       % The two panels share both axes, so each axis is described once: the y
       % label on (a), and the x label as a single centred node under the pair.
@@ -269,7 +296,7 @@
         title={(a) 12MP normal},
         ylabel={Applied delay \(d\) (ms)},
       ]
-      \rqthreecalscatter{12mp_normal}{94}{93}
+      \rqthreecalscatter{12mp_normal}{79}{67}
 
       % (b) shares (a)'s y range, so repeating the tick labels would only spend
       % the gap between the two plot boxes on redundant text.
@@ -277,7 +304,7 @@
         title={(b) 24MP memory pressure},
         yticklabels={},
       ]
-      \rqthreecalscatter{24mp_memory}{73}{85}
+      \rqthreecalscatter{24mp_memory}{140}{59}
     \end{groupplot}
 
     \node[font=\scriptsize,anchor=north]
@@ -302,7 +329,7 @@
       title={(c) Calibration error where pacing was in play},
       xlabel={\(d-d^{*}\) (\% of Capture Timeout budget)},
       ylabel={Cumulative fraction},
-      xmin=-10,xmax=30,ymin=0,ymax=1.02,
+      xmin=-15,xmax=35,ymin=0,ymax=1.02,
       xtick={-10,0,10,20,30},
       ytick={0,0.5,1},
       yticklabel style={/pgf/number format/fixed},

@@ -1,12 +1,32 @@
 """Export the case-study traces used by figures/fig_casestudy_*.tex.
 
-Source workbooks are produced by CaptureMetricsExcelExporter in the private ML
-implementation (commit 99aae0a) and are not committed to this repository.
-Set CASESTUDY_SRC to the directory that holds the two workbooks, or pass it as
-the first argument.  Sessions that recorded a Capture Timeout are excluded.
+The workbooks are produced by CaptureMetricsExcelExporter in the private ML
+implementation (commit 99aae0a).  They now live in this repository, so the
+default source is data/ablation_sampling/ -- the balanced copy the RQ1 tables
+report from, which keeps the case study's peer statistics computed over the
+same runs as those tables.  data/ablation_original/ holds the untrimmed source
+and can be passed as the first argument (or through CASESTUDY_SRC) to see what
+the trim costs; the peer set there is larger, so the numbers differ and the
+table that quotes them has to say which folder it used.
+
+Each condition is split across two workbook parts that number their runs
+independently, so runs are keyed "<part>:<runId>" throughout.  Sessions that
+recorded a Capture Timeout are excluded.
 
 The session shown in each figure is not hand-picked: it is the unique session
 that survives the mechanism-coverage filter implemented in `select()` below.
+A condition that no longer yields exactly one such session is reported and
+skipped rather than exported from -- see main().
+
+One committed artifact is deliberately NOT reproduced here.  The queue depth in
+data/case_study/12mp_normal_backlog.csv counts the Draft currently being
+processed as well as those waiting, which the workbook column `realQueueDepth`
+does not: on the plotted run the file is that column plus one at every capture
+except 1, 5, 16 and 30, where nothing is in service.  The file also carries a
+shot-2 backlog of 650 ms that `realBacklogMs` leaves empty.  Rewriting it from
+these workbooks therefore drops a capture and lowers the staircase by one, so
+the writer below leaves an existing backlog CSV alone; set
+CASESTUDY_WRITE_BACKLOG=1 to overwrite it on purpose.
 """
 
 import os
@@ -14,24 +34,42 @@ import sys
 import numpy as np
 import pandas as pd
 
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = (sys.argv[1] if len(sys.argv) > 1
        else os.environ.get('CASESTUDY_SRC',
-                           r'C:\Users\sal_eunki\Desktop\ML\data\0803_FULL'))
-OUT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                   'data', 'casestudy')
+                           os.path.join(REPO, 'data', 'ablation_sampling')))
+OUT = os.path.join(REPO, 'data', 'case_study')
+WRITE_BACKLOG = bool(os.environ.get('CASESTUDY_WRITE_BACKLOG'))
 
 CONDITIONS = {
     '12mp_normal': dict(
-        workbook='SM-S948U_metrics_12MP_normal_0803.xlsx',
+        workbooks=['48U_metrics_12MP_normal_0803_1.xlsx',
+                   '48U_metrics_12MP_normal_0803_2.xlsx'],
         # the 12MP condition never leaves the MP12 bucket
         require_size=None,
     ),
     '24mp_memory': dict(
-        workbook='SM-S948U_metrics_24MP_memory_0803.xlsx',
+        workbooks=['48U_metrics_24MP_memory_0803_1.xlsx',
+                   '48U_metrics_24MP_memory_0803_2.xlsx'],
         # exclude the Lv5-6 production MP12 resolution fallback
         require_size='MP24',
     ),
 }
+
+
+def read_condition(cfg):
+    """Concatenate the workbook parts, keying every run by "<part>:<runId>"."""
+    traces, summaries = [], []
+    for part, book in enumerate(cfg['workbooks'], start=1):
+        path = os.path.join(SRC, book)
+        t = pd.read_excel(path, sheet_name='CaseStudyTrace')
+        s = pd.read_excel(path, sheet_name='RQ3Summary')
+        for df in (t, s):
+            df['runKey'] = '%d:' % part + df.runId.astype(str)
+        traces.append(t)
+        summaries.append(s)
+    return (pd.concat(traces, ignore_index=True),
+            pd.concat(summaries, ignore_index=True))
 
 
 def zero_blocks(shots, delay):
@@ -92,9 +130,9 @@ def evaluate(d):
 
 def select(trace, require_size):
     rows = []
-    for run, d in trace.groupby('runId'):
+    for key, d in trace.groupby('runKey'):
         r = evaluate(d)
-        r['run'] = int(run)
+        r['run'] = key
         rows.append(r)
     R = pd.DataFrame(rows)
     funnel = []
@@ -116,28 +154,35 @@ def write(path, df):
 
 def main():
     os.makedirs(OUT, exist_ok=True)
+    skipped = []
+    print('source: %s\n' % SRC)
     for name, cfg in CONDITIONS.items():
-        book = os.path.join(SRC, cfg['workbook'])
-        trace = pd.read_excel(book, sheet_name='CaseStudyTrace')
-        summary = pd.read_excel(book, sheet_name='RQ3Summary')
+        trace, summary = read_condition(cfg)
         chosen, funnel, allruns = select(trace, cfg['require_size'])
 
-        print('=== %s (%s)' % (name, cfg['workbook']))
+        print('=== %s (%s)' % (name, ', '.join(cfg['workbooks'])))
         print('  sessions: %d' % allruns.run.nunique())
         for c, n, runs in funnel:
             print('  after %-14s -> %2d %s' % (c, n, runs))
         if len(chosen) != 1:
-            raise SystemExit('expected exactly one eligible session, got %s'
-                             % sorted(chosen.run.tolist()))
+            # The single surviving session is what makes the case study a
+            # filter result rather than a pick, so an ambiguous condition is
+            # left unexported instead of resolved by a tie-break here.
+            print('  !! expected exactly one eligible session, got %s'
+                  '  -- nothing exported for this condition'
+                  % sorted(chosen.run.tolist()))
+            skipped.append(name)
+            print()
+            continue
         sel = chosen.iloc[0]
-        run = int(sel.run)
-        print('  selected run %d (start Lv%d, %s)'
+        run = sel.run
+        print('  selected run %s (start Lv%d, %s)'
               % (run, sel.startLevel, sel.sizeBucket))
         print('  pacing@%s bokehSkip@%s relax %s-%s react@%s filterSkip@%s'
               % (sel.pacing, sel.bokehSkip, sel.relax, sel.relaxEnd,
                  sel.react, sel.filterSkip))
 
-        d = trace[trace.runId == run].sort_values('runShotIndex')
+        d = trace[trace.runKey == run].sort_values('runShotIndex')
         out = pd.DataFrame({
             'shot': d.runShotIndex.values,
             'delay_ms': d.appliedDelayMs.fillna(0).values,
@@ -150,8 +195,16 @@ def main():
             'width_px': d.resultImageWidth.values,
         })
         write(os.path.join(OUT, '%s_delay.csv' % name), out[['shot', 'delay_ms']])
-        write(os.path.join(OUT, '%s_backlog.csv' % name),
-              out.loc[out.backlog_ms.notna(), ['shot', 'backlog_ms', 'queue_depth']])
+        # queue_depth here is the waiting count only; the committed file counts
+        # the Draft in service too (module docstring), so an existing one is
+        # kept rather than silently downgraded.
+        backlog = os.path.join(OUT, '%s_backlog.csv' % name)
+        if WRITE_BACKLOG or not os.path.exists(backlog):
+            write(backlog,
+                  out.loc[out.backlog_ms.notna(), ['shot', 'backlog_ms', 'queue_depth']])
+        else:
+            print('  kept  %s_backlog.csv (in-service queue-depth convention; '
+                  'CASESTUDY_WRITE_BACKLOG=1 to replace)' % name)
         write(os.path.join(OUT, '%s_margin.csv' % name), out[['shot', 'margin_ms']])
 
         # stage-execution strip: lane 2 = Bokeh (multi-frame), lane 1 = Filter
@@ -164,12 +217,12 @@ def main():
 
         # peer comparison: same condition, complete + timeout-free, same start
         # level and same size bucket as the selected session
-        to = trace.groupby('runId').captureTimedOut.any()
+        to = trace.groupby('runKey').captureTimedOut.any()
         S = summary[(summary.isComplete30ShotRun == True)
-                    & (~summary.runId.map(to).fillna(False))]
+                    & (~summary.runKey.map(to).fillna(False))]
         peers = S[(S.startingOverheatLevel == sel.startLevel)
                   & (S.sizeBucket == sel.sizeBucket)]
-        tr = S[S.runId == run].iloc[0]
+        tr = S[S.runKey == run].iloc[0]
         metrics = ['totalDelayMs', 'pacedPercent', 'timeoutMarginP5Ms',
                    'burstSpanMs', 'bokehExecutionPercent', 'filterExecutionPercent']
         cmp = pd.DataFrame([dict(metric=m,
@@ -181,10 +234,14 @@ def main():
                             for m in metrics])
         cmp.to_csv(os.path.join(OUT, '%s_peer_comparison.csv' % name),
                    index=False, float_format='%.1f')
-        print('  peers (Lv%d, %s): %s' % (sel.startLevel, sel.sizeBucket,
-                                          sorted(peers.runId.tolist())))
+        print('  peers (Lv%d, %s), n=%d: %s'
+              % (sel.startLevel, sel.sizeBucket, len(peers),
+                 sorted(peers.runKey.tolist())))
         print(cmp.to_string(index=False))
         print()
+
+    if skipped:
+        raise SystemExit('no unique eligible session for: %s' % ', '.join(skipped))
 
 
 if __name__ == '__main__':

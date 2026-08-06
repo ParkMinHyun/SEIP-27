@@ -43,13 +43,39 @@
 % Cells that did not change, because they already held ten runs: 12MP Lv0, Lv1
 % and 24MP Lv0, Lv2, Lv4, Lv5, Lv6.
 %
-% Aggregation conventions, each verified by reproducing the previous version of
-% this table from data/ablation_original exactly, on all 14 rows and all 20 columns:
-%   - N, Slack P5 and every pacing column use all retained runs;
-%   - M+S, M and S drop a watchdog-bearing run from the average for the horizon
-%     the watchdog falls inside, while the run stays in N.  A watchdog at shot
-%     13 therefore leaves @5 eligible and @30 ineligible.  This affects the two
-%     24MP cells that contain one such run, Lv2 and Lv4.
+% Aggregation conventions:
+%   - EVERY column, completion included, uses all ten retained runs.  The
+%     denominator of an @H cell is therefore H x 10 captures, which is the same
+%     rule Table~\ref{tab:rq1_ablation} states as "over the 300 captures each
+%     cell requested".  The two tables now agree by construction rather than by
+%     coincidence.
+%   - The denominators coincide because of what this arm contains, and that is
+%     worth checking again if the run set is ever re-exported: across all 140
+%     runs here, NO run ends before 30 captures, NO capture is flagged
+%     isTimeout, and NO capture has a negative timeoutMarginMs.  "Captures
+%     present in the run", "captures that met the deadline" and "captures
+%     requested" are all 30 per run.  The distinction that forced the
+%     300-capture denominator in Table~\ref{tab:rq1_ablation} -- truncated runs
+%     and deadline-missing captures -- simply does not arise in this table.
+%   - RETIRED: the rule that dropped a watchdog-bearing run from the completion
+%     average for the horizon the watchdog falls inside.  It was redundant and
+%     disproportionate.  Redundant because the watchdog capture already scores
+%     zero on its own: in both affected runs (24MP Lv2 run 37 and Lv4 run 24,
+%     watchdog at shot 13 with only 9 ms and 53 ms of margin left) neither Bokeh
+%     nor Filter executed, so excluding the capture and keeping it give
+%     identical cell values.  Disproportionate because it discarded 30 captures
+%     on account of one, and it also hid real behaviour -- optional work stays
+%     suppressed on shots 14 and 15 immediately after the watchdog.
+%     The change moves six numbers, in both directions, because the affected run
+%     is above the cell mean in one case and below it in the other (M of 63.3%
+%     at Lv4 against the cell's 39.3%, and 60.2% at Lv2 against 72.2%):
+%       24MP Lv2 @30  M+S/M/S  72.2/72.2/81.1 -> 71.0/71.0/79.0
+%       24MP Lv4 @30  M+S/M/S  39.3/39.3/82.2 -> 41.7/41.7/80.3
+%     No @5 cell moves: both watchdogs fall at shot 13, outside that horizon,
+%     and the retired rule already left @5 eligible.  No pacing column, N or
+%     Slack P5 moves either; those already used all ten runs, so retiring the
+%     rule is what makes the table internally uniform instead of splitting the
+%     completion block off from every other column.
 %   - retention is measured by EXECUTION (the node has a positive observed
 %     duration).  In this arm that agrees with the exporter's Completed flag;
 %     the two diverge only in the forced-execution arms of
@@ -60,10 +86,11 @@
 % MP24-to-MP12 execution and the MP12 fallback traces at Lv5--6.
 %
 % Slack P5 pools normalized per-capture margins.  Completion and activation
-% percentages are computed within each run and macro-averaged across retained
-% runs.  Delay P50 pools positive transition-delay events.  Sigma-delay P50 is
-% the median across the within-run summed delay already paid before shot 5 or
-% shot 30; it is reported in seconds.
+% percentages are computed within each run and macro-averaged across all ten
+% runs; because every run here is a complete 30-capture session, that
+% macro-average equals the pooled H x 10 rate exactly.  Delay P50 pools positive
+% transition-delay events.  Sigma-delay P50 is the median across the within-run
+% summed delay already paid before shot 5 or shot 30; it is reported in seconds.
 
 \begin{table*}[t]
   \centering
@@ -108,15 +135,14 @@
     & & & &
     \multicolumn{2}{c||}{\textbf{Timeout onset}} &
     \multicolumn{1}{c|}{\multirow{2}{*}[-0.4ex]{%
-      \makecell[c]{\textbf{Timeout}\\\textbf{count}}}} &
+      \makecell[c]{\textbf{Survived}\\\textbf{runs}}}} &
     \multicolumn{1}{c||}{\multirow{2}{*}[-0.4ex]{%
       \makecell[c]{\textbf{Slack P5}\\\textbf{(\%)}}}} &
     \multicolumn{2}{c|}{\makecell[c]{\mbox{\boldmath$M{+}S$}\\\textbf{(\%)}}} &
     \multicolumn{2}{c|}{\makecell[c]{\mbox{\boldmath$M$}\\\textbf{(\%)}}} &
     \multicolumn{2}{c||}{\makecell[c]{\mbox{\boldmath$S$}\\\textbf{(\%)}}} &
     \multicolumn{2}{c|}{\makecell[c]{\textbf{Activated}\\\textbf{(\%)}}} &
-    \multicolumn{2}{c|}{\makecell[c]{\textbf{Delay (}%
-      \raisebox{0.22ex}{\scalebox{0.68}{\textbf{\textgreater}}}\ \textbf{0)}\\\textbf{P50 (ms)}}} &
+    \multicolumn{2}{c|}{\makecell[c]{\textbf{Applied Delay}\\\textbf{P50 (ms)}}} &
     \multicolumn{2}{c|}{\makecell[c]{\mbox{\boldmath$\Sigma$}\textbf{ Delay}\\\textbf{P50 (s)}}} \\
     \cline{5-6}\cline{9-20}
     & & & &
@@ -132,74 +158,74 @@
     \hline\hline
     \multirow{14}{*}{\makecell[c]{S26\\Ultra}}
       & \multirow{7}{*}{\makecell[c]{12MP\\normal}}
-      & Lv0 & 10 & \rqShot{--} & \rqShot{--} & 0 & 37.7
+      & Lv0 & 10 & \rqShot{--} & \rqShot{--} & 10/10 & 37.7
         & \textbf{100} & 100 & \textbf{100} & 100
         & \textbf{100} & 100 & \textbf{0} & 3.8
         & \textbf{--} & 106 & \textbf{0} & 0 \\
     \cline{3-20}
-      & & Lv1 & 10 & \rqShot{--} & \rqShot{--} & 0 & 19.3
+      & & Lv1 & 10 & \rqShot{--} & \rqShot{--} & 10/10 & 19.3
         & \textbf{100} & 96.0 & \textbf{100} & 96.0
         & \textbf{100} & 100 & \textbf{0} & 0.3
         & \textbf{--} & 74 & \textbf{0} & 0 \\
     \cline{3-20}
-      & & Lv2 & 10 & \rqShot{24} & \rqShot{27} & 0 & 4.3
+      & & Lv2 & 10 & \rqShot{24} & \rqShot{27} & 10/10 & 4.3
         & \textbf{100} & 89.3 & \textbf{100} & 89.3
         & \textbf{100} & 100 & \textbf{0} & 13.8
         & \textbf{--} & 234 & \textbf{0} & 1.1 \\
     \cline{3-20}
-      & & Lv3 & 10 & \rqShot{13} & \rqShot{18} & 0 & 4.0
+      & & Lv3 & 10 & \rqShot{13} & \rqShot{18} & 10/10 & 4.0
         & \textbf{100} & 44.3 & \textbf{100} & 44.7
         & \textbf{100} & 87.7 & \textbf{0} & 27.9
         & \textbf{--} & 385 & \textbf{0} & 3.1 \\
     \cline{3-20}
-      & & Lv4 & 10 & \rqShot{10} & \rqShot{17} & 0 & 5.0
+      & & Lv4 & 10 & \rqShot{8} & \rqShot{12} & 10/10 & 5.0
         & \textbf{100} & 34.3 & \textbf{100} & 34.3
         & \textbf{100} & 97.3 & \textbf{2.5} & 33.8
         & \textbf{291} & 387 & \textbf{0} & 3.5 \\
     \cline{3-20}
-      & & Lv5 & 10 & \rqShot{8} & \rqShot{10} & 0 & 3.4
+      & & Lv5 & 10 & \rqShot{8} & \rqShot{10} & 10/10 & 3.4
         & \textbf{100} & 27.3 & \textbf{100} & 27.3
         & \textbf{100} & 72.7 & \textbf{0} & 29.3
         & \textbf{--} & 467 & \textbf{0} & 3.9 \\
     \cline{3-20}
-      & & Lv6 & 10 & \rqShot{7} & \rqShot{10} & 0 & 5.3
+      & & Lv6 & 10 & \rqShot{7} & \rqShot{9} & 10/10 & 5.3
         & \textbf{100} & 27.7 & \textbf{100} & 27.7
         & \textbf{100} & 87.7 & \textbf{12.5} & 32.8
         & \textbf{78} & 446 & \textbf{0} & 4.3 \\
     % Emphasize the scenario boundary only after the final 12MP row.
     \Xcline{2-20}{0.7pt}
       & \multirow{7}{*}{\makecell[c]{24MP\\memory\\pressure}}
-      & Lv0 & 10 & \rqShot{26} & \rqShot{30} & 0 & 14.3
+      & Lv0 & 10 & \rqShot{26} & \rqShot{30} & 10/10 & 14.3
         & \textbf{100} & 99.3 & \textbf{100} & 99.3
         & \textbf{100} & 100 & \textbf{0} & 9.0
         & \textbf{--} & 200 & \textbf{0} & 0 \\
     \cline{3-20}
-      & & Lv1 & 10 & \rqShot{19} & \rqShot{22} & 0 & 7.7
+      & & Lv1 & 10 & \rqShot{19} & \rqShot{22} & 10/10 & 7.7
         & \textbf{100} & 97.0 & \textbf{100} & 97.0
         & \textbf{100} & 100 & \textbf{0} & 6.9
         & \textbf{--} & 150 & \textbf{0} & 0.2 \\
     \cline{3-20}
-      & & Lv2 & 10 & \rqShot{14} & \rqShot{21} & 0 & 5.9
-        & \textbf{100} & 72.2 & \textbf{100} & 72.2
-        & \textbf{100} & 81.1 & \textbf{2.5} & 12.8
+      & & Lv2 & 10 & \rqShot{14} & \rqShot{21} & 10/10 & 5.9
+        & \textbf{100} & 71.0 & \textbf{100} & 71.0
+        & \textbf{100} & 79.0 & \textbf{2.5} & 12.8
         & \textbf{83} & 257 & \textbf{0} & 1.1 \\
     \cline{3-20}
-      & & Lv3 & 10 & \rqShot{7} & \rqShot{10} & 0 & 4.3
+      & & Lv3 & 10 & \rqShot{5} & \rqShot{11} & 10/10 & 4.3
         & \textbf{94.0} & 46.7 & \textbf{94.0} & 46.7
         & \textbf{100} & 81.0 & \textbf{10.0} & 36.9
         & \textbf{404.5} & 296 & \textbf{0} & 4.2 \\
     \cline{3-20}
-      & & Lv4 & 10 & \rqShot{5} & \rqShot{9} & 0 & 4.7
-        & \textbf{94.0} & 39.3 & \textbf{94.0} & 39.3
-        & \textbf{100} & 82.2 & \textbf{10.0} & 13.4
+      & & Lv4 & 10 & \rqShot{3} & \rqShot{9} & 10/10 & 4.7
+        & \textbf{94.0} & 41.7 & \textbf{94.0} & 41.7
+        & \textbf{100} & 80.3 & \textbf{10.0} & 13.4
         & \textbf{852.5} & 313 & \textbf{0} & 1.4 \\
     \cline{3-20}
-      & & Lv5 & 10 & \rqShot{4} & \rqShot{8} & 0 & 5.6
+      & & Lv5 & 10 & \rqShot{4} & \rqShot{8} & 10/10 & 5.6
         & \textbf{96.0} & 38.0 & \textbf{96.0} & 38.0
         & \textbf{98.0} & 80.3 & \textbf{42.5} & 46.2
         & \textbf{440} & 421 & \textbf{0.8} & 5.2 \\
     \cline{3-20}
-      & & Lv6 & 10 & \rqShot{4} & \rqShot{8} & 0 & 7.8
+      & & Lv6 & 10 & \rqShot{3} & \rqShot{7} & 10/10 & 7.8
         & \textbf{80.0} & 17.7 & \textbf{80.0} & 23.7
         & \textbf{94.0} & 68.7 & \textbf{30.0} & 43.4
         & \textbf{872} & 269 & \textbf{0.5} & 5.1 \\

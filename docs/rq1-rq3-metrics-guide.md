@@ -214,61 +214,50 @@ The four configurations are:
 | Admission only | On | Off | Controls current service demand only |
 | Ours (Full) | On | On | Coordinated workload and arrival control |
 
-The ablation table reports four conditions, each a (capture condition, starting
-overheat level) pair: 12MP normal and 24MP memory pressure at starting levels 3
-and 4.  Within a condition the four configurations are listed in the order
-above, so the listing itself walks the Admission-by-Pacing factorial; the table
-does not carry separate On/Off columns, because the configuration name already
-states them.
+The ablation table reports two conditions, each a (capture condition, starting
+overheat level) pair: 12MP normal and 24MP memory pressure at starting level 4.
+Within a condition the four configurations are listed in the order above, so
+the listing itself walks the Admission-by-Pacing factorial; the table does not
+carry separate On/Off columns, because the configuration name already states
+them.
 
 `S(30)` alone is **not** sufficient and must never be the only reported column.
-An arm can reach zero timeouts trivially, either by discarding optional Draft
-work or by pacing without bound, and the two single-component arms occupy
-exactly those two degenerate corners: Admission only reaches 100% `S(30)` in
-two of the four conditions while retaining the least optional work of any
-arm, and Pacing only retains all of it (100%) and survives the least.
-Each row therefore also reports what the arm preserved and what it charged:
+An arm can reach zero timeouts trivially by discarding optional Draft work, and
+Pacing only can execute all optional work before failure while surviving only
+one run per condition. Each row therefore also reports effective retained work,
+the incidence of pacing, and the conditional magnitude of the applied delay.
+RQ3 separately evaluates whether that delay is appropriately sized.
 
 | Column | Printed as | Definition |
 |---|---|---|
 | `S(30)` | Survived runs | Runs completing 30 captures with no Capture Timeout, over included runs; the denominator carries `N` |
-| `E/M` | E/M | Earliest and median first-timeout capture index; `M` is censored when fewer than half the runs in the cell time out |
-| Slack P5 `(%)` | Slack P5 (%) | Each run's own inclusive fifth percentile of the per-capture normalized deadline margin, macro-averaged **over the runs that survived**; censored when the cell has no surviving run |
-| Overrun P50 `(ms)` | Overrun P50 (ms) | Median, over the runs that timed out, of `-timeoutMarginMs` at the first timeout; censored when no run in the cell timed out |
-| \(M+S\) `(%)` | Draft completion | Per-run rate of Bokeh **and** Filter having *executed* over the first 30 captures, macro-averaged across runs |
-| \(\Sigma d\) `(s)` | Pacing cost | Median across runs of the delay accumulated in the run; structurally zero when the pacer is off |
+| \(M\) `(%)` | Work completion | Per-run Bokeh execution rate over the first 30 captures, set to zero when the run does not survive 30 captures without Capture Timeout, then macro-averaged across all included runs |
+| \(S\) `(%)` | Work completion | Per-run Filter execution rate over the first 30 captures, set to zero when the run does not survive 30 captures without Capture Timeout, then macro-averaged across all included runs |
+| Activated `(%)` | Pacing cost | Percentage of observed eligible outgoing-shot intervals with `transitionDelayMs > 0`; structurally zero when the pacer is off |
+| Applied delay P50 `(ms)` | Pacing cost | Inclusive median of positive `transitionDelayMs` values over observed eligible outgoing-shot intervals; `--` when pacing is off |
 
-Slack P5 must be computed **per run and then averaged, over surviving runs
-only**. Two failure modes of the earlier pooled-over-all-captures form:
-
-- Pooling weighted the cell by capture count, so the longest-surviving runs
-  dominated it. That also weighted this column differently from \(M+S\) in the
-  next column, which is macro-averaged per run.
-- A run that ends at its first timeout contributes exactly one negative margin.
-  The count of negatives was therefore pinned to `N` while the pool size was `N`
-  times the mean surviving length, so the percentile fell inside the overruns
-  whenever that mean dropped below about 20 captures. The printed sign tracked
-  run length, not deadline safety: 12MP normal / Lv3 / Pacing only times out in
-  9 of its 11 runs, yet pooling all captures still gives `+1.6` for it, because
-  the nine terminal overruns are only 4.1% of the 217 samples.
-
-\(M+S\) must be measured by **execution** — the node has a positive observed
+\(M\) and \(S\) must be measured by **execution** — the node has a positive observed
 duration — and *not* by the exporter's `bokehCompleted`/`filterCompleted` flags.
 Per ReplayNotes "Recommendation vs execution", `Completed` additionally requires
 `recommendedAdmit = true`, and the recommendation is still recorded in the two
-forced-execution arms. Using the flag there reports work that demonstrably ran
-as not completed: it prints 91.0/82.9 (12MP Lv3/Lv4) and 84.3/69.5 (24MP) for No
-control, where in fact both nodes ran on every capture and the correct value is
-100.0. The two definitions agree in the admission-on arms.
+forced-execution arms. First compute the execution rate within each run; then
+multiply it by the run's `S(30)` indicator before macro-averaging. Thus a failed
+run contributes zero even if the node executed on every observed capture. This
+gives 0% for No control and 10% for each N=10 Pacing-only cell, where only one
+run survives.
 
-Failure severity belongs in `Overrun P50` instead, where the run set it is
-defined over is stated rather than implied. Report it in **ms**, not as a
-percentage of the deadline: the smallest observed cell is 2 ms, which rounds to
-`0.0%` and reads as "did not overrun".
+Activated uses the same convention as RQ1(a):
 
-`E/M` is what differentiates the arms that never complete 30 captures. A
-timeout-only table renders No control and Pacing only indistinguishable at
-`0/N`, which understates pacing's contribution.
+```text
+Activated (%)
+    = 100 * count(transitionDelayMs > 0)
+            / count(nonblank transitionDelayMs)
+```
+
+The denominator includes zero-delay intervals. Applied delay P50 excludes them
+and reports intervention magnitude conditional on pacing having activated.
+Together, the two Pacing cost columns report incidence and magnitude; RQ3
+evaluates the required versus applied delay and its calibration.
 
 24MP is a requested-mode label: only the first one or two captures are 24MP and
 the remaining captures are 12MP.  Starting-level 5--6 runs use the product's
@@ -314,9 +303,11 @@ the cell moves 53.1% → 34.3%. Lv3 moves 53.6% → 44.3%. Outcome-neutral
 alternatives, for reference: first-ten-by-collection-order gives 48.3/55.0 and
 scoring on Slack P5 alone gives 54.3/56.3.
 
-Only the Full arm was balanced. Two Pacing-only cells remain uneven — 12MP / Lv3
-(11 runs) and 24MP / Lv4 (13) — so a factorial read across those rows still
-compares 10 against 11 or 13.
+Only the Full arm was balanced by rewriting workbooks. For the displayed
+24MP / Lv4 Pacing-only cell, RQ1(b) additionally takes the first ten eligible
+runs in workbook collection order after `includedForRq1` filtering: run ids 5,
+6, 7, 8, 14, 15, 16, 17, 18 and 19. This reporting-time selection makes every
+displayed ablation cell `N = 10` without modifying the source workbook.
 
 **Collection gap to resolve before submission.** The Full exports omit the run
 ids that the RQ3 notes identify as this arm's Capture-Timeout sessions (12MP run
@@ -337,12 +328,16 @@ Primary sheets:
 
 - `Capture`
 - `PacingReplay`
+- `RQ1Runs`
+- `RQ3Pacing`
 
-Join them by `captureIndex`.
+Join `Capture` and `PacingReplay` by `captureIndex`. For RQ1(b), select runs
+from `RQ1Runs` and join their per-shot records in `RQ3Pacing` by `runId`.
 
 | Purpose | Sheet | Columns |
 |---|---|---|
 | Run reconstruction | `Capture` | `captureIndex`, `ppSequenceId` |
+| RQ1(b) run inclusion | `RQ1Runs` | `runId`, `includedForRq1`, `startingOverheatLevel`, `isComplete30ShotRun`, `timeoutEventObserved` |
 | Starting level | `Capture` | `firstNodeOverheatLevel` |
 | Timeout outcome | `Capture` | `isTimeout` |
 | Watchdog audit | `Capture` | `hasWatchdogTimeout` |
@@ -350,6 +345,9 @@ Join them by `captureIndex`.
 | \(M\) decision/completion | `Capture` | `bokehAdmitted`, `bokehCompleted` |
 | \(S\) decision/completion | `Capture` | `filterAdmitted`, `filterCompleted` |
 | Applied pacing | `PacingReplay` | `beforeAppliedDelayMs` |
+| RQ1(b) \(M\)/\(S\) execution | `RQ3Pacing` | `bokehExecuted`, `filterExecuted` |
+| RQ1(b) pacing activation | `RQ3Pacing` | `transitionDelayMs` |
+| RQ1(b) applied delay P50 | `RQ3Pacing` | `transitionDelayMs` |
 
 The detailed historical aggregation convention is recorded in
 `data/rq1_metrics_aggregation.md` in the ML implementation repository.
@@ -980,14 +978,24 @@ Backlog is the *time* queued and falls when admission makes each Draft cheaper;
 queue depth is the *count* queued and falls only when arrivals stop outrunning
 service. In the selected 12MP session the two part company over captures
 23--30, immediately after the \(S\) demotion: real backlog drops from 63.8% to
-27.6% of the deadline while `realQueueDepth` stays at four or five. Backlog
+27.6% of the deadline while the queue stays at five or six. Backlog
 alone reads as "the session recovered"; the pair shows that the queue never
 shortened and only became cheaper to serve, which is the coordination claim the
 case study exists to make. `figures/fig_casestudy_12mp.tex` therefore carries a
-queue-depth strip, sourced from the `queue_depth` column already emitted into
-`data/case_study/<condition>_backlog.csv` by `scripts/export_casestudy.py`. Keep
+queue-depth strip, reading the `queue_depth` column of
+`data/case_study/<condition>_backlog.csv`. Keep
 the strip in any case-study figure that shows a demotion; drop it only if a
 future session shows the two moving together throughout.
+
+That column counts the Draft in service as well as those waiting -- the
+`realOutstandingDraftCount` convention noted under \(Q_{\max}\) in section 6.2,
+not `realQueueDepth`, which excludes the running Draft and therefore reads one
+lower wherever one is running (four or five over the same captures). The
+committed file is not reproduced by `scripts/export_casestudy.py`: the exporter
+can only write the waiting-only count, and it also has no value for the shot-2
+backlog the file carries, so it leaves an existing backlog CSV in place unless
+`CASESTUDY_WRITE_BACKLOG=1` is set. Quote five or six for the figure and four
+or five for `realQueueDepth`, and name the column whenever the number appears.
 The cumulative-delay panel draws policy medians and IQR bands for the arms
 whose traces are currently available because run-to-run pacing cost is central
 to its interpretation. After all four arms are populated, verify that four

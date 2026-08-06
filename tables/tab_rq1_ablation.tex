@@ -1,94 +1,101 @@
-% RQ1(b): Two-factor controller ablation across four stress conditions.
+% RQ1(b): Two-factor controller ablation across two stress conditions.
 % This is the second RQ1 table: RQ1(a) characterizes the full controller across
 % starting levels, and this one isolates what each control loop contributes.
 %
 % Reviewer-facing structure:
 %   - Admission and Pacing remain the two axes of a factorial design; the 2x2 is
-%     unrolled into four rows per condition so that four conditions fit one
+%     unrolled into four rows per condition so that two conditions fit one
 %     table.
 %   - S(30) alone is not reported.  An arm can trivially reach zero timeouts by
 %     discarding optional Draft work or by pacing arbitrarily slowly, so each
-%     row also reports what the arm preserved (M+S) and what it charged the user
-%     (Sigma delay).  This is the column set that answers the "trivial solution"
-%     objection.
-%   - Failure timing (E/M) differentiates the arms that never complete 30
-%     captures, which a timeout-only table would render indistinguishable.
+%     row also reports how many of the requested captures actually completed,
+%     how much M and S work those captures delivered, and how often and how
+%     hard the pacer intervened.  RQ3 separately evaluates whether that delay is
+%     appropriately sized for the observed backlog.
 %
 % Condition definition:
 %   Each condition is one (capture condition, starting overheat level) pair.
-%   12MP normal and 24MP memory pressure are each reported at starting levels
-%   3 and 4, the regime where the deployed static guard is closest to its
-%   decision boundary and where the baseline already fails.
+%   12MP normal and 24MP memory pressure are each reported at starting level 4,
+%   the regime where the deployed static guard is closest to its decision
+%   boundary and where the baseline already fails.
 %   The 24MP workbooks are a requested-mode label: only the first one or two
 %   captures are 24MP and the remainder are 12MP.
 %
-% Layout:
-%   Single-column \begin{table}, about half a page.  Compression relative to the
-%   earlier full-width version, with no loss of reported quantity:
-%     - the separate N column is dropped, because N is the denominator of S(30);
-%     - the S(30) percentage is dropped, because the fraction carries it;
-%     - E and M share one "E/M" column;
-%     - the Admission and Pacing On/Off columns are dropped entirely.  They
-%       restated what the Configuration name already says: "Admission only" is
-%       exactly A-on/P-off.  The four configuration names, in the order given,
-%       still walk the 2x2, so the factorial survives without two columns of
-%       duplicated marks.
-%   Natural column sizing left the table about 201pt wide inside a 252pt
-%   \columnwidth, and spending the whole 51pt remainder on one uniform
-%   \tabcolsep only widened the gaps while leaving the narrow-valued columns
-%   looking squeezed.  The widths are therefore set per column; see the note
-%   above the tabular for the measured floors and the fill arithmetic.  A
-%   re-added column has to come out of those widths, so re-measure rather than
-%   assuming there is slack.
+% THE DENOMINATOR, and why it changed.  Every rate in this table is taken over
+% the 30 x 10 = 300 captures the cell requested, NOT over the captures a run
+% happened to reach.  Two earlier forms were wrong in opposite directions and
+% both are worth remembering, because each looks reasonable in isolation:
+%   - Rate over captures present in the run.  This printed M = S = 100.0 for
+%     both admission-off arms, because with admission off every node runs on
+%     every capture.  But 12MP No control reaches a mean of 9.7 captures of 30,
+%     so "100%" was 100% of a third of a session, printed alongside Full's 100%
+%     of a whole one.  It also counted the capture that timed out as delivered
+%     work, which is exactly backwards: on that capture Bokeh and Filter did run
+%     (380-588 ms and 208-319 ms at 12MP/Lv4) but the Draft overran the deadline
+%     by 153-773 ms, and the exporter's own bokehCompleted/filterCompleted are
+%     False there.  That capture is the failure, not a delivered result.
+%   - Rate over the run, multiplied by a survival indicator.  This printed 0 for
+%     No control, which contradicts Section~\ref{sec:guard-limit}: the
+%     uncontrolled arm does not fail by doing no optional work, it fails by
+%     doing all of it.  It also charged the same failure twice, once in Survived
+%     runs and again inside M and S, so the printed gap mixed a retention
+%     difference with a survival penalty.
+%   The 300-capture denominator fixes both: a capture that was never reached
+%   because the session ended contributes zero, a capture whose Draft missed the
+%   deadline contributes zero, and every cell is divided by the same number.
 %
-% Belongs in the RQ1 prose, not in this note (it was moved out to keep the
-% table near half a column): M+S and Sigma-d are reported because S(30) alone is
-% trivially maximized either by discarding optional work or by pacing without
-% bound, and the two single-component arms occupy exactly those two degenerate
-% corners.  Admission only reaches 100% S(30) in two of the four conditions
-% while retaining the least optional work of any arm; Pacing only retains all
-% optional work but has low survival.
+% ONE INVERSION TO STATE IN THE PROSE, NOT TO HIDE.  At 12MP, Pacing only
+% delivers more multi-frame Drafts per attempted burst than Full (40.7% against
+% 34.3%), and the same holds for M+S.  This is real and follows from the
+% mechanism: Full deliberately skips M on about two thirds of its captures,
+% while Pacing only skips nothing and simply takes fewer captures -- 131 of 300
+% against Full's 300 of 300.  The Captures column immediately next to it
+% is what settles the comparison (40.7 against 100.0), so the honest move is to
+% print the inversion and say what it costs:
+%   "Pacing only delivers more multi-frame Drafts per attempted burst (40.7%
+%    against 34.3%), but only 40.7% of requested captures complete at all."
+% Do not switch denominators to make this row disappear; every total-work
+% measure produces it, because doing less work per capture IS the mechanism.
 %
-% Printed label vs metric name:
-%   The guide names the metrics S(30), M+S and Sigma-d.  This table prints the
-%   first as "Survived runs" and gives the two group headers the RQ1(a) names,
-%   "Completion" and "Pacing cost", so a reader meets words rather than symbols
-%   in the header and the two RQ1 tables use one vocabulary.  The symbols are
-%   kept in the note, so the mapping to the guide stays explicit.  If these are
-%   renamed again, docs/rq1-rq3-metrics-guide.md section 4.3 must follow.
+% Reading the two blocks:
+%   12MP shows the trade.  Admission converts a 29.0% capture completion rate
+%   into 100% by giving up optional work, and pacing then buys S back from
+%   33.7% to 97.3% without giving up the completion rate.
+%   24MP shows dominance.  Full leads on all three of Captures, M and S
+%   (100.0/41.7/80.3 against Admission only's 87.3/24.3/51.0).
+%   The two conditions therefore do different work and both are worth keeping.
+%
+% Degenerate corners are visible by construction: for the two admission-off
+% arms, Captures, M and S are the SAME number (29.0/29.0/29.0 and
+% 40.7/40.7/40.7 at 12MP).  Those arms never skip, so every capture that
+% completes carries both stages, and the only thing that varies is how many
+% complete.  The repetition is the finding, not a redundancy to remove.
 %
 % Column definitions (docs/rq1-rq3-metrics-guide.md, sections 3.2--3.5, 4.3):
-%   S(30)    runs reaching 30 captures with no Capture Timeout, over the number
-%            of included runs after run reconstruction and cross-workbook dedup
-%   E / M    earliest / median first-timeout capture index; M is printed only
-%            when at least half the runs in the cell timed out, otherwise the
-%            median is censored and shown as --
-%   Slack P5 per-run inclusive 5th percentile of 100 * timeoutMarginMs /
-%            captureTimeoutMs, macro-averaged over the runs that reached 30
-%            captures with no Capture Timeout; censored when the cell has none.
-%            Two deliberate departures from the earlier pooled form:
-%              - per run, then averaged.  Pooling every capture of every run let
-%                the runs that survived longest dominate the cell, which also
-%                made this column weight its runs differently from M+S in the
-%                next column, and M+S is macro-averaged.
-%              - survivors only.  A run that ends at its first timeout puts
-%                exactly one negative margin in the pool, so the count of
-%                negatives was pinned to N while the pool size was N times the
-%                mean surviving length.  The percentile therefore landed inside
-%                the overruns whenever that mean fell below about 20 captures,
-%                and the printed sign tracked run length rather than deadline
-%                safety.  In the current 12MP/Lv3 Pacing-only data, 9 of 11 runs
-%                time out, yet pooling all captures still gives +1.6% because
-%                the nine terminal overruns are only 4.1% of the 217 samples.
-%                Failure severity now has its own column instead.
-%   Overrun  median over the runs that timed out of -timeoutMarginMs at the
-%   P50      first timeout, in ms; censored when no run in the cell timed out.
-%            Reported in ms rather than as a percentage so failure magnitude is
-%            directly readable; the current cells range from 86 to 574 ms.
-%   M+S      per-run rate of (bokehCompleted && filterCompleted) over the first
-%            30 captures, macro-averaged across runs
-%   Sigma d  median across runs of the delay accumulated in the run
-%            (RQ3Summary.totalDelayMs); structurally 0 when the pacer is off
+%   Survived   runs reaching 30 captures with no Capture Timeout, over the
+%   runs      number of included runs after run reconstruction and dedup
+%   Captures   100 * (captures whose Draft completed within the deadline) / 300.
+%              The capture that timed out is excluded from the numerator; the
+%              captures never reached because the session ended contribute zero.
+%              The printed header is just "Captures (%)": the group header
+%              "Deadline safety" and the caption's "over the 300 captures each
+%              cell requested" supply the rest.  NOTE that the on-time
+%              qualifier now survives ONLY here and in the caption, so do not
+%              paraphrase this column as "captures taken" -- 12MP No control
+%              reached 97 captures but only 87 of them met the deadline, and it
+%              is 87/300 = 29.0 that is printed.
+%   M / S      100 * (captures that completed within the deadline AND executed
+%              Bokeh / Filter) / 300.  Execution means the node has a positive
+%              observed duration; see the "Recommendation vs execution" note
+%              below for why the Completed flag is not used.
+%   Activated  100 * count(RQ3Pacing.transitionDelayMs > 0) / count(nonblank
+%              transitionDelayMs) over observed eligible outgoing-shot
+%              intervals; structurally 0 when the pacer is off
+%   Delay P50  inclusive P50 of positive RQ3Pacing.transitionDelayMs values over
+%              observed eligible outgoing-shot intervals; -- when pacing is off.
+%              Named "Applied Delay P50" in Table~\ref{tab:rq1_controller_behavior};
+%              shortened here because the Pacing cost group header already
+%              disambiguates it and the single column is 28pt wide.
 %
 % Sources per cell -- all four arms now live in this repository, so the table no
 % longer depends on a path in the private implementation clone.  Values are read
@@ -104,79 +111,100 @@
 %   Full:            48U_metrics_12MP_normal_0803_{1,2}.xlsx
 %                    48U_metrics_24MP_memory_0803_{1,2}.xlsx
 %
+% Captures actually reached, per cell, behind the Captures column
+% (reached / on time, out of 300 -- the second number is what is printed):
+%   12MP  No control 97/87   Admission only 300/300
+%         Pacing only 131/122  Full 300/300
+%   24MP  No control 83/73   Admission only 264/262
+%         Pacing only 96/87    Full 300/300
+%
 % Recomputation notes:
 %   - Values are recomputed directly from the workbooks with the guide's run
-%     reconstruction rule.  The 12MP Full rows still reproduce the Lv3 and Lv4
-%     rows of Table~\ref{tab:rq1_controller_behavior} exactly, which validates
-%     the pipeline.
-%   - The Full arm now pools BOTH parts of each condition's collection, which is
-%     the run set Table~\ref{tab:rq1_controller_behavior} has always used, and
-%     reads the balanced copy in data/ablation_sampling/.  The earlier version of
-%     this table read only the first part of one workbook, so its Full cells
-%     rested on 10/10/7/6 runs; pooling gives 12/14/11/10 and the N=10 balancing
-%     protocol then levels every cell to ten.  The other three arms are unchanged
-%     and reproduce their previous values exactly.
-%     Full cells on the unbalanced pooled source, for reference:
-%       12MP Lv3  12/12  Slack 4.7  M+S 53.6  Sigma-d 3.2
-%       12MP Lv4  14/14  Slack 6.9  M+S 53.1  Sigma-d 4.5
-%       24MP Lv3  11/11  Slack 6.1  M+S 43.6  Sigma-d 4.1
-%       24MP Lv4  10/10  Slack 8.5  M+S 41.7  Sigma-d 1.4
-%     The 12MP Lv3/Lv4 gap is the bimodality the balancing protocol prunes; see
-%     data/ablation_sampling/README.md before quoting either number.
-%   - The two Pacing-only cells with 11 and 13 runs were NOT balanced.  Only the
-%     Full arm was in the balancing scope, so those denominators stay as
-%     collected and the design remains uneven across arms within a condition.
+%     reconstruction rule.
+%   - The Full arm pools BOTH parts of each condition's collection, which is the
+%     run set Table~\ref{tab:rq1_controller_behavior} has always used, and reads
+%     the balanced copy in data/ablation_sampling/.  See
+%     data/ablation_sampling/README.md for the selection rule and its known
+%     outcome-dependent bias.
+%   - The 24MP/Lv4 Pacing-only workbook contains 13 eligible runs.  This table
+%     takes the first ten in workbook collection order after includedForRq1
+%     filtering: run ids 5, 6, 7, 8, 14, 15, 16, 17, 18 and 19.
+%     NOTE THE PROTOCOL ASYMMETRY, and state it if this table is published: the
+%     Full arm is levelled by the deviation-score rule while this cell is
+%     levelled by collection order.  The asymmetry is conservative against the
+%     paper, not for it -- applying collection order to the Full arm would raise
+%     its 12MP/Lv4 retention rather than lower it (README: 55.0 against 34.3 on
+%     the old M+S denominator) -- but a reviewer will ask why one table uses two
+%     rules, so answer it in one sentence rather than leaving it to be found.
 %   - The predeclared per-cell exclusion is retired.  It removed one 24MP/Lv3
 %     Full session containing a Capture Timeout, and the guide flagged that it
 %     could not be applied symmetrically.  The data/ablation_original Full exports contain
 %     no Capture-Timeout session at all, so nothing is excluded here.  BUT SEE
 %     THE COLLECTION GAP BELOW -- that is not the same as none having occurred.
-%   - M and S retention is measured by EXECUTION (the node has a positive
-%     observed duration), not by the legacy Completed flag.  ReplayNotes
-%     "Recommendation vs execution" states that Completed additionally requires
+%   - Execution, not the Completed flag.  ReplayNotes "Recommendation vs
+%     execution" states that Completed additionally requires
 %     recommendedAdmit = true, so in the two forced-execution arms it reports
-%     work that demonstrably ran as not completed: it prints 91.0/82.9 (12MP) and
-%     84.3/69.5 (24MP) for No control, where the nodes in fact ran on every
-%     capture.  The 24MP No-control cells previously carried those two legacy
-%     values and now read 100.0 like the other three No-control/Pacing-only
-%     cells.  The distinction does not arise in the admission-on arms, where the
-%     two definitions agree.
-%   - One consequence to state if a reviewer diffs the two RQ1 tables: the 24MP
-%     Lv4 Full M+S is 41.7 here and 39.3 in
-%     Table~\ref{tab:rq1_controller_behavior}, over the same ten runs.  That
-%     table follows the exporter, which drops the watchdog-truncated prefix of
-%     one run from the completion denominator; this table keeps every capture.
-%   - The Pacing-only rows use the workbooks' includedForRq1 manifest.  In
-%     particular, 12MP/Lv4 Run 21 is an incomplete, non-timeout run and is not
-%     included in that cell's denominator.
+%     work that demonstrably ran as not completed.  Execution is the right input
+%     here; the deadline test is then applied on top of it by the denominator
+%     rule above, which is what keeps the timed-out capture out of the numerator.
+%   - Every arm, not only Pacing-only, is filtered through the workbooks'
+%     includedForRq1 manifest, which drops incomplete non-timeout sessions and
+%     retains Capture-Timeout and watchdog ones.  The displayed cells are
+%     affected by 12MP/Lv4/Pacing-only Run 21 (5 shots), which is removed before
+%     selecting the ten eligible runs.  The 24MP baseline workbook carries no
+%     RQ1Runs sheet; there every reconstructed Lv4 run is already a timeout or
+%     30-capture session.
 %   - In the Admission-only collection, pacing decisions were left enabled for
 %     observation but not applied to shutter cadence.  Median shot-to-shot on the
 %     transitions carrying a positive recorded delay (449 ms in 12MP, 886 ms in
 %     24MP) matches the unpaced median (434 and 839 ms) and is far below the
 %     recorded delay itself (median 1,709 and 1,080 ms), so those fields are
-%     shadow outputs and Sigma d is structurally 0 for this arm.  The baseline
-%     workbooks behave the same way; the 24MP baseline records no pacing decision
-%     at all.
-%   - The 24MP baseline workbook predates RQ1Runs, so its 59 runs are
-%     reconstructed by ppSequenceId reset; all relevant Lv3/Lv4 runs are valid
-%     timeout or 30-capture sessions.
+%     shadow outputs rather than applied pacing.  Activated is therefore 0 and
+%     Delay P50 is undefined (--) for this arm.  The baseline workbooks behave
+%     the same way; the 24MP baseline records no pacing decision at all.
+%   - Cross-table consistency: the Full rows here now match
+%     Table~\ref{tab:rq1_controller_behavior}'s Lv4 rows EXACTLY, on all four
+%     values -- 12MP 34.3/97.3 and 24MP 41.7/80.3.  Every run in that table is a
+%     complete, timeout-free 30-capture session, so its H x 10 denominator and
+%     this table's 300-capture denominator are the same number.  The earlier
+%     24MP/Lv4 mismatch (41.7 here against 39.3 there) is gone: that table has
+%     retired the rule that dropped a watchdog-bearing run from the completion
+%     average, which was the sole cause.  See its own aggregation note for why.
+%     The two definitions would still diverge for any arm that FAILS, which is
+%     why the group header here says "delivered" rather than "completion" -- but
+%     that arm does not appear in Table~\ref{tab:rq1_controller_behavior}, so on
+%     the overlap the two tables now agree by construction.  If a future edit
+%     makes a Full cell here disagree with that table's Lv4 row, something has
+%     changed in the run set, not in the metric.
 %
-% COLLECTION GAP -- resolve before submission:
-%   The Full exports are missing the run ids that the RQ3 notes identify as the
-%   Capture-Timeout sessions of this arm (12MP run 9; 24MP runs 35 and 36).
-%   RQ1Runs jumps over them.  The Full denominators above therefore count only
-%   the sessions present in the export, and "12/12" is not by itself evidence
-%   that no attempt timed out.  Either re-export the arm without that filter, or
-%   state the number of excluded sessions in the caption.  The other three arms
-%   retain their timeout sessions, so the comparison is conservative against the
-%   Full arm only in the sense that its denominator is smaller, not larger.
+% COLLECTION GAP -- the largest single threat to this table; resolve before
+% submission.  Measured on the untouched source in data/ablation_original, so
+% none of it is an artifact of the N=10 balancing:
+%   The Full arm contains ZERO runs with runStatus CAPTURE_TIMEOUT across all
+%   four of its workbooks, and its RQ1Runs sheets skip seven run ids:
+%     12MP part 1: 9        12MP part 2: none
+%     24MP part 1: 35, 36   24MP part 2: 8, 9, 12, 21
+%   The RQ3 notes identify the first three as this arm's Capture-Timeout
+%   sessions; the four gaps in 24MP part 2 are unexplained by the export, and
+%   ReplayNotes says nothing about them.  Every other arm has NO id gaps at all
+%   and retains its failures: 19/20 No-control and 19/25 Pacing-only sessions at
+%   12MP, 25/30 Pacing-only and 4/23 Admission-only at 24MP carry a timeout.
+%   So the Full arm is the only arm whose export was filtered on the outcome the
+%   table reports.  "10/10" is therefore not evidence that no attempt timed out,
+%   and it is NOT comparable to Admission-only's "8/10", which was not filtered.
+%   This now matters more than it did when the table carried two starting
+%   levels: with Lv3 gone, the ONLY cell where survival separates Full from
+%   Admission only is 24MP/Lv4, a two-run difference.  A reviewer who diffs the
+%   run ids will find this before the third page.
+%   Fix by re-exporting the Full arm without the filter.  Failing that, state
+%   the seven omitted sessions in the caption and report the worst case: if an
+%   omitted 24MP session fell in Lv4, that cell is at best 10/11.
 %
 % DATA BALANCE NOTE:
-%   Fourteen of the sixteen cells now hold N=10.  The two exceptions are
-%   Pacing-only at 12MP/Lv3 (11) and 24MP/Lv4 (13), which were outside the
-%   balancing scope.  Either extend the protocol to them or state the remaining
-%   imbalance; a 2x2 factorial read across a row still compares 10 against 11 or
-%   13 in those two conditions.
+%   All eight displayed cells hold N=10, so every cell's denominator is exactly
+%   300 captures.  The Full cells use the balancing protocol in
+%   data/ablation_sampling/README.md; 24MP/Lv4 Pacing-only uses the
+%   first-ten-by-collection-order rule recorded above.
 %   All workbooks carry the 0803 campaign label and the same policy label
 %   (ReplayScope: RECORDED_RUNTIME / FACTUAL_RECORDED_TARGET / M+S).
 %
@@ -193,96 +221,101 @@
   {\scriptsize
   \renewcommand{\arraystretch}{1.05}%
   % Explicit column widths rather than one uniform \tabcolsep.  Measured at
-  % \scriptsize, the widest entry per column is: Condition 30.0pt (its own
-  % header), Configuration 47.0pt ("Admission only"), Survived runs 26.6pt,
-  % E/M 16.0pt ("12/19"), Slack 19.4pt, Overrun 26.0pt, Draft completion 33.1pt,
-  % Pacing cost 20.2pt -- 218.1pt of floor in a 252pt column.  Both trailing
-  % group headers are set on two lines for that reason: on one line they measure
-  % 35.0pt and 34.3pt, which pushes the floor to 234.2pt and leaves only 2.5pt
-  % of average inter-column gap, too tight to read at this size.
-  %   The eight widths sum to 244pt.  \fittabcolsep (macros.tex) spreads the 8pt
-  % remainder over the 14 inter-column gaps (14 = 2 x 8 columns, less the two
-  % suppressed by the @{} ends), so the outer rules land exactly on \columnwidth
-  % and the fill survives a change of \columnwidth without re-tuning every
-  % p-width.  At eight columns the table is at its legibility limit for one
-  % column; a ninth needs \begin{table*} instead.
+  % \scriptsize, the binding content per column is: Condition 30.0pt (its own
+  % header), Configuration 45.2pt ("Admission only", which must not wrap),
+  % Survived runs 26.6pt, Captures 27.5pt (its own header), M and S 12.3pt of
+  % data each but 34.4pt jointly for the "Draft work" group header, Activated
+  % 28.6pt, Delay 27.1pt ("P50 (ms)").  The eight widths below sum to 233pt.
+  %   Dropping "on time" from the Captures header lowered that column's floor
+  % from 37.5pt to 27.5pt.  The freed 10pt was spent rather than returned to
+  % \tabcolsep, and the total is deliberately held at 233pt so the fitted
+  % \tabcolsep below does not move: 8pt to M and S (17pt each to 21pt each) and
+  % 1pt each to Survived runs and Captures.
+  %   M and S were the table's tight spot: at 17pt their raggedleft data sat
+  % about 2.5pt apart, so "29.0 29.0" read as one number; at 21pt the gap is
+  % about 11.6pt.  The 1pt each to columns 3 and 4 is for the header line, not
+  % the data -- "Survived" and "Captures" nearly fill their boxes (26.6 and
+  % 27.5pt), so at 27/28pt they sat about 3.7pt apart and read as the phrase
+  % "Survived Captures".  At 28/29pt that opens to about 5.7pt.  This is the
+  % same failure mode as "Activated Delay P50" described below, in a milder
+  % form: whenever two neighbouring headers each fill their column, the gap
+  % comes only from \tabcolsep and the words run together.
+  %   Two labels are deliberately short.  "Delay" replaces RQ1(a)'s "Applied
+  % Delay" because at 42.1pt that header alone costs 13pt more than the whole
+  % column needs, and the "Pacing cost" group above it already says which delay
+  % is meant.  "Draft work delivered" must break across two lines: on one line
+  % it measures about 65pt against the 34pt its two columns provide.
+  %   The break point of the last header is load-bearing, not cosmetic.  Split
+  % as "Delay P50" / "(ms)" its first line sits 1pt from "Activated" and the two
+  % headers read as the single phrase "Activated Delay P50" -- which is worse
+  % than merely tight, because "Applied Delay P50" is a real column name in
+  % Table~\ref{tab:rq1_controller_behavior}.  Splitting "Delay" / "P50 (ms)"
+  % puts a short word on the colliding line and opens the gap to about 8pt.
+  %   \fittabcolsep (macros.tex) spreads the 19pt remainder over the 14
+  % inter-column gaps (14 = 2 x 8 columns, less the two suppressed by the @{}
+  % ends), giving about 1.4pt of \tabcolsep, so the outer rules land exactly on
+  % \columnwidth and the fill survives a change of \columnwidth without
+  % re-tuning every p-width.  It iterates because a \multicolumn span makes the
+  % width only piecewise linear in \tabcolsep.  A ninth column does not fit;
+  % use \begin{table*} instead.
   %   Condition and Configuration carry no group header, so they span both
   % header rows and centre across the whole header depth, as Device and Starting
   % overheat level do in Table~\ref{tab:rq1_controller_behavior} and
   % Table~\ref{tab:timeout_index}.  Leaving them in the second row alone would
   % sit them below the header's optical centre with an empty cell above.
-  %   The -4.2pt nudge is not tuned by eye.  \multirow sizes its box as
-  % nrows x (\ht+\dp)\@arstrutbox = 2 x 1.05 x 8pt = 16.8pt, but the second
-  % header row holds two-line \makecells, so the real block is 8.4 + 16.8 =
-  % 25.2pt.  Centring in 16.8pt of a 25.2pt block leaves the text (25.2-16.8)/2
-  % = 4.2pt high, and multirow's vmove is positive-up (multirow.sty shifts by
-  % -\multirow@dima), hence -4.2pt.  Re-derive it if \arraystretch, the font
-  % size, or the second row's line count changes.
+  %   The -8.4pt nudge assumes both header rows hold at most two lines, which is
+  % still true: row one's tallest cell is "Draft work / delivered" and row two's
+  % are the two-line \makecells.  Re-derive it if \arraystretch, the font size,
+  % or either row's line count changes.
   %   Other header cells are wrapped in \multicolumn{1}{c} so that a group
   % header centers over its column instead of inheriting the data column's
   % alignment, and in \makecell so one-line and two-line headers share a vertical
-  % centre.
+  % centre.  Note that \multicolumn{1}{c} also releases the p-width, so a header
+  % wider than its p{} value silently widens the column; that is why the widths
+  % above are measured against the headers and not only against the data.
   \newsavebox{\rqablbox}%
   \newcommand{\rqabltabular}{%
   \begin{tabular}{@{}%
-      >{\centering\arraybackslash}p{35pt}%    Condition
-      >{\raggedright\arraybackslash}p{49pt}%  Configuration
-      >{\centering\arraybackslash}p{30pt}%    Survived runs
-      >{\centering\arraybackslash}p{20pt}%    E/M
-      >{\centering\arraybackslash}p{23pt}%    Slack P5
-      >{\centering\arraybackslash}p{28pt}%    Overrun P50
-      >{\centering\arraybackslash}p{36pt}%    Draft completion / M+S
-      >{\centering\arraybackslash}p{23pt}%    Pacing cost / Sigma d
+      >{\centering\arraybackslash}p{31pt}%    Condition
+      >{\raggedright\arraybackslash}p{46pt}%  Configuration
+      >{\raggedleft\arraybackslash}p{28pt}%   Survived runs
+      >{\raggedleft\arraybackslash}p{29pt}%   Captures
+      >{\raggedleft\arraybackslash}p{21pt}%   M delivered
+      >{\raggedleft\arraybackslash}p{21pt}%   S delivered
+      >{\raggedleft\arraybackslash}p{28pt}%   Pacing activation
+      >{\raggedleft\arraybackslash}p{29pt}%   Delay P50
     @{}}
     \toprule
     \multirow[c]{2}{=}[-8.4pt]{\textbf{Condition}}
       & \multirow[c]{2}{=}[-8.4pt]{\textbf{Configuration}}
-      & \multicolumn{4}{c}{\textbf{Deadline outcome}}
-      & \multicolumn{1}{c}{\makecell[c]{\textbf{Draft}\\\textbf{completion}}}
-      & \multicolumn{1}{c}{\makecell[c]{\textbf{Pacing}\\\textbf{cost}}} \\
-    \cmidrule(lr){3-6}\cmidrule(lr){7-7}\cmidrule(l){8-8}
+      & \multicolumn{2}{c}{\makecell[c]{\textbf{Deadline safety}}}
+      & \multicolumn{2}{c}{\makecell[c]{\textbf{Draft work}\\\textbf{delivered}}}
+      & \multicolumn{2}{c}{\makecell[c]{\textbf{Pacing cost}}} \\
+    \cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(l){7-8}
     & & \multicolumn{1}{c}{\makecell[c]{\textbf{Survived}\\\textbf{runs}}}
-      & \multicolumn{1}{c}{\makecell[c]{\textbf{E/M}}}
-      & \multicolumn{1}{c}{\makecell[c]{\textbf{Slack}\\\textbf{P5(\%)}}}
-      & \multicolumn{1}{c}{\makecell[c]{\textbf{Overrun}\\\textbf{P50(ms)}}}
-      & \multicolumn{1}{c}{\makecell[c]{\mbox{\boldmath$M{+}S$}\\\textbf{(\%)}}}
-      & \multicolumn{1}{c}{\makecell[c]{\mbox{\boldmath$\Sigma d$}\\\textbf{(s)}}} \\
+      & \multicolumn{1}{c}{\makecell[c]{\textbf{Captures}\\\textbf{(\%)}}}
+      & \multicolumn{1}{c}{\makecell[c]{\mbox{\boldmath$M$}\\\textbf{(\%)}}}
+      & \multicolumn{1}{c}{\makecell[c]{\mbox{\boldmath$S$}\\\textbf{(\%)}}}
+      & \multicolumn{1}{c}{\makecell[c]{\textbf{Activated}\\\textbf{(\%)}}}
+      & \multicolumn{1}{c}{\makecell[c]{\textbf{Applied}\\\textbf{delay (ms)}}} \\
     \midrule
-
-    % ---------------------------------------------------------------- 12MP Lv3
-    \multirow{4}{*}{\makecell[c]{12MP\\normal\\Lv3}}
-      & No control     & 1/10   & 11/15 & 25.7   & 359    & 100.0  & 0 \\
-      & Pacing only    & 2/11   & 12/19 & 7.3    & 270    & 100.0  & 0 \\
-      & Admission only & 10/10  & --/-- & 4.3    & --     & 41.7   & 0 \\
-      & \textbf{Full}  & \textbf{10/10} & --/--
-                       & \textbf{4.7} & -- & \textbf{44.3} & 3.1 \\
-    \cmidrule(l){2-8}
 
     % ---------------------------------------------------------------- 12MP Lv4
     \multirow{4}{*}{\makecell[c]{12MP\\normal\\Lv4}}
-      & No control     & 0/10   & 8/8.5 & --     & 574    & 100.0  & 0 \\
-      & Pacing only    & 1/10 & 9/10 & 5.8 & 267 & 100.0 & 1.2 \\
-      & Admission only & 10/10  & --/-- & 3.6    & --     & 29.0   & 0 \\
-      & \textbf{Full}  & \textbf{10/10} & --/--
-                       & \textbf{6.6} & -- & \textbf{34.3} & 3.5 \\
+      & No control     & 0/10   & 29.0  & 29.0 & 29.0 & 0 & -- \\
+      & Admission only & 10/10  & 100.0 & 29.3 & 33.7 & 0 & -- \\
+      & Pacing only    & 1/10   & 40.7  & 40.7 & 40.7 & 37.2 & 411 \\
+      & \textbf{Full}  & \textbf{10/10} & \textbf{100.0}
+                       & \textbf{34.3} & \textbf{97.3} & 33.8 & 387 \\
     \midrule
-
-    % ---------------------------------------------------------------- 24MP Lv3
-    \multirow{4}{*}{\makecell[c]{24MP\\memory\\Lv3}}
-      & No control     & 0/10   & 5/16  & --     & 251    & 100.0  & 0 \\
-      & Pacing only    & 0/10   & 5/12  & --     & 258    & 100.0  & 1.9 \\
-      & Admission only & 8/10   & 20/-- & 6.1    & 86     & 25.2   & 0 \\
-      & \textbf{Full}  & \textbf{10/10} & --/--
-                       & \textbf{5.6} & -- & \textbf{46.7} & 4.2 \\
-    \cmidrule(l){2-8}
 
     % ---------------------------------------------------------------- 24MP Lv4
     \multirow{4}{*}{\makecell[c]{24MP\\memory\\Lv4}}
-      & No control     & 0/10   & 3/8.5 & --     & 176    & 100.0  & 0 \\
-      & Pacing only    & 1/13   & 3/4.5 & 4.7    & 327    & 100.0  & 1.5 \\
-      & Admission only & 8/10   & 3/--  & 8.2    & 160    & 30.1   & 0 \\
-      & \textbf{Full}  & \textbf{10/10} & --/--
-                       & \textbf{8.5} & -- & \textbf{41.7} & 1.4 \\
+      & No control     & 0/10   & 24.3  & 24.3 & 24.3 & 0 & -- \\
+      & Admission only & 8/10   & 87.3  & 24.3 & 51.0 & 0 & -- \\
+      & Pacing only    & 1/10   & 29.0  & 29.0 & 29.0 & 29.1 & 370 \\
+      & \textbf{Full}  & \textbf{10/10} & \textbf{100.0}
+                       & \textbf{41.7} & \textbf{80.3} & 13.4 & 313 \\
     \bottomrule
   \end{tabular}}%
   \fittabcolsep{\rqablbox}{\rqabltabular}{\columnwidth}{14}%

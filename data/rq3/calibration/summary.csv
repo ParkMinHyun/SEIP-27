@@ -1,3 +1,9 @@
-condition,subset,runs,validTransitions,matchedTransitions,safeRequiredCount,safeCoveredPercent,requiredCount,requiredPercent,requiredCoveredPercent,tightPercent,requiredErrorP5Ms,requiredErrorP50Ms,requiredErrorP95Ms,underDeficitP95Ms,coveredExcessP50Ms,coveredExcessP95Ms,zeroRequirementWhenPacedPercent,cumulativeExcessP50Ms
-12MP normal,all,43,1167,1167,0,100.0,94,8.05484147386461,92.5531914893617,10.638297872340425,-38.24999999999999,283.5,514.3499999999999,172.39999999999992,298.0,521.7,75.27173913043478,3113.0
-24MP mode + memory pressure,all,37,1013,1013,6,100.0,73,7.206317867719645,84.93150684931507,16.43835616438356,-177.0,324.0,1069.1999999999996,418.0,416.5,1090.1,79.71014492753623,2717.0
+condition,band,nRequired,nCovered,coveragePercent,worstDeficitMs,surplusP50Ms,reserveTermMs,backlogTermMs,backlogP95Percent
+12MP normal,Lv0--2,33,14,42.4,205,191,309,-108,71.0
+12MP normal,Lv3--4,31,24,77.4,582,380,264,102,64.5
+12MP normal,Lv5--6,15,15,100.0,,407,351,0,56.6
+12MP normal,All,79,53,67.1,582,357,302,-30,65.4
+24MP mode + memory pressure,Lv0--2,39,12,30.8,552,198,183,-34,75.4
+24MP mode + memory pressure,Lv3--4,46,22,47.8,920,255,228,-66,67.0
+24MP mode + memory pressure,Lv5--6,55,49,89.1,195,294,594,-60,52.3
+24MP mode + memory pressure,All,140,83,59.3,920,257,445,-60,69.5

@@ -75,6 +75,12 @@ and were left alone because they were not in scope:
 - 12MP normal / Lv3 / Pacing only -- 11 runs
 - 24MP memory / Lv4 / Pacing only -- 13 runs
 
+The current RQ1(b) table reports only Lv4. For its 24MP/Lv4 Pacing-only cell,
+the table takes the first ten eligible runs in workbook collection order after
+`includedForRq1` filtering (run ids 5, 6, 7, 8, 14, 15, 16, 17, 18 and 19).
+This reporting-time selection leaves the source workbook unchanged and makes
+all eight displayed RQ1(b) cells `N = 10`.
+
 ## Workbook fidelity
 
 The four rewritten workbooks are re-emitted values-only: cell values, types and

@@ -3,21 +3,52 @@
 % Table VI records the deployment rationale for the setting and a compact peer
 % audit showing that the mechanism-revealing trace is not the best-performing
 % run in its matched condition.
+%
+% Reference band.  The shaded capture window is where an uncontrolled run of
+% this setting first times out: captures 8--12, the controller-off Timeout
+% onset E/M of the 12MP normal Lv4 row of RQ1(a)
+% (tables/tab_rq1_end_to_end_summary.tex, \ref{tab:rq1_controller_behavior}).
+% Two other tables report a related quantity for this setting and do not agree
+% with it, so cite RQ1(a) and not them when the prose names the window: Table I
+% (\ref{tab:timeout_index}, normal capture, 12MP, M+S, starting level 4) reads
+% 10/17 from the Section 2 motivation campaign, and the RQ1(b) No-control row
+% reads 8/8.5 from the 0803 baseline workbook.
+% It replaces the four dashed event markers an earlier revision drew at
+% captures 5, 9, 21 and 23.  Those markers annotated transitions the panels
+% already show -- pacing activation is visible in the applied-delay bars and
+% both demotions in the execution strip -- while the band adds what no panel
+% carried: where an uncontrolled run of the same setting would already have
+% timed out.  Do not reinstate the event lines alongside it; the figure does
+% not have room for two sets of capture-axis annotation.
+%
+% Rejected alternative: lifting the window out of the axes as a red |-|
+% bracket above the strip, which would have let red keep one meaning across
+% the figure.  It was drawn and dropped.  With no fill through the panels the
+% window stops relating to the curves -- the reader has to carry two capture
+% indices down four panels by eye -- and the bracket sits far from the only
+% tick labels, so the range is not even readable where it is drawn.  The band
+% is worth the colour split it forces below.
+% If the source cell is ever recomputed, update the two arguments of
+% \csTimeoutRange below to match it.
 \begin{figure}[t]
   \centering
   \setlength{\abovecaptionskip}{2pt}%
   \setlength{\belowcaptionskip}{2pt}%
   \providecommand{\caseStudyDataDir}{data/case_study}
-  \providecommand{\csEvent}[1]{%
-    \draw[cs event] ({axis cs:#1,0}|-{rel axis cs:0,0})
-                 -- ({axis cs:#1,0}|-{rel axis cs:0,1});}
-  \providecommand{\csBand}[2]{%
-    \fill[cs band] ({axis cs:#1,0}|-{rel axis cs:0,0})
+  % Uncontrolled first-timeout window, spanning the full height of every panel
+  % so that a single glance carries it down the stack.
+  \providecommand{\csTimeoutRange}[2]{%
+    \fill[cs tmo range] ({axis cs:#1,0}|-{rel axis cs:0,0})
       rectangle ({axis cs:#2,0}|-{rel axis cs:0,1});}
+  % Red carries failure throughout the figure: this window and the deadline in
+  % the bottom panel.  What keeps the two from reading as one mark is form, not
+  % hue -- the window is a capture interval and fills, the deadline is a
+  % threshold and is a line -- and the fact that only one red area is left, the
+  % danger tint under the floor having been dropped (see the bottom panel).  Do
+  % not restore that tint while this band is red; two red areas crossing at the
+  % bottom left is exactly the collision that was removed.
   \tikzset{
-    cs event/.style={red!65!black,densely dashed,line width=0.5pt},
-    cs band/.style={blue!55!black,opacity=0.08},
-    cs danger/.style={red!70!black,opacity=0.07},
+    cs tmo range/.style={red!70!black,opacity=0.10},
   }
   \pgfplotsset{
     cs executed/.style={
@@ -80,8 +111,7 @@
         grid=none,
         clip=false,
       ]
-      \csBand{12.5}{20.5}
-      \csEvent{5}\csEvent{9}\csEvent{21}\csEvent{23}
+      \csTimeoutRange{8}{12}
       \addplot[cs executed] table[x=shot,y=lane,col sep=comma]
         {\caseStudyDataDir/12mp_normal_bokeh_exec.csv};
       \addplot[cs skipped] table[x=shot,y=lane,col sep=comma]
@@ -90,18 +120,16 @@
         {\caseStudyDataDir/12mp_normal_filter_exec.csv};
       \addplot[cs skipped] table[x=shot,y=lane,col sep=comma]
         {\caseStudyDataDir/12mp_normal_filter_skip.csv};
-      \node[anchor=south west,rotate=55,font=\tiny,
-            text=red!65!black,inner sep=0.5pt]
-        at (axis cs:5,2.6) {pacing on};
-      \node[anchor=south west,rotate=55,font=\tiny,
-            text=red!65!black,inner sep=0.5pt]
-        at (axis cs:9,2.6) {\(M\) demoted};
-      \node[anchor=south west,rotate=55,font=\tiny,
-            text=red!65!black,inner sep=0.5pt]
-        at (axis cs:21,2.6) {pacing back on};
-      \node[anchor=south west,rotate=55,font=\tiny,
-            text=red!65!black,inner sep=0.5pt]
-        at (axis cs:23,2.6) {\(S\) demoted};
+      % The band is named once, on the annotation line above the strip, in the
+      % space the removed event labels used to occupy.  It is centred on the
+      % band rather than set flush left, so it points at what it names, and it
+      % is broken over two lines and lifted by the same 1pt as the legend on
+      % the right so the two blocks sit on one line.  "window" is load-bearing:
+      % the band is a range over captures, not a single failure.
+      \node[anchor=south,font=\tiny,align=center,
+            text=red!70!black,inner sep=1pt]
+        at ([yshift=1pt]axis cs:10,2.6)
+        {baseline\\first-timeout window};
 
       % ---- queue depth -----------------------------------------------
       % Grouped with the execution strip above it: both are per-capture
@@ -113,8 +141,7 @@
         ymin=0,ymax=6.8,
         ytick={0,3,6},
       ]
-      \csBand{12.5}{20.5}
-      \csEvent{5}\csEvent{9}\csEvent{21}\csEvent{23}
+      \csTimeoutRange{8}{12}
       \addplot[cs step] table[x=shot,y=queue_depth,col sep=comma]
         {\caseStudyDataDir/12mp_normal_backlog.csv};
 
@@ -125,14 +152,9 @@
         ymin=0,ymax=1500,
         ytick={0,500,1000},
       ]
-      \csBand{12.5}{20.5}
-      \csEvent{5}\csEvent{9}\csEvent{21}\csEvent{23}
+      \csTimeoutRange{8}{12}
       \addplot[cs delay] table[x=shot,y=delay_ms,col sep=comma]
         {\caseStudyDataDir/12mp_normal_delay.csv};
-      \node[anchor=north,font=\tiny,inner sep=1pt,text=blue!45!black]
-        at (axis cs:16.5,1470) {pacing relaxed};
-      \node[anchor=east,font=\tiny,inner sep=1pt,align=center]
-        at (axis cs:29.5,750) {\(\sum_i d_i\)\\\(5{,}212\)~ms};
 
       % ---- real Draft backlog ----------------------------------------
       \nextgroupplot[
@@ -142,28 +164,36 @@
         ytick={0,20,40,60},
         yticklabels={0\%,20\%,40\%,60\%},
       ]
-      \csBand{12.5}{20.5}
-      \csEvent{5}\csEvent{9}\csEvent{21}\csEvent{23}
+      \csTimeoutRange{8}{12}
       \addplot[cs series] table[x=shot,y expr={\thisrow{backlog_ms}/70},col sep=comma]
         {\caseStudyDataDir/12mp_normal_backlog.csv};
-      \node[anchor=north,font=\tiny,inner sep=1pt]
-        at (axis cs:16.5,68) {backlog rebuilds};
 
       % ---- deadline margin -------------------------------------------
       \nextgroupplot[
         height=0.30\columnwidth,
         xlabel={Capture index within the 30-shot burst},
         ylabel={Deadline margin\\(\% of timeout)},
-        ymin=-6,ymax=69,
+        % ymin is -11, not the -6 that fitted when the deadline label sat at the
+        % right end of the floor line inside the plot.  The label now hangs
+        % under the 0% tick and needs about 9pt of clearance there; at -6 the
+        % axis frame cut through it.  Nothing is plotted below zero in this run,
+        % so the added strip costs only a 7% vertical compression of the curve.
+        ymin=-11,ymax=69,
         ytick={0,20,40,60},
         yticklabels={0\%,20\%,40\%,60\%},
       ]
-      \fill[cs danger] ({rel axis cs:0,0}) rectangle ({axis cs:30.5,0});
-      \csBand{12.5}{20.5}
-      \csEvent{5}\csEvent{9}\csEvent{21}\csEvent{23}
+      % The tinted band below zero is gone.  The margin never enters it in this
+      % run -- its minimum is 2.1% -- so it shaded an empty strip, and it was
+      % the red area that the reference window ran through.  The floor line and
+      % its label carry the deadline on their own.
+      \csTimeoutRange{8}{12}
       \addplot[cs floor] coordinates {(0.5,0) (30.5,0)};
-      \node[anchor=north east,font=\tiny,text=red!70!black,inner sep=1.5pt]
-        at (axis cs:30.3,0.15) {Capture Timeout};
+      % Under the 0% tick rather than at the right end of the floor line.  The
+      % strip below zero is empty in this run, so the label reads as a caption
+      % of the tick it hangs from, and it no longer sits where the margin curve
+      % climbs back out at capture 30.
+      \node[anchor=north west,font=\tiny,text=red!70!black,inner sep=1.5pt]
+        at ([yshift=-1pt]axis cs:0.5,0) {Capture Timeout};
       \addplot[cs series] table[x=shot,y expr={\thisrow{margin_ms}/70},col sep=comma]
         {\caseStudyDataDir/12mp_normal_margin.csv};
       \node[anchor=east,font=\tiny,inner sep=1.5pt] at (axis cs:7.7,2.5)
@@ -172,16 +202,33 @@
         {5.1\%};
     \end{groupplot}
 
-    % ---- stage legend below the axes ---------------------------------
+    % ---- stage legend beside the timeout label -----------------------
+    % Share the annotation line above the execution strip: the timeout label
+    % identifies the reference window on the left, while this two-row legend is
+    % right-aligned to the strip frame.  Both legend entries use "stage" so the
+    % execution and admission-skip states remain grammatically parallel.
     \matrix[
       matrix of nodes,
-      nodes={font=\tiny,anchor=west},
-      column sep=2pt,row sep=0pt,anchor=north,
-    ] at ([yshift=-5.8ex]group c1r5.south) {
+      % inner ysep is cut from the \tiny default (about 1.7pt a side) so the two
+      % rows close up to the line spacing of the two-line band label opposite;
+      % with the default the legend stood a third taller than that label and the
+      % two blocks no longer read as one annotation line.
+      nodes={font=\tiny,anchor=west,inner ysep=0.4pt},
+      % south east, not east: an east anchor sits at the middle of a two-row
+      % matrix, which dropped the second row through the strip frame and on to
+      % the markers.  Anchoring on the bottom edge keeps both rows above it and
+      % puts the block on the same baseline as the band label opposite, which
+      % is why the yshift here has to track the label's.
+      % The yshift is 2pt under the label's because the two blocks measure their
+      % bottoms differently: the label's south anchor lands on a line with no
+      % descenders, the matrix's on a row that has them, so equal yshifts left
+      % the legend sitting visibly higher.
+      column sep=2pt,row sep=0.6pt,anchor=south east,
+    ] at ([xshift=5pt,yshift=-2pt]group c1r1.north east) {
       \node[rectangle,draw=black,fill=black!72,line width=0.4pt,
-            minimum size=2.7pt,inner sep=0pt] at (0.12,0) {}; & stage executed &
+            minimum size=2.7pt,inner sep=0pt] at (0.12,0) {}; & stage executed \\
       \node[rectangle,draw=black!45,line width=0.4pt,
-            minimum size=2.7pt,inner sep=0pt] at (0.12,0) {}; & skipped by admission \\
+            minimum size=2.7pt,inner sep=0pt] at (0.12,0) {}; & stage skipped by admission \\
     };
   \end{tikzpicture}
   \caption{Case study}
