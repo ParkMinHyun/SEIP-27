@@ -63,24 +63,33 @@
 % the budget takes one quantity in both a budget-relative and an absolute form, so
 % the rule is really a rule about pairs.
 %
-% This pair is internally clean, and two choices are what make it so:
+% OPEN, and the choice is the author's rather than the analysis's.  Panel (c) now
+% plots the delay and the backlog as shares of the budget, so that the figure
+% reads on one scale; both of its axes must carry the same unit or the d = B locus
+% is not a line.  The cost group below prints the applied delay in milliseconds.
+% Those two together make the budget derivable: the delay cloud in panel (c) is
+% centred near 5% of budget and the table says the median delay is 381 ms.
 %
-%   - The backlog estimation error is in points of budget in both the table and
-%     panel (b), and the backlog never appears as a percentage of the budget
-%     anywhere in this pair.
-%   - Panel (c) plots the delay and the backlog in SECONDS, not in points of
-%     budget, precisely because the cost group below prints the delay in
-%     milliseconds.  A budget-relative delay beside a millisecond one is a
-%     one-step division; two absolute forms of the same quantity are not.
+% It is a weaker path than a printed pair -- it needs the reader to estimate a
+% centre off a 411-mark scatter, not to divide two printed numbers -- but it is a
+% path, and the earlier revision avoided it by keeping panel (c) in seconds.  Two
+% ways to close it, both one edit:
 %
-% What is NOT clean is shipping this table together with
-% Table~\ref{tab:rq3_pacing_selectivity}.  That table prints the measured backlog
-% as a percentage of the budget (P50 52.5 paced), and this one prints the applied
-% delay in milliseconds (P50 381) while panel (c) shows the backlog in seconds
-% against it; the median backlog read off panel (c) divided by 52.5% recovers the
-% budget to within a percent.  Retiring the selectivity pair, which is the intent
-% of this pair, removes the disclosing term.  Keeping both means dropping either
-% this table's millisecond row or that table's backlog percentages.
+%   - Quote the delay in points of budget in the cost group (5.4 / 11.8 and
+%     4.0 / 16.9) instead of milliseconds.  The pair then never leaves
+%     budget-relative units, at the cost of the one number a product owner reads
+%     directly.
+%   - Return panel (c) to seconds on both axes.  The figure then mixes units
+%     across panels, which is what prompted the change.
+%
+% Independent of that, shipping this table together with
+% Table~\ref{tab:rq3_pacing_selectivity} adds a second path: that table prints the
+% measured backlog as a percentage of the budget (P50 52.5 paced) beside this
+% one's millisecond delay.  Retiring the selectivity pair, which is the intent of
+% this pair, removes it.
+%
+% What is settled: the backlog estimation error is in points of budget in both the
+% table and panel (b), and no exhibit in this pair prints the budget itself.
 %
 % ---------------------------------------------------------------------------
 % Definitions
@@ -231,8 +240,8 @@
                    |>{\raggedleft\arraybackslash}m{60pt}%
                    |>{\raggedleft\arraybackslash}m{60pt}|}
     \hline\hline
-    \textbf{Metric} & \rqthreepolhead{12MP}{normal}
-      & \rqthreepolhead{24MP \(+\) memory}{pressure} \\
+    \textbf{Condition} & \rqthreepolhead{12MP}{normal}
+      & \rqthreepolhead{24MP}{memory pressure} \\
     \hline\hline
     \rqthreepolgroup{Where the delay is applied} \\
     \hline

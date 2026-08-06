@@ -493,12 +493,14 @@ def write_all(results, safe, overrun):
                 round(b['activation'] - b['actLo'], 2),
                 round(b['actHi'] - b['activation'], 2)]
                for i, (b, name) in enumerate(zip(res['bands'], BAND_NAMES))])
-        # (c) plots the applied delay against the backlog it drains, both in
-        # seconds.  Seconds and not points of budget: the delay is also printed in
-        # milliseconds in the table, and a budget-relative delay beside a
-        # millisecond one recovers the budget by division in a single step.
-        write(f'delay_vs_backlog_{slug}.csv', ['backlog_s', 'delay_s'],
-              [[round(t['B'] / 1000, 4), round(t['d'] / 1000, 4)]
+        # (c) plots the applied delay against the backlog it drains, both as a
+        # share of the budget so that the panel shares the unit of (a) and (b).
+        # Both axes have to carry the same unit or the d = B locus is not a line;
+        # see the DISCLOSURE note in tables/tab_rq3_pacing_policy.tex for what
+        # that costs.
+        write(f'delay_vs_backlog_{slug}.csv', ['backlog_pct', 'delay_pct'],
+              [[round(100 * t['B'] / t['budget'], 4),
+                round(100 * t['d'] / t['budget'], 4)]
                for t in sorted(res['paced'], key=lambda t: (t['B'], t['d']))])
         # (d) plots one mark per burst.
         write(f'burst_share_swarm_{slug}.csv', ['share_pct', 'y'],
