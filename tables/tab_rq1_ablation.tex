@@ -45,9 +45,9 @@
 % table near half a column): M+S and Sigma-d are reported because S(30) alone is
 % trivially maximized either by discarding optional work or by pacing without
 % bound, and the two single-component arms occupy exactly those two degenerate
-% corners.  Admission only reaches 100% S(30) in three of the four conditions
-% while retaining the least optional work of any arm; Pacing only retains the
-% most and survives the least.
+% corners.  Admission only reaches 100% S(30) in two of the four conditions
+% while retaining the least optional work of any arm; Pacing only retains all
+% optional work but has low survival.
 %
 % Printed label vs metric name:
 %   The guide names the metrics S(30), M+S and Sigma-d.  This table prints the
@@ -77,15 +77,14 @@
 %                mean surviving length.  The percentile therefore landed inside
 %                the overruns whenever that mean fell below about 20 captures,
 %                and the printed sign tracked run length rather than deadline
-%                safety.  The measured consequence: 12MP/Lv3 Pacing only, which
-%                times out in 5 of 9 runs, printed +5.4 under pooling -- safer
-%                than Full's +4.1 -- purely because its runs survived 25.2
-%                captures on average and its 5 overruns were only 2.2% of the
-%                pool.  Failure severity now has its own column instead.
+%                safety.  In the current 12MP/Lv3 Pacing-only data, 9 of 11 runs
+%                time out, yet pooling all captures still gives +1.6% because
+%                the nine terminal overruns are only 4.1% of the 217 samples.
+%                Failure severity now has its own column instead.
 %   Overrun  median over the runs that timed out of -timeoutMarginMs at the
 %   P50      first timeout, in ms; censored when no run in the cell timed out.
-%            Reported in ms, not as a percentage of the deadline: the smallest
-%            cell is 2 ms, which rounds to 0.0% and reads as "did not overrun".
+%            Reported in ms rather than as a percentage so failure magnitude is
+%            directly readable; the current cells range from 86 to 574 ms.
 %   M+S      per-run rate of (bokehCompleted && filterCompleted) over the first
 %            30 captures, macro-averaged across runs
 %   Sigma d  median across runs of the delay accumulated in the run
@@ -93,15 +92,14 @@
 %
 % Sources per cell:
 %   No control:
-%     24MP  ML/data/0803_FULL/SM-S948U_metrics_24MP_memory_baseline_0803.xlsx
-%     12MP  NO ACCESSIBLE WORKBOOK.  The E/M pair carried in the row is the
-%           controller-off reference already published in
-%           Table~\ref{tab:timeout_index} (12MP normal, M+S column).  N, S(30),
-%           Slack P5 and M+S cannot be derived from it and are marked TBD.
+%     SM-S948U_metrics_12MP_normal_baseline_0803.xlsx
+%     SM-S948U_metrics_24MP_memory_baseline_0803.xlsx
 %   Admission only:
-%     48U_metrics_{12MP_normal,24MP_memory}_0729_AdmitOnly_{1,2}.xlsx
+%     SM-S948U_metrics_12MP_normal_admit_only_0803.xlsx
+%     SM-S948U_metrics_24MP_memory_admit_only_0803.xlsx
 %   Pacing only:
-%     48U_metrics_{12MP_normal,24MP_memory}_0729_PacingOnly_{1,2}.xlsx
+%     SM-S948U_metrics_12MP_normal_pacing_only_0803.xlsx
+%     SM-S948U_metrics_24MP_memory_pacing_only_0803.xlsx
 %   Full:
 %     ML/data/0803_FULL/SM-S948U_metrics_12MP_normal_0803.xlsx
 %     ML/data/0803_FULL/SM-S948U_metrics_24MP_memory_0803.xlsx
@@ -111,20 +109,27 @@
 %     reconstruction rule.  The 12MP Full rows reproduce the Lv3 and Lv4 rows of
 %     Table~\ref{tab:rq1_controller_behavior} exactly, which validates the
 %     pipeline.
+%   - The 0803 Pacing-only rows use the workbooks' includedForRq1 manifest.  In
+%     particular, 12MP/Lv4 Run 21 is an incomplete, non-timeout run and is not
+%     included in that cell's denominator.
+%   - In the 0803 Admission-only collection, pacing decisions were left enabled
+%     for observation but not applied to shutter cadence.  Actual shot-to-shot
+%     intervals remain below recorded delay values, so those fields are shadow
+%     outputs and Sigma d is structurally 0 for this arm.
+%   - The 0803 baseline workbooks likewise retain controller calculations for
+%     observation, but neither admission nor pacing is applied.  The table uses
+%     actual completion and cadence, and Sigma d is structurally 0.  The 24MP
+%     workbook predates RQ1Runs, so its 59 runs are reconstructed by ppSequenceId
+%     reset and joined positionally to RQ3Summary; all relevant Lv3/Lv4 runs are
+%     valid timeout or 30-capture sessions.
 %
-% OPEN DATA GAPS -- these must be closed before submission:
-%   (1) No controller-off workbook exists for 12MP normal.  Either collect one
-%       or drop the two 12MP No control rows and say so.
-%   (2) 12MP normal / Lv4 / Pacing only has N=1 and must be recollected.
-%   (3) Arms are unbalanced (N ranges from 1 to 15) and split across campaigns:
-%       No control and Full are 0803, the single-component arms are 0729.  This
-%       is not yet a controlled ablation.  Recollect all four arms on one
-%       software build with a counterbalanced protocol.
+% DATA BALANCE NOTE:
+%   Arms are unbalanced (N ranges from 6 to 13 across the observed cells),
+%   although all accessible workbooks now carry the 0803 campaign label.
+%   Report the imbalance or apply a predeclared balancing protocol.
 %
 % Implementation reference inspected at commit:
 % 99aae0af8c3fa1ceb784083446e83c40d0fb917f
-
-\providecommand{\rqTBD}{\textcolor{red}{\textbf{TBD}}}
 
 \begin{table}[t]
   \centering
@@ -138,7 +143,7 @@
   % Explicit column widths rather than one uniform \tabcolsep.  Measured at
   % \scriptsize, the widest entry per column is: Condition 30.0pt (its own
   % header), Configuration 47.0pt ("Admission only"), Survived runs 26.6pt,
-  % E/M 16.0pt ("18/20"), Slack 19.4pt, Overrun 26.0pt, Draft completion 33.1pt,
+  % E/M 16.0pt ("12/19"), Slack 19.4pt, Overrun 26.0pt, Draft completion 33.1pt,
   % Pacing cost 20.2pt -- 218.1pt of floor in a 252pt column.  Both trailing
   % group headers are set on two lines for that reason: on one line they measure
   % 35.0pt and 34.3pt, which pushes the floor to 234.2pt and leaves only 2.5pt
@@ -194,18 +199,18 @@
 
     % ---------------------------------------------------------------- 12MP Lv3
     \multirow{4}{*}{\makecell[c]{12MP\\normal\\Lv3}}
-      & No control     & \rqTBD & 13/18 & \rqTBD & \rqTBD & \rqTBD & 0 \\
-      & Pacing only    & 4/9    & 18/20 & 6.4    & 188    & 93.9   & 4.1 \\
-      & Admission only & 9/10   & 13/-- & 3.6    & 2      & 45.8   & 0 \\
+      & No control     & 1/10   & 11/15 & 25.7   & 359    & 100.0  & 0 \\
+      & Pacing only    & 2/11   & 12/19 & 7.3    & 270    & 100.0  & 0 \\
+      & Admission only & 10/10  & --/-- & 4.3    & --     & 41.7   & 0 \\
       & \textbf{Full}  & \textbf{10/10} & --/--
                        & \textbf{4.8} & -- & \textbf{48.3} & 3.1 \\
     \cmidrule(l){2-8}
 
     % ---------------------------------------------------------------- 12MP Lv4
     \multirow{4}{*}{\makecell[c]{12MP\\normal\\Lv4}}
-      & No control     & \rqTBD & 10/17 & \rqTBD & \rqTBD & \rqTBD & 0 \\
-      & Pacing only    & 0/1 & 17/17 & -- & 333 & 94.1 & 0 \\
-      & Admission only & 9/9    & --/-- & 4.1    & --     & 29.3   & 0 \\
+      & No control     & 0/10   & 8/8.5 & --     & 574    & 100.0  & 0 \\
+      & Pacing only    & 1/10 & 9/10 & 5.8 & 267 & 100.0 & 1.2 \\
+      & Admission only & 10/10  & --/-- & 3.6    & --     & 29.0   & 0 \\
       & \textbf{Full}  & \textbf{10/10} & --/--
                        & \textbf{6.5} & -- & \textbf{55.0} & 4.4 \\
     \midrule
@@ -213,17 +218,17 @@
     % ---------------------------------------------------------------- 24MP Lv3
     \multirow{4}{*}{\makecell[c]{24MP\\memory\\Lv3}}
       & No control     & 0/10   & 5/16  & --     & 251    & 84.3   & 0 \\
-      & Pacing only    & 0/11   & 7/11  & --     & 402    & 77.5   & 0.3 \\
-      & Admission only & 6/6    & --/-- & 4.1    & --     & 33.9   & 0 \\
+      & Pacing only    & 0/10   & 5/12  & --     & 258    & 100.0  & 1.9 \\
+      & Admission only & 8/10   & 20/-- & 6.1    & 86     & 25.2   & 0 \\
       & \textbf{Full}  & \textbf{7/7} & --/--
                        & \textbf{5.5} & -- & \textbf{44.3} & 4.4 \\
     \cmidrule(l){2-8}
 
     % ---------------------------------------------------------------- 24MP Lv4
     \multirow{4}{*}{\makecell[c]{24MP\\memory\\Lv4}}
-      & No control     & 0/11   & 3/9   & --     & 176    & 63.1   & 0 \\
-      & Pacing only    & 0/15   & 9/14  & --     & 206    & 79.1   & 0 \\
-      & Admission only & 8/8    & --/-- & 8.5    & --     & 36.7   & 0 \\
+      & No control     & 0/10   & 3/8.5 & --     & 176    & 69.5   & 0 \\
+      & Pacing only    & 1/13   & 3/4.5 & 4.7    & 327    & 100.0  & 1.5 \\
+      & Admission only & 8/10   & 3/--  & 8.2    & 160    & 30.1   & 0 \\
       & \textbf{Full}  & \textbf{6/6} & --/--
                        & \textbf{9.2} & -- & \textbf{51.1} & 1.1 \\
     \bottomrule

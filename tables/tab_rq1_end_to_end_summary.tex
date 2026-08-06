@@ -5,16 +5,26 @@
 %
 % Controller-off Timeout onset retains the previously reported baseline
 % reference.  Full-controller values are reconstructed from:
-%   - SM-S948U_metrics_12MP_normal_0803.xlsx
-%   - SM-S948U_metrics_24MP_memory_0803.xlsx
-% Both workbooks were exported by CaptureMetricsExcelExporter.  The
+%   - SM-S948U_metrics_12MP_normal_0803_1.xlsx
+%   - SM-S948U_metrics_12MP_normal_0803_2.xlsx
+%   - SM-S948U_metrics_24MP_memory_0803_1.xlsx
+%   - SM-S948U_metrics_24MP_memory_0803_2.xlsx
+% The workbooks were exported by CaptureMetricsExcelExporter.  The
 % implementation reference was inspected at commit:
 % 99aae0af8c3fa1ceb784083446e83c40d0fb917f
 %
 % Per the collection correction, sessions containing Capture Timeout are
-% excluded: run 9 in the 12MP workbook and runs 35 and 36 in the 24MP workbook.
-% Incomplete non-timeout sessions remain outside the exporter's RQ1 inclusion
-% set.  The retained samples contain 43 and 40 complete runs, respectively.
+% excluded and incomplete non-timeout sessions remain outside the exporter's
+% RQ1 inclusion set.  The four input workbooks contribute 84 and 72 complete,
+% timeout-free runs to the 12MP and 24MP conditions, respectively.
+%
+% This table reports all exporter-eligible complete, timeout-free runs.  The
+% run-level N therefore varies by (condition, starting-level) cell.  The
+% separate post-hoc balanced-N=10 sensitivity result remains available in
+% data/rq1/all_vs_balanced_n10_summary.csv, with its run-level selection in
+% data/rq1/balanced_n10_selection_audit.csv; it is not used in this table.
+% Some watchdog-only traces remain in N but are omitted from a completion
+% percentage when the exporter marks that prefix ineligible.
 %
 % The 24MP/memory-pressure workbook is treated as one requested-mode scenario
 % rather than regrouped by exported Draft sizeBucket.  This preserves its mixed
@@ -93,77 +103,77 @@
     \hline\hline
     \multirow{14}{*}{\makecell[c]{S26\\Ultra}}
       & \multirow{7}{*}{\makecell[c]{12MP\\normal}}
-      & Lv0 & 5 & \rqShot{--} & \rqShot{--} & 0 & 37.2
+      & Lv0 & 10 & \rqShot{--} & \rqShot{--} & 0 & 37.7
         & \textbf{100} & 100 & \textbf{100} & 100
-        & \textbf{100} & 100 & \textbf{0} & \textbf{0}
-        & \textbf{--} & -- & \textbf{0} & 0 \\
+        & \textbf{100} & 100 & \textbf{0} & 3.8
+        & \textbf{--} & 106 & \textbf{0} & 0 \\
     \cline{3-20}
-      & & Lv1 & 2 & \rqShot{--} & \rqShot{--} & 0 & 22.6
-        & \textbf{100} & 100 & \textbf{100} & 100
-        & \textbf{100} & 100 & \textbf{0} & 0
-        & \textbf{--} & -- & \textbf{0} & 0 \\
+      & & Lv1 & 10 & \rqShot{--} & \rqShot{--} & 0 & 19.3
+        & \textbf{100} & 96.0 & \textbf{100} & 96.0
+        & \textbf{100} & 100 & \textbf{0} & 0.3
+        & \textbf{--} & 74 & \textbf{0} & 0 \\
     \cline{3-20}
-      & & Lv2 & 4 & \rqShot{24} & \rqShot{27} & 0 & 4.7
-        & \textbf{100} & 92.5 & \textbf{100} & 92.5
-        & \textbf{100} & 100 & \textbf{0} & 17.2
-        & \textbf{--} & 197.5 & \textbf{0} & 1.1 \\
+      & & Lv2 & 13 & \rqShot{24} & \rqShot{27} & 0 & 5.1
+        & \textbf{100} & 88.7 & \textbf{100} & 88.7
+        & \textbf{100} & 100 & \textbf{0} & 15.1
+        & \textbf{--} & 286 & \textbf{0} & 1.3 \\
     \cline{3-20}
-      & & Lv3 & 10 & \rqShot{13} & \rqShot{18} & 0 & 4.1
-        & \textbf{100} & 48.3 & \textbf{100} & 48.7
-        & \textbf{100} & 87.7 & \textbf{0} & 32.8
-        & \textbf{--} & 390 & \textbf{0} & 3.1 \\
+      & & Lv3 & 12 & \rqShot{13} & \rqShot{18} & 0 & 4.1
+        & \textbf{100} & 53.6 & \textbf{100} & 53.9
+        & \textbf{100} & 89.7 & \textbf{0} & 35.3
+        & \textbf{--} & 381 & \textbf{0} & 3.2 \\
     \cline{3-20}
-      & & Lv4 & 10 & \rqShot{10} & \rqShot{17} & 0 & 5.4
-        & \textbf{100} & 55.0 & \textbf{100} & 55.0
-        & \textbf{100} & 97.3 & \textbf{2.5} & 46.6
-        & \textbf{291} & 383 & \textbf{0} & 4.4 \\
+      & & Lv4 & 14 & \rqShot{10} & \rqShot{17} & 0 & 5.7
+        & \textbf{100} & 53.1 & \textbf{100} & 53.1
+        & \textbf{100} & 98.1 & \textbf{1.8} & 44.8
+        & \textbf{291} & 383 & \textbf{0} & 4.5 \\
     \cline{3-20}
-      & & Lv5 & 5 & \rqShot{8} & \rqShot{10} & 0 & 5.3
-        & \textbf{100} & 26.0 & \textbf{100} & 26.0
-        & \textbf{100} & 71.3 & \textbf{0} & 32.4
-        & \textbf{--} & 448 & \textbf{0} & 4.1 \\
+      & & Lv5 & 14 & \rqShot{8} & \rqShot{10} & 0 & 3.9
+        & \textbf{100} & 32.9 & \textbf{100} & 32.9
+        & \textbf{100} & 75.5 & \textbf{1.8} & 32.8
+        & \textbf{611} & 546 & \textbf{0} & 3.9 \\
     \cline{3-20}
-      & & Lv6 & 7 & \rqShot{7} & \rqShot{10} & 0 & 5.6
-        & \textbf{100} & 30.0 & \textbf{100} & 30.0
-        & \textbf{100} & 84.3 & \textbf{3.6} & 29.6
-        & \textbf{539} & 461 & \textbf{0} & 4.4 \\
+      & & Lv6 & 11 & \rqShot{7} & \rqShot{10} & 0 & 5.2
+        & \textbf{100} & 30.3 & \textbf{100} & 30.3
+        & \textbf{100} & 85.2 & \textbf{11.4} & 32.0
+        & \textbf{78} & 448 & \textbf{0} & 4.4 \\
     % Emphasize the scenario boundary only after the final 12MP row.
     \Xcline{2-20}{0.7pt}
       & \multirow{7}{*}{\makecell[c]{24MP\\memory\\pressure}}
-      & Lv0 & 6 & \rqShot{26} & \rqShot{30} & 0 & 12.9
-        & \textbf{100} & 98.9 & \textbf{100} & 98.9
-        & \textbf{100} & 100 & \textbf{0} & 14.9
-        & \textbf{--} & 200 & \textbf{0} & 0.5 \\
+      & Lv0 & 10 & \rqShot{26} & \rqShot{30} & 0 & 14.3
+        & \textbf{100} & 99.3 & \textbf{100} & 99.3
+        & \textbf{100} & 100 & \textbf{0} & 9.0
+        & \textbf{--} & 200 & \textbf{0} & 0 \\
     \cline{3-20}
-      & & Lv1 & 4 & \rqShot{19} & \rqShot{22} & 0 & 9.2
-        & \textbf{100} & 98.3 & \textbf{100} & 98.3
-        & \textbf{100} & 100 & \textbf{0} & 6.0
-        & \textbf{--} & 79 & \textbf{0} & 0.1 \\
+      & & Lv1 & 11 & \rqShot{19} & \rqShot{22} & 0 & 8.3
+        & \textbf{100} & 97.3 & \textbf{100} & 97.3
+        & \textbf{100} & 100 & \textbf{0} & 6.3
+        & \textbf{--} & 150 & \textbf{0} & 0.2 \\
     \cline{3-20}
-      & & Lv2 & 3 & \rqShot{14} & \rqShot{21} & 0 & 6.5
-        & \textbf{100} & 58.3 & \textbf{100} & 58.3
-        & \textbf{100} & 75.0 & \textbf{8.3} & 25.3
-        & \textbf{83} & 231 & \textbf{0} & 1.4 \\
+      & & Lv2 & 10 & \rqShot{14} & \rqShot{21} & 0 & 5.9
+        & \textbf{100} & 72.2 & \textbf{100} & 72.2
+        & \textbf{100} & 81.1 & \textbf{2.5} & 12.8
+        & \textbf{83} & 257 & \textbf{0} & 1.1 \\
     \cline{3-20}
-      & & Lv3 & 7 & \rqShot{7} & \rqShot{10} & 0 & 4.4
-        & \textbf{91.4} & 44.3 & \textbf{91.4} & 44.3
-        & \textbf{100} & 89.0 & \textbf{17.9} & 40.9
-        & \textbf{448} & 304 & \textbf{0} & 4.4 \\
+      & & Lv3 & 11 & \rqShot{7} & \rqShot{10} & 0 & 4.4
+        & \textbf{92.7} & 43.6 & \textbf{92.7} & 43.6
+        & \textbf{100} & 82.7 & \textbf{15.9} & 34.8
+        & \textbf{448} & 301 & \textbf{0} & 4.1 \\
     \cline{3-20}
-      & & Lv4 & 6 & \rqShot{5} & \rqShot{9} & 0 & 6.0
-        & \textbf{100} & 48.7 & \textbf{100} & 48.7
-        & \textbf{100} & 88.7 & \textbf{15.8} & 12.1
-        & \textbf{360} & 287 & \textbf{0} & 4.6 \\
+      & & Lv4 & 10 & \rqShot{5} & \rqShot{9} & 0 & 4.7
+        & \textbf{94.0} & 39.3 & \textbf{94.0} & 39.3
+        & \textbf{100} & 82.2 & \textbf{10.0} & 13.4
+        & \textbf{852.5} & 313 & \textbf{0} & 1.4 \\
     \cline{3-20}
-      & & Lv5 & 7 & \rqShot{4} & \rqShot{8} & 0 & 6.3
-        & \textbf{100} & 43.8 & \textbf{100} & 43.8
-        & \textbf{100} & 96.2 & \textbf{35.7} & 55.2
-        & \textbf{383.5} & 373 & \textbf{0.7} & 5.9 \\
+      & & Lv5 & 10 & \rqShot{4} & \rqShot{8} & 0 & 5.6
+        & \textbf{96.0} & 38.0 & \textbf{96.0} & 38.0
+        & \textbf{98.0} & 80.3 & \textbf{42.5} & 46.2
+        & \textbf{440} & 421 & \textbf{0.8} & 5.2 \\
     \cline{3-20}
-      & & Lv6 & 7 & \rqShot{4} & \rqShot{8} & 0 & 6.1
-        & \textbf{94.3} & 21.9 & \textbf{94.3} & 30.5
-        & \textbf{100} & 80.5 & \textbf{17.9} & 46.8
-        & \textbf{436} & 294 & \textbf{0} & 5.6 \\
+      & & Lv6 & 10 & \rqShot{4} & \rqShot{8} & 0 & 7.8
+        & \textbf{80.0} & 17.7 & \textbf{80.0} & 23.7
+        & \textbf{94.0} & 68.7 & \textbf{30.0} & 43.4
+        & \textbf{872} & 269 & \textbf{0.5} & 5.1 \\
     \hline\hline
   \end{tabular}}%
   \fittabcolsep{\rqtabbox}{\rqtabular}{\textwidth}{40}%
@@ -174,11 +184,13 @@
   {\scriptsize Bold @5 values characterize the first five shots as a
   short-burst usability proxy; @30 values characterize the full burst.
   The controller-off Timeout onset columns retain the earlier reference; all
-  columns to their right use the two 0803 full-controller workbooks after
+  columns to their right use the four 0803 full-controller workbooks after
   excluding sessions that contain Capture Timeout.  Timeout count therefore
   reports zero over the retained sessions.  Slack P5 is the lower-tail
   normalized deadline margin.  Completion percentages are macro-averaged
   across runs.  Delay P50 is pooled over positive applied delays;
   \(\Sigma\)-delay P50 is the median within-run summed delay.  -- indicates
-  that an event was not observed within the corresponding horizon.}
+  that an event was not observed within the corresponding horizon.  The
+  full-controller columns report all retained runs; the separate balanced
+  sensitivity comparison is not used in these cells.}
 \end{table*}
