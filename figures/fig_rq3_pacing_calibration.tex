@@ -353,43 +353,6 @@
       % are in the caption, which is the place with room for their denominators.
     \end{axis}
   \end{tikzpicture}
-
-  \caption{RQ3 pacing envelope and its error. Panels (a) and (b) plot the
-  \(94\) and \(73\) analyzed transitions whose measured requirement is positive,
-  one point each; the dashed diagonal marks equality and the dotted guides
-  \(\pm100\)\,ms. The points sit above the diagonal rather than along it ---
-  \(88\%\) and \(77\%\) clear it by more than \(100\)\,ms --- because the
-  reserve the delay is priced from is the burst's observed maximum Draft
-  duration: the delay holds an envelope over Draft cost rather than matching the
-  Draft that follows it. Below the diagonal is where that envelope failed, and
-  all but \(1\) and \(5\) of those cases fall inside the guides.
-  The \(14\) and \(22\) transitions whose sequence admission demoted after the
-  pacing decision are not marked apart, because on this quantity they are
-  indistinguishable from the rest (\(p=0.62\) and \(0.66\)); coordination
-  therefore does not explain the surplus, which
-  Table~\ref{tab:rq3_pacing_calibration} attributes to the reserve instead. A
-  further \(277\) and \(278\) paced transitions have \(d^{*}=0\) on the realized
-  trace and are not plotted here; because their error \(d-d^{*}\) is then
-  exactly the delay applied, they make up most of the positive side of
-  panel~(c). They are not idle pacing: every one of them had a positive measured
-  backlog, the median measured time until the Draft pipeline was next free was
-  \(3.2\) and \(3.1\)\,s, and the applied delay covered a median \(11\%\) and
-  \(7\%\) of that wait. Because the trace was already shaped by pacing, the
-  requirement of the unpaced trajectory is at or above \(d^{*}\), and
-  Table~\ref{tab:rq1_ablation} shows that removing pacing reintroduces Capture
-  Timeouts under the same conditions. Panel~(c) gives the calibration error, as
-  a share of the Capture Timeout budget, over the \(371\) and \(351\)
-  transitions where pacing was in play --- a delay was applied, the measured
-  requirement was positive, or both. The \(796\) and \(683\) transitions where
-  neither holds are omitted: they record that nothing was required and nothing
-  was applied, and they carry no calibration information. Its curves read
-  cumulatively: at a given error the height is the fraction of those transitions
-  whose error is at most that large, and the shaded band is the first
-  \(10\%\) of the budget, which both curves leave having accounted for nine
-  transitions in ten. Left of zero is
-  under-pacing, at \(1.9\%\) and \(3.1\%\) of transitions in play; the median
-  error is \(+4.7\%\) and \(+3.7\%\) of the budget, and the right tail is the
-  surplus that Table~\ref{tab:rq3_pacing_calibration} attributes to the
-  Draft-duration reserve.}
+  \caption{RQ3 pacing envelope}
   \label{fig:rq3_pacing_calibration}
 \end{figure}

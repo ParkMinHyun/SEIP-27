@@ -195,24 +195,6 @@
 
     \end{axis}
   \end{tikzpicture}
-
-  \caption{What changed at each unsafe admit of
-  Table~\ref{tab:rq2_admission_audit}, relative to the capture immediately
-  before it.  Bars grow out of \(1.0\), so a bar reaching left is a decrease.
-  Latency and CPU time rose in all five cases, but the CPU-time bar is the
-  shorter of the two everywhere except M3; the difference is taken up by busy
-  cores, which fell in four cases and rose only where M3's latency barely
-  moved.  Latency is CPU time divided by busy cores, a multiplicative
-  relation, so the bars do not add on this scale.
-  The right-hand column names the safeguard the audit build removes and that a
-  shipped build would have applied.  \textsf{watchdog}: the per-node
-  watchdog would have cut the decision node at its own budget.
-  \textsf{later single-frame skip}: omitting the later Decoration work reduces
-  the remaining cost; \textsf{earlier multi-frame skip}: omitting the earlier
-  Bokeh work frees budget by shortening the path to the decision.  Every row
-  carries a reason, so
-  none of the five reaches a shipped build as a Capture Timeout; M1--M2 are the
-  two the model's skips alone do not cover, and so the two that stay over
-  budget even on the model's own decision set.}
+   \caption{Rason about each unsafe admit of Table~\ref{tab:rq2_admission_audit}}
   \label{fig:rq2_unsafe_spike_anatomy}
 \end{figure}

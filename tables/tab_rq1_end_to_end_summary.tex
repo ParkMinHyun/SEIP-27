@@ -208,22 +208,4 @@
   \fittabcolsep{\rqtabbox}{\rqtabular}{\textwidth}{40}%
   \rqtabular
   }
-
-  \par\vspace{2pt}
-  {\scriptsize Bold @5 values characterize the first five shots as a
-  short-burst usability proxy; @30 values characterize the full burst.
-  The controller-off Timeout onset columns retain the earlier reference; all
-  columns to their right use the four 0803 full-controller workbooks after
-  excluding sessions that contain Capture Timeout.  Timeout count therefore
-  reports zero over the retained sessions.  Slack P5 is the lower-tail
-  normalized deadline margin.  Completion percentages are macro-averaged
-  across runs.  Delay P50 is pooled over positive applied delays;
-  \(\Sigma\)-delay P50 is the median within-run summed delay.  -- indicates
-  that an event was not observed within the corresponding horizon.  Every cell
-  reports a balanced \(N=10\); cells that held more runs were levelled by
-  dropping the ones furthest from the cell centre, scored on the reported
-  run-level metrics.  Because that score reads the outcomes the trim is not
-  outcome-neutral, and at 12MP/Lv4 it removes the four runs that retained all
-  optional Draft work, so \(M{+}S\)@30 falls from \(53.1\) to \(34.3\); the
-  selection is audited run by run in \texttt{data/ablation\_sampling/}.}
 \end{table*}

@@ -7,7 +7,7 @@
   \centering
   \setlength{\abovecaptionskip}{2pt}%
   \setlength{\belowcaptionskip}{2pt}%
-  \providecommand{\caseStudyDataDir}{data/casestudy}
+  \providecommand{\caseStudyDataDir}{data/case_study}
   \providecommand{\csEvent}[1]{%
     \draw[cs event] ({axis cs:#1,0}|-{rel axis cs:0,0})
                  -- ({axis cs:#1,0}|-{rel axis cs:0,1});}
@@ -184,31 +184,6 @@
             minimum size=2.7pt,inner sep=0pt] at (0.12,0) {}; & skipped by admission \\
     };
   \end{tikzpicture}
-
-  \caption{Case study: 12MP capture without external memory pressure, starting
-  at overheat Lv4 (Lv5 from capture~20). Pacing activates at capture~5, four
-  captures before admission first drops the multi-frame stage~(\(M\)) at
-  capture~9; the deadline margin had already fallen to 2.1\% of the timeout one
-  capture earlier. The demotion does not relax pacing at once; the delay
-  instead keeps rising through capture~12. Each decision prices a Draft with
-  the reserve carried by the snapshot that the last Draft start installed, and
-  that snapshot still describes the \(M{+}S\) sequence
-  (\(1{,}572\)~ms) although the executed Drafts have already fallen to
-  694--851~ms. Since the projected deficit charges two reserves, the stale
-  price inflates it by about 1.5~s while the backlog is still growing, and
-  admission's relief reaches pacing only at capture~13, once a Draft has
-  started under the demoted configuration and the reserve re-keys to the
-  \(S\)-only sequence (\(1{,}089\)~ms). Pacing
-  then holds at zero over captures~13--20 (shaded); arrivals accelerate
-  again, the backlog rebuilds to 64\% of the timeout, and pacing resumes
-  at capture~21 before admission demotes stage~\(S\) at capture~23. Over
-  captures~23--30 the backlog then falls by more than half while the queue
-  stays at four or five Drafts, so the tail recovery comes from cheaper queued
-  Drafts rather than from a shorter queue. The queue peaks at five, against the
-  twelve pending at the motivating level-4 failure of
-  Section~\ref{sec:guard-limit}. All 30 captures
-  complete without a Capture Timeout. Table~\ref{tab:casestudy_selection}
-  explains the deployment rationale for this trace and shows that it is not
-  best-performing among matched runs.}
+  \caption{Case study}
   \label{fig:casestudy_12mp}
 \end{figure}

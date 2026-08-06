@@ -1,1 +1,0 @@
-no_pacing_delay_s,no_pacing_max_backlog_s,thermal_lut_delay_s,thermal_lut_max_backlog_s,codel_inspired_delay_s,codel_inspired_max_backlog_s,ours_delay_s,ours_max_backlog_s

@@ -126,20 +126,4 @@
   \fittabcolsep{\rqtwobox}{\rqtwotabular}{\textwidth}{22}%
   \rqtwotabular
   }
-
-  \par\vspace{2pt}
-  \begin{minipage}{0.97\textwidth}
-    \scriptsize\emph{Notes:}
-    The audit block scores each decision as measured: this suffix, executed as
-    the audit build ran it, against the budget the decision saw.  Because the
-    build forces every optional node and suppresses the per-node watchdog, an
-    unsafe-admitted decision here is a model misjudgement under that condition,
-    not a Capture Timeout a shipped build would emit.
-    Figure~\ref{fig:rq2_unsafe_spike_anatomy} takes the five unsafe-admitted
-    decisions apart and marks, for each, which shipped safeguard would have
-    prevented the overrun; every one is covered, two of them only by the
-    watchdog.
-    The budget is the time left to the deadline, so a decision is unsafe here
-    exactly when its capture overran that deadline in the recording.
-  \end{minipage}
 \end{table*}

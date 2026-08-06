@@ -1,7 +1,0 @@
-metric,selected,peer_median,peer_min,peer_max,peer_n
-totalDelayMs,4388.0,4225.0,2687.0,6622.0,6
-pacedPercent,31.0,39.7,13.8,58.6,6
-timeoutMarginP5Ms,302.4,331.7,157.2,768.8,6
-burstSpanMs,22755.0,22694.5,19659.0,27339.0,6
-bokehExecutionPercent,16.7,33.3,10.0,73.3,6
-filterExecutionPercent,53.3,100.0,53.3,100.0,6

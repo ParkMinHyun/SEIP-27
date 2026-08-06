@@ -985,7 +985,7 @@ alone reads as "the session recovered"; the pair shows that the queue never
 shortened and only became cheaper to serve, which is the coordination claim the
 case study exists to make. `figures/fig_casestudy_12mp.tex` therefore carries a
 queue-depth strip, sourced from the `queue_depth` column already emitted into
-`data/casestudy/<condition>_backlog.csv` by `scripts/export_casestudy.py`. Keep
+`data/case_study/<condition>_backlog.csv` by `scripts/export_casestudy.py`. Keep
 the strip in any case-study figure that shows a demotion; drop it only if a
 future session shows the two moving together throughout.
 The cumulative-delay panel draws policy medians and IQR bands for the arms

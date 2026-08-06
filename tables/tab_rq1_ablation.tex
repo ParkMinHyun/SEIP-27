@@ -187,7 +187,7 @@
   \centering
   \setlength{\abovecaptionskip}{2pt}%
   \setlength{\belowcaptionskip}{3pt}%
-  \caption{RQ1(b) two-factor controller ablation across four stress conditions.}
+  \caption{RQ1(b) two-factor controller ablation.}
   \label{tab:rq1_ablation}
 
   {\scriptsize
@@ -288,28 +288,4 @@
   \fittabcolsep{\rqablbox}{\rqabltabular}{\columnwidth}{14}%
   \rqabltabular
   }
-
-  \par\vspace{3pt}
-  {\scriptsize\begin{minipage}{\columnwidth}
-    \raggedright
-    The four configurations of a condition are the Admission\,$\times$\,Pacing
-    $2{\times}2$: neither loop, pacing only, admission only, and both.
-    \textbf{Survived runs} (\(S(30)\) in the metrics guide): runs completing 30
-    captures without Capture
-    Timeout, over included runs.  \textbf{E/M}: earliest and median
-    first-timeout capture index, censored (--) when fewer than half the runs
-    time out.  \textbf{Slack~P5}: each run's own fifth percentile of the
-    per-capture deadline margin, normalized by the Capture Timeout deadline and
-    macro-averaged over the runs that survived; censored (--) when no run in the
-    cell survived, because a run that ends at its first timeout contributes only
-    that one overrun and a pooled percentile would then report failure severity
-    instead of lower-tail safety.  \textbf{Overrun~P50}: median, over the runs
-    that did time out, of how far past the deadline the first timeout ran; it
-    carries the failure severity that Slack~P5 no longer absorbs, and is
-    censored where no run timed out.  \mbox{\boldmath$M{+}S$}: macro-averaged
-    per-run rate of executed multi-frame and single-frame optional Draft
-    processing.  \mbox{\boldmath$\Sigma d$}: median accumulated pacing delay per
-    run, structurally zero when the pacer is off.  24MP is a requested-mode
-    label: only the first one or two captures are 24MP.
-  \end{minipage}}
 \end{table}

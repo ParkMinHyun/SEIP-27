@@ -239,11 +239,7 @@
   \centering
   \setlength{\abovecaptionskip}{2pt}%
   \setlength{\belowcaptionskip}{3pt}%
-  \caption{RQ3 pacing calibration on the S26 Ultra: the applied delay against
-  the delay the controller's own condition requires on measured inputs. Across
-  the 82 analyzed timeout-free sessions no transition fell below the
-  mandatory-work floor, which was positive on 6 of 2,201 transitions and covered
-  on all 6.}
+  \caption{RQ3 pacing calibration on the S26 Ultra}
   \label{tab:rq3_pacing_calibration}
 
   {\scriptsize
@@ -313,35 +309,4 @@
   \fittabcolsep{\rqthreecalbox}{\rqthreecaltabular}{\columnwidth}{16}%
   \rqthreecaltabular
   }
-
-  \par\vspace{2pt}
-  \begin{minipage}{0.97\columnwidth}
-    \scriptsize\emph{Notes:} \(d^{*}\) is the deployed pacing condition
-    evaluated on measured inputs --- reconstructed real backlog and the Draft
-    duration as it ran --- against the same deadline and two-Draft horizon.
-    Because that reserve is the burst's observed maximum Draft duration, the
-    delay holds an envelope over Draft cost rather than matching any one
-    transition's need, and these columns ask whether the envelope covered the
-    requirement rather than whether it equalled it.
-    \(n_{\mathrm{req}}\) counts transitions with \(d^{*}>0\).
-    \emph{Coverage} is the share of those transitions whose requirement was
-    covered;
-    \emph{Worst deficit} is the largest shortfall in ms among those not met.
-    \emph{Surplus} is \(\max(0,d-d^{*})\) over paced transitions, summing to a
-    per-burst median of \(3.11\) and \(2.69\)\,s out of a total applied delay
-    that is \(18\%\) and \(14\%\) of the \(17.5\) and \(22.6\)\,s median burst.
-    Where \(d\) and \(d^{*}\) are
-    both positive, \(d-d^{*}=(\hat{C}-C)+(\hat{B}-B)/2\) holds identically, so
-    the \emph{Reserve} and \emph{Backlog} columns split the surplus: the backlog
-    clock is unbiased and the Draft reserve carries the cost. \emph{Backlog P95}
-    is the 95th percentile of measured Draft backlog as a share of the timeout
-    budget, i.e., the state the delay regulates rather than the delay itself.
-    No Capture Timeout occurred, and the
-    smallest realized margin --- \(0.3\)\% and \(0.2\)\% of the deadline ---
-    belongs to no under-paced transition. Measured on a trace pacing
-    already shaped, \(d^{*}\) is a local target rather than a global
-    counterfactual optimum, so the surplus bounds removable delay from above and
-    the deficits from below; whether pacing was needed at all is
-    Table~\ref{tab:rq1_ablation}'s question.
-  \end{minipage}
 \end{table}
