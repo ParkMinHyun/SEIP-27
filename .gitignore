@@ -21,6 +21,10 @@ _minted-*/
 # Generated paper PDF. Do not ignore figures/*.pdf.
 /paper.pdf
 
+# Python bytecode from scripts/
+__pycache__/
+*.pyc
+
 # Local scratch directory
 /tmp/
 

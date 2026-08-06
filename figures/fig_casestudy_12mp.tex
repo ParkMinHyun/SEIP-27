@@ -146,10 +146,25 @@
         {\caseStudyDataDir/12mp_normal_backlog.csv};
 
       % ---- applied pacing delay --------------------------------------
+      % The labelled ceiling is 1000 ms, not the 1500 an earlier revision used.
+      % The largest delay this run applies is 696 ms at capture 12, so the top
+      % third of the taller panel was empty and nothing is clipped here.  The
+      % height is cut in the same proportion as the range, which keeps the
+      % ms-per-length scale of the bars at exactly what it was -- 5000 ms per
+      % \columnwidth -- and takes 0.08\columnwidth off the figure.  Do not lower
+      % the ceiling without restoring the height, or the bars will read as
+      % taller delays than the panels around them imply.
+      % ymax is 1100 rather than a flush 1000: at 1000 the top tick label sits
+      % on the axis frame, and with the 3.5pt group separation it ran into the
+      % 0 of the queue-depth panel above.  The 100 ms of headroom drops it about
+      % 5pt and the two labels clear each other.
+      % The 1500 ms axis of Figure~\ref{fig:rq3_pacing_calibration} is a
+      % different population -- delays there reach 2022 ms across all runs --
+      % and the two panels are not meant to share a scale.
       \nextgroupplot[
-        height=0.30\columnwidth,
+        height=0.22\columnwidth,
         ylabel={Applied delay\\(ms)},
-        ymin=0,ymax=1500,
+        ymin=0,ymax=1100,
         ytick={0,500,1000},
       ]
       \csTimeoutRange{8}{12}

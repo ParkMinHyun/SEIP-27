@@ -1,5 +1,16 @@
 % RQ3: is the applied pacing delay objectively well calibrated?
 %
+% STATUS -- no longer RQ3's primary exhibit.  Table~\ref{tab:rq3_pacing_selectivity}
+% and Figure~\ref{fig:rq3_pacing_selectivity} now carry RQ3, which is scoped to
+% whether pacing intervenes selectively under measured backlog pressure and at what
+% responsiveness cost.  This pair is retained as the estimator diagnostic: d - d*
+% measures how badly the controller prices its own reserve, not whether the delay
+% it produces is the right size, and on this data the requirement is prospective
+% (the one-Draft condition B + C - T is positive on 0 of 1,920 12MP transitions)
+% while a timeout-based criterion is degenerate (no eligible run timed out).  It
+% moves to the appendix once one exists; see tab_rq3_pacing_selectivity.tex for the
+% full argument.  Everything below still holds as a statement about the estimator.
+%
 % Merged from two candidate revisions.  What each contributed is recorded at the
 % end of this block so neither line of reasoning is lost.
 %

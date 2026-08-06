@@ -1,0 +1,323 @@
+% RQ3: where the pacer intervenes, and what the intervention costs.
+% Companion to Table~\ref{tab:rq3_pacing_selectivity}, which carries the same
+% quantities as point estimates plus the population definition, the eligibility
+% rules and the two limits that qualify every rate.
+%
+% ---------------------------------------------------------------------------
+% What each panel is, and why it is not circular
+% ---------------------------------------------------------------------------
+% Activation means the pacer applied a delay (d > 0).  It does so exactly when its
+% own online score Bhat + 2*Chat - max(0,T) is positive, so activation plotted
+% against that score would be a tautology -- it holds on 100% of the analyzed
+% transitions in both conditions.  All three panels are therefore drawn against
+% orderings the controller never observed: the projected overrun (a), the realized
+% margin (b), and the burst's elapsed time (c).
+%
+% Units, and why no exhibit prints the budget.  The Capture Timeout budget is an
+% internal figure and is deliberately absent from every rendered axis, cell and
+% caption; both selectivity orderings are shares of it instead of milliseconds.
+% It is a single constant across all analyzed transitions in both conditions
+% (checked in the script), so the normalisation is exact rather than an average.
+% Anything derived from these orderings has to stay in budget-relative units for
+% the same reason -- see the note on the backlog gap in the table, which is in
+% points of budget because two percentages and a millisecond difference would let
+% a reader divide the budget back out.
+%
+% (a) Activation by projected overrun, B + 2*C - max(0,T) as a share of budget:
+%     the deployed admissibility condition re-solved on the measured backlog and
+%     the Draft as it actually ran.  Negative is spare time; at zero the queue
+%     plus the next two Drafts are projected to exhaust the budget exactly, which
+%     is why zero carries a dashed rule.  Bins are ten points of budget wide,
+%     plotted at their midpoints, with the last one open at zero.
+%
+%     The curve is monotone in both conditions with no reversal, and because the
+%     axis is an amount rather than a rank it also yields thresholds a reader can
+%     use.  Activation is nil below -60% of budget (0 of 317 and 0 of 204
+%     transitions), crosses the pooled rate between -30 and -20%, passes half in
+%     the -10 to 0% bin (68.3 and 61.7%), and reaches 77.2 and 68.8% at or past
+%     zero.  In one sentence: the controller stays quiet while more than half the
+%     budget is projected to remain spare, and is at roughly three-quarters
+%     activation by the time the projection reaches the deadline.
+%
+%     The open top bin is also the bridge to the calibration diagnostic.  Since
+%     d* = ceil(max(0, overrun)/2), a strictly positive overrun is exactly a
+%     positive requirement, so that bin is the required set of
+%     Table~\ref{tab:rq3_pacing_calibration} -- 79 and 140 transitions, with one
+%     more in the 24MP bin whose overrun is exactly zero.  Its 77.2 and 68.8%
+%     activation and that table's 67.1 and 59.3% coverage are the same population
+%     measured against a weaker and a stronger bar.
+%
+% (b) The same question against the realized margin, also as a share of budget and
+%     in ten-point bins, with confidence bands.
+%
+%     12MP falls 86.3 -> 49.2 -> 13.6% over the first three bins and is extinct
+%     from 50% of budget onward: 600 transitions with more than half the budget
+%     left over, not one of them paced.  That is the false-positive side of
+%     selectivity and it is the panel's cleanest reading.  24MP falls more slowly
+%     and its first two bins are close (63.2 and 54.4%, bands [52.9, 73.9] and
+%     [44.5, 63.4]) -- it separates the risky fifth from the rest but resolves
+%     little within it, and roughly one in three of the tightest-margin captures
+%     is released with no delay at all.  It is also not quite extinct at the loose
+%     end: 2 of 496 transitions above 50% of budget were paced.  Do not describe
+%     the 24MP curve as resolving the tail, and do not round its loose end to zero.
+%
+%     The table additionally reports the tightest 5, 10 and 25% by margin as
+%     cumulative rank prefixes.  Those are a different cut of the same ordering,
+%     kept because they resolve the tight end more finely than a ten-point bin can
+%     -- the 24MP flatness between the tightest 5 and 10% is where that matters --
+%     and both cuts are written to data/rq3/selectivity/.
+%
+%     Not drawn here: the size of the delay, bin by bin.  An earlier revision put
+%     it on a right-hand axis in this panel and it was removed -- four curves in a
+%     plot box of roughly eighty points is unreadable, whatever the encoding, and
+%     the two that had to survive are the activation pair this panel exists for.
+%     The quantity is kept as the "Paced delay P50" row of
+%     Table~\ref{tab:rq3_pacing_selectivity}, with the caveats that make it need a
+%     table rather than an axis: it declines 453 -> 224 ms and 322 -> 204 ms over
+%     the bins with enough paced transitions to carry a median, the intervals of
+%     adjacent bins overlap, and the same decline does NOT hold against projected
+%     overrun.  Do not reinstate it as a curve here.
+%
+%     Realized margin is endogenous: pacing raises the margin of the captures it
+%     delays, so paced transitions drift toward the loose end and the tight tail
+%     is depleted of them.  That bias runs against the positive reading (a falling
+%     curve is found in spite of it) and inflates the negative one (the 24MP miss
+%     rate in the tight tail is an upper bound).  Both directions are in the
+%     caption; neither may be dropped.
+%
+% (c) The cost, as a share of the burst's elapsed time.  One point per eligible
+%     30-shot burst: the sum of applied delays over the burst divided by the sum
+%     of its shot-to-shot intervals.  Read the left intercept first -- 27.1% of
+%     12MP bursts and 18.8% of 24MP bursts paid nothing at all -- and the right
+%     tail second: the P95 burst spends 24.5% and 29.7% of its elapsed time
+%     waiting on the pacer, and the worst 24MP burst spends 52.9%.
+%     Share, not seconds.  In seconds the medians are 3.09 and 2.36 s and the
+%     distributions are comparable, but the 24MP tail reaches 18.5 s on a single
+%     burst, which either clips that point or compresses the mass every other
+%     burst sits in into a quarter of the panel.  The share is bounded by the data
+%     at 52.9% and needs no clipping, and it is the unit in which the cost can be
+%     called large or small.  data/rq3/selectivity/burst_delay_ecdf_*.csv holds the
+%     seconds form for anyone who wants to check the correspondence.
+%     What the share is NOT: the time a burst would save without pacing.  The
+%     delay is charged inside the interval it gates, but removing it would leave
+%     the queued Drafts to drain anyway and would hand admission a deeper backlog.
+%     The panel prices the intervention; it does not price its absence.
+%
+% ---------------------------------------------------------------------------
+% Encoding
+% ---------------------------------------------------------------------------
+% Condition is one encoding, reused unchanged in all three panels and inherited
+% from Figure~\ref{fig:rq3_pacing_calibration}: 12MP is solid, 24MP is dashed and
+% lightened.  The pair separates in greyscale and at one-column scale without a
+% second visual channel, so the legend is needed once only and sits in (a), whose
+% upper left is empty because activation is near zero through D5.  Marks are added
+% in (a) and (b) because those panels carry ten sampled points rather than a
+% continuous trace; (c) is an ECDF over 70 and 69 bursts and is a line alone.
+%
+% The figure is monochrome, and there is no second visual channel to spend.  A
+% revision that added one -- a tinted delay series on a right-hand axis in (b) --
+% was built and removed: colour separated the two quantities on screen and
+% collapsed in greyscale, mark shape had to carry the difference instead, and the
+% panel ended up with four curves and two filled bands in eighty points of width.
+% Anything that needs a second quantity per panel belongs in the table.
+%
+% ---------------------------------------------------------------------------
+% Uncertainty and data
+% ---------------------------------------------------------------------------
+% The bands in (a) and (b) are 95% percentile bootstrap over 2,000 replicates
+% resampling bursts, not transitions: the 29 transitions of one 30-shot run share
+% a thermal trajectory and a queue, so a transition-level resample would overstate
+% precision by roughly the square root of the cluster size.  Both bands in a panel
+% are grey rather than one grey and one tinted -- each hugs its own curve, so the
+% curve identifies the band, and a second hue would be this figure's only colour
+% while carrying nothing the dash pattern does not.
+%
+% Value bins make the bands matter more than rank bins did, which is the reason
+% (a) now carries one where an earlier revision did not.  Equal-count bins spread
+% precision evenly by construction; equal-width bins do not, so the reader has to
+% be able to see that the sparse ends are sparse.  The counts range from 91 to 480
+% per bin below the open top bin, and the bands widen accordingly.
+%
+% No band is drawn in (c): its ECDF is the full population of eligible bursts
+% rather than a sample from one.  Every interval that is not drawn is either
+% printed in Table~\ref{tab:rq3_pacing_selectivity} beside its point estimate or
+% written to data/rq3/selectivity/.
+%
+% Data: data/rq3/selectivity/, generated by scripts/rq3_selectivity_metrics.py
+% from data/ablation_sampling/48U_metrics_{12MP_normal,24MP_memory}_0803_{1,2}.xlsx
+% (ML commit 99aae0a).  Run and transition eligibility is documented in
+% tables/tab_rq3_pacing_selectivity.tex and is identical here: 70 and 69 runs,
+% 1,920 and 1,861 analyzed transitions.
+%
+% Layout: single-column float.  (a) and (b) share the activation-rate axis and sit
+% side by side so the two readings of "where does it fire" can be compared
+% directly; only (a) carries that axis's label and tick labels.  Both panels put a
+% share of budget on x, so the two orderings are read with one grammar and on one
+% unit.  (c) measures something else entirely and takes its own wider row: its x
+% is a share of the burst's elapsed time, not of the budget.
+
+\begin{figure}[t]
+  \centering
+  \providecommand{\rqThreeSelDir}{data/rq3/selectivity}
+
+  \tikzset{
+    rq3sel a/.style={black, solid, line width=0.7pt,
+      line join=round, line cap=round},
+    rq3sel b/.style={black!55, line width=0.7pt,
+      line join=round, line cap=round,
+      dash pattern=on 2pt off 1.1pt},
+    % Small marks: the panels carry ten sampled points each, and at 1.1pt the
+    % mark reads as a sampled value without thickening the trace.
+    rq3sel mark a/.style={mark=*, mark size=1.1pt,
+      mark options={draw=black, fill=black, line width=0.3pt}},
+    rq3sel mark b/.style={mark=diamond*, mark size=1.4pt,
+      mark options={draw=black!55, fill=white, line width=0.4pt}},
+    % The pooled activation rate, drawn as a band rather than as two rules
+    % because the two conditions differ by 3.9 points and two rules that close
+    % together read as one thick rule at this scale.
+    rq3sel baseline/.style={fill=black, fill opacity=0.07, draw=none},
+    % Confidence bands.  Both grey, not one grey and one tinted: each band hugs
+    % its own curve, so the enclosing curve identifies it, and a second hue here
+    % would be the figure's only colour while carrying no meaning the dash
+    % pattern does not already carry.
+    rq3sel ci/.style={fill=black, fill opacity=0.10, draw=none},
+    % Zero projected overrun in (a): the locus where the queue plus the next two
+    % Drafts are projected to exhaust the budget exactly.  A marked value, so it
+    % is darker than the grid it sits among but lighter than the curves.
+    rq3sel zero/.style={black!50, densely dashed, line width=0.5pt},
+  }
+
+  \pgfplotsset{
+    rq3sel axis/.style={
+      scale only axis=true,
+      tick label style={font=\tiny},
+      label style={font=\scriptsize},
+      title style={font=\scriptsize,yshift=-2pt},
+      grid=major,
+      major grid style={gray!20,line width=0.2pt},
+      axis line style={line width=0.35pt},
+      tick style={line width=0.35pt},
+      tick align=outside,
+      tick pos=left,
+      enlargelimits=false,
+      clip=true,
+    },
+  }
+
+  \begin{tikzpicture}
+    \begin{groupplot}[
+      rq3sel axis,
+      group style={group size=2 by 1, horizontal sep=0.05\columnwidth},
+      width=0.35\columnwidth,
+      height=0.35\columnwidth,
+      ymin=0,ymax=100,ytick={0,25,50,75,100},
+    ]
+      \nextgroupplot[
+        title={(a) By projected overrun},
+        xlabel={Overrun (\% of budget)},
+        ylabel={Activation rate (\%)},
+        xmin=-85,xmax=10,xtick={-80,-60,-40,-20,0},
+        legend style={
+          font=\tiny, at={(0.03,0.97)}, anchor=north west,
+          draw=gray!50, line width=0.3pt, fill=white, fill opacity=0.85,
+          text opacity=1, inner sep=1.5pt, row sep=-1pt,
+        },
+        legend cell align=left,
+      ]
+      \draw[rq3sel baseline]
+        (axis cs:-85,21.41) rectangle (axis cs:10,25.31);
+      % Bands first, so the curves and their marks sit on top of them.
+      \addplot[draw=none,forget plot,name path=rqselovloa]
+        table[x=bin_mid_pct,y=act_lo_pct,col sep=comma]
+        {\rqThreeSelDir/overrun_bins_12mp_normal.csv};
+      \addplot[draw=none,forget plot,name path=rqselovhia]
+        table[x=bin_mid_pct,y=act_hi_pct,col sep=comma]
+        {\rqThreeSelDir/overrun_bins_12mp_normal.csv};
+      \addplot[rq3sel ci,forget plot] fill between[of=rqselovloa and rqselovhia];
+      \addplot[draw=none,forget plot,name path=rqselovlob]
+        table[x=bin_mid_pct,y=act_lo_pct,col sep=comma]
+        {\rqThreeSelDir/overrun_bins_24mp_memory.csv};
+      \addplot[draw=none,forget plot,name path=rqselovhib]
+        table[x=bin_mid_pct,y=act_hi_pct,col sep=comma]
+        {\rqThreeSelDir/overrun_bins_24mp_memory.csv};
+      \addplot[rq3sel ci,forget plot] fill between[of=rqselovlob and rqselovhib];
+      % The deadline-projection locus: right of it the queue plus the next two
+      % Drafts are projected to exhaust the budget.
+      \addplot[rq3sel zero,forget plot] coordinates {(0,0) (0,100)};
+      \addplot[rq3sel a,rq3sel mark a]
+        table[x=bin_mid_pct,y=activation_pct,col sep=comma]
+        {\rqThreeSelDir/overrun_bins_12mp_normal.csv};
+      \addlegendentry{12MP normal}
+      \addplot[rq3sel b,rq3sel mark b]
+        table[x=bin_mid_pct,y=activation_pct,col sep=comma]
+        {\rqThreeSelDir/overrun_bins_24mp_memory.csv};
+      \addlegendentry{24MP mem.\ pressure}
+      \node[anchor=south west,font=\tiny,text=black!55,inner sep=1pt]
+        at (axis cs:-83,26) {pooled};
+
+      % (b) shares (a)'s left y range and label, so repeating the tick labels
+      % would spend the gap between the plot boxes on redundant text.
+      \nextgroupplot[
+        title={(b) By realized margin},
+        xlabel={Margin (\% of budget)},
+        xmin=0,xmax=90,xtick={0,20,40,60,80},
+        yticklabels={},
+      ]
+      \draw[rq3sel baseline]
+        (axis cs:0,21.41) rectangle (axis cs:90,25.31);
+      % Bands first, so the curves and their marks sit on top of them.
+      \addplot[draw=none,forget plot,name path=rqselloa]
+        table[x=bin_mid_pct,y=act_lo_pct,col sep=comma]
+        {\rqThreeSelDir/margin_bins_12mp_normal.csv};
+      \addplot[draw=none,forget plot,name path=rqselhia]
+        table[x=bin_mid_pct,y=act_hi_pct,col sep=comma]
+        {\rqThreeSelDir/margin_bins_12mp_normal.csv};
+      \addplot[rq3sel ci,forget plot] fill between[of=rqselloa and rqselhia];
+      \addplot[draw=none,forget plot,name path=rqsellob]
+        table[x=bin_mid_pct,y=act_lo_pct,col sep=comma]
+        {\rqThreeSelDir/margin_bins_24mp_memory.csv};
+      \addplot[draw=none,forget plot,name path=rqselhib]
+        table[x=bin_mid_pct,y=act_hi_pct,col sep=comma]
+        {\rqThreeSelDir/margin_bins_24mp_memory.csv};
+      \addplot[rq3sel ci,forget plot] fill between[of=rqsellob and rqselhib];
+      \addplot[rq3sel a,rq3sel mark a,forget plot]
+        table[x=bin_mid_pct,y=activation_pct,col sep=comma]
+        {\rqThreeSelDir/margin_bins_12mp_normal.csv};
+      \addplot[rq3sel b,rq3sel mark b,forget plot]
+        table[x=bin_mid_pct,y=activation_pct,col sep=comma]
+        {\rqThreeSelDir/margin_bins_24mp_memory.csv};
+    \end{groupplot}
+  \end{tikzpicture}
+
+  \par\vspace{0.6ex}
+
+  \begin{tikzpicture}
+    \begin{axis}[
+      rq3sel axis,
+      width=0.735\columnwidth,
+      height=0.26\columnwidth,
+      title={(c) Pacing cost per 30-shot burst},
+      xlabel={Applied delay (\% of the burst's elapsed time)},
+      ylabel={Cumulative fraction},
+      xmin=0,xmax=55,ymin=0,ymax=1.02,
+      xtick={0,10,20,30,40,50},
+      ytick={0,0.5,1},
+      yticklabel style={/pgf/number format/fixed},
+    ]
+      \addplot[rq3sel a,no marks,forget plot]
+        table[x=delay_share_pct,y=cdf,col sep=comma]
+        {\rqThreeSelDir/burst_share_ecdf_12mp_normal.csv};
+      \addplot[rq3sel b,no marks,forget plot]
+        table[x=delay_share_pct,y=cdf,col sep=comma]
+        {\rqThreeSelDir/burst_share_ecdf_24mp_memory.csv};
+      % The left intercept is the reading this panel is most often mis-skimmed
+      % on, so it is named on the plot: the curves do not start at zero because
+      % 19 of 70 and 13 of 69 bursts never paced.  Set below both intercepts
+      % (0.271 and 0.188) so neither curve runs through the text.
+      \node[anchor=west,font=\tiny,text=black!60,inner sep=1.5pt]
+        at (axis cs:2.5,0.085) {bursts that never paced};
+    \end{axis}
+  \end{tikzpicture}
+  \caption{RQ3 pacing selectivity and cost}
+  \label{fig:rq3_pacing_selectivity}
+\end{figure}

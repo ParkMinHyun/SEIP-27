@@ -1,0 +1,83 @@
+condition,metric,value,ciLo,ciHi,n
+12MP normal,activationPercent,21.4,,,1920
+12MP normal,activationPercent Lv0--2,6.2,,,834
+12MP normal,activationPercent Lv3--4,32.6,,,549
+12MP normal,activationPercent Lv5--6,33.5,,,537
+12MP normal,activationPercent overrun-80to-70pct,0.0,0.0,0.0,91
+12MP normal,activationPercent overrun-70to-60pct,0.0,0.0,0.0,226
+12MP normal,activationPercent overrun-60to-50pct,0.6,0.0,2.1,155
+12MP normal,activationPercent overrun-50to-40pct,4.4,1.7,8.0,180
+12MP normal,activationPercent overrun-40to-30pct,5.7,1.9,11.1,300
+12MP normal,activationPercent overrun-30to-20pct,16.8,12.5,21.5,376
+12MP normal,activationPercent overrun-20to-10pct,38.0,31.2,44.1,295
+12MP normal,activationPercent overrun-10to+0pct,68.3,59.5,77.1,218
+12MP normal,activationPercent overrunGe+0pct,77.2,68.0,87.3,79
+12MP normal,activationPercent margin0to10pct,86.3,80.0,92.3,226
+12MP normal,pacedDelayP50Ms margin0to10pct,453,392,525,195
+12MP normal,activationPercent margin10to20pct,49.2,40.8,56.9,305
+12MP normal,pacedDelayP50Ms margin10to20pct,322,255,381,150
+12MP normal,activationPercent margin20to30pct,13.6,8.8,18.8,317
+12MP normal,pacedDelayP50Ms margin20to30pct,338,286,413,43
+12MP normal,activationPercent margin30to40pct,7.2,2.6,13.4,250
+12MP normal,pacedDelayP50Ms margin30to40pct,224,155,508,18
+12MP normal,activationPercent margin40to50pct,2.3,0.0,5.4,222
+12MP normal,activationPercent margin50to60pct,0.0,0.0,0.0,174
+12MP normal,activationPercent margin60to70pct,0.0,0.0,0.0,189
+12MP normal,activationPercent margin70to80pct,0.0,0.0,0.0,196
+12MP normal,activationPercent margin80to90pct,0.0,0.0,0.0,41
+12MP normal,activationPercent tightest5pct,94.8,88.5,100.0,96
+12MP normal,activationPercent tightest10pct,87.0,80.1,93.2,192
+12MP normal,activationPercent tightest25pct,68.3,59.8,75.9,480
+12MP normal,backlogPacedP50Percent,52.5,,,411
+12MP normal,backlogUnpacedP50Percent,32.8,,,1509
+12MP normal,backlogGapPoints,19.7,16.1,22.6,1920
+12MP normal,delayP50Ms,381,,,411
+12MP normal,delayP95Ms,823,,,411
+12MP normal,burstDelayP50Ms,3086,,,70
+12MP normal,burstDelaySharePercent,18.1,,,70
+12MP normal,activationPercent marginGe50pct,0.0,,,600
+12MP normal,burstActivationPercent P25,0.0,,,70
+12MP normal,burstActivationPercent P50,23.1,,,70
+12MP normal,burstActivationPercent P75,34.0,,,70
+24MP mode + memory pressure,activationPercent,25.3,,,1861
+24MP mode + memory pressure,activationPercent Lv0--2,10.1,,,815
+24MP mode + memory pressure,activationPercent Lv3--4,25.4,,,507
+24MP mode + memory pressure,activationPercent Lv5--6,48.2,,,539
+24MP mode + memory pressure,activationPercent overrun-90to-80pct,0.0,0.0,0.0,1
+24MP mode + memory pressure,activationPercent overrun-80to-70pct,0.0,0.0,0.0,49
+24MP mode + memory pressure,activationPercent overrun-70to-60pct,0.0,0.0,0.0,154
+24MP mode + memory pressure,activationPercent overrun-60to-50pct,0.5,0.0,1.6,207
+24MP mode + memory pressure,activationPercent overrun-50to-40pct,2.4,0.0,6.1,212
+24MP mode + memory pressure,activationPercent overrun-40to-30pct,10.8,4.1,19.1,249
+24MP mode + memory pressure,activationPercent overrun-30to-20pct,22.9,15.0,31.4,315
+24MP mode + memory pressure,activationPercent overrun-20to-10pct,41.9,31.8,51.5,303
+24MP mode + memory pressure,activationPercent overrun-10to+0pct,61.7,52.2,71.4,230
+24MP mode + memory pressure,activationPercent overrunGe+0pct,68.8,51.9,82.8,141
+24MP mode + memory pressure,activationPercent margin0to10pct,63.2,52.9,73.9,228
+24MP mode + memory pressure,pacedDelayP50Ms margin0to10pct,322,250,453,144
+24MP mode + memory pressure,activationPercent margin10to20pct,54.4,44.5,63.4,340
+24MP mode + memory pressure,pacedDelayP50Ms margin10to20pct,294,252,452,185
+24MP mode + memory pressure,activationPercent margin20to30pct,31.1,21.6,40.9,309
+24MP mode + memory pressure,pacedDelayP50Ms margin20to30pct,276,231,336,96
+24MP mode + memory pressure,activationPercent margin30to40pct,12.1,5.5,19.7,265
+24MP mode + memory pressure,pacedDelayP50Ms margin30to40pct,204,166,290,32
+24MP mode + memory pressure,activationPercent margin40to50pct,5.4,1.4,10.9,223
+24MP mode + memory pressure,pacedDelayP50Ms margin40to50pct,82,54,458,12
+24MP mode + memory pressure,activationPercent margin50to60pct,0.0,0.0,0.0,188
+24MP mode + memory pressure,activationPercent margin60to70pct,1.2,0.0,3.3,169
+24MP mode + memory pressure,activationPercent margin70to80pct,0.0,0.0,0.0,117
+24MP mode + memory pressure,activationPercent margin80to90pct,0.0,0.0,0.0,22
+24MP mode + memory pressure,activationPercent tightest5pct,63.4,49.5,75.8,93
+24MP mode + memory pressure,activationPercent tightest10pct,63.4,51.1,75.0,186
+24MP mode + memory pressure,activationPercent tightest25pct,61.3,51.9,70.7,465
+24MP mode + memory pressure,backlogPacedP50Percent,47.7,,,471
+24MP mode + memory pressure,backlogUnpacedP50Percent,29.5,,,1390
+24MP mode + memory pressure,backlogGapPoints,18.2,14.2,22.9,1861
+24MP mode + memory pressure,delayP50Ms,278,,,471
+24MP mode + memory pressure,delayP95Ms,1180,,,471
+24MP mode + memory pressure,burstDelayP50Ms,2359,,,69
+24MP mode + memory pressure,burstDelaySharePercent,9.8,,,69
+24MP mode + memory pressure,activationPercent marginGe50pct,0.4,,,496
+24MP mode + memory pressure,burstActivationPercent P25,7.1,,,69
+24MP mode + memory pressure,burstActivationPercent P50,18.5,,,69
+24MP mode + memory pressure,burstActivationPercent P75,40.7,,,69

@@ -1,0 +1,346 @@
+% RQ3: does the pacer intervene selectively, and what does the intervention cost?
+%
+% ---------------------------------------------------------------------------
+% Why this table replaces the calibration table as RQ3's primary exhibit
+% ---------------------------------------------------------------------------
+% Table~\ref{tab:rq3_pacing_calibration} asks whether the applied delay d covers
+% the delay d* that the same admissibility condition requires on measured inputs.
+% That is a well-posed question and its answer is reported, but it is not RQ3's
+% question, and three properties of the collected data make it unable to stand as
+% RQ3's primary evidence:
+%
+%   1. d* is an estimator residual, not a policy criterion.  d and d* share the
+%      horizon model, the deadline and the arithmetic and differ only in their two
+%      inputs, so "coverage" measures how badly the controller prices its own
+%      reserve -- not whether the delay it produces is the right size for the
+%      deadline.  A controller with a perfect reserve estimate would score 100%
+%      coverage while pacing exactly as much, or as little, as it does today.
+%   2. The horizon carries the whole requirement.  Re-solved on a one-Draft
+%      horizon (B + C - T) the requirement is positive on 0 of 1,920 transitions
+%      in 12MP and 13 of 1,861 in 24MP.  Every 12MP "requirement" in the
+%      calibration table is therefore prospective headroom for a Draft that had
+%      not started, not a deadline the capture itself was about to miss.
+%   3. A timeout-based criterion has no discriminating power on this data.  The
+%      eligible population contains no Capture Timeout, so coverage against a
+%      realized-timeout criterion is 100% by construction in both conditions.
+%
+% The narrowed question this table answers is: does pacing intervene selectively
+% under high measured backlog pressure, and what responsiveness cost does that
+% selectivity impose?  Both halves are answerable from the recorded traces without
+% a counterfactual.  The question of whether the delay is correctly *scaled*
+% requires an alpha-sweep that varies the pacer's scale factor and measures the
+% admission compensation at each setting; it is deferred to that experiment rather
+% than answered here with an estimator residual.
+%
+% ---------------------------------------------------------------------------
+% What is reportable and what is circular
+% ---------------------------------------------------------------------------
+% Activation means d > 0: the pacer applied a delay before releasing the next
+% capture.  The pacer does that exactly when its online score
+%
+%     Bhat + 2*Chat - max(0,T)
+%
+% is positive.  Activation measured against that score is therefore a tautology --
+% it holds on 1,920 of 1,920 and 1,861 of 1,861 transitions -- and must never
+% appear as evidence of selectivity.  Only orderings the controller did not
+% observe carry information, and this table uses three:
+%
+%   projected overrun  B + 2*C - max(0,T)  the same condition on measured inputs
+%   realized margin    timeoutMarginMs     how close the capture came to its deadline
+%   measured backlog   B = realBacklogMs   the queue measured in time, not in items
+%
+% with B the measured backlog clock, C the Draft as it actually ran, T the window
+% left on the newest committed capture's deadline, and Bhat/Chat the controller's
+% estimates of B and C.  Starting overheat level is a fourth ordering the pacer
+% does not read: it takes no thermal input, so the band rows are also a
+% non-circular check.
+%
+% None of the three is a count.  B is the time left for the queue to drain, not the
+% number of Drafts in it; realQueueDepth is a separate recorded field and is not
+% used here, because a deadline is a time budget and four light Drafts are not the
+% same risk as four heavy ones.  Ordering by queue depth instead is measurably
+% worse and not monotone: activation by depth reverses at depth 6 in 12MP and at
+% depths 3 and 6 in 24MP, and the Spearman of the applied delay against depth is
+% +0.656 and +0.594 where against the projected overrun it is +0.545 and +0.543
+% over a monotone curve.
+%
+% Units.  All three orderings are reported as shares of the Capture Timeout budget
+% and never in milliseconds, so no rendered axis, cell or caption discloses the
+% budget.  The budget is a single constant across every analyzed transition in both
+% conditions (checked in the script), so the normalisation is exact.  This is why
+% the backlog gap below is in points of budget: printing the two backlog medians as
+% percentages and their difference in milliseconds would let a reader divide the
+% budget straight back out.  Any row added to this table has to respect that.
+%
+% Endogeneity of the margin, and which way it cuts.  Pacing raises the realized
+% margin of the captures it delays, so paced transitions are pushed toward the
+% loose end of the margin distribution and the tight tail is *depleted* of them.
+% An activation rate that rises as the margin tightens is therefore found against
+% that bias, not because of it -- which is what makes the positive finding usable.
+% The same bias inflates the negative finding: the 36.6% of the tightest 24MP
+% margins that received no delay is an upper bound on the miss rate under this
+% ordering, not a point estimate.  Both directions are stated because only stating
+% the first would be selective.
+%
+% ---------------------------------------------------------------------------
+% What the numbers say
+% ---------------------------------------------------------------------------
+% Selectivity holds in both conditions and is strong.  Activation against the
+% projected overrun -- ten-point-of-budget bins, negative meaning spare time -- is
+% monotone with no reversal in either condition:
+%   share of budget   -80  -70  -60  -50  -40  -30  -20  -10  >= 0
+%   12MP activation   0.0  0.0  0.6  4.4  5.7 16.8 38.0 68.3  77.2 %
+%   24MP activation   0.0  0.0  0.5  2.4 10.8 22.9 41.9 61.7  68.8 %
+% Because the axis is an amount and not a rank, three thresholds can be quoted
+% directly: activation is nil below -60% of budget (0 of 317 and 0 of 204
+% transitions), it passes half in the -10 to 0% bin, and it reaches roughly
+% three-quarters at or past zero -- the point where the queue plus the next two
+% Drafts are projected to exhaust the budget.  The table prints only the last of
+% these; the shape is Figure~\ref{fig:rq3_pacing_selectivity}'s panel (a).
+%
+% That last bin doubles as the bridge to the calibration diagnostic.  Since
+% d* = ceil(max(0, overrun)/2), a strictly positive overrun is exactly a positive
+% requirement, so the >= 0 bin is the required set of
+% Table~\ref{tab:rq3_pacing_calibration}: 79 and 140 transitions, with one more in
+% the 24MP bin whose overrun is exactly zero.  Its 77.2 and 68.8% activation and
+% that table's 67.1 and 59.3% coverage are the same population against a weaker
+% and a stronger bar, which is worth one sentence when both exhibits are cited.
+%
+% Against the realized margin the two conditions differ, and the difference is the
+% one finding here that separates them.  In 12MP activation climbs continuously as
+% the margin tightens -- 21.4% overall, 68.3% in the tightest quartile, 94.8% in
+% the tightest twentieth -- so the controller resolves risk within the risky
+% quartile.  In 24MP it separates the risky quartile from the rest (61.3% against
+% 25.3%) but does not resolve further inside it: 63.4% at both the tightest 10%
+% and the tightest 5%, flat within the confidence intervals.  Under memory
+% pressure the pacer identifies which captures are at risk but not which of those
+% are worst, and one in three of the tightest-margin captures is released with no
+% delay at all.  That is the table's negative finding and the caption states it.
+%
+% Two more rows extend the margin ordering past the binary question.  Both are
+% keyed to ten-point-of-budget bins rather than to the cumulative rank prefixes
+% the three rows above use; the two cuts are kept side by side because the ranks
+% resolve the tight end more finely than a ten-point bin can, which is where the
+% 24MP flatness lives.
+%
+%   Activation at margin >= 50% of budget.  In 12MP it is exactly zero: 600
+%   transitions finished with more than half the budget to spare and not one of
+%   them was paced.  In 24MP it is 0.4%, 2 of 496 -- close to zero but not zero,
+%   and the row prints 0.4 rather than rounding it away.  This is the
+%   false-positive side of selectivity: the controller does not spend delay where
+%   the deadline was never in question.
+%
+%   Paced delay P50 by margin bin.  Given that it fires, the delay also shrinks as
+%   the margin loosens -- 453 -> 224 ms and 322 -> 204 ms between the <10% and
+%   30--40% bins, with Spearman of d against margin over paced transitions of
+%   -0.280 and -0.192.  The row answers the standing objection that the controller
+%   applies a fixed delay whenever it acts.  Three limits on it, and they are the
+%   reason this is a table row rather than a curve in the figure.  (i) Only bins
+%   with at least ten paced transitions are quotable; past 30--40% the paced counts
+%   fall to 5, 0, 0, 0, 0 and 12, 0, 2, 0, 0.  (ii) Adjacent intervals overlap
+%   ([392, 525] and [155, 508] for the two 12MP bins), so the decline is a trend
+%   and not an ordering of bins.  (iii) The same statement is FALSE against the
+%   projected overrun: over paced transitions the delay's Spearman with
+%   B + 2C - T is -0.023 in 12MP and +0.247 in 24MP, because Chat is the burst's
+%   observed maximum Draft duration for the size bucket and barely moves within a
+%   burst.  The magnitude tracks how tight the capture turned out, not how much
+%   backlog the estimator saw.  Quote the margin form, never the overrun form, and
+%   say which one is being quoted.
+%
+% Endogeneity, for the magnitude row specifically.  The mechanism predicts the
+% opposite sign to what is observed -- a larger delay buys a looser margin, hence
+% a positive relation -- so the observed negative means selection dominates
+% treatment and its magnitude is a lower bound.  For the activation rows the same
+% endogeneity works the other way and is described above.
+%
+% Cost.  The intervention is not free and the table prices it in the two units a
+% product owner uses.  Per paced capture the delay is 381 and 278 ms at the median
+% with a P95 of 823 and 1,180 ms.  Per 30-shot burst the accumulated delay is 3.09
+% and 2.36 s at the median, which is 18.1% and 9.8% of the burst's elapsed time.
+% The tail is what to watch in 24MP: the P95 burst pays 8.14 s, 29.7% of its
+% elapsed time, and one burst reaches 18.5 s.  The share is descriptive -- it is
+% the fraction of elapsed time spent waiting on the pacer, not the time a burst
+% would save without it, because the queued Drafts would still have to drain and
+% admission would meet a deeper backlog.
+%
+% Dispersion is the reason no single activation rate should be quoted alone.  The
+% per-burst activation rate runs from 0% to 64.3% (12MP) and 96.2% (24MP), and 19
+% of 70 and 13 of 69 bursts never paced at all.  The pooled rates of 21.4% and
+% 25.3% are the mean of a policy that is idle in a quarter of the bursts and
+% active in half the captures of the worst ones, and reading them as "the
+% controller delays one capture in four" would be wrong.
+%
+% Shot-to-shot is reported but must not be read as the cost of pacing.  Paced
+% transitions have a median 689 vs 425 ms (12MP) and 786 vs 610 ms (24MP), but
+% the populations are selected on load: a paced capture is one the controller
+% found behind a deep backlog, and such captures are slower whether or not a delay
+% is applied.  The row bounds the user-visible interval under pacing; it does not
+% attribute the difference to the delay.
+%
+% ---------------------------------------------------------------------------
+% Population, and the two limits that qualify every rate in this table
+% ---------------------------------------------------------------------------
+% Data: data/ablation_sampling/48U_metrics_12MP_normal_0803_{1,2}.xlsx and
+% 48U_metrics_24MP_memory_0803_{1,2}.xlsx (ML implementation commit 99aae0a,
+% exported by CaptureMetricsExcelExporter), both arms with admission and pacing
+% enabled.  This is the RQ1(a) Full-arm source balanced to ten runs per
+% (condition, starting level) cell; see data/ablation_sampling/README.md.  The two
+% parts number their runs independently, so a run is keyed (part, runId).
+%
+% Run eligibility: complete 30-shot runs (RQ3Summary.isComplete30ShotRun) with no
+% recorded Capture Timeout; in 24MP, below Lv5, runs that captured MP12 from shot 1
+% are excluded as out of shape, while the Lv5--6 MP12 fallback is production
+% behaviour and is kept.  70 and 69 runs remain (12MP loses none; 24MP loses three
+% incomplete runs and one out-of-shape run).  Transition eligibility: shots 2--30
+% with a recorded pacing decision and a complete prior-Draft timeline
+% (pacingDecisionRecorded and realTraceCompleteBeforeDelay); two watchdog-truncated
+% 24MP captures are dropped as transitions while their runs are retained.  This
+% yields 1,920 and 1,861 analyzed transitions.  Identical to
+% Table~\ref{tab:rq3_pacing_calibration}, which shares this loader.
+%
+% Limit 1 -- the population is survival-conditioned, and the export got there
+% first.  The eligibility rule drops runs that recorded a Capture Timeout, but on
+% this source it dropped none: the run audit's only exclusions are three
+% incomplete 24MP runs and one out-of-shape 24MP run.  The reason is that the Full
+% arm was exported with those sessions already filtered out, which is visible as
+% gaps in the run ids of the untrimmed export (data/ablation_original/):
+%   12MP  part 1 omits id 9;              part 2 omits none
+%   24MP  part 1 omits ids 35 and 36;     part 2 omits ids 8, 9, 12 and 21
+% Ids 9, 35 and 36 are the Capture-Timeout sessions named in
+% docs/rq1-rq3-metrics-guide.md; the four 24MP part-2 gaps are undocumented and
+% should be accounted for before submission.  Do NOT quote a gap count from the
+% balanced source instead: data/ablation_sampling/ has fifteen absent 12MP ids and
+% eight absent 24MP ids, but most of those are the RQ1(a) balancing trim rather
+% than the export filter, and conflating the two overstates the filter.
+%
+% What this costs the table.  Every rate here describes captures that did not time
+% out.  That is the population RQ3 is scoped to -- the question is whether pacing
+% was placed where the risk was, among captures that survived -- and the realized
+% margin is the only realized-risk ordering that exists once the timeouts are
+% gone.  But the table cannot say whether pacing would have fired on the sessions
+% that did time out, and it must not be read as evidence that it would have.
+% Re-export the arm without the filter and re-run the script before submission.
+%
+% Limit 2 -- the 12MP thermal rows carry a known trim bias.  RQ1(a)'s balancing
+% trim scores runs on reported outcome metrics, and at Lv4 it drops the four 12MP
+% runs that retained all optional Draft work, i.e. exactly the runs with the
+% heaviest Drafts.  In 24MP only two runs were trimmed and nothing moves.  State
+% the direction wherever the 12MP band rows are quoted.
+%
+% ---------------------------------------------------------------------------
+% Uncertainty
+% ---------------------------------------------------------------------------
+% Bracketed intervals are 95% percentile bootstrap over 2,000 replicates
+% resampling bursts, not transitions.  The 29 transitions of one 30-shot run share
+% a thermal trajectory and a queue; a transition-level resample would overstate
+% precision by roughly the square root of the cluster size.  Rows without an
+% interval are either exact counts or descriptive quantiles for which a cluster
+% bootstrap would imply a precision the run count does not support.
+%
+% ---------------------------------------------------------------------------
+% Retracted -- do not reintroduce from earlier drafts
+% ---------------------------------------------------------------------------
+% "53% / 51% of the applied delay was unremovable" was computed as a ratio of
+% per-burst medians, which is not a statistic of any distribution.  On the correct
+% unit -- the median of the per-burst ratios -- the removable share is 61% and 73%
+% (IQR 48--76 and 58--86), i.e. the error ran in the direction that flattered the
+% policy.  The margin-inversion estimate behind it is in any case a
+% trace-conditioned local sensitivity, not a causal lower bound on necessary
+% delay: reducing a delay also changes the drain of earlier Drafts, this capture's
+% deadline, later queue state, admission decisions and predictor inputs.  It is
+% kept out of this table for that reason and is printed by
+% scripts/rq3_policy_evidence.py under every aggregation unit so the unit
+% dependence stays visible.
+%
+% Regenerate every number with scripts/rq3_selectivity_metrics.py, which writes
+% data/rq3/selectivity/ and prints each value quoted above and in
+% figures/fig_rq3_pacing_selectivity.tex.
+%
+% ---------------------------------------------------------------------------
+% Layout
+% ---------------------------------------------------------------------------
+% Single-column float, metrics down the rows and conditions across the columns.
+% The alternative -- conditions and thermal bands down the rows, as the
+% calibration table has them -- cannot hold this row set: the quantities here are
+% heterogeneous (percentages, milliseconds, seconds, counts, intervals) and a
+% shared numeric column header would be false for most of them.  Group headers
+% span the full width instead of occupying a fourth column, which buys the metric
+% column the width its longest labels need.  Confidence intervals are set on a
+% second line so the value columns stay narrow enough for the metric column to
+% avoid hyphenation.
+
+\begin{table}[t]
+  \centering
+  \setlength{\abovecaptionskip}{2pt}%
+  \setlength{\belowcaptionskip}{3pt}%
+  \caption{RQ3 pacing selectivity and cost on the S26 Ultra}
+  \label{tab:rq3_pacing_selectivity}
+
+  {\scriptsize
+  \renewcommand{\arraystretch}{1.08}%
+  \setlength{\arrayrulewidth}{0.35pt}%
+  \setlength{\doublerulesep}{0.8pt}%
+  \newsavebox{\rqthreeselbox}%
+  \newcommand{\rqthreeselgroup}[1]{\multicolumn{3}{|l|}{\textbf{#1}}}%
+  \newcommand{\rqthreeselci}[2]{\makecell[r]{#1\\{\tiny[#2]}}}%
+  \newcommand{\rqthreeseltabular}{%
+  \begin{tabular}{|>{\raggedright\arraybackslash}m{108pt}%
+                   |>{\raggedleft\arraybackslash}m{60pt}%
+                   |>{\raggedleft\arraybackslash}m{60pt}|}
+    \hline\hline
+    \textbf{Metric} &
+    \multicolumn{1}{c|}{\makecell[c]{\textbf{12MP}\\\textbf{normal}}} &
+    \multicolumn{1}{c|}{\makecell[c]{\textbf{24MP} \(+\) \textbf{memory}\\\textbf{pressure}}} \\
+    \hline\hline
+    \rqthreeselgroup{Selectivity} \\
+    \hline
+    Activation rate, all (\%) & 21.4 & 25.3 \\
+    \cline{1-3}
+    \quad Lv0--2 / Lv3--4 / Lv5--6 & 6.2 / 32.6 / 33.5 & 10.1 / 25.4 / 48.2 \\
+    \cline{1-3}
+    \quad overrun \(\geq 0\%\) of budget
+      & \rqthreeselci{77.2}{68.0, 87.3} & \rqthreeselci{68.8}{58.8, 78.8} \\
+    \cline{1-3}
+    \quad margin \(\geq 50\%\) of budget & 0.0 \,[600] & 0.4 \,[496] \\
+    \cline{1-3}
+    \quad tightest 25\% by margin
+      & \rqthreeselci{68.3}{59.8, 75.9} & \rqthreeselci{61.3}{51.9, 70.7} \\
+    \cline{1-3}
+    \quad tightest 10\%
+      & \rqthreeselci{87.0}{80.1, 93.2} & \rqthreeselci{63.4}{51.1, 75.0} \\
+    \cline{1-3}
+    \quad tightest 5\%
+      & \rqthreeselci{94.8}{88.5, 100.0} & \rqthreeselci{63.4}{49.5, 75.8} \\
+    \cline{1-3}
+    Paced delay P50 (ms), margin
+      \(<\)10\% / 30--40\% & 453 / 224 & 322 / 204 \\
+    \hline\hline
+    \rqthreeselgroup{Measured backlog at the decision (\% of budget)} \\
+    \hline
+    P50, paced / not paced & 52.5 / 32.8 & 47.7 / 29.5 \\
+    \cline{1-3}
+    Gap, paced \(-\) not (points)
+      & \rqthreeselci{\(+19.7\)}{16.1, 22.6}
+      & \rqthreeselci{\(+18.2\)}{14.2, 22.9} \\
+    \hline\hline
+    \rqthreeselgroup{Responsiveness cost} \\
+    \hline
+    Applied delay P50 / P95 (ms) & 381 / 823 & 278 / 1{,}180 \\
+    \cline{1-3}
+    Per burst P50 / P95 (s) & 3.09 / 4.98 & 2.36 / 8.14 \\
+    \cline{1-3}
+    \quad \% of elapsed time & 18.1 / 24.5 & 9.8 / 29.7 \\
+    \cline{1-3}
+    Shot-to-shot P50, paced / not (ms) & 689 / 425 & 786 / 610 \\
+    \hline\hline
+    \rqthreeselgroup{Per-burst dispersion: activation rate (\%)} \\
+    \hline
+    P25 / P50 / P75 & 0.0 / 23.1 / 34.0 & 7.1 / 18.5 / 40.7 \\
+    \cline{1-3}
+    Bursts that never paced & 19 of 70 & 13 of 69 \\
+    \hline\hline
+  \end{tabular}}%
+  \fittabcolsep{\rqthreeselbox}{\rqthreeseltabular}{\columnwidth}{6}%
+  \rqthreeseltabular
+  }
+\end{table}

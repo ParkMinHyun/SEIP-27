@@ -404,6 +404,31 @@ audit workbooks every one of the 154 over-budget decisions belongs to a capture
 that timed out. Do not present the unsafe-admit count as a proxy for timeouts;
 it is the timeout attributed to the decision that caused it.
 
+#### The controller-enforced run set
+
+Record this for the same reason as the audit set below. The current cells come
+from the balanced Full arm,
+`data/ablation_sampling/48U_metrics_<condition>_0803_{1,2}.xlsx`, with:
+
+- both parts pooled, which is the run set RQ1(a) uses, per section 4.3.1;
+- runs delimited by a `ppSequenceId` reset, per section 3.2;
+- identical run signatures counted once;
+- shots after 30 of each run excluded.
+
+That yields 70 runs / 2,100 captures at 12MP normal and 73 runs / 2,116 captures
+at 24MP memory pressure; two 24MP captures carry no Filter decision, so the
+Single-frame denominator is 2,114. `scripts/rq2_admission_metrics.py` regenerates
+the cells.
+
+These replace an earlier unbalanced pool of `ML/data/0727/` workbooks whose
+timeout-bearing runs were dropped, and the two are not directly comparable: the
+Full arm holds ten runs per starting overheat level Lv0–Lv6 while the 0727 pool
+was weighted towards the hot levels. Standardizing on an equal weight per level,
+the Multi-frame admit rate moves 72.1% → 59.9% at 12MP and 56.0% → 60.5% at 24MP,
+so the change is not only a change of level mix. The Full export carries no
+Capture-Timeout session, per the collection gap in section 4.3.1, so the
+successful-admit denominator counts only the sessions present in the export.
+
 ### 5.3 Always-admit audit metrics
 
 The audit forces optional work to execute while a shadow controller records

@@ -1,7 +1,35 @@
-% RQ2 results from the current Full-controller traces and planned always-admit
-% audit on one device.
+% RQ2 results from the balanced Full-controller arm of this repository and the
+% always-admit audit on one device.
 % Each capture contributes at most one selected decision per optional-work
 % group: Multi-frame = Bokeh; Single-frame = Filter.
+%
+% The Controller-enforced cells come from the balanced Full arm,
+% data/ablation_sampling/48U_metrics_<condition>_0803_{1,2}.xlsx, with both parts
+% pooled, runs delimited by a ppSequenceId reset, identical run signatures
+% counted once and shots after 30 excluded: 70 runs / 2,100 captures at 12MP
+% normal and 73 runs / 2,116 captures at 24MP memory pressure.  Two 24MP captures
+% carry no Filter decision, which is why the Single-frame denominator is 2,114.
+% Regenerate with scripts/rq2_admission_metrics.py.
+%
+% This arm replaces the earlier unbalanced 0727 pool, and the two are not
+% directly comparable: the Full arm holds ten runs at each starting overheat
+% level Lv0--Lv6, whereas the 0727 pool was weighted towards the hot levels.
+% Standardizing on an equal weight per level, the Multi-frame admit rate moves
+% 72.1% -> 59.9% at 12MP and 56.0% -> 60.5% at 24MP, so the change is a change in
+% measured behaviour and not only in the level mix.
+%
+% The Full export contains no Capture-Timeout session -- the collection gap
+% recorded in docs/rq1-rq3-metrics-guide.md section 4.3.1 -- so the
+% Successful-admit denominator counts only the sessions present in the export.
+% The 0727 cells were filtered the same way, by dropping timeout-bearing runs.
+%
+% These cells inherit the balancing protocol of data/ablation_sampling/README.md,
+% whose deviation score reads reported outcomes and is therefore not
+% outcome-neutral.  Against the untrimmed data/ablation_original the trim moves
+% the Multi-frame admit rate 63.1% -> 59.9% at 12MP and 60.2% -> 60.3% at 24MP,
+% and the Single-frame rate 92.2% -> 92.2% and 85.1% -> 84.7%; only the 12MP
+% Multi-frame cell moves by more than half a point.
+%
 % The all-decision audit reports factual feasible/unsafe outcomes crossed with
 % the fresh shadow-model admit/skip decision before session-sticky demotion.
 % The median effect uses all shadow-model skips in the corresponding factual class
@@ -78,9 +106,9 @@
     \hline
     \multirow{2}{*}[-0.6ex]{\makecell[c]{12MP\\normal}}
       & Multi-frame
-      & \makecell[r]{61.7\%\\{\scriptsize [828 of 1,341]}}
-      & \makecell[r]{99.9\%\\{\scriptsize [827]}}
-      & \makecell[r]{0.1\%\\{\scriptsize [1 watchdog]}}
+      & \makecell[r]{59.9\%\\{\scriptsize [1,258 of 2,100]}}
+      & \makecell[r]{100.0\%\\{\scriptsize [1,258]}}
+      & \makecell[r]{0.0\%\\{\scriptsize [0]}}
       & \makecell[r]{622\\{\scriptsize (98.1\%)}}
       & \makecell[r]{12\\{\scriptsize (1.9\%)}}
       & $+1.2\%$
@@ -89,8 +117,8 @@
       & $-2.9\%$ \\
     \cline{2-11}
       & Single-frame
-      & \makecell[r]{96.8\%\\{\scriptsize [1,297 of 1,340]}}
-      & \makecell[r]{100.0\%\\{\scriptsize [1,297]}}
+      & \makecell[r]{92.2\%\\{\scriptsize [1,936 of 2,100]}}
+      & \makecell[r]{100.0\%\\{\scriptsize [1,936]}}
       & \makecell[r]{0.0\%\\{\scriptsize [0]}}
       & \makecell[r]{630\\{\scriptsize (99.4\%)}}
       & \makecell[r]{4\\{\scriptsize (0.6\%)}}
@@ -101,9 +129,9 @@
     \hline
     \multirow{2}{*}[-0.6ex]{\makecell[c]{24MP\\memory pressure}}
       & Multi-frame
-      & \makecell[r]{46.4\%\\{\scriptsize [554 of 1,193]}}
-      & \makecell[r]{99.8\%\\{\scriptsize [553]}}
-      & \makecell[r]{0.2\%\\{\scriptsize [1 watchdog]}}
+      & \makecell[r]{60.3\%\\{\scriptsize [1,276 of 2,116]}}
+      & \makecell[r]{99.8\%\\{\scriptsize [1,274]}}
+      & \makecell[r]{0.2\%\\{\scriptsize [2 watchdogs]}}
       & \makecell[r]{728\\{\scriptsize (93.8\%)}}
       & \makecell[r]{48\\{\scriptsize (6.2\%)}}
       & $+2.6\%$
@@ -112,8 +140,8 @@
       & $-3.2\%$ \\
     \cline{2-11}
       & Single-frame
-      & \makecell[r]{87.8\%\\{\scriptsize [1,047 of 1,192]}}
-      & \makecell[r]{100.0\%\\{\scriptsize [1,047]}}
+      & \makecell[r]{84.7\%\\{\scriptsize [1,791 of 2,114]}}
+      & \makecell[r]{100.0\%\\{\scriptsize [1,791]}}
       & \makecell[r]{0.0\%\\{\scriptsize [0]}}
       & \makecell[r]{749\\{\scriptsize (96.5\%)}}
       & \makecell[r]{27\\{\scriptsize (3.5\%)}}
