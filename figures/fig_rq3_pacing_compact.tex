@@ -1,192 +1,274 @@
-% RQ3 companion figure: every mandatory-floor miss named in
-% Table~\ref{tab:rq3_pacing_compact}, plotted so that the panel accounts for the
-% deadline margin each capture kept instead of only measuring it.  The original
-% RQ3 policy, selectivity and calibration figures remain untouched as historical
+% Compact coordination-aware RQ3 main-paper figure.  The original RQ3 policy,
+% selectivity, and calibration figures remain untouched as historical
 % alternatives; docs/rq3-current.md is the authoritative handoff for this pair.
 %
-% Source: data/rq3/coordination/floor_miss_{filter,encoding}.csv, split by what
-% admission left running.  Regenerate with scripts/rq3_coordination_metrics.py
-% then scripts/rq3_coordination_audit.py.
-%
-% Naming follows tables/tab_rq3_pacing_compact.tex, whose header carries the map
-% between the printed terms and the column names the generated CSVs still use
-% (pacing decision = transition, run = burst, missing delay = the CSVs'
-% shortfall_ms, skipped optional work = demotion, deadline margin = realized
-% margin).  Only the printed labels change; the CSV column names do not.
+% Sources:
+%   data/rq3/estimator/draft_pricing_ecdf_*.csv          panel (a)
+%   data/rq3/estimator/reserve_error_ecdf_*.csv          panel (a)
+%   data/rq3/estimator/scatter_<condition>_<class>.csv   panels (b) and (c)
 %
 % ---------------------------------------------------------------------------
-% Why the figure is this and not an aggregate, and why it is a scatter
+% What this figure is for, and what it replaces
 % ---------------------------------------------------------------------------
-% Earlier revisions spent the figure on the aggregates -- activation by budget
-% band, a mechanism flow chart, a stacked partition of the required delay, a
-% ladder of every decision that required one.  All of them restated the table,
-% and the table can be cited.  The division of labour here is the one RQ2 already
-% uses: the table carries the result and the figure takes the handful of
-% exceptions the table names and shows what happened in them.  RQ3's exception
-% set is the 14 pacing decisions that fell below the mandatory floor, the only
-% place the controller failed a sufficient condition reconstructed after the run.
+% Earlier revisions of this figure drew an activation bar chart, a boxes-and-
+% arrows "mechanism" diagram, and a stacked bar of the same partition
+% Table~\ref{tab:rq3_pacing_compact} now prints as rows.  None of the three
+% carried a claim the table could not: two restated table cells as geometry, and
+% the middle panel asserted a mechanism in prose set inside a plot frame rather
+% than measuring one.
 %
-% The form, however, is deliberately NOT RQ2's.  A first attempt drew these 14
-% cases as horizontal grouped bars with a right-hand text column, which is
-% Figure~\ref{fig:rq2_unsafe_spike_anatomy} line for line; two figures in one
-% paper that share a skeleton are read as the same exhibit twice.  This paper
-% already spends a box diagram on the pipeline, grouped horizontal bars on RQ2,
-% and a capture-index time series on the case study, so the one grammar left free
-% is a scatter -- and it happens to be the right one, because the claim IS a
-% comparison between two commensurable quantities and a scatter can put that
-% comparison on the diagonal instead of asking the reader to compare bar lengths.
+% This figure carries the two claims that are genuinely distributional, i.e. the
+% two the table can only summarise at P50:
+%
+%   (a) The controller builds its two estimates by different conventions, and
+%       the shapes are what make one of them safe and the other not.  The Draft
+%       reserve is the session's observed MAXIMUM for the size bucket, so its
+%       error sits almost entirely to the right of zero -- it over-covers by
+%       construction, which is the price of the 350 and 374 decisions the table
+%       shows pacing acting on although none required a delay.  The backlog
+%       clock charges each queued Draft a POINT price, so its per-Draft error
+%       straddles zero: right in the middle (P50 +16 and +19 ms), wrong in both
+%       tails (P05 -135 and -293 ms).  A central statistic is the correct thing
+%       to charge for one Draft and the wrong thing to SUM over a queue, and the
+%       separation of the two curves is that argument in one picture.
+%
+%   (b,c) The sum is taken anyway, and this is what it does.  Each mark is one
+%       analyzed pacing decision: the accumulated pricing error of the Drafts
+%       occupying the pipeline ahead of it against the error the backlog clock
+%       actually carried into the delay formula.  The mass lies on the diagonal
+%       -- Pearson r = 0.95 and 0.88 -- so the backlog error IS the queue's
+%       accumulated pricing error and not an unexplained model defect.  Reading
+%       down the diagonal then separates the outcome classes: the decisions
+%       pacing covered sit in the cloud at the origin, and the decisions that
+%       left part of the requirement to admission or fell below the mandatory
+%       floor are the ones whose queue accumulated 0.6 to 1.3 s of optimism.
+%       That is the answer to "why was the backlog under-estimated", and it is
+%       the panel the table cannot be.
+%
+% Panels (b) and (c) are close to definitional and are meant to be.  The backlog
+% clock IS the sum of the queued prices, so a relation between its error and the
+% sum of the per-Draft pricing errors is expected; what the panel establishes is
+% that nothing ELSE contributes materially -- not deadline drift, not a queue
+% effect outside the FIFO the clock tracks -- so the whole of the backlog error
+% is localised in one place a future revision can change.  The scatter about the
+% diagonal is the honest part: the queue is reconstructed offline from the Draft
+% timeline rather than read out of the controller's FIFO, so the regression slope
+% is 0.84 and 0.79 rather than 1, and the vertical spread is what that
+% reconstruction does not capture.  Do not present r as a discovery; present it
+% as an accounting result that localises the error, and present the class
+% positions along the diagonal as the finding.
 %
 % ---------------------------------------------------------------------------
-% Why THESE two axes: the diagonal has to be the deadline
+% Quantities, all signed estimate minus realized so positive means conservative
 % ---------------------------------------------------------------------------
-% An earlier revision plotted the missing delay against the margin the capture
-% kept.  It answered "how close was it" and nothing else: its diagonal marked
-% "margin equalled the missing delay", which is not a boundary of anything, so a
-% reader could see that the misses were survivable but never why.  Two of the 14
-% sat below that line and the figure had to shade a region to explain that this
-% was not a failure -- a figure arguing against its own geometry.
+%   Draft pricing error   (beforeWorkloadSequencePredictedDurationMs
+%                          + beforeDraftSequenceOverheadDurationMs)
+%                         - draftSequenceDurationMs.  What the backlog clock
+%                         charged for one queued Draft minus what that Draft
+%                         occupied.  Population: every Draft carrying both
+%                         terms, 1,984 and 1,904.
+%   Draft reserve error   beforeDraftSequenceReservedDurationMs
+%                         - draftSequenceDurationMs.  Population: the analyzed
+%                         decisions, 1,920 and 1,861.
+%   Queued pricing error  the Draft pricing error summed over the Drafts that
+%                         had not finished at the decision and started before
+%                         the target's own Draft -- the set the backlog clock
+%                         was carrying.  Left blank, and the decision omitted,
+%                         when any member is missing a term: 1,808 and 1,741 of
+%                         the 1,920 and 1,861 analyzed decisions are plotted.
+%                         The correlation additionally drops the 1 and 4 whose
+%                         queue was empty, where the sum is zero by definition
+%                         and carries no information, so it is over 1,807 and
+%                         1,737.
+%   Backlog error         beforeBacklogMs - realBacklogMs.
 %
-% Substituting the floor's own definition, 2*d_mand = B + 2*C_mand - T, into
-% margin = (deadline - decision) - wait - C_exec turns the margin into an
-% identity over three separately measured terms:
+% ---------------------------------------------------------------------------
+% Drawing decisions
+% ---------------------------------------------------------------------------
+% Panel (a) is cut at -700 and +1100 ms.  The axis is a reading range; every
+% quantile quoted in the table is computed on the whole population.
 %
-%   margin = [ deadline_ref + horizon_reserve + backlog_residual ] - 2*d_mand
+% Panels (b) and (c) share the range [-2.8, 2.2] s on both axes so the diagonal
+% is at 45 degrees and vertical distance to it reads as the part of the backlog
+% error the queue reconstruction does not account for.  21 of the 3,549 plotted
+% decisions (8 and 13) fall outside; they are clipped by the axis, not dropped
+% from the data, and the correlations are computed before clipping.
 %
-%   deadline_ref      the controller prices the remaining window from the
-%                     queue's binding deadline -- backlogDeadlineMs, "the
-%                     deadline of whatever entered the backlog last, which is
-%                     the one the whole queue has to fit inside"
-%                     (CaptureAvailablePacingSession.kt, timeToDeadlineMsAt).
-%                     This is the budget between that deadline and the capture's
-%                     own timeout timestamp, which the floor never counted:
-%                     0 to 1,323 ms here, P50 845 ms.
-%   horizon_reserve   2*C_mand - C_exec.  The 2C horizon reserves a second Draft
-%                     for the next capture, while this capture's own deadline
-%                     has to cover only its own: 56 to 1,109 ms, P50 629 ms.
-%   backlog_residual  B - wait, how well the measured backlog predicted the wait
-%                     the capture actually served: -92 to -14 ms.  Near zero,
-%                     which is itself the result -- the backlog clock is not
-%                     where the margin came from.
+% The 12MP panel has no below-the-floor mark because no 12MP decision fell below
+% the floor, so its legend lists three classes and the 24MP legend four.  This
+% is the same structural zero the table states as a spanning cell, not a missing
+% series.
 %
-% Splitting 2*d_mand into the part the delay applied and the part it did not
-% gives the two axes, both in budget rather than in delay because one
-% millisecond of waiting buys two of budget (it drains one from the backlog and
-% moves the next deadline by one):
+% LIMIT.  Every quantity is arithmetic on the realized trace.  The queued
+% pricing error is NOT recoverable time and NOT a counterfactual: pacing is
+% closed-loop, so a clock that priced the queue differently would have changed
+% later arrivals, backlog, admission, thermal state and realized Draft duration.
+% The correlation is measured over the analyzed decisions and is not a causal
+% estimate.
 %
-%   x = 2*(d_mand - d)                                the miss, as budget
-%   y = deadline_ref + horizon_reserve + backlog_residual - 2*d
-%
-% so y - x is the realized margin exactly.  The diagonal is therefore margin = 0
-% -- the deadline itself -- the vertical distance from a mark to it is that
-% capture's margin, and the shaded half below it is where a capture misses its
-% deadline.  scripts/rq3_coordination_audit.py asserts the identity closes on
-% every analyzed decision, not only these 14; it does, to 1.0 ms, which is the
-% two ceilings in the floor formulas.
-%
-% This is arithmetic on the realized trace, NOT a counterfactual.  It accounts
-% for the margin that was observed; it says nothing about the margin a different
-% delay would have produced, and the closed-loop objection in
-% docs/rq3-current.md still forbids that claim.  Nor is the mark shape -- what
-% admission left running -- the cause of the margin: d*_mand already excludes
-% optional work, so skipping it documents coordination rather than closing the
-% deficit.
-%
-% Units.  Shares of the Capture Timeout budget, never milliseconds.  The budget
-% is an internal constant and an axis in ms would make it recoverable from any
-% quantity the manuscript also prints as a share of it.  The generator emits both
-% columns; the ms ones stay for the audit trail.
-%
-% Encoding.  Mark shape is what admission left running, which is the coordination
-% dimension and varies: the single-frame optional stage S survived on 6 cases and
-% only the mandatory work ran on 8.  Run identity is NOT encoded: the 14 cases
-% fall in four runs but they do not cluster in this space, so a four-way mark
-% would spend the figure's only free channel on something the reader cannot use.
-% The per-run count is in the table.  Two cases carry labels -- the largest miss
-% and the smallest margin -- because those are the two a reader will want to look
-% up; "c" is the capture index within the run, the CSV's shot field.
-%
-% Frame.  Square, both axes 0 to 28% of the budget, so the diagonal is at 45
-% degrees and "above the line" is a fair visual comparison rather than an
-% artefact of aspect.  x only reaches 18.7%, so the lower right is empty by
-% construction; that is where the legend and the annotations go.
+% Regenerate with scripts/rq3_estimator_metrics.py.
 
-\begin{figure}[t]
+\begin{figure*}[t]
   \centering
-  \setlength{\abovecaptionskip}{3pt}%
-  \setlength{\belowcaptionskip}{2pt}%
-  \begin{tikzpicture}
-    \begin{axis}[
+  \providecommand{\rqThreeCompactEstDir}{data/rq3/estimator}
+
+  \pgfplotsset{
+    rq3compact axis/.style={
       scale only axis=true,
-      width=0.60\columnwidth, height=0.60\columnwidth,
-      xmin=0, xmax=28, ymin=0, ymax=28,
-      xtick={0,5,10,15,20,25},
-      ytick={0,5,10,15,20,25},
-      xlabel={Budget the missing delay did not reserve (\%)},
-      ylabel={Budget the floor never counted (\%)},
-      tick align=outside,
+      tick label style={font=\tiny},
+      label style={font=\scriptsize},
+      title style={font=\scriptsize,yshift=-2pt},
       grid=major,
-      major grid style={black!12,line width=0.25pt},
+      major grid style={gray!20,line width=0.2pt},
       axis line style={line width=0.35pt},
       tick style={line width=0.35pt},
-      tick label style={font=\tiny},
-      label style={font=\tiny},
+      tick align=outside,
+      tick pos=left,
       enlargelimits=false,
-      clip=false,
-      legend style={
-        font=\tiny, draw=black!25, fill=white, line width=0.2pt,
-        inner sep=2pt, row sep=-1pt,
-        at={(0.99,0.02)}, anchor=south east,
-      },
+      clip=true,
+      legend style={font=\tiny,draw=gray!45,line width=0.3pt,
+        fill=white,fill opacity=0.9,text opacity=1,
+        inner sep=1.5pt,row sep=-1pt},
       legend cell align=left,
+    },
+    % The two estimators.  The heavier pair is the one that is summed over the
+    % queue, which is the pair the rest of the figure is about.
+    rq3compact price/.style={black, line width=0.75pt},
+    rq3compact price alt/.style={black!50, line width=0.75pt},
+    rq3compact reserve/.style={black, line width=0.5pt,
+      dash pattern=on 2.4pt off 1.4pt},
+    rq3compact reserve alt/.style={black!50, line width=0.5pt,
+      dash pattern=on 2.4pt off 1.4pt},
+    % The four outcome classes, in the table's order.  The background cloud is
+    % drawn first and lightest; the two short-fall classes carry the only filled
+    % marks, because they are what the panel asks the reader to locate.
+    rq3compact cloud/.style={only marks, mark=*, mark size=0.22pt,
+      draw=black!25, fill=black!25},
+    rq3compact covered/.style={only marks, mark=o, mark size=1.05pt,
+      draw=black!70, line width=0.3pt},
+    rq3compact flexible/.style={only marks, mark=triangle*, mark size=1.7pt,
+      draw=black, fill=black!45, line width=0.3pt},
+    rq3compact floor/.style={only marks, mark=square*, mark size=1.5pt,
+      draw=black, fill=black, line width=0.3pt},
+    rq3compact guide/.style={black!60, line width=0.4pt,
+      dash pattern=on 2pt off 1.4pt},
+  }
+
+  \begin{tikzpicture}
+    \begin{groupplot}[
+      rq3compact axis,
+      group style={group size=3 by 1, horizontal sep=0.062\textwidth},
+      width=0.245\textwidth,
+      height=0.212\textwidth,
     ]
+      % ---- (a) the two conventions --------------------------------------
+      \nextgroupplot[
+        title={(a) The two estimates},
+        xlabel={Estimate $-$ realized (ms)},
+        ylabel={Cumulative share (\%)},
+        xmin=-700,xmax=1100,
+        xtick={-600,-200,200,600,1000},
+        ymin=0,ymax=100,ytick={0,25,50,75,100},
+        legend style={at={(0.03,0.97)},anchor=north west},
+      ]
+      \addplot[rq3compact guide,forget plot] coordinates {(0,0) (0,100)};
+      \addplot[rq3compact price]
+        table[x=ms,y=cdf_pct,col sep=comma]
+        {\rqThreeCompactEstDir/draft_pricing_ecdf_12mp_normal.csv};
+      \addlegendentry{Draft price, 12MP}
+      \addplot[rq3compact price alt]
+        table[x=ms,y=cdf_pct,col sep=comma]
+        {\rqThreeCompactEstDir/draft_pricing_ecdf_24mp_memory.csv};
+      \addlegendentry{Draft price, 24MP}
+      \addplot[rq3compact reserve]
+        table[x=ms,y=cdf_pct,col sep=comma]
+        {\rqThreeCompactEstDir/reserve_error_ecdf_12mp_normal.csv};
+      \addlegendentry{Draft reserve, 12MP}
+      \addplot[rq3compact reserve alt]
+        table[x=ms,y=cdf_pct,col sep=comma]
+        {\rqThreeCompactEstDir/reserve_error_ecdf_24mp_memory.csv};
+      \addlegendentry{Draft reserve, 24MP}
+      \node[font=\tiny,text=black!65,anchor=south east,align=right]
+        at (axis cs:1070,4) {reserve over-covers\\by construction};
 
-    % Below the diagonal the capture misses its deadline.  The region is empty,
-    % and that is the result; it is shaded so the emptiness reads as a region
-    % rather than being inferred from an absence of marks.
-    \path[fill=black!8]
-      (axis cs:0,0) -- (axis cs:28,28) -- (axis cs:28,0) -- cycle;
-    \draw[black!55,densely dashed,line width=0.5pt]
-      (axis cs:0,0) -- (axis cs:28,28);
-    \node[font=\tiny,text=black!62,rotate=45,anchor=south,inner sep=2pt]
-      at (axis cs:23.2,23.2) {deadline: margin $=0$};
+      % ---- (b) 12MP ------------------------------------------------------
+      \nextgroupplot[
+        title={(b) 12MP normal},
+        xlabel={Queued Draft pricing error (s)},
+        ylabel={Backlog error $\hat{B}-B$ (s)},
+        xmin=-2.8,xmax=2.2,ymin=-2.8,ymax=2.2,
+        xtick={-2,-1,0,1,2},ytick={-2,-1,0,1,2},
+        legend style={at={(0.97,0.03)},anchor=south east},
+      ]
+      \addplot[rq3compact guide,forget plot] coordinates {(-2.8,-2.8) (2.2,2.2)};
+      \addplot[rq3compact cloud]
+        table[x=queued_pricing_error_s,y=backlog_error_s,col sep=comma]
+        {\rqThreeCompactEstDir/scatter_12mp_normal_no_delay_required.csv};
+      \addlegendentry{No delay required}
+      \addplot[rq3compact covered]
+        table[x=queued_pricing_error_s,y=backlog_error_s,col sep=comma]
+        {\rqThreeCompactEstDir/scatter_12mp_normal_covered.csv};
+      \addlegendentry{Covered by pacing}
+      \addplot[rq3compact flexible]
+        table[x=queued_pricing_error_s,y=backlog_error_s,col sep=comma]
+        {\rqThreeCompactEstDir/scatter_12mp_normal_flexible.csv};
+      \addlegendentry{Left to admission}
+      \node[font=\tiny,anchor=north west] at (axis cs:-2.68,2.12) {$r=0.95$};
 
-    % The smallest margin of the 14 (run 2#31 c26), drawn as the vertical
-    % distance to the diagonal so the reader is told once how to read every
-    % other mark.
-    \draw[black!55,line width=0.4pt]
-      (axis cs:5.914,5.914) -- (axis cs:5.914,10.286);
-    \node[font=\tiny,text=black!62,anchor=east,inner sep=2.5pt]
-      at (axis cs:5.914,7.1) {margin};
-
-    \addplot[only marks,mark=*,mark size=1.5pt,
-             mark options={fill=black,draw=white,line width=0.3pt}]
-      table[x=unmet_floor_pct,y=uncounted_budget_pct,col sep=comma]
-      {data/rq3/coordination/floor_miss_filter.csv};
-    \addlegendentry{admission kept \(S\) only}
-
-    \addplot[only marks,mark=square,mark size=1.5pt,
-             mark options={draw=black,line width=0.45pt}]
-      table[x=unmet_floor_pct,y=uncounted_budget_pct,col sep=comma]
-      {data/rq3/coordination/floor_miss_encoding.csv};
-    \addlegendentry{admission kept mandatory work only}
-
-    % The largest miss and the smallest margin.
-    \node[font=\tiny,text=black!62,anchor=south east,inner sep=3pt]
-      at (axis cs:18.743,26.186) {run 2\#15, c24};
-    \node[font=\tiny,text=black!62,anchor=west,inner sep=3pt]
-      at (axis cs:5.914,10.286) {run 2\#31, c26};
-
-    \node[font=\tiny,text=black!62,anchor=north west,align=left,inner sep=2pt]
-      at (axis cs:0.6,27.4)
-      {14 cases, four runs\\no actual Capture Timeout};
-    % In the empty half, above the legend.
-    \node[font=\tiny,text=black!62,anchor=east,align=right,inner sep=2pt]
-      at (axis cs:27.4,9.5)
-      {shaded: the capture would have\\missed its deadline};
-    \end{axis}
+      % ---- (c) 24MP ------------------------------------------------------
+      \nextgroupplot[
+        title={(c) 24MP memory pressure},
+        xlabel={Queued Draft pricing error (s)},
+        xmin=-2.8,xmax=2.2,ymin=-2.8,ymax=2.2,
+        xtick={-2,-1,0,1,2},ytick={-2,-1,0,1,2},
+        yticklabels={,,},
+        legend style={at={(0.97,0.03)},anchor=south east},
+      ]
+      \addplot[rq3compact guide,forget plot] coordinates {(-2.8,-2.8) (2.2,2.2)};
+      \addplot[rq3compact cloud]
+        table[x=queued_pricing_error_s,y=backlog_error_s,col sep=comma]
+        {\rqThreeCompactEstDir/scatter_24mp_memory_no_delay_required.csv};
+      \addlegendentry{No delay required}
+      \addplot[rq3compact covered]
+        table[x=queued_pricing_error_s,y=backlog_error_s,col sep=comma]
+        {\rqThreeCompactEstDir/scatter_24mp_memory_covered.csv};
+      \addlegendentry{Covered by pacing}
+      \addplot[rq3compact flexible]
+        table[x=queued_pricing_error_s,y=backlog_error_s,col sep=comma]
+        {\rqThreeCompactEstDir/scatter_24mp_memory_flexible.csv};
+      \addlegendentry{Left to admission}
+      \addplot[rq3compact floor]
+        table[x=queued_pricing_error_s,y=backlog_error_s,col sep=comma]
+        {\rqThreeCompactEstDir/scatter_24mp_memory_below_floor.csv};
+      \addlegendentry{Below the floor}
+      \node[font=\tiny,anchor=north west] at (axis cs:-2.68,2.12) {$r=0.88$};
+    \end{groupplot}
   \end{tikzpicture}
-  \caption{Every mandatory-floor miss of Table~\ref{tab:rq3_pacing_compact}.
-  The vertical distance to the diagonal is the deadline margin the capture
-  actually kept}
+
+  \caption{Where the pacing delay error comes from.  Both quantities are signed
+  estimate minus realized, so positive means the controller reserved more than
+  the pipeline used.  (a)~The Draft reserve is the session's observed
+  \emph{maximum} Draft duration for the capture's size bucket, so its error lies
+  almost entirely above zero: it over-covers by construction, which is what pays
+  for pacing firing on decisions that required no delay.  The backlog clock
+  instead charges each queued Draft a \emph{point} price, whose error straddles
+  zero --- accurate in the middle, wrong in both tails.  (b,~c)~One mark per
+  analyzed pacing decision: the accumulated pricing error of the Drafts occupying
+  the pipeline ahead of the decision against the error the backlog clock carried
+  into the delay formula, with the diagonal marking equality.  The clock is that
+  sum, so the relation is close to definitional; what it establishes is that
+  nothing else contributes materially, and the whole backlog error is localised
+  in one place --- a central statistic that is right for one Draft is the wrong
+  one to sum over a queue.  Reading down the diagonal separates the
+  outcomes of Table~\ref{tab:rq3_pacing_compact}: the decisions pacing covered
+  sit in the cloud near the origin, whereas the decisions that left part of the
+  requirement to admission, and the 14 that fell below the mandatory floor, are
+  those whose queue accumulated $0.6$--$1.3$\,s of optimism.  No 12MP decision
+  fell below the floor, so panel~(b) carries no such mark.  The axes are reading
+  ranges: 21 of the 3{,}549 plotted decisions fall outside and are clipped by
+  the axis rather than dropped, and the correlations are computed before
+  clipping.  All of this is arithmetic
+  on the realized trace; the accumulated pricing error is not recoverable time,
+  because pacing is closed-loop.}
   \label{fig:rq3_pacing_compact}
-\end{figure}
+\end{figure*}
