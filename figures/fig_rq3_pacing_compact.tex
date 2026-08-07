@@ -1,37 +1,81 @@
 % Compact coordination-aware RQ3 main-paper figure.  The original RQ3 policy,
-% selectivity, and calibration figures remain untouched.
+% selectivity, and calibration figures remain untouched as historical
+% alternatives; docs/rq3-current.md is the authoritative handoff for this pair.
 %
 % Sources:
-%   data/rq3/policy/band_activation_*.csv
-%   data/rq3/coordination/envelope_share.csv
-%   data/rq3/coordination/action_summary.csv
-%   data/rq3/policy/summary.csv and boundary_case_details.csv (panel b labels)
-% Interpretation and handoff: docs/rq3-current.md
+%   data/rq3/coordination/envelope_ladder_{12mp_normal,24mp_memory}.csv
+% Regenerate with scripts/rq3_coordination_metrics.py.
+%
+% ---------------------------------------------------------------------------
+% Why this figure and not three panels of rates
+% ---------------------------------------------------------------------------
+% An earlier revision had three panels: activation by pressure band, a
+% mechanism flow chart, and a stacked bar of the envelope partition.  Every one
+% of them was a table in disguise -- eight rates, six boxes of prose, and six
+% counts respectively -- and all three now live in
+% Table~\ref{tab:rq3_pacing_compact}, where a reader can also cite them.  The
+% reference papers in references/ do the same thing: results go in tables, and
+% the one figure each paper spends is reserved for something a table cannot
+% state.  A figure that restates a table earns nothing but page area.
+%
+% What a table cannot state here is the SHAPE of the coordination.  The table
+% says pacing covered 53 of 79 and 83 of 140 realized-work envelopes; it cannot
+% say how large those envelopes were, how far above or below them the applied
+% delay landed, or that the 24MP mandatory floor only becomes nonzero in the
+% deepest fifth of the order.  That is what this figure carries.
+%
+% Construction.  One panel per condition.  Every transition whose realized Draft
+% work would have required a delay is a column, ordered along x by the size of
+% that requirement, so the upper curve is monotone by construction and the x axis
+% is a rank rather than a quantity.  For each transition the figure draws:
+%
+%   curve         the delay the realized Draft work would have required
+%   shading       the area under it, i.e. the requirement itself
+%   mark          the delay the controller actually applied
+%
+% The two main categories of Table~\ref{tab:rq3_pacing_compact} are then regions
+% rather than mark styles, which is why the marks are all one shape: a mark above
+% the curve is a covered envelope and a mark inside the shading is
+% admission-flexible.  Labelling the regions instead of the marks also puts the
+% reading INSIDE the panel, which is what lets the caption be one line.
+%
+% The mandatory floor is deliberately NOT drawn.  It is zero on all 79 12MP
+% transitions and on 111 of the 140 24MP ones, so joining its values into a curve
+% draws a saw-tooth between 0 and 782 ms across the upper half of the 24MP order
+% and implies a trend that does not exist.  The floor and its 14 misses are a
+% seven-row audit in Table~\ref{tab:rq3_pacing_compact}, which is the right place
+% for 14 cases in one condition.  Do not reinstate it as a curve.
+%
+% Frames.  12MP y to 900 ms, which holds every point (largest applied delay 874).
+% 24MP is clipped at 1,600 ms and the panel says so: two applied delays reach
+% 2,010 and 2,022 ms, and a frame that held them would spend a third of the panel
+% on two marks.  The 24MP curve reaches 1,038 ms, so it occupies the lower half of
+% its frame; that is the finding, not a framing accident -- the applied delay
+% routinely exceeds what the realized work required.
+%
+% Claim limits are in tables/tab_rq3_pacing_compact.tex and docs/rq3-current.md.
+% In particular the shaded band is a joint-control interpretation, not a claim
+% that pacing alone covers the work that eventually ran, and the floor is a
+% retrospective sufficient reservation condition rather than the timeout
+% boundary.
 
-\begin{figure*}[t]
+\begin{figure}[t]
   \centering
-  \providecommand{\rqThreeCompactPolicyDir}{data/rq3/policy}
-  \providecommand{\rqThreeCompactCoordDir}{data/rq3/coordination}
+  \providecommand{\rqThreeCmpDir}{data/rq3/coordination}
 
   \tikzset{
-    rq3compact bar a/.style={draw=black, line width=0.45pt, fill=black!24},
-    rq3compact bar b/.style={draw=black!58, line width=0.45pt, fill=black!5,
-      dash pattern=on 1.5pt off 1pt},
-    rq3compact full/.style={draw=black, line width=0.4pt, fill=black!58},
-    rq3compact flexible/.style={draw=black!65, line width=0.4pt,
-      fill=black!18},
-    rq3compact floor/.style={draw=black!65, line width=0.4pt, fill=white,
-      pattern=north east lines, pattern color=black!55},
-    rq3compact mech/.style={draw=black!55, line width=0.4pt,
-      rounded corners=1pt, fill=white, align=center, font=\tiny,
-      text width=0.067\textwidth, inner sep=1.5pt},
-    rq3compact mech action/.style={rq3compact mech, fill=black!10},
-    rq3compact arrow/.style={black!55, line width=0.45pt,
-      -{Latex[length=2pt,width=2pt]}},
+    rq3cmp envelope/.style={black!75, line width=0.6pt},
+    rq3cmp applied/.style={only marks, mark=*, mark size=0.6pt,
+      mark options={fill=black, draw=none}},
+    rq3cmp note/.style={font=\tiny, text=black!62, inner sep=1.2pt},
+    rq3cmp note bg/.style={rq3cmp note, fill=white, fill opacity=0.92,
+      text opacity=1},
+    rq3cmp lead/.style={black!55, line width=0.3pt,
+      -{Latex[length=1.6pt,width=1.6pt]}},
   }
 
   \pgfplotsset{
-    rq3compact axis/.style={
+    rq3cmp axis/.style={
       scale only axis=true,
       tick label style={font=\tiny},
       label style={font=\scriptsize},
@@ -44,139 +88,86 @@
       tick pos=left,
       enlargelimits=false,
       clip=true,
-      legend style={font=\tiny,draw=gray!45,line width=0.3pt,
-        fill=white,fill opacity=0.88,text opacity=1,
-        inner sep=1.5pt,row sep=-1pt},
-      legend cell align=left,
     },
   }
 
   \begin{tikzpicture}
     \begin{groupplot}[
-      rq3compact axis,
-      group style={group size=3 by 1, horizontal sep=0.075\textwidth},
-      width=0.245\textwidth,
-      height=0.215\textwidth,
+      rq3cmp axis,
+      group style={group size=1 by 2, vertical sep=0.105\columnwidth},
+      width=0.795\columnwidth,
+      height=0.245\columnwidth,
+      xtick align=outside,
+      ylabel={Delay (ms)},
     ]
-      % (a) Online action against the retrospective pressure observed later.
+      % -------------------------------------------------------------------
+      % (a) 12MP normal.  The mandatory floor is zero on every transition, so
+      % the shaded band runs from the axis to the upper curve.
+      % -------------------------------------------------------------------
       \nextgroupplot[
-        title={(a) Targeted activation},
-        ybar,bar width=6pt,
-        xlabel={Retrospective spare (\% of budget)},
-        ylabel={Activation rate (\%)},
-        xmin=-0.65,xmax=3.65,
-        xtick={0,1,2,3},
-        xticklabels={$>$40,20--40,0--20,$\leq 0$},
-        ymin=0,ymax=100,ytick={0,25,50,75,100},
-        error bars/y dir=both,error bars/y explicit,
-        error bars/error bar style={black!65,line width=0.3pt},
-        error bars/error mark=|,
-        error bars/error mark options={black!65,line width=0.3pt,mark size=1pt},
-        legend style={at={(0.03,0.97)},anchor=north west},
-        legend image code/.code={\draw[#1]
-          (0cm,-0.055cm) rectangle (0.17cm,0.055cm);},
+        title={(a) 12MP normal, 79 transitions},
+        xmin=0,xmax=80,ymin=0,ymax=900,
+        xtick={0,20,40,60,80},
+        ytick={0,300,600,900},
       ]
-      \addplot[rq3compact bar a]
-        table[x=band_index,y=activation_pct,
-              y error plus=err_hi_pct,y error minus=err_lo_pct,col sep=comma]
-        {\rqThreeCompactPolicyDir/band_activation_12mp_normal.csv};
-      \addlegendentry{12MP normal}
-      \addplot[rq3compact bar b]
-        table[x=band_index,y=activation_pct,
-              y error plus=err_hi_pct,y error minus=err_lo_pct,col sep=comma]
-        {\rqThreeCompactPolicyDir/band_activation_24mp_memory.csv};
-      \addlegendentry{24MP mem. pressure}
+      \addplot[draw=none,name path=rqcmpazero] coordinates {(0,0) (80,0)};
+      \addplot[draw=none,name path=rqcmpaexec]
+        table[x=rank,y=realized_ms,col sep=comma]
+        {\rqThreeCmpDir/envelope_ladder_12mp_normal.csv};
+      \addplot[fill=black!9,draw=none]
+        fill between[of=rqcmpazero and rqcmpaexec];
+      \addplot[rq3cmp envelope]
+        table[x=rank,y=realized_ms,col sep=comma]
+        {\rqThreeCmpDir/envelope_ladder_12mp_normal.csv};
+      \addplot[rq3cmp applied]
+        table[x=rank,y=applied_ms,col sep=comma]
+        {\rqThreeCmpDir/envelope_ladder_12mp_normal.csv};
+      \node[rq3cmp note bg,anchor=north west,align=left] at (axis cs:2,880)
+        {dot above the shading: pacing covered\\the delay the realized work required};
+      \node[rq3cmp note bg,anchor=east] at (axis cs:47,330)
+        {dot inside it: admission absorbed the rest};
+      \draw[rq3cmp lead] (axis cs:48,320) -- (axis cs:56,120);
+      % The dots sitting on the axis are the transitions the controller left
+      % unpaced although their realized work needed a delay.  They are the
+      % population the boundary-mismatch group of the table diagnoses, and
+      % without a label a reader reads them as part of the shading.
+      \node[rq3cmp note bg,anchor=south west] at (axis cs:2,155)
+        {on the axis: needed a delay, got none (18)};
 
-      % (b) Why the online action can disagree with retrospective pressure.
+      % -------------------------------------------------------------------
+      % (b) 24MP memory pressure.  The floor becomes nonzero only in the
+      % deepest part of the order, which is where every floor miss sits.
+      % -------------------------------------------------------------------
       \nextgroupplot[
-        title={(b) Boundary mismatch mechanisms},
-        axis lines=none,
-        xmin=0,xmax=1,ymin=0,ymax=1,
-        ticks=none,
-        clip=false,
+        title={(b) 24MP memory pressure, 140 transitions},
+        xlabel={Transitions ordered by the delay their realized work needed},
+        % Clipped at 1,600 ms and said so: two applied delays reach 2,010 and
+        % 2,022 ms, and a frame that held them would spend a third of the panel
+        % on two marks.
+        xmin=0,xmax=141,ymin=0,ymax=1600,
+        xtick={0,35,70,105,140},
+        ytick={0,400,800,1200,1600},
       ]
-      \node[rq3compact mech] (safe-decision) at (axis cs:0.14,0.75)
-        {Backlog risk at pacing decision};
-      \node[rq3compact mech action] (safe-admit) at (axis cs:0.50,0.75)
-        {Admission later demoted\\15/15 targets; 55/58 ahead};
-      \node[rq3compact mech] (safe-outcome) at (axis cs:0.86,0.75)
-        {Paced, yet $>40\%$ spare\\15/1{,}275};
-      \draw[rq3compact arrow] (safe-decision) -- node[above,font=\tiny]{pace}
-        (safe-admit);
-      \draw[rq3compact arrow] (safe-admit) -- (safe-outcome);
-
-      \node[rq3compact mech] (risk-decision) at (axis cs:0.14,0.27)
-        {No pace from completed-duration history};
-      \node[rq3compact mech action] (risk-drift) at (axis cs:0.50,0.27)
-        {Queued 5.14\,s; headroom rose\\53/62};
-      \node[rq3compact mech] (risk-outcome) at (axis cs:0.86,0.27)
-        {Backlog under-estimated 61/62\\projected overrun 62/220};
-      \draw[rq3compact arrow] (risk-decision) -- (risk-drift);
-      \draw[rq3compact arrow] (risk-drift) -- (risk-outcome);
-      \node[font=\tiny,text=black!65,align=center,anchor=north]
-        at (axis cs:0.50,0.05)
-        {Admission demoted 29/62 targets, providing a partial backstop};
-
-      % (c) Joint-control interpretation of the pacing-only envelope.
-      \nextgroupplot[
-        title={(c) Admission-aware sizing and action},
-        xbar stacked,bar width=13pt,
-        xlabel={Transitions with $d^{*}_{\mathrm{exec}}>0$ (\%)},
-        xmin=0,xmax=100,ymin=-0.72,ymax=1.90,
-        xtick={0,25,50,75,100},
-        ytick={0,1},
-        yticklabels={{24MP mem.},{12MP normal}},
-        ymajorgrids=false,
-        legend style={at={(0.02,0.98)},anchor=north west},
-      ]
-      \addplot[rq3compact full]
-        table[x=full_covered_pct,y=slot,col sep=comma]
-        {\rqThreeCompactCoordDir/envelope_share.csv};
-      \addlegendentry{Pacing covers realized work}
-      \addplot[rq3compact flexible]
-        table[x=admission_flexible_pct,y=slot,col sep=comma]
-        {\rqThreeCompactCoordDir/envelope_share.csv};
-      \addlegendentry{Admission-flexible}
-      \addplot[rq3compact floor]
-        table[x=below_mandatory_pct,y=slot,col sep=comma]
-        {\rqThreeCompactCoordDir/envelope_share.csv};
-      \addlegendentry{Below mandatory floor}
-      \node[font=\tiny,text=white] at (axis cs:33.5,1) {53};
-      \node[font=\tiny,align=center] at (axis cs:83.5,1) {26 [7/21]};
-      \node[font=\tiny,text=white] at (axis cs:29.6,0) {83};
-      \node[font=\tiny,align=center] at (axis cs:74.7,0) {43 [17/31]};
-      \node[font=\tiny,align=center,fill=white,inner sep=0.5pt] at (axis cs:95,0) {14};
-      \node[font=\tiny,text=black!65,align=center,anchor=north]
-        at (axis cs:72,-0.43)
-        {Brackets: target / target-or-next demotions\\
-         24MP floor: 14/14 targets demoted; margin $\geq307$\,ms; timeout 0/14};
+      \addplot[draw=none,name path=rqcmpbzero] coordinates {(0,0) (141,0)};
+      \addplot[draw=none,name path=rqcmpbexec]
+        table[x=rank,y=realized_ms,col sep=comma]
+        {\rqThreeCmpDir/envelope_ladder_24mp_memory.csv};
+      \addplot[fill=black!9,draw=none]
+        fill between[of=rqcmpbzero and rqcmpbexec];
+      \addplot[rq3cmp envelope]
+        table[x=rank,y=realized_ms,col sep=comma]
+        {\rqThreeCmpDir/envelope_ladder_24mp_memory.csv};
+      \addplot[rq3cmp applied]
+        table[x=rank,y=applied_ms,col sep=comma]
+        {\rqThreeCmpDir/envelope_ladder_24mp_memory.csv};
+      \node[rq3cmp note bg,anchor=north east] at (axis cs:139,1560)
+        {2 dots above the frame, at 2,010 and 2,022\,ms};
+      \node[rq3cmp note bg,anchor=south west] at (axis cs:3,270)
+        {on the axis: needed a delay, got none (43)};
     \end{groupplot}
   \end{tikzpicture}
 
-  \caption{RQ3 admission--pacing coordination. (a) Online activation against
-  pressure reconstructed after the Draft executes; whiskers are 95\%
-  burst-cluster bootstrap intervals. (b) The two boundary mismatches.  Pacing
-  can precede an admission demotion that later creates retrospective spare.
-  Conversely, long queue residence and rising thermal headroom are consistent
-  with processing slowdown after a no-pacing decision, producing backlog
-  under-estimation; admission provides a partial backstop.  These mechanism
-  associations are observational. (c) Decisions with a positive pacing-only
-  realized-work envelope $d^{*}_{\mathrm{exec}}$: pacing either covers that
-  envelope, stops within the admission-flexible band
-  $d^{*}_{\mathrm{mand}}\leq d<d^{*}_{\mathrm{exec}}$, or falls below the
-  mandatory-work floor.  The deployed $2C$ horizon comprises the Draft that
-  begins after the decision and the next capture's Draft released by the delay.
-  Flexible-band annotations therefore report target and target-or-next admission
-  demotions; they do not causally attribute the next admission decision to the
-  current delay.  The 14 24MP floor misses occurred in four bursts; 11 received
-  zero delay, yet all 14 targets were demoted, retained at least 307\,ms realized
-  margin, and incurred no actual Capture Timeout.  Because
-  $d^{*}_{\mathrm{mand}}$ already excludes optional work, demotion documents
-  coordination rather than causally explaining that margin.  All 14 also
-  underestimated backlog and 12/14 showed rising headroom during queue residence,
-  consistent with retrospective queue/thermal drift.  The floor is a sufficient
-  reservation condition, not the timeout boundary.  Records affected by the known
-  timeout-measurement error are invalid observations; no valid analyzed run timed
-  out.  Segment labels are transition counts.}
+  \caption{Where the applied pacing delay lands against the delay each
+  transition's realized and mandatory Draft work would have required.}
   \label{fig:rq3_pacing_compact}
-\end{figure*}
+\end{figure}

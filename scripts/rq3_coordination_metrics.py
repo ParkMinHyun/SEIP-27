@@ -245,6 +245,23 @@ def main():
             ["avoided_ms", "y"],
             [[round(value, 2), round(y, 3)] for value, y in swarm(avoided, row_slot[condition])],
         )
+        # Every positive-envelope transition, ordered by the delay its realized
+        # Draft work would have needed.  The figure draws the two envelopes as
+        # curves over this order and the applied delay as marks against them, so
+        # the three categories become regions rather than three counts.  Sorting
+        # by (d_exec, d_mand, d) makes the upper curve monotone and the order
+        # reproducible.
+        ordered = sorted(transitions, key=lambda t: (t["d_exec"], t["d_mand"], t["d"]))
+        write_csv(
+            OUT / f"envelope_ladder_{condition}.csv",
+            ["rank", "mandatory_ms", "realized_ms", "applied_ms", "category"],
+            [[index, int(t["d_mand"]), int(t["d_exec"]), int(round(t["d"])), t["category"]]
+             for index, t in enumerate(ordered, start=1)],
+        )
+        # The category is not emitted as separate mark files on purpose: the
+        # figure draws one mark style and lets the regions carry the category,
+        # so a per-category split would be data nothing reads.  The category
+        # column of the ladder file keeps it auditable.
         print(f"{LABEL[condition]}: n={total}, full={counts['full_covered']}, "
               f"flexible={counts['admission_flexible']}, below mandatory={counts['below_mandatory']}, "
               f"avoided P50/P95={percentile(avoided, 0.5):.1f}/{percentile(avoided, 0.95):.1f} ms")
