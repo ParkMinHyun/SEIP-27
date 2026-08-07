@@ -1,0 +1,15 @@
+condition,metric,value,denominator
+12mp_normal,realizedWorkEnvelopePositive,79,79
+12mp_normal,realizedWorkEnvelopeCovered,53,79
+12mp_normal,admissionFlexibleBand,26,79
+12mp_normal,belowMandatoryFloor,0,79
+12mp_normal,potentialAvoidedDelayMsP50,71.5,26
+12mp_normal,potentialAvoidedDelayMsP95,208.2,26
+12mp_normal,belowMandatoryMarginMsMin,,0
+24mp_memory,realizedWorkEnvelopePositive,140,140
+24mp_memory,realizedWorkEnvelopeCovered,83,140
+24mp_memory,admissionFlexibleBand,43,140
+24mp_memory,belowMandatoryFloor,14,140
+24mp_memory,potentialAvoidedDelayMsP50,131.0,43
+24mp_memory,potentialAvoidedDelayMsP95,442.8,43
+24mp_memory,belowMandatoryMarginMsMin,307,14

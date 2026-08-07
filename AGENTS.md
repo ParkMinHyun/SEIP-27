@@ -26,6 +26,17 @@ This repository is a LaTeX paper project for SEIP 2027.
 - RQ3 evaluates whether the proposed controller computes an appropriately sized pacing delay for the Draft backlog and Capture Timeout budget. Do not frame RQ3 as a comparison against pacing methods transplanted from other domains unless the user explicitly requests that comparison.
 - Preserve the core research framing unless the user explicitly asks to change the problem statement, contribution, or terminology.
 
+## Current RQ3 Evidence Rules
+
+- Treat `docs/rq3-current.md` as the authoritative RQ3 handoff, `docs/rq3-file-manifest.md` as the transfer checklist, and `data/rq3/coordination/README.md` as the generated-artifact dictionary.
+- The current main-paper candidates are `tables/tab_rq3_pacing_compact.tex` and `figures/fig_rq3_pacing_compact.tex`; preserve the older RQ3 policy, selectivity, and calibration pairs as untouched historical alternatives.
+- RQ3 evaluates trace-derived targeting, admission-aware envelope coverage, work conservation, and responsiveness cost. It does not establish global optimality or a universally minimum counterfactual delay.
+- Do not mechanically scale recorded delay by 0.5 or 0.75 on the factual trace. Pacing is closed-loop and changes subsequent backlog, admission, thermal state, throttling, and realized Draft duration; a scaling study requires new matched runs or a validated closed-loop replay/simulator.
+- The deployed $2C$ horizon covers the Draft that begins after the pacing decision and the next capture's Draft released by that delay. `target-or-next` is an observed admission-action audit over this horizon, not causal attribution of the next decision to the current delay.
+- Timeout-labelled records removed from the current collection are known invalid measurements, not actual Capture Timeout outcomes. No valid analyzed run timed out; do not describe this population as survival-conditioned. Document the measurement fault and exclusion manifest when that evidence is accessible rather than inventing details.
+- The mandatory floor is a sufficient retrospective reservation condition, not the actual timeout boundary. Because it already excludes optional work, admission demotion documents coordination but does not itself erase a mandatory-floor deficit.
+
+
 ## Implementation Reference
 
 The actual implementation for this research is maintained in a private GitHub repository:

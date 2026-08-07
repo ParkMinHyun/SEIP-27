@@ -1,0 +1,15 @@
+condition,run,shot,captureIndex,category,plannedClass,executedClass,targetDemoted,nextDemoted,targetOrNextDemoted,appliedDelayMs,realizedEnvelopeMs,mandatoryFloorMs,floorGapMs,potentialAvoidedMs,marginMs,nextMarginMs,backlogMs,estimatedBacklogMs,backlogErrorMs,waitMs,headroomDelta,captureTimedOut,watchdogFailed
+24mp_memory,2#15,13,379,below_mandatory,Bokeh+Filter,Filter only,True,True,True,764,1038,782,18,274,332,1074,4695,4082,-613,4718,0.01,False,False
+24mp_memory,2#15,19,385,below_mandatory,Bokeh+Filter,Filter only,True,True,True,0,719,256,256,719,1076,1062,3881,3371,-510,3915,0.007,False,False
+24mp_memory,2#15,20,386,below_mandatory,Bokeh+Filter,Filter only,True,True,True,0,429,39,39,429,1062,1013,4123,2761,-1362,4148,0.003,False,False
+24mp_memory,2#15,21,387,below_mandatory,Bokeh+Filter,Filter only,True,True,True,0,752,233,233,752,1013,590,3990,2868,-1122,4014,0.006,False,False
+24mp_memory,2#15,22,388,below_mandatory,Bokeh+Filter,Filter only,True,True,True,0,920,235,235,920,590,337,4266,3134,-1132,4358,0.006,False,False
+24mp_memory,2#15,23,389,below_mandatory,Bokeh+Filter,Encoding only,True,True,True,0,323,323,323,323,337,522,4770,3287,-1483,4844,0.003,False,False
+24mp_memory,2#15,24,390,below_mandatory,Bokeh+Filter,Encoding only,True,True,True,4,660,660,656,656,522,699,5017,3390,-1627,5077,0.003,False,False
+24mp_memory,2#15,25,391,below_mandatory,Bokeh+Filter,Encoding only,True,True,True,0,58,58,58,58,699,886,4555,3721,-834,4584,0.0,False,False
+24mp_memory,2#15,26,392,below_mandatory,Bokeh+Filter,Encoding only,True,True,True,627,760,760,133,133,886,2149,4197,3980,-217,4224,0.0,False,False
+24mp_memory,2#22,19,595,below_mandatory,Bokeh+Filter,Encoding only,True,True,True,0,78,78,78,78,421,458,5493,3268,-2225,5522,0.014,False,False
+24mp_memory,2#22,20,596,below_mandatory,Bokeh+Filter,Encoding only,True,True,True,0,88,88,88,88,458,323,5443,3622,-1821,5461,0.007,False,False
+24mp_memory,2#22,21,597,below_mandatory,Bokeh+Filter,Encoding only,True,True,True,0,552,552,552,552,323,276,5462,3705,-1757,5528,0.007,False,False
+24mp_memory,2#29,26,816,below_mandatory,Bokeh+Filter,Filter only,True,True,True,0,293,87,87,293,548,401,5560,3423,-2137,5574,0.013,False,False
+24mp_memory,2#31,26,879,below_mandatory,Bokeh+Filter,Encoding only,True,True,True,0,207,207,207,207,307,420,5990,4568,-1422,6009,0.02,False,False

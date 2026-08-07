@@ -14,18 +14,12 @@ The definitions were checked against:
 - `data/rq1_metrics_aggregation.md`;
 - `data/rq2_metrics_aggregation.md`.
 
-The exporter records the active `PolicyType` in the `pacingPolicy` column of
-both `RQ3Pacing` and `RQ3Summary`. This exported value is the authoritative
-policy identity. Aggregation maps it to the artifact keys `no_pacing`,
-`thermal_lut`, `codel_inspired`, and `ours`; the operator-supplied workbook
-mapping only locates inputs and must agree with the exported policy. Legacy
-workbooks without `pacingPolicy` require an explicit operator mapping.
-
-The policy keys match the implementation's `PolicyType` enum
-(`NO_PACING`, `THERMAL_LUT`, `CODEL_INSPIRED`, `OURS`). Manuscript labels are
-No pacing, Thermal LUT, CoDel-inspired, and Ours. The earlier Queue-EWMA and
-`static_lut` / `queue_dynamic` keys and the "Static LUT" / "Queue dynamic"
-labels are retired; do not reintroduce them.
+The current RQ3 no longer uses the four-policy comparison as its main-paper design.
+The authoritative RQ3 handoff is `docs/rq3-current.md`, and the generated
+coordination-artifact dictionary is `data/rq3/coordination/README.md`. Legacy
+`pacingPolicy` fields and four-policy aggregation material remain below only as
+historical collection notes; do not use them to frame or regenerate the current
+compact RQ3 exhibits.
 
 ## 2. Research-question overview
 
@@ -33,7 +27,7 @@ labels are retired; do not reintroduce them.
 |---|---|---|
 | RQ1 | Does the coordinated controller prevent Capture Timeout while preserving optional Draft functionality at acceptable intervention cost? | End-to-end ablation and full-controller behavior |
 | RQ2 | Does admission retain optional work that can safely complete and reject work that would exceed its remaining budget? | Factual admitted outcomes and an Always-admit audit |
-| RQ3 | Does the pacing policy control Draft backlog and queue depth with an objectively justified amount of user-visible delay? | Four-policy pacing comparison under a fixed admitted workload |
+| RQ3 | Does the controller compute an appropriately sized pacing delay for the Draft backlog and Capture Timeout budget? | Targeting, boundary diagnosis, admission-aware envelope partition, actual admission action, work conservation, and responsiveness cost |
 
 The intended argument is:
 
@@ -263,11 +257,11 @@ evaluates the required versus applied delay and its calibration.
 the remaining captures are 12MP.  Starting-level 5--6 runs use the product's
 12MP fallback and must not be presented as 24MP ablation evidence.
 
-The predeclared per-cell exclusion of one Capture-Timeout session from the Full
-24MP / Lv3 cell is **retired**. It could not be applied symmetrically — No
-control would have had no runs left — and the current Full exports contain no
-Capture-Timeout session to exclude. See the collection gap below before reading
-that as "no attempt timed out".
+The sessions previously described as Full-arm Capture Timeout outcomes are now
+known to contain an invalid timeout measurement. They are removed as invalid
+observations, not as unfavorable outcomes. No valid Full-arm run experienced an
+actual Capture Timeout; preserve the measurement-fault and invalid-run manifest
+when reporting the valid-run denominator.
 
 ### 4.3.1 Data sources and balancing
 
@@ -309,13 +303,12 @@ runs in workbook collection order after `includedForRq1` filtering: run ids 5,
 6, 7, 8, 14, 15, 16, 17, 18 and 19. This reporting-time selection makes every
 displayed ablation cell `N = 10` without modifying the source workbook.
 
-**Collection gap to resolve before submission.** The Full exports omit the run
-ids that the RQ3 notes identify as this arm's Capture-Timeout sessions (12MP run
-9; 24MP runs 35 and 36); `RQ1Runs` jumps over them. The Full denominators
-therefore count only the sessions present in the export, so `10/10` is not by
-itself evidence that no attempt timed out. The other three arms retain their
-timeout sessions. Either re-export the arm without that filter or state the
-number of excluded sessions in the caption.
+**Timeout-measurement data-quality rule.** Full-arm run ids 12MP 9 and 24MP
+35--36 were previously labelled as Capture Timeout sessions, but those labels
+come from the known measurement fault rather than actual timeout outcomes. Their
+removal is invalid-observation filtering, not survival conditioning. Record the
+fault, the affected ids, and the exclusion rule in the final artifact; no valid
+Full-arm run timed out.
 
 `scripts/rq1_ablation_metrics.py` predates this reorganization: its workbook
 paths point at a different machine and at the retired 0729 campaign, and it
@@ -752,45 +745,60 @@ and does not include the whole remaining wall-clock path to Draft completion.
 The detailed historical aggregation convention is recorded in
 `data/rq2_metrics_aggregation.md` in the ML implementation repository.
 
-## 6. RQ3: Pacing-delay appropriateness
+## 6. RQ3: Coordination-aware pacing-delay appropriateness
 
-### 6.1 Research question
+### 6.1 Current research question and evidence
 
-> Under the same admitted workload, does the proposed policy keep the Draft
-> backlog and queue bounded with less and better-targeted delay than alternative
-> pacing policies?
+> Does the controller compute an appropriately sized pacing delay for the Draft
+> backlog and Capture Timeout budget?
 
-The controlled setup is:
+The current main-paper design evaluates the deployed controller rather than
+ranking it against pacing methods transplanted from unrelated domains. The
+compact evidence chain is: targeted activation, trace-level boundary diagnosis,
+an admission-aware envelope partition, observed admission action within the
+two-Draft horizon, work conservation, and responsiveness cost. The authoritative
+handoff is `docs/rq3-current.md`.
 
-- 12MP normal;
-- starting thermal level 3;
-- 30 shots per run;
-- the same admitted workload across policies;
-- separate factual runs for `no_pacing`, `thermal_lut`, `codel_inspired`, and
-  `ours`;
-- results stratified by device.
+For measured backlog $B$, remaining deadline window $T$, realized admitted-Draft
+duration $C_{exec}$, and mandatory-only duration $C_{mand}$:
 
-RQ3 excludes First Timeout, M-retained, safe-burst, and drain metrics. Those
-either belong to the end-to-end evaluation or require admission to interpret.
+```text
+d_exec = ceil(max(0, B + 2*C_exec - max(0,T)) / 2)
+d_mand = ceil(max(0, B + 2*C_mand - max(0,T)) / 2)
+```
 
-Slack P5 and shot-to-shot P95 are still computed for every RQ3 arm, but they
-are reported through RQ1 rather than duplicated as RQ3 summary-table columns.
-An earlier revision repeated them next to the pacing-cost columns so that cost
-and benefit could be read together; both column groups were then removed,
-because the RQ3 figure already shows pacing activation, cumulative cost, and a
-continuous cost--tail trade-off, while the deadline margin is an RQ1 column.
-Keep the values in `rq3_metrics.json` and cite them from prose; a reader who
-needs the deadline benefit alongside backlog reduction is pointed at RQ1.
+Positive realized-work envelopes are partitioned into pacing-covered
+($d >= d_exec$), admission-flexible ($d_mand <= d < d_exec$), and below-floor
+($d < d_mand$) transitions. The $2C$ horizon comprises the Draft that begins
+after the pacing decision and the next capture's Draft released by that delay.
+Accordingly, target-or-next demotion audits actual admission action on either
+Draft in the horizon; it does not causally attribute the next admission decision
+to the current delay.
 
-The two main-paper RQ3 artifacts divide the question as follows, and the division should
-be preserved when adding data:
+Timeout-labelled records removed from the current collection are known invalid
+measurements, not actual timeout outcomes. No valid analyzed run experienced an
+actual Capture Timeout, so this population must not be called
+survival-conditioned. Watchdog-truncated transitions are omitted from envelope
+reconstruction because they lack a complete realized Draft duration.
 
-| Artifact | Answers |
-|---|---|
-| `tab_rq3_pacing_summary.tex` | What backlog and queue depth resulted |
-| `fig_rq3_pacing_trajectories.tex` | How backlog, pacing activation, and cumulative cost evolve, and how each run trades total delay for backlog P95 |
+The existing factual trace cannot support a valid 0.5x or 0.75x scaled-delay
+counterfactual: changing one delay changes later backlog, admission, thermal
+state, throttling, and realized work. Such a study requires new matched runs or
+a validated closed-loop replay/simulator. Do not mechanically rescale the delay
+column. Do not make domain-mismatched policy comparison the default RQ3 baseline.
 
-### 6.2 RQ3 summary-table metrics
+Current artifacts are `tables/tab_rq3_pacing_compact.tex`,
+`figures/fig_rq3_pacing_compact.tex`, and the generated CSVs documented in
+`data/rq3/coordination/README.md`. The older policy, selectivity, calibration,
+trajectory, and four-policy aggregation material below is retained only as
+historical design context and must not drive the current manuscript.
+
+### 6.H Historical four-policy RQ3 material (retired)
+
+Everything from this heading through the historical RQ3 workbook mapping is
+retained for provenance only. It does not define the current RQ3.
+#### 6.H1 Historical summary-table metrics
+
 
 #### Paced (%)
 
@@ -894,7 +902,7 @@ as a run-level median. Comparing the span difference against the median `sum d`
 separates delay from any other source of slowdown: if the two agree, the whole
 measured responsiveness cost is the pacing delay itself.
 
-### 6.2a Audit-only pacing diagnostics
+#### 6.H2 Historical audit-only diagnostics
 
 The following diagnostics are retained in `rq3_metrics.json` for artifact
 inspection. They are not reported in a main-paper table because they do not
@@ -938,7 +946,7 @@ not run never maintains `beforeBacklogMs`** — every AdmitOnly transition recor
 reporting a disabled estimator as a policy property. Check
 `beforeBacklogMs` for all-zero before computing this row.
 
-### 6.3 RQ3 figure metrics
+#### 6.H3 Historical figure metrics
 
 For every `(device, policy, shot)` group, compute the inclusive P10, median,
 and P90 of:
@@ -1036,7 +1044,7 @@ at the last point. The cumulative-delay value at shot 30 nevertheless remains
 defined: it is the sum of the 29 eligible delays on shots 1--29. Backlog and
 queue depth also remain defined at shot 30.
 
-### 6.4 Run-level cost--tail trade-off panel
+#### 6.H4 Historical run-level cost--tail trade-off panel
 
 This panel reports one point per included complete run:
 
@@ -1079,7 +1087,7 @@ codel_inspired_delay_s,codel_inspired_max_backlog_s,
 ours_delay_s,ours_max_backlog_s
 ```
 
-### 6.5 RQ3 workbook mapping
+#### 6.H5 Historical RQ3 workbook mapping
 
 Primary sheets:
 
@@ -1117,7 +1125,9 @@ Use `RQ3Pacing` to produce final cross-run percentiles. `RQ3Summary` is useful
 for validation, but its run-level P50/P95 values must not be pooled or averaged
 to approximate the event-level P50/P95.
 
-## 7. Mandatory pre-collection checks for RQ3
+## 7. Historical four-policy pre-collection checks (retired)
+
+These checks are retained for the retired comparison design. Current compact-RQ3 validity and regeneration rules are in `docs/rq3-current.md`.
 
 These checks determine whether an exported workbook can factually populate the
 RQ3 table and figure.
@@ -1170,7 +1180,7 @@ earlier Draft relevant to that snapshot must contain both:
 If an earlier Draft timeline is incomplete, the exporter intentionally leaves
 the real-backlog and real-queue fields blank instead of treating them as zero.
 
-### 7.4 Keep admission fixed
+### 7.4 Keep admission fixed (historical comparison only)
 
 The four pacing policies must receive the same admitted workload sequence.
 Otherwise, a policy may appear to control backlog simply because Admission
@@ -1183,7 +1193,7 @@ removed more work, and RQ3 would no longer isolate pacing ability.
 - `tables/tab_rq1_ablation.tex`
 - `tables/tab_rq1_result.tex`
 - `tables/tab_rq2_admission_summary.tex`
-- `tables/tab_rq3_pacing_summary.tex`
+- `tables/tab_rq3_pacing_compact.tex`
 
 ### RQ2 figure
 
@@ -1200,30 +1210,31 @@ in the ML implementation repository, which is the single place the
 node data/rq2_spike_anatomy.mjs
 ```
 
-### RQ3 figure
+### Current RQ3 figure and generated evidence
 
-- `figures/fig_rq3_pacing_trajectories.tex`
-- `data/rq3/<device>/no_pacing.csv`
-- `data/rq3/<device>/thermal_lut.csv`
-- `data/rq3/<device>/codel_inspired.csv`
-- `data/rq3/<device>/ours.csv`
-- `data/rq3/<device>/<policy>_tradeoff.csv` — panel (d), one row per run
-- `data/rq3/<device>/risk_exposure_runs.csv` — threshold-risk audit, not plotted
-- `data/rq3/<device>/backlog_cost.csv` — secondary max-backlog audit
+- `figures/fig_rq3_pacing_compact.tex`
+- `docs/tab_rq3_pacing_compact_preview.png`
+- `docs/fig_rq3_pacing_compact_preview.png`
+- `data/rq3/coordination/summary.csv`
+- `data/rq3/coordination/envelope_share.csv`
+- `data/rq3/coordination/action_summary.csv`
+- `data/rq3/coordination/flexible_cases.csv`
+- `data/rq3/coordination/mandatory_floor_cases.csv`
+- `data/rq3/coordination/avoided_delay_12mp_normal.csv`
+- `data/rq3/coordination/avoided_delay_24mp_memory.csv`
 
-### RQ3 audit record
-
-- `data/rq3/rq3_metrics.json` — every unrounded pooled cell, the per-run values
-  behind it, and the run-level Mann--Whitney comparison.
-
-All of the above are produced by `data/rq3_aggregate.py` in the ML
-implementation repository, which encodes section 6 of this guide. Update the arm
-to workbook mapping at the top of that script and rerun it rather than editing
-cells by hand:
+Regenerate the current RQ3 evidence from the repository root:
 
 ```text
-uv run --with openpyxl --with pandas --with scipy python data/rq3_aggregate.py
+python3 scripts/rq3_policy_metrics.py sampling  # requires openpyxl
+python3 scripts/rq3_coordination_metrics.py
+python3 scripts/rq3_coordination_audit.py
+python3 scripts/render_rq3_compact_preview.py
 ```
+
+Do not edit generated CSV cells by hand. See
+`data/rq3/coordination/README.md` for their schemas and interpretation.
+The complete cross-session transfer checklist is `docs/rq3-file-manifest.md`.
 
 ## 9. Current manuscript issues to resolve before final submission
 
@@ -1233,9 +1244,9 @@ uv run --with openpyxl --with pandas --with scipy python data/rq3_aggregate.py
 2. The current RQ3 table and figure name S26 Ultra and S26. If the evaluation
    uses Device A/B/C, both artifacts and their data directories must be
    updated consistently.
-3. The RQ3 CSVs retain backlog, queue-depth, and delay P10/P90 columns even
-   when only medians or activation rates are rendered. This is a decided
-   reporting choice so the full spread remains available in the artifact.
+3. The known timeout-measurement fault and invalid-record manifest must be
+   described in the final evaluation protocol. No valid analyzed run timed out;
+   do not characterize the filtering as survival conditioning.
 4. The historical RQ1 aggregation note describes Slack P5 in milliseconds,
    whereas the current paper table labels and comments define a
    deadline-normalized percentage. This guide follows the current paper:
@@ -1246,9 +1257,9 @@ uv run --with openpyxl --with pandas --with scipy python data/rq3_aggregate.py
    outcomes were known and scores runs on those outcomes. It must be presented
    as a post-hoc balancing choice with its direction of bias stated, not as a
    predeclared exclusion — or replaced with an outcome-neutral rule.
-7. The Full-arm exports omit this arm's Capture-Timeout sessions, so its
-   `S(30)` denominators are pre-filtered while the other three arms' are not.
-   Resolve by re-export or by stating the count (section 4.3.1).
+7. Full-arm timeout-labelled records affected by the known measurement fault are
+   invalid observations, not actual Capture Timeout sessions. Preserve the
+   invalid-record manifest and do not present their removal as outcome filtering.
 
 ## 10. Data handoff checklist
 

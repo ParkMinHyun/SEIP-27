@@ -99,14 +99,16 @@ def med(values):
 def load(condition, files):
     """Analyzed transitions and the run-eligibility audit for one condition.
 
-    Run eligibility: complete 30-shot runs with no Capture Timeout.  In the 24MP
-    condition a run captures MP24 on shots 1-2 and MP12 from shot 3; from Lv5 it
-    falls back to MP12 for the whole run, which is production behaviour and
-    belongs to the condition, so an MP12-from-shot-1 run is excluded only below
-    that level.  Transition eligibility: shots 2-30 with a recorded pacing
-    decision and a complete prior-Draft timeline.  Watchdog-truncated captures
-    are dropped as transitions -- a truncated node has no clean executed-Draft
-    duration -- while their runs are retained.
+    Run eligibility: complete valid 30-shot runs. Timeout-labelled records in
+    this collection are known measurement errors and are removed as invalid
+    observations, not actual timeout outcomes. In the 24MP condition a run
+    captures MP24 on shots 1-2 and MP12 from shot 3; from Lv5 it falls back to
+    MP12 for the whole run, which is production behaviour and belongs to the
+    condition, so an MP12-from-shot-1 run is excluded only below that level.
+    Transition eligibility: shots 2-30 with a recorded pacing decision and a
+    complete prior-Draft timeline. Watchdog-truncated captures are dropped as
+    transitions because a truncated node has no clean executed-Draft duration,
+    while their runs are retained.
     """
     transitions, audit = [], []
     for part, path in enumerate(files, start=1):
@@ -128,7 +130,7 @@ def load(condition, files):
             if not truthy(summary['isComplete30ShotRun']):
                 excluded = 'incomplete'
             elif any(truthy(r['captureTimedOut']) for r in shots):
-                excluded = 'timeout'
+                excluded = 'invalid-timeout-measurement'
             elif condition == '24mp_memory' and level <= 4:
                 head = [r['sizeBucket'] for r in shots if r['runShotIndex'] in (1, 2)]
                 if head and all(b == 'MP12' for b in head):

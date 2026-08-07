@@ -1,0 +1,119 @@
+% Compact coordination-aware RQ3 main-paper table.  The original RQ3 policy,
+% selectivity, and calibration tables remain untouched.
+%
+% Sources:
+%   data/rq3/policy/summary.csv
+%   data/rq3/coordination/summary.csv
+%   data/rq3/coordination/action_summary.csv
+% Interpretation and handoff: docs/rq3-current.md
+
+\begin{table}[t]
+  \centering
+  \setlength{\abovecaptionskip}{2pt}%
+  \setlength{\belowcaptionskip}{3pt}%
+  \caption{RQ3: Pacing targeting, admission-aware sizing and action,
+  work conservation, and responsiveness cost on the S26 Ultra.}
+  \label{tab:rq3_pacing_compact}
+
+  {\scriptsize
+  \renewcommand{\arraystretch}{1.08}%
+  \setlength{\tabcolsep}{3pt}%
+  \begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.50\columnwidth}
+                      >{\centering\arraybackslash}p{0.19\columnwidth}
+                      >{\centering\arraybackslash}p{0.19\columnwidth}@{}}
+    \toprule
+    \textbf{Metric} & \makecell[c]{\textbf{12MP}\\\textbf{normal}}
+      & \makecell[c]{\textbf{24MP}\\\textbf{memory pressure}} \\
+    \midrule
+
+    \multicolumn{3}{@{}l}{\textbf{Targeting}} \\
+    Analyzed / paced transitions
+      & 1{,}920 / 411 & 1{,}861 / 471 \\
+    Activation with $>40\%$ retrospective spare, \% [n]
+      & 1.4 [652] & 1.0 [623] \\
+    Activation at projected overrun, \% [n]
+      & 77.2 [79] & 68.8 [141] \\
+    \addlinespace[1pt]
+
+    \multicolumn{3}{@{}l}{\textbf{Admission--pacing coordination}} \\
+    Transitions with pacing-only $d^{*}_{\mathrm{exec}}>0$
+      & 79 & 140 \\
+    Pacing covers realized-work envelope, $d\geq d^{*}_{\mathrm{exec}}$
+      & 53/79 (67.1\%) & 83/140 (59.3\%) \\
+    Admission-flexible band,
+      $d^{*}_{\mathrm{mand}}\leq d<d^{*}_{\mathrm{exec}}$
+      & 26/79 (32.9\%) & 43/140 (30.7\%) \\
+    \makecell[l]{Observed demotion in flexible band,\\target / target-or-next}
+      & \makecell[c]{7/26 (26.9\%)\\21/26 (80.8\%)}
+      & \makecell[c]{17/43 (39.5\%)\\31/43 (72.1\%)} \\
+    Flexible-band realized margin, min / P5 (ms)
+      & 134 / 183 & 36 / 84 \\
+    Below mandatory floor, $d<d^{*}_{\mathrm{mand}}$
+      & 0/79 (0.0\%) & 14/140 (10.0\%) \\
+    \makecell[l]{Floor-miss audit: zero delay / target demoted\\
+      backlog underestimated / headroom rose}
+      & \makecell[c]{--\\--}
+      & \makecell[c]{11/14 / 14/14\\14/14 / 12/14} \\
+    \makecell[l]{Floor-miss outcome: target / next minimum margin (ms)\\
+      actual Capture Timeout}
+      & -- & \makecell[c]{307 / 276\\0/14} \\
+    Potential delay avoided in flexible band, P50 / P95 (ms)
+      & 72 / 208 & 131 / 443 \\
+    \addlinespace[1pt]
+
+    \multicolumn{3}{@{}l}{\textbf{Work conservation}} \\
+    Applied delay overlapping measured backlog (\%)
+      & 100.0 & 98.7 \\
+    Waits longer than the backlog, $d>B$
+      & 0/411 & 8/471 \\
+    \addlinespace[1pt]
+
+    \multicolumn{3}{@{}l}{\textbf{Responsiveness cost, P50 / P95}} \\
+    Per paced capture (ms)
+      & 381 / 823 & 278 / 1{,}180 \\
+    Per 30-shot burst (\% of elapsed time)
+      & 18.1 / 24.5 & 9.8 / 29.7 \\
+    Bursts with no pacing
+      & 19/70 & 13/69 \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{2pt}
+  \begin{minipage}{\columnwidth}
+    \tiny\raggedright
+    Retrospective pressure is $B+2C-\max(0,T)$, where $B$ is the measured
+    backlog, $C$ the realized duration of the admitted Draft sequence, and $T$
+    the remaining deadline window; projected overrun denotes nonnegative
+    pressure, not an observed Capture Timeout.  The pacing-only envelope is
+    $d^{*}_{\mathrm{exec}}=\ceil{[B+2C_{\mathrm{exec}}-\max(0,T)]^{+}/2}$.
+    The mandatory floor $d^{*}_{\mathrm{mand}}$ replaces the skippable workload
+    in $C_{\mathrm{exec}}$ with DynamicFunction and Encoding, plus measured
+    Draft overhead.  A delay in the admission-flexible band deliberately leaves
+    optional-work protection to admission instead of making pacing alone cover
+    the realized-work envelope.  Demotion means a reduction from Bokeh+Filter
+    to Filter-only or Encoding-only execution.  The deployed $2C$ horizon
+    represents (i) the Draft that begins after the pacing decision and (ii) the
+    Draft of the next capture released by that delay.  Accordingly,
+    target-or-next reports whether admission demoted either Draft in the horizon;
+    it does not attribute the next admission decision causally to the current
+    delay.  The 14 floor misses cluster in four 24MP bursts.  The floor is a
+    retrospective sufficient reservation condition, not the timeout boundary.
+    All targets were demoted; because $d^{*}_{\mathrm{mand}}$ already excludes
+    optional work, this documents coordination rather than explaining away the
+    remaining floor deficit.  Target and next captures kept at least 307 and
+    276\,ms of realized margin, respectively, and no floor miss produced an
+    actual Capture Timeout.  Backlog under-estimation in 14/14 and rising
+    headroom in 12/14 during a median 4.78\,s queue residence are observationally
+    consistent with queue and thermal drift after the online decision.  Records
+    affected by the known timeout-measurement error were removed as invalid
+    observations; no valid analyzed run experienced an actual Capture Timeout.
+    Watchdog-truncated transitions lack a complete realized Draft duration and
+    are excluded only from envelope reconstruction.  Potential delay avoided is
+    $d^{*}_{\mathrm{exec}}-d$ within the flexible band; it is not a
+    counterfactual end-to-end speedup.  Backlog overlap is
+    $\sum\min(d,B)/\sum d$ over paced transitions.  Burst cost is $\sum d$
+    divided by the sum of shot-to-shot intervals within the burst.  P50/P95 are
+    inclusive percentiles.
+  \end{minipage}
+  }
+\end{table}

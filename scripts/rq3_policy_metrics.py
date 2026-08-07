@@ -4,6 +4,10 @@ sizing.
 Emits everything Table~\\ref{tab:rq3_pacing_policy} and
 Figure~\\ref{fig:rq3_pacing_policy} report, into data/rq3/policy/.
 
+The current compact pair consumes this script's targeting and boundary outputs;
+the policy-pair references above are retained for historical reproducibility.
+See docs/rq3-current.md for the current artifact map.
+
 Scope, and how it relates to the two sibling scripts
 ----------------------------------------------------
 scripts/rq3_selectivity_metrics.py asks where the pacer fires and what the
@@ -85,10 +89,11 @@ Definitions
              thermal state the controller decided under, not a reading taken at
              the decision.  Every thermal statement from it is an association.
 
-Limits inherited from the sibling exhibits, both of which apply unchanged: the
-population is survival-conditioned because the source export had already filtered
-the Capture-Timeout sessions out, and the 12MP thermal rows carry the RQ1(a)
-balancing-trim bias.  See tables/tab_rq3_pacing_selectivity.tex.
+Data-quality and sampling limits inherited from the sibling exhibits apply.
+Timeout-labelled records removed from this collection are known invalid
+measurements, not actual Capture Timeout outcomes; no valid analyzed run timed
+out, so do not describe the population as survival-conditioned. The 12MP thermal
+rows still carry the RQ1(a) balancing-trim bias. See docs/rq3-current.md.
 
 Run:
     python scripts/rq3_policy_metrics.py sampling

@@ -1,0 +1,182 @@
+% Compact coordination-aware RQ3 main-paper figure.  The original RQ3 policy,
+% selectivity, and calibration figures remain untouched.
+%
+% Sources:
+%   data/rq3/policy/band_activation_*.csv
+%   data/rq3/coordination/envelope_share.csv
+%   data/rq3/coordination/action_summary.csv
+%   data/rq3/policy/summary.csv and boundary_case_details.csv (panel b labels)
+% Interpretation and handoff: docs/rq3-current.md
+
+\begin{figure*}[t]
+  \centering
+  \providecommand{\rqThreeCompactPolicyDir}{data/rq3/policy}
+  \providecommand{\rqThreeCompactCoordDir}{data/rq3/coordination}
+
+  \tikzset{
+    rq3compact bar a/.style={draw=black, line width=0.45pt, fill=black!24},
+    rq3compact bar b/.style={draw=black!58, line width=0.45pt, fill=black!5,
+      dash pattern=on 1.5pt off 1pt},
+    rq3compact full/.style={draw=black, line width=0.4pt, fill=black!58},
+    rq3compact flexible/.style={draw=black!65, line width=0.4pt,
+      fill=black!18},
+    rq3compact floor/.style={draw=black!65, line width=0.4pt, fill=white,
+      pattern=north east lines, pattern color=black!55},
+    rq3compact mech/.style={draw=black!55, line width=0.4pt,
+      rounded corners=1pt, fill=white, align=center, font=\tiny,
+      text width=0.067\textwidth, inner sep=1.5pt},
+    rq3compact mech action/.style={rq3compact mech, fill=black!10},
+    rq3compact arrow/.style={black!55, line width=0.45pt,
+      -{Latex[length=2pt,width=2pt]}},
+  }
+
+  \pgfplotsset{
+    rq3compact axis/.style={
+      scale only axis=true,
+      tick label style={font=\tiny},
+      label style={font=\scriptsize},
+      title style={font=\scriptsize,yshift=-2pt},
+      grid=major,
+      major grid style={gray!20,line width=0.2pt},
+      axis line style={line width=0.35pt},
+      tick style={line width=0.35pt},
+      tick align=outside,
+      tick pos=left,
+      enlargelimits=false,
+      clip=true,
+      legend style={font=\tiny,draw=gray!45,line width=0.3pt,
+        fill=white,fill opacity=0.88,text opacity=1,
+        inner sep=1.5pt,row sep=-1pt},
+      legend cell align=left,
+    },
+  }
+
+  \begin{tikzpicture}
+    \begin{groupplot}[
+      rq3compact axis,
+      group style={group size=3 by 1, horizontal sep=0.075\textwidth},
+      width=0.245\textwidth,
+      height=0.215\textwidth,
+    ]
+      % (a) Online action against the retrospective pressure observed later.
+      \nextgroupplot[
+        title={(a) Targeted activation},
+        ybar,bar width=6pt,
+        xlabel={Retrospective spare (\% of budget)},
+        ylabel={Activation rate (\%)},
+        xmin=-0.65,xmax=3.65,
+        xtick={0,1,2,3},
+        xticklabels={$>$40,20--40,0--20,$\leq 0$},
+        ymin=0,ymax=100,ytick={0,25,50,75,100},
+        error bars/y dir=both,error bars/y explicit,
+        error bars/error bar style={black!65,line width=0.3pt},
+        error bars/error mark=|,
+        error bars/error mark options={black!65,line width=0.3pt,mark size=1pt},
+        legend style={at={(0.03,0.97)},anchor=north west},
+        legend image code/.code={\draw[#1]
+          (0cm,-0.055cm) rectangle (0.17cm,0.055cm);},
+      ]
+      \addplot[rq3compact bar a]
+        table[x=band_index,y=activation_pct,
+              y error plus=err_hi_pct,y error minus=err_lo_pct,col sep=comma]
+        {\rqThreeCompactPolicyDir/band_activation_12mp_normal.csv};
+      \addlegendentry{12MP normal}
+      \addplot[rq3compact bar b]
+        table[x=band_index,y=activation_pct,
+              y error plus=err_hi_pct,y error minus=err_lo_pct,col sep=comma]
+        {\rqThreeCompactPolicyDir/band_activation_24mp_memory.csv};
+      \addlegendentry{24MP mem. pressure}
+
+      % (b) Why the online action can disagree with retrospective pressure.
+      \nextgroupplot[
+        title={(b) Boundary mismatch mechanisms},
+        axis lines=none,
+        xmin=0,xmax=1,ymin=0,ymax=1,
+        ticks=none,
+        clip=false,
+      ]
+      \node[rq3compact mech] (safe-decision) at (axis cs:0.14,0.75)
+        {Backlog risk at pacing decision};
+      \node[rq3compact mech action] (safe-admit) at (axis cs:0.50,0.75)
+        {Admission later demoted\\15/15 targets; 55/58 ahead};
+      \node[rq3compact mech] (safe-outcome) at (axis cs:0.86,0.75)
+        {Paced, yet $>40\%$ spare\\15/1{,}275};
+      \draw[rq3compact arrow] (safe-decision) -- node[above,font=\tiny]{pace}
+        (safe-admit);
+      \draw[rq3compact arrow] (safe-admit) -- (safe-outcome);
+
+      \node[rq3compact mech] (risk-decision) at (axis cs:0.14,0.27)
+        {No pace from completed-duration history};
+      \node[rq3compact mech action] (risk-drift) at (axis cs:0.50,0.27)
+        {Queued 5.14\,s; headroom rose\\53/62};
+      \node[rq3compact mech] (risk-outcome) at (axis cs:0.86,0.27)
+        {Backlog under-estimated 61/62\\projected overrun 62/220};
+      \draw[rq3compact arrow] (risk-decision) -- (risk-drift);
+      \draw[rq3compact arrow] (risk-drift) -- (risk-outcome);
+      \node[font=\tiny,text=black!65,align=center,anchor=north]
+        at (axis cs:0.50,0.05)
+        {Admission demoted 29/62 targets, providing a partial backstop};
+
+      % (c) Joint-control interpretation of the pacing-only envelope.
+      \nextgroupplot[
+        title={(c) Admission-aware sizing and action},
+        xbar stacked,bar width=13pt,
+        xlabel={Transitions with $d^{*}_{\mathrm{exec}}>0$ (\%)},
+        xmin=0,xmax=100,ymin=-0.72,ymax=1.90,
+        xtick={0,25,50,75,100},
+        ytick={0,1},
+        yticklabels={{24MP mem.},{12MP normal}},
+        ymajorgrids=false,
+        legend style={at={(0.02,0.98)},anchor=north west},
+      ]
+      \addplot[rq3compact full]
+        table[x=full_covered_pct,y=slot,col sep=comma]
+        {\rqThreeCompactCoordDir/envelope_share.csv};
+      \addlegendentry{Pacing covers realized work}
+      \addplot[rq3compact flexible]
+        table[x=admission_flexible_pct,y=slot,col sep=comma]
+        {\rqThreeCompactCoordDir/envelope_share.csv};
+      \addlegendentry{Admission-flexible}
+      \addplot[rq3compact floor]
+        table[x=below_mandatory_pct,y=slot,col sep=comma]
+        {\rqThreeCompactCoordDir/envelope_share.csv};
+      \addlegendentry{Below mandatory floor}
+      \node[font=\tiny,text=white] at (axis cs:33.5,1) {53};
+      \node[font=\tiny,align=center] at (axis cs:83.5,1) {26 [7/21]};
+      \node[font=\tiny,text=white] at (axis cs:29.6,0) {83};
+      \node[font=\tiny,align=center] at (axis cs:74.7,0) {43 [17/31]};
+      \node[font=\tiny,align=center,fill=white,inner sep=0.5pt] at (axis cs:95,0) {14};
+      \node[font=\tiny,text=black!65,align=center,anchor=north]
+        at (axis cs:72,-0.43)
+        {Brackets: target / target-or-next demotions\\
+         24MP floor: 14/14 targets demoted; margin $\geq307$\,ms; timeout 0/14};
+    \end{groupplot}
+  \end{tikzpicture}
+
+  \caption{RQ3 admission--pacing coordination. (a) Online activation against
+  pressure reconstructed after the Draft executes; whiskers are 95\%
+  burst-cluster bootstrap intervals. (b) The two boundary mismatches.  Pacing
+  can precede an admission demotion that later creates retrospective spare.
+  Conversely, long queue residence and rising thermal headroom are consistent
+  with processing slowdown after a no-pacing decision, producing backlog
+  under-estimation; admission provides a partial backstop.  These mechanism
+  associations are observational. (c) Decisions with a positive pacing-only
+  realized-work envelope $d^{*}_{\mathrm{exec}}$: pacing either covers that
+  envelope, stops within the admission-flexible band
+  $d^{*}_{\mathrm{mand}}\leq d<d^{*}_{\mathrm{exec}}$, or falls below the
+  mandatory-work floor.  The deployed $2C$ horizon comprises the Draft that
+  begins after the decision and the next capture's Draft released by the delay.
+  Flexible-band annotations therefore report target and target-or-next admission
+  demotions; they do not causally attribute the next admission decision to the
+  current delay.  The 14 24MP floor misses occurred in four bursts; 11 received
+  zero delay, yet all 14 targets were demoted, retained at least 307\,ms realized
+  margin, and incurred no actual Capture Timeout.  Because
+  $d^{*}_{\mathrm{mand}}$ already excludes optional work, demotion documents
+  coordination rather than causally explaining that margin.  All 14 also
+  underestimated backlog and 12/14 showed rising headroom during queue residence,
+  consistent with retrospective queue/thermal drift.  The floor is a sufficient
+  reservation condition, not the timeout boundary.  Records affected by the known
+  timeout-measurement error are invalid observations; no valid analyzed run timed
+  out.  Segment labels are transition counts.}
+  \label{fig:rq3_pacing_compact}
+\end{figure*}
