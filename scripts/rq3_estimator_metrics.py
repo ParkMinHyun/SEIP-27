@@ -182,6 +182,7 @@ def load(condition, files):
                         "duration_ms": duration,
                         "time_left_ms": time_left,
                         "budget_ms": float(pr["captureTimeoutMs"]),
+                        "estimated_backlog_ms": float(pr["beforeBacklogMs"]),
                         "reserved_ms": float(pr["beforeDraftSequenceReservedDurationMs"]),
                         "backlog_error_ms": float(pr["beforeBacklogMs"]) - backlog,
                         "reserve_error_ms":
@@ -192,14 +193,17 @@ def load(condition, files):
                     dyn_ms, enc_ms = dyn.get(row["captureIndex"]), enc.get(row["captureIndex"])
                     if dyn_ms is not None and enc_ms is not None:
                         mandatory = float(dyn_ms) + float(enc_ms) + (duration - node_ms)
+                        item["mandatory_duration_ms"] = mandatory
                         item["mandatory_ms"] = math.ceil(
                             max(0.0, backlog + 2 * mandatory - time_left) / 2)
                     else:
+                        item["mandatory_duration_ms"] = None
                         item["mandatory_ms"] = None
                 else:
                     for key in ("d", "backlog_ms", "duration_ms", "time_left_ms",
-                                "budget_ms", "reserved_ms", "backlog_error_ms",
-                                "reserve_error_ms", "required_ms", "mandatory_ms"):
+                                "budget_ms", "estimated_backlog_ms", "reserved_ms",
+                                "backlog_error_ms", "reserve_error_ms", "required_ms",
+                                "mandatory_duration_ms", "mandatory_ms"):
                         item[key] = None
                 rows.append(item)
     return rows
@@ -344,7 +348,8 @@ def class_row(condition, name, sel, budget):
 
 
 def main():
-    summary, class_rows, scatter_rows = [], [], []
+    summary, class_rows, scatter_rows, zero_delay_rows = [], [], [], []
+    sizing_rows = []
     report = {}
 
     for condition, files in coord.CONDITIONS.items():
@@ -393,6 +398,41 @@ def main():
             put(f"freshestWallLagMs{label}",
                 round(pct([r["wall_lag_ms"] for r in analyzed], q), 1), len(analyzed))
 
+        # --- what was applied against what was required -------------------------
+        # The outcome matrix says whether the delay was ENOUGH; it cannot say
+        # whether it was more than enough, because it prints no applied delay.
+        # These two populations are the ones where pacing acted and a comparison
+        # is therefore defined: decisions that required nothing and got a delay
+        # anyway, and decisions whose requirement the delay covered.  Each
+        # percentile is taken on its own quantity, so the over-applied column is
+        # the median of d - d* and NOT the difference of the two medians.
+        for name, sel in (
+                ("paced_none_required",
+                 [r for r in analyzed if r["required_ms"] == 0 and r["d"] > 0]),
+                ("covered", [r for r in analyzed if r["class"] == "covered"])):
+            if not sel:
+                continue
+            over = [r["d"] - r["required_ms"] for r in sel]
+            # What the conservatism is bounded BY.  d/B prices the delay against
+            # the Draft work already outstanding when it was applied, and the
+            # absorbed share is sum(min(d, B))/sum(d): the part of the wait that
+            # ran while at least that much work was still in the pipeline.  A
+            # wait longer than the backlog it drains is idle for the remainder,
+            # and `outlast` counts those.  Both are arithmetic on the realized
+            # trace and neither says what a different delay would have done.
+            ratio = [100 * r["d"] / r["backlog_ms"] for r in sel if r["backlog_ms"] > 0]
+            applied = sum(r["d"] for r in sel)
+            overlap = sum(min(r["d"], r["backlog_ms"]) for r in sel)
+            sizing_rows.append([
+                condition, name, len(sel),
+                round(pct([r["required_ms"] for r in sel], .5), 1),
+                round(pct([r["d"] for r in sel], .5), 1),
+                round(pct(over, .5), 1), round(pct(over, .95), 1),
+                round(pct(ratio, .5), 1), round(pct(ratio, .95), 1),
+                round(100 * overlap / applied, 1) if applied else "",
+                sum(1 for r in sel if r["d"] > r["backlog_ms"]),
+            ])
+
         # --- the outcome matrix ------------------------------------------------
         for name in CLASSES:
             sel = [r for r in analyzed if r["class"] == name]
@@ -425,6 +465,52 @@ def main():
                 sum(v >= r["mandatory_ms"] for v, r in zip(repriced, floor)), len(floor))
             put("floorMissRepricedMsP50", round(pct(repriced, .5), 1), len(floor))
 
+            # --- the zero-delay floor misses, row by row -----------------------
+            # These are the decisions the controller left unpaced although the
+            # mandatory work provably did not fit, so they are the ones a reader
+            # asks about first.  The account below is an identity, not an
+            # explanation of intent: what the controller priced online,
+            #
+            #     saw = Bhat + 2*Chat - T,
+            #
+            # is non-positive on every one of them, which is why the deployed
+            # formula returned zero.  The realized mandatory pressure is
+            # B + 2*C_mand - T, and the difference between the two is exactly
+            #
+            #     (B - Bhat)  +  2*(C_mand - Chat),
+            #
+            # the backlog term and the reserve term.  The assertion checks that
+            # the three sum back to the floor the class was cut on; it closes to
+            # the ceiling in the floor formula.
+            for r in sorted((x for x in floor if x["d"] == 0),
+                            key=lambda x: (x["run"], x["shot"])):
+                saw = r["estimated_backlog_ms"] + 2 * r["reserved_ms"] - r["time_left_ms"]
+                backlog_term = r["backlog_ms"] - r["estimated_backlog_ms"]
+                reserve_term = 2 * (r["mandatory_duration_ms"] - r["reserved_ms"])
+                account = saw + backlog_term + reserve_term
+                assert abs(account - 2 * r["mandatory_ms"]) <= 2.0, (
+                    f"{condition} {r['run']}#{r['shot']}: "
+                    "zero-delay account does not close")
+                repriced_one = math.ceil(max(0.0, r["backlog_ms"] + 2 * r["reserved_ms"]
+                                             - r["time_left_ms"]) / 2)
+                zero_delay_rows.append([
+                    condition, r["run"], r["shot"], r["capture_index"],
+                    round(saw), round(backlog_term), round(reserve_term), round(account),
+                    r["mandatory_ms"], repriced_one,
+                    "yes" if repriced_one >= r["mandatory_ms"] else "no",
+                    # Whether correcting the backlog clock alone would have made
+                    # the controller see positive pressure at the decision.  The
+                    # reserve term is left at its recorded value, so this is a
+                    # statement about that instant and not about the run.
+                    "yes" if saw + backlog_term > 0 else "no",
+                    r["queued_drafts"],
+                    "" if r["wait_ms"] is None else round(r["wait_ms"]),
+                ])
+            put("floorMissZeroDelayBacklogFlipsSign",
+                sum(1 for row in zero_delay_rows
+                    if row[0] == condition and row[11] == "yes"),
+                sum(1 for row in zero_delay_rows if row[0] == condition))
+
     write_csv(OUT / "summary.csv", ["condition", "metric", "value", "denominator"], summary)
     write_csv(OUT / "outcome_matrix.csv",
               ["condition", "class", "n", "paced", "paced_pct", "applied_delay_p50_ms",
@@ -434,6 +520,18 @@ def main():
                "reserve_error_p50_ms", "backlog_error_p50_ms",
                "queued_pricing_error_p50_ms", "backlog_under_estimated"],
               class_rows)
+    write_csv(OUT / "sizing_summary.csv",
+              ["condition", "population", "n", "required_p50_ms",
+               "applied_p50_ms", "over_applied_p50_ms", "over_applied_p95_ms",
+               "delay_over_backlog_p50_pct", "delay_over_backlog_p95_pct",
+               "delay_absorbed_by_backlog_pct", "waits_outlasting_backlog"],
+              sizing_rows)
+    write_csv(OUT / "floor_zero_delay_account.csv",
+              ["condition", "run", "shot", "captureIndex", "controller_saw_ms",
+               "backlog_term_ms", "reserve_term_ms", "account_ms",
+               "mandatory_floor_ms", "repriced_ms", "repriced_reaches_floor",
+               "backlog_flips_sign", "queued_drafts", "queue_wait_ms"],
+              zero_delay_rows)
     write_csv(OUT / "queued_pricing_scatter.csv",
               ["condition", "slot", "class", "queued_pricing_error_s", "backlog_error_s"],
               scatter_rows)

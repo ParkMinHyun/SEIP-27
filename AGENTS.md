@@ -29,7 +29,7 @@ This repository is a LaTeX paper project for SEIP 2027.
 ## Current RQ3 Evidence Rules
 
 - Treat `docs/rq3-current.md` as the authoritative RQ3 handoff, `docs/rq3-file-manifest.md` as the transfer checklist, and `data/rq3/coordination/README.md` as the generated-artifact dictionary.
-- The current main-paper candidates are `tables/tab_rq3_pacing_compact.tex` and `figures/fig_rq3_pacing_compact.tex`; preserve the older RQ3 policy, selectivity, and calibration pairs as untouched historical alternatives.
+- The current main-paper exhibit is `tables/tab_rq3_pacing_compact.tex` alone; RQ3 ships no figure, and `figures/fig_rq3_pacing_compact.tex` was deleted. Preserve the older RQ3 policy, selectivity, and calibration pairs as untouched historical alternatives.
 - RQ3 evaluates trace-derived targeting, admission-aware envelope coverage, work conservation, and responsiveness cost. It does not establish global optimality or a universally minimum counterfactual delay.
 - Do not mechanically scale recorded delay by 0.5 or 0.75 on the factual trace. Pacing is closed-loop and changes subsequent backlog, admission, thermal state, throttling, and realized Draft duration; a scaling study requires new matched runs or a validated closed-loop replay/simulator.
 - The deployed $2C$ horizon covers the Draft that begins after the pacing decision and the next capture's Draft released by that delay. `target-or-next` is an observed admission-action audit over this horizon, not causal attribution of the next decision to the current delay.

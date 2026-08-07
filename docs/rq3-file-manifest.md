@@ -18,12 +18,13 @@ another session or paper branch. Paths are repository-relative.
 
 - `2_4_static_safeguards.tex`
 - `tables/tab_rq3_pacing_compact.tex`
-- `figures/fig_rq3_pacing_compact.tex`
 
-Both exhibits carry their definitions, provenance, and claim limits in their own
-header comments; copy the files whole rather than extracting the environments.
-The browser-preview PNGs earlier revisions listed here are no longer produced —
-review from a `pdflatex` render instead.
+RQ3 now ships a single single-column table and no figure;
+`figures/fig_rq3_pacing_compact.tex` was deleted. The table carries its
+definitions, provenance, and claim limits in its own header comment; copy the
+file whole rather than extracting the environment. The browser-preview PNGs
+earlier revisions listed here are no longer produced — review from a `pdflatex`
+render instead.
 
 ### Generators used by the compact pair
 
@@ -81,17 +82,24 @@ Directory: `data/rq3/coordination/`
 
 Directory: `data/rq3/estimator/`
 
-Everything the current table and figure print, apart from the cost block.
+Everything the current table prints, apart from the cost figures in its note.
 
 - `summary.csv`
 - `outcome_matrix.csv`
+- `sizing_summary.csv`
+- `floor_zero_delay_account.csv`
 - `queued_pricing_scatter.csv`
 - `scatter_{12mp_normal,24mp_memory}_{no_delay_required,covered,flexible,below_floor}.csv`
 - `draft_pricing_ecdf_{12mp_normal,24mp_memory}.csv`
 - `reserve_error_ecdf_{12mp_normal,24mp_memory}.csv`
 
-The eight `scatter_*` files are the rows of `queued_pricing_scatter.csv` split
-per mark style, which is what pgfplots consumes;
+`floor_zero_delay_account.csv` is the row-by-row account of the 11 below-floor
+decisions that received no delay; `data/rq3/estimator/README.md` defines every
+column and records which of them is load-bearing.
+
+The scatter and ECDF files backed the deleted figure. They are still generated
+and are still the fastest way to check the population P05/P50/P95 line in the
+table note, but nothing in the manuscript reads them.
 `scatter_12mp_normal_below_floor.csv` is deliberately a header with no rows,
 because no 12MP decision fell below the floor.
 

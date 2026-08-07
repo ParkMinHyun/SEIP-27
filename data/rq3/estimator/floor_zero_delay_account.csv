@@ -1,0 +1,12 @@
+condition,run,shot,captureIndex,controller_saw_ms,backlog_term_ms,reserve_term_ms,account_ms,mandatory_floor_ms,repriced_ms,repriced_reaches_floor,backlog_flips_sign,queued_drafts,queue_wait_ms
+24mp_memory,2#15,19,385,-46,510,48,512,256,232,no,yes,4,3915
+24mp_memory,2#15,20,386,-624,1362,-660,78,39,370,yes,yes,4,4148
+24mp_memory,2#15,21,387,-227,1122,-429,466,233,448,yes,yes,4,4014
+24mp_memory,2#15,22,388,-199,1132,-464,469,235,467,yes,yes,4,4358
+24mp_memory,2#15,23,389,-978,1483,140,645,323,253,no,yes,4,4844
+24mp_memory,2#15,25,391,-378,834,-340,116,58,229,yes,yes,4,4584
+24mp_memory,2#22,19,595,-1729,2225,-340,156,78,248,yes,yes,6,5522
+24mp_memory,2#22,20,596,-1006,1821,-640,175,88,408,yes,yes,6,5461
+24mp_memory,2#22,21,597,-273,1757,-380,1104,552,742,yes,yes,7,5528
+24mp_memory,2#29,26,816,-1492,2137,-472,173,87,323,yes,yes,7,5574
+24mp_memory,2#31,26,879,-113,1422,-896,413,207,655,yes,yes,8,6009

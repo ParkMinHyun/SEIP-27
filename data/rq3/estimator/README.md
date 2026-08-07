@@ -86,13 +86,46 @@ run, not a record of an intent expressed at the decision.
 |---|---|
 | `summary.csv` | Scalars: populations, both error distributions, the identity check, the floor block, and the floor repricing |
 | `outcome_matrix.csv` | One row per (condition, class): every cell the table prints, plus `skipped_either_pct` and `deadline_margin_under_1pct`, which it does not |
-| `queued_pricing_scatter.csv` | One row per decision with a reconstructible queue: the two axes of figure panels (b) and (c) |
-| `scatter_<condition>_<class>.csv` | The same rows split per mark style, which is what pgfplots consumes |
+| `sizing_summary.csv` | The two populations on which applied-against-required is defined: decisions paced although none was required, and decisions whose requirement the delay covered. Feeds block (b) of the table |
+| `floor_zero_delay_account.csv` | One row per below-the-floor decision that received no delay at all (11, all 24MP): what the controller priced online and how that differs from the realized mandatory pressure. See below |
+| `queued_pricing_scatter.csv` | One row per decision with a reconstructible queue |
+| `scatter_<condition>_<class>.csv` | The same rows split per class |
 | `draft_pricing_ecdf_<condition>.csv` | ECDF of the per-Draft pricing error, thinned to at most 360 points with both endpoints kept |
 | `reserve_error_ecdf_<condition>.csv` | ECDF of the Draft reserve error, thinned the same way |
 
-Percentiles printed in the table are computed on the whole population; the
-thinning affects only what the figure draws.
+The last four backed the compact RQ3 figure, which was deleted. They are still
+generated and are still the fastest way to check the population P05/P50/P95 the
+RQ3 prose has to quote, but nothing in the manuscript reads them directly.
+
+### `floor_zero_delay_account.csv`
+
+The 11 rows are the decisions a reader asks about first: pacing applied nothing
+although the mandatory work provably did not fit. The file is an identity, not
+an explanation of intent. With \(\hat{B}\), \(\hat{C}\), \(B\), \(T\) as above
+and \(C_{mand}\) the mandatory part of the realized Draft duration,
+
+- `controller_saw_ms` \(=\hat{B}+2\hat{C}-T\), what the deployed formula was
+  given at the decision. It is **non-positive on 11/11** (\(-46\) to
+  \(-1{,}729\) ms), so zero was that formula's correct output;
+- `backlog_term_ms` \(=B-\hat{B}\) and `reserve_term_ms` \(=2(C_{mand}-\hat{C})\)
+  are the two ways the online view differed from the realized one;
+- `account_ms` is their sum with `controller_saw_ms`, and the generator asserts
+  it equals \(2d^{*}_{mand}\) within 2 ms — that assertion is the file's
+  correctness check;
+- `repriced_reaches_floor` is `repriced_ms` \(\ge\) `mandatory_floor_ms`, true on
+  **9/11** (and 11/14 over all floor misses, `floorMissRepricedAtOrAboveFloor`);
+- `backlog_flips_sign` is `controller_saw_ms + backlog_term_ms > 0`, true on
+  **11/11**: correcting the backlog clock alone would have made the controller
+  see positive pressure at that instant.
+
+A previous version of this column was named `backlog_term_sufficient` and tested
+`backlog_term > -(saw + reserve_term)`, which reduces to `account > 0` and is
+therefore true for every below-floor decision by the class definition. It
+carried no information and must not be reinstated. Neither the repricing nor the
+sign flip says what the run would have done: pacing is closed-loop.
+
+Percentiles quoted anywhere are computed on the whole population; the ECDF
+thinning affects only those two files.
 
 ## Validity and interpretation
 
@@ -111,8 +144,8 @@ deployed formula on the recorded row. It says what the controller would have
 computed at that instant with an exact backlog clock, on 11 of the 14 floor
 misses. It does not say what the run would have done.
 
-The relation the figure plots between the backlog error and the queued pricing
-error is close to definitional, because the backlog clock is that sum. Its value
+The relation between the backlog error and the queued pricing error is close to
+definitional, because the backlog clock is that sum. Its value
 is that it localises the whole backlog error in the per-Draft price and rules
 out other contributions, and that the outcome classes separate along it. The
 queue is reconstructed offline from the Draft timeline rather than read out of

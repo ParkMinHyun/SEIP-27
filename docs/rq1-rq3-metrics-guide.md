@@ -787,9 +787,9 @@ state, throttling, and realized work. Such a study requires new matched runs or
 a validated closed-loop replay/simulator. Do not mechanically rescale the delay
 column. Do not make domain-mismatched policy comparison the default RQ3 baseline.
 
-Current artifacts are `tables/tab_rq3_pacing_compact.tex`,
-`figures/fig_rq3_pacing_compact.tex`, and the generated CSVs documented in
-`data/rq3/coordination/README.md`. The older policy, selectivity, calibration,
+The current artifact is `tables/tab_rq3_pacing_compact.tex` alone, with the
+generated CSVs documented in `data/rq3/coordination/README.md` and
+`data/rq3/estimator/README.md`; the compact RQ3 figure was deleted. The older policy, selectivity, calibration,
 trajectory, and four-policy aggregation material below is retained only as
 historical design context and must not drive the current manuscript.
 
@@ -1210,11 +1210,11 @@ in the ML implementation repository, which is the single place the
 node data/rq2_spike_anatomy.mjs
 ```
 
-### Current RQ3 figure and generated evidence
+### Current RQ3 generated evidence
 
-- `figures/fig_rq3_pacing_compact.tex`
-- `docs/tab_rq3_pacing_compact_preview.png`
-- `docs/fig_rq3_pacing_compact_preview.png`
+RQ3 no longer ships a figure, and the preview PNGs this section used to list are
+no longer produced; review from a `pdflatex` render.
+
 - `data/rq3/coordination/summary.csv`
 - `data/rq3/coordination/envelope_share.csv`
 - `data/rq3/coordination/action_summary.csv`
