@@ -1,173 +1,192 @@
-% Compact coordination-aware RQ3 main-paper figure.  The original RQ3 policy,
-% selectivity, and calibration figures remain untouched as historical
+% RQ3 companion figure: every mandatory-floor miss named in
+% Table~\ref{tab:rq3_pacing_compact}, plotted so that the panel accounts for the
+% deadline margin each capture kept instead of only measuring it.  The original
+% RQ3 policy, selectivity and calibration figures remain untouched as historical
 % alternatives; docs/rq3-current.md is the authoritative handoff for this pair.
 %
-% Sources:
-%   data/rq3/coordination/envelope_ladder_{12mp_normal,24mp_memory}.csv
-% Regenerate with scripts/rq3_coordination_metrics.py.
+% Source: data/rq3/coordination/floor_miss_{filter,encoding}.csv, split by what
+% admission left running.  Regenerate with scripts/rq3_coordination_metrics.py
+% then scripts/rq3_coordination_audit.py.
+%
+% Naming follows tables/tab_rq3_pacing_compact.tex, whose header carries the map
+% between the printed terms and the column names the generated CSVs still use
+% (pacing decision = transition, run = burst, missing delay = the CSVs'
+% shortfall_ms, skipped optional work = demotion, deadline margin = realized
+% margin).  Only the printed labels change; the CSV column names do not.
 %
 % ---------------------------------------------------------------------------
-% Why this figure and not three panels of rates
+% Why the figure is this and not an aggregate, and why it is a scatter
 % ---------------------------------------------------------------------------
-% An earlier revision had three panels: activation by pressure band, a
-% mechanism flow chart, and a stacked bar of the envelope partition.  Every one
-% of them was a table in disguise -- eight rates, six boxes of prose, and six
-% counts respectively -- and all three now live in
-% Table~\ref{tab:rq3_pacing_compact}, where a reader can also cite them.  The
-% reference papers in references/ do the same thing: results go in tables, and
-% the one figure each paper spends is reserved for something a table cannot
-% state.  A figure that restates a table earns nothing but page area.
+% Earlier revisions spent the figure on the aggregates -- activation by budget
+% band, a mechanism flow chart, a stacked partition of the required delay, a
+% ladder of every decision that required one.  All of them restated the table,
+% and the table can be cited.  The division of labour here is the one RQ2 already
+% uses: the table carries the result and the figure takes the handful of
+% exceptions the table names and shows what happened in them.  RQ3's exception
+% set is the 14 pacing decisions that fell below the mandatory floor, the only
+% place the controller failed a sufficient condition reconstructed after the run.
 %
-% What a table cannot state here is the SHAPE of the coordination.  The table
-% says pacing covered 53 of 79 and 83 of 140 realized-work envelopes; it cannot
-% say how large those envelopes were, how far above or below them the applied
-% delay landed, or that the 24MP mandatory floor only becomes nonzero in the
-% deepest fifth of the order.  That is what this figure carries.
+% The form, however, is deliberately NOT RQ2's.  A first attempt drew these 14
+% cases as horizontal grouped bars with a right-hand text column, which is
+% Figure~\ref{fig:rq2_unsafe_spike_anatomy} line for line; two figures in one
+% paper that share a skeleton are read as the same exhibit twice.  This paper
+% already spends a box diagram on the pipeline, grouped horizontal bars on RQ2,
+% and a capture-index time series on the case study, so the one grammar left free
+% is a scatter -- and it happens to be the right one, because the claim IS a
+% comparison between two commensurable quantities and a scatter can put that
+% comparison on the diagonal instead of asking the reader to compare bar lengths.
 %
-% Construction.  One panel per condition.  Every transition whose realized Draft
-% work would have required a delay is a column, ordered along x by the size of
-% that requirement, so the upper curve is monotone by construction and the x axis
-% is a rank rather than a quantity.  For each transition the figure draws:
+% ---------------------------------------------------------------------------
+% Why THESE two axes: the diagonal has to be the deadline
+% ---------------------------------------------------------------------------
+% An earlier revision plotted the missing delay against the margin the capture
+% kept.  It answered "how close was it" and nothing else: its diagonal marked
+% "margin equalled the missing delay", which is not a boundary of anything, so a
+% reader could see that the misses were survivable but never why.  Two of the 14
+% sat below that line and the figure had to shade a region to explain that this
+% was not a failure -- a figure arguing against its own geometry.
 %
-%   curve         the delay the realized Draft work would have required
-%   shading       the area under it, i.e. the requirement itself
-%   mark          the delay the controller actually applied
+% Substituting the floor's own definition, 2*d_mand = B + 2*C_mand - T, into
+% margin = (deadline - decision) - wait - C_exec turns the margin into an
+% identity over three separately measured terms:
 %
-% The two main categories of Table~\ref{tab:rq3_pacing_compact} are then regions
-% rather than mark styles, which is why the marks are all one shape: a mark above
-% the curve is a covered envelope and a mark inside the shading is
-% admission-flexible.  Labelling the regions instead of the marks also puts the
-% reading INSIDE the panel, which is what lets the caption be one line.
+%   margin = [ deadline_ref + horizon_reserve + backlog_residual ] - 2*d_mand
 %
-% The mandatory floor is deliberately NOT drawn.  It is zero on all 79 12MP
-% transitions and on 111 of the 140 24MP ones, so joining its values into a curve
-% draws a saw-tooth between 0 and 782 ms across the upper half of the 24MP order
-% and implies a trend that does not exist.  The floor and its 14 misses are a
-% seven-row audit in Table~\ref{tab:rq3_pacing_compact}, which is the right place
-% for 14 cases in one condition.  Do not reinstate it as a curve.
+%   deadline_ref      the controller prices the remaining window from the
+%                     queue's binding deadline -- backlogDeadlineMs, "the
+%                     deadline of whatever entered the backlog last, which is
+%                     the one the whole queue has to fit inside"
+%                     (CaptureAvailablePacingSession.kt, timeToDeadlineMsAt).
+%                     This is the budget between that deadline and the capture's
+%                     own timeout timestamp, which the floor never counted:
+%                     0 to 1,323 ms here, P50 845 ms.
+%   horizon_reserve   2*C_mand - C_exec.  The 2C horizon reserves a second Draft
+%                     for the next capture, while this capture's own deadline
+%                     has to cover only its own: 56 to 1,109 ms, P50 629 ms.
+%   backlog_residual  B - wait, how well the measured backlog predicted the wait
+%                     the capture actually served: -92 to -14 ms.  Near zero,
+%                     which is itself the result -- the backlog clock is not
+%                     where the margin came from.
 %
-% Frames.  12MP y to 900 ms, which holds every point (largest applied delay 874).
-% 24MP is clipped at 1,600 ms and the panel says so: two applied delays reach
-% 2,010 and 2,022 ms, and a frame that held them would spend a third of the panel
-% on two marks.  The 24MP curve reaches 1,038 ms, so it occupies the lower half of
-% its frame; that is the finding, not a framing accident -- the applied delay
-% routinely exceeds what the realized work required.
+% Splitting 2*d_mand into the part the delay applied and the part it did not
+% gives the two axes, both in budget rather than in delay because one
+% millisecond of waiting buys two of budget (it drains one from the backlog and
+% moves the next deadline by one):
 %
-% Claim limits are in tables/tab_rq3_pacing_compact.tex and docs/rq3-current.md.
-% In particular the shaded band is a joint-control interpretation, not a claim
-% that pacing alone covers the work that eventually ran, and the floor is a
-% retrospective sufficient reservation condition rather than the timeout
-% boundary.
+%   x = 2*(d_mand - d)                                the miss, as budget
+%   y = deadline_ref + horizon_reserve + backlog_residual - 2*d
+%
+% so y - x is the realized margin exactly.  The diagonal is therefore margin = 0
+% -- the deadline itself -- the vertical distance from a mark to it is that
+% capture's margin, and the shaded half below it is where a capture misses its
+% deadline.  scripts/rq3_coordination_audit.py asserts the identity closes on
+% every analyzed decision, not only these 14; it does, to 1.0 ms, which is the
+% two ceilings in the floor formulas.
+%
+% This is arithmetic on the realized trace, NOT a counterfactual.  It accounts
+% for the margin that was observed; it says nothing about the margin a different
+% delay would have produced, and the closed-loop objection in
+% docs/rq3-current.md still forbids that claim.  Nor is the mark shape -- what
+% admission left running -- the cause of the margin: d*_mand already excludes
+% optional work, so skipping it documents coordination rather than closing the
+% deficit.
+%
+% Units.  Shares of the Capture Timeout budget, never milliseconds.  The budget
+% is an internal constant and an axis in ms would make it recoverable from any
+% quantity the manuscript also prints as a share of it.  The generator emits both
+% columns; the ms ones stay for the audit trail.
+%
+% Encoding.  Mark shape is what admission left running, which is the coordination
+% dimension and varies: the single-frame optional stage S survived on 6 cases and
+% only the mandatory work ran on 8.  Run identity is NOT encoded: the 14 cases
+% fall in four runs but they do not cluster in this space, so a four-way mark
+% would spend the figure's only free channel on something the reader cannot use.
+% The per-run count is in the table.  Two cases carry labels -- the largest miss
+% and the smallest margin -- because those are the two a reader will want to look
+% up; "c" is the capture index within the run, the CSV's shot field.
+%
+% Frame.  Square, both axes 0 to 28% of the budget, so the diagonal is at 45
+% degrees and "above the line" is a fair visual comparison rather than an
+% artefact of aspect.  x only reaches 18.7%, so the lower right is empty by
+% construction; that is where the legend and the annotations go.
 
 \begin{figure}[t]
   \centering
-  \providecommand{\rqThreeCmpDir}{data/rq3/coordination}
-
-  \tikzset{
-    rq3cmp envelope/.style={black!75, line width=0.6pt},
-    rq3cmp applied/.style={only marks, mark=*, mark size=0.6pt,
-      mark options={fill=black, draw=none}},
-    rq3cmp note/.style={font=\tiny, text=black!62, inner sep=1.2pt},
-    rq3cmp note bg/.style={rq3cmp note, fill=white, fill opacity=0.92,
-      text opacity=1},
-    rq3cmp lead/.style={black!55, line width=0.3pt,
-      -{Latex[length=1.6pt,width=1.6pt]}},
-  }
-
-  \pgfplotsset{
-    rq3cmp axis/.style={
+  \setlength{\abovecaptionskip}{3pt}%
+  \setlength{\belowcaptionskip}{2pt}%
+  \begin{tikzpicture}
+    \begin{axis}[
       scale only axis=true,
-      tick label style={font=\tiny},
-      label style={font=\scriptsize},
-      title style={font=\scriptsize,yshift=-2pt},
+      width=0.60\columnwidth, height=0.60\columnwidth,
+      xmin=0, xmax=28, ymin=0, ymax=28,
+      xtick={0,5,10,15,20,25},
+      ytick={0,5,10,15,20,25},
+      xlabel={Budget the missing delay did not reserve (\%)},
+      ylabel={Budget the floor never counted (\%)},
+      tick align=outside,
       grid=major,
-      major grid style={gray!20,line width=0.2pt},
+      major grid style={black!12,line width=0.25pt},
       axis line style={line width=0.35pt},
       tick style={line width=0.35pt},
-      tick align=outside,
-      tick pos=left,
+      tick label style={font=\tiny},
+      label style={font=\tiny},
       enlargelimits=false,
-      clip=true,
-    },
-  }
-
-  \begin{tikzpicture}
-    \begin{groupplot}[
-      rq3cmp axis,
-      group style={group size=1 by 2, vertical sep=0.105\columnwidth},
-      width=0.795\columnwidth,
-      height=0.245\columnwidth,
-      xtick align=outside,
-      ylabel={Delay (ms)},
+      clip=false,
+      legend style={
+        font=\tiny, draw=black!25, fill=white, line width=0.2pt,
+        inner sep=2pt, row sep=-1pt,
+        at={(0.99,0.02)}, anchor=south east,
+      },
+      legend cell align=left,
     ]
-      % -------------------------------------------------------------------
-      % (a) 12MP normal.  The mandatory floor is zero on every transition, so
-      % the shaded band runs from the axis to the upper curve.
-      % -------------------------------------------------------------------
-      \nextgroupplot[
-        title={(a) 12MP normal, 79 transitions},
-        xmin=0,xmax=80,ymin=0,ymax=900,
-        xtick={0,20,40,60,80},
-        ytick={0,300,600,900},
-      ]
-      \addplot[draw=none,name path=rqcmpazero] coordinates {(0,0) (80,0)};
-      \addplot[draw=none,name path=rqcmpaexec]
-        table[x=rank,y=realized_ms,col sep=comma]
-        {\rqThreeCmpDir/envelope_ladder_12mp_normal.csv};
-      \addplot[fill=black!9,draw=none]
-        fill between[of=rqcmpazero and rqcmpaexec];
-      \addplot[rq3cmp envelope]
-        table[x=rank,y=realized_ms,col sep=comma]
-        {\rqThreeCmpDir/envelope_ladder_12mp_normal.csv};
-      \addplot[rq3cmp applied]
-        table[x=rank,y=applied_ms,col sep=comma]
-        {\rqThreeCmpDir/envelope_ladder_12mp_normal.csv};
-      \node[rq3cmp note bg,anchor=north west,align=left] at (axis cs:2,880)
-        {dot above the shading: pacing covered\\the delay the realized work required};
-      \node[rq3cmp note bg,anchor=east] at (axis cs:47,330)
-        {dot inside it: admission absorbed the rest};
-      \draw[rq3cmp lead] (axis cs:48,320) -- (axis cs:56,120);
-      % The dots sitting on the axis are the transitions the controller left
-      % unpaced although their realized work needed a delay.  They are the
-      % population the boundary-mismatch group of the table diagnoses, and
-      % without a label a reader reads them as part of the shading.
-      \node[rq3cmp note bg,anchor=south west] at (axis cs:2,155)
-        {on the axis: needed a delay, got none (18)};
 
-      % -------------------------------------------------------------------
-      % (b) 24MP memory pressure.  The floor becomes nonzero only in the
-      % deepest part of the order, which is where every floor miss sits.
-      % -------------------------------------------------------------------
-      \nextgroupplot[
-        title={(b) 24MP memory pressure, 140 transitions},
-        xlabel={Transitions ordered by the delay their realized work needed},
-        % Clipped at 1,600 ms and said so: two applied delays reach 2,010 and
-        % 2,022 ms, and a frame that held them would spend a third of the panel
-        % on two marks.
-        xmin=0,xmax=141,ymin=0,ymax=1600,
-        xtick={0,35,70,105,140},
-        ytick={0,400,800,1200,1600},
-      ]
-      \addplot[draw=none,name path=rqcmpbzero] coordinates {(0,0) (141,0)};
-      \addplot[draw=none,name path=rqcmpbexec]
-        table[x=rank,y=realized_ms,col sep=comma]
-        {\rqThreeCmpDir/envelope_ladder_24mp_memory.csv};
-      \addplot[fill=black!9,draw=none]
-        fill between[of=rqcmpbzero and rqcmpbexec];
-      \addplot[rq3cmp envelope]
-        table[x=rank,y=realized_ms,col sep=comma]
-        {\rqThreeCmpDir/envelope_ladder_24mp_memory.csv};
-      \addplot[rq3cmp applied]
-        table[x=rank,y=applied_ms,col sep=comma]
-        {\rqThreeCmpDir/envelope_ladder_24mp_memory.csv};
-      \node[rq3cmp note bg,anchor=north east] at (axis cs:139,1560)
-        {2 dots above the frame, at 2,010 and 2,022\,ms};
-      \node[rq3cmp note bg,anchor=south west] at (axis cs:3,270)
-        {on the axis: needed a delay, got none (43)};
-    \end{groupplot}
+    % Below the diagonal the capture misses its deadline.  The region is empty,
+    % and that is the result; it is shaded so the emptiness reads as a region
+    % rather than being inferred from an absence of marks.
+    \path[fill=black!8]
+      (axis cs:0,0) -- (axis cs:28,28) -- (axis cs:28,0) -- cycle;
+    \draw[black!55,densely dashed,line width=0.5pt]
+      (axis cs:0,0) -- (axis cs:28,28);
+    \node[font=\tiny,text=black!62,rotate=45,anchor=south,inner sep=2pt]
+      at (axis cs:23.2,23.2) {deadline: margin $=0$};
+
+    % The smallest margin of the 14 (run 2#31 c26), drawn as the vertical
+    % distance to the diagonal so the reader is told once how to read every
+    % other mark.
+    \draw[black!55,line width=0.4pt]
+      (axis cs:5.914,5.914) -- (axis cs:5.914,10.286);
+    \node[font=\tiny,text=black!62,anchor=east,inner sep=2.5pt]
+      at (axis cs:5.914,7.1) {margin};
+
+    \addplot[only marks,mark=*,mark size=1.5pt,
+             mark options={fill=black,draw=white,line width=0.3pt}]
+      table[x=unmet_floor_pct,y=uncounted_budget_pct,col sep=comma]
+      {data/rq3/coordination/floor_miss_filter.csv};
+    \addlegendentry{admission kept \(S\) only}
+
+    \addplot[only marks,mark=square,mark size=1.5pt,
+             mark options={draw=black,line width=0.45pt}]
+      table[x=unmet_floor_pct,y=uncounted_budget_pct,col sep=comma]
+      {data/rq3/coordination/floor_miss_encoding.csv};
+    \addlegendentry{admission kept mandatory work only}
+
+    % The largest miss and the smallest margin.
+    \node[font=\tiny,text=black!62,anchor=south east,inner sep=3pt]
+      at (axis cs:18.743,26.186) {run 2\#15, c24};
+    \node[font=\tiny,text=black!62,anchor=west,inner sep=3pt]
+      at (axis cs:5.914,10.286) {run 2\#31, c26};
+
+    \node[font=\tiny,text=black!62,anchor=north west,align=left,inner sep=2pt]
+      at (axis cs:0.6,27.4)
+      {14 cases, four runs\\no actual Capture Timeout};
+    % In the empty half, above the legend.
+    \node[font=\tiny,text=black!62,anchor=east,align=right,inner sep=2pt]
+      at (axis cs:27.4,9.5)
+      {shaded: the capture would have\\missed its deadline};
+    \end{axis}
   \end{tikzpicture}
-
-  \caption{Where the applied pacing delay lands against the delay each
-  transition's realized and mandatory Draft work would have required.}
+  \caption{Every mandatory-floor miss of Table~\ref{tab:rq3_pacing_compact}.
+  The vertical distance to the diagonal is the deadline margin the capture
+  actually kept}
   \label{fig:rq3_pacing_compact}
 \end{figure}

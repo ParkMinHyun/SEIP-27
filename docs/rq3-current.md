@@ -42,6 +42,30 @@ Browser-rendered review previews are:
 These PNGs preserve the content hierarchy for review but are not substitutes
 for the final LaTeX render.
 
+## Printed terminology
+
+The compact table and figure print only terms the manuscript already uses
+elsewhere. This document, the generated CSVs, and `scripts/rq3_coordination_*.py`
+keep the older analysis vocabulary, so use this map when moving between them.
+
+| Printed in the exhibits | Used in this document, the CSVs, and the scripts |
+|---|---|
+| pacing decision | transition (one shot-to-shot interval; a 30-capture run holds 29) |
+| run | burst (one complete 30-capture session) |
+| budget left | spare, i.e. retrospective pressure negated |
+| required delay | envelope, \(d^{*}\) |
+| missing delay | \(d^{*}-d\): potential avoided delay (flexible band), `shortfall_ms` (mandatory-floor block) |
+| skipped optional work | demotion (Bokeh+Filter → Filter only → Encoding only) |
+| deadline margin | realized margin |
+| this / next Draft | target / next |
+
+The printed terms are anchored in the rest of the paper: *budget* is in the
+paper title and Section~2.4, *run* and *capture* are the units of the RQ1
+tables, *Skipped* is RQ2's column, *deadline margin* is the case-study table's
+row, and *Draft*, *optional work*, and *mandatory* come from Section~2.3.
+Do not reintroduce *spare*, *transition*, *burst*, *target*, *demotion*,
+*shortfall*, *envelope*, or *retrospective* into printed labels or body text.
+
 ## Population and data-quality rule
 
 The compact analysis uses the Full controller workbooks:
@@ -102,6 +126,21 @@ Transitions with \(d^*_{exec}>0\) are partitioned into:
 The admission-flexible category is a joint-control interpretation, not a claim
 that pacing alone covers the work that eventually ran.
 
+### The overrun population is strict
+
+"No budget left" and "required a delay" must be the same set. Pressure is
+\(B+2C-\max(0,T)\) and \(d^{*}_{exec}=\lceil \text{pressure}/2\rceil\), so a
+decision at exactly zero pressure needs no delay and is not an overrun. Both
+populations are therefore **pressure > 0**: 79 at 12MP and 140 at 24MP.
+
+`scripts/rq3_policy_metrics.py` keeps its half-open `[0, inf)` pressure *band*
+unchanged, because the historical selectivity exhibit bins a shape and must
+leave no value unbinned. Everything the compact pair prints instead uses the
+strict cut `OVERRUN_PCT`, which agrees with
+`rq3_coordination_metrics.py` by construction. The two forms differ on one
+decision in this collection, 24MP run 2#27 capture 28 at pressure 0.0 ms; an
+earlier revision printed 141 against 140 in the same table because of it.
+
 ## Actual admission-action audit
 
 Demotion ranks optional-work classes as:
@@ -151,6 +190,50 @@ demotion documents coordination but does not itself erase the mandatory-floor
 deficit. Backlog under-estimation and rising headroom are observationally
 consistent with queue/thermal drift after the online decision; do not claim
 causality from this trace split.
+
+### Where the retained margin came from
+
+Substituting the floor's own definition, \(2d^{*}_{mand}=B+2C_{mand}-T\), into
+\(\text{margin}=(\text{deadline}-\text{decision})-\text{wait}-C_{exec}\) makes
+the realized margin an identity over three separately measured terms:
+
+\[
+\text{margin}=\underbrace{\varepsilon}_{\text{deadline reference}}
++\underbrace{(2C_{mand}-C_{exec})}_{\text{horizon reserve}}
++\underbrace{(B-\text{wait})}_{\text{backlog residual}}
+-2d^{*}_{mand}
+\]
+
+| Term | What it is | 14 floor misses (min / P50 / max) |
+|---|---|---|
+| deadline reference \(\varepsilon\) | The controller prices the remaining window from `backlogDeadlineMs`, "the deadline of whatever entered the backlog last, which is the one the whole queue has to fit inside" (`CaptureAvailablePacingSession.timeToDeadlineMsAt`). \(\varepsilon\) is the budget between that deadline and the capture's own timeout timestamp. | 0 / 845 / 1,323 ms |
+| horizon reserve | The \(2C\) horizon reserves a second Draft for the next capture; this capture's own deadline covers only its own. | 56 / 629 / 1,109 ms |
+| backlog residual | \(B-\text{wait}\): how well the measured backlog predicted the wait actually served. | −92 / −28 / −14 ms |
+
+`scripts/rq3_coordination_audit.py` asserts the identity on every analyzed
+decision, not only these 14. It closes to **1.0 ms**, which is the two ceilings
+in the floor formulas; a residual above 2 ms aborts the run and means a
+deadline or wait field in the export changed meaning. The emitted columns are
+`deadlineRefMs`, `horizonReserveMs`, `backlogResidualMs`, `unmetFloorMs`, and
+`uncountedBudgetMs`.
+
+The figure plots \(x=2(d^{*}_{mand}-d)\) against
+\(y=\varepsilon+(2C_{mand}-C_{exec})+(B-\text{wait})-2d\), so \(y-x\) is the
+margin and the diagonal is the deadline itself.
+
+Two limits on this decomposition:
+
+- It is **arithmetic on the realized trace, not a counterfactual**. It accounts
+  for the margin that was observed and says nothing about the margin a
+  different delay would have produced. The closed-loop objection below still
+  applies in full.
+- \(\varepsilon\ge 0\) holds on 14/14 floor misses but **not** on the whole
+  population (12MP 56/79, 24MP 130/140). Do not write that the binding deadline
+  is always earlier than the capture's own.
+
+The near-zero backlog residual is itself a result worth stating: the measured
+backlog predicted the realized wait to within 92 ms on every floor miss, so the
+retained margin did not come from the backlog clock.
 
 ## Why no alternative-policy or scaled-delay baseline is required
 

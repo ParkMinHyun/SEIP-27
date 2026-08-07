@@ -7,6 +7,8 @@ condition,metric,value,denominator
 12mp_normal,activationPercent band spare_20_40,11.83,676
 12mp_normal,activationPercent band spare_0_20,50.88,513
 12mp_normal,activationPercent band projected_overrun,77.22,79
+12mp_normal,projectedOverrunStrict,79,1920
+12mp_normal,activationPercent overrunStrict,77.22,79
 12mp_normal,safeButPaced,9,652
 12mp_normal,overrunButUnpaced,18,79
 12mp_normal,delayFormulaMatches,1920,1920
@@ -27,8 +29,10 @@ condition,metric,value,denominator
 24mp_memory,activationPercent band spare_20_40,17.55,564
 24mp_memory,activationPercent band spare_0_20,50.47,533
 24mp_memory,activationPercent band projected_overrun,68.79,141
+24mp_memory,projectedOverrunStrict,140,1861
+24mp_memory,activationPercent overrunStrict,69.29,140
 24mp_memory,safeButPaced,6,623
-24mp_memory,overrunButUnpaced,44,141
+24mp_memory,overrunButUnpaced,43,140
 24mp_memory,delayFormulaMatches,1861,1861
 24mp_memory,backlogDrainingDelaySharePercent,98.72,
 24mp_memory,waitsOutlastingBacklog,8,471
@@ -55,19 +59,19 @@ pooled,safeButPaced thermalStatusRose,0,15
 pooled,safeButPaced overheatLevelRose,0,15
 pooled,safeButPaced within10BudgetPointsOfBoundary,0,15
 pooled,safeButPaced medianRetrospectivePressurePct,-45.61,15
-pooled,overrunButUnpaced cases,62,
-pooled,overrunButUnpaced ratePercentOfBand,28.18,220
-pooled,overrunButUnpaced targetDemoted,29,62
-pooled,overrunButUnpaced aheadTasksDemoted,64,396
-pooled,overrunButUnpaced backlogOverEstimated,1,62
-pooled,overrunButUnpaced backlogUnderEstimated,61,62
-pooled,overrunButUnpaced medianBacklogErrorBudgetPoints,-15.32,62
-pooled,overrunButUnpaced medianAdmittedReserveErrorMs,10.5,62
-pooled,overrunButUnpaced medianAheadReserveErrorMs,-335.5,62
-pooled,overrunButUnpaced medianDecisionToDraftStartMs,5140.0,62
-pooled,overrunButUnpaced headroomRose,53,62
-pooled,overrunButUnpaced medianHeadroomDelta,0.01,62
-pooled,overrunButUnpaced thermalStatusRose,17,62
-pooled,overrunButUnpaced overheatLevelRose,8,62
-pooled,overrunButUnpaced within10BudgetPointsOfBoundary,55,62
-pooled,overrunButUnpaced medianRetrospectivePressurePct,3.04,62
+pooled,overrunButUnpaced cases,61,
+pooled,overrunButUnpaced ratePercentOfBand,27.85,219
+pooled,overrunButUnpaced targetDemoted,29,61
+pooled,overrunButUnpaced aheadTasksDemoted,64,389
+pooled,overrunButUnpaced backlogOverEstimated,1,61
+pooled,overrunButUnpaced backlogUnderEstimated,60,61
+pooled,overrunButUnpaced medianBacklogErrorBudgetPoints,-15.03,61
+pooled,overrunButUnpaced medianAdmittedReserveErrorMs,11.0,61
+pooled,overrunButUnpaced medianAheadReserveErrorMs,-326.0,61
+pooled,overrunButUnpaced medianDecisionToDraftStartMs,5136.0,61
+pooled,overrunButUnpaced headroomRose,52,61
+pooled,overrunButUnpaced medianHeadroomDelta,0.01,61
+pooled,overrunButUnpaced thermalStatusRose,17,61
+pooled,overrunButUnpaced overheatLevelRose,8,61
+pooled,overrunButUnpaced within10BudgetPointsOfBoundary,54,61
+pooled,overrunButUnpaced medianRetrospectivePressurePct,3.21,61

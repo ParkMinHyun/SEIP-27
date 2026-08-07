@@ -26,3 +26,10 @@ condition,metric,value,denominator
 24mp_memory,floorMissNextMarginMsMin,276,14
 24mp_memory,floorMissActualTimeouts,0,14
 24mp_memory,floorMissWatchdogs,0,14
+24mp_memory,floorMissDeadlineRefMsP50,845.0,14
+24mp_memory,floorMissDeadlineRefMsMax,1323.0,14
+24mp_memory,floorMissHorizonReserveMsP50,628.5,14
+24mp_memory,floorMissBacklogResidualMsMin,-92.0,14
+24mp_memory,floorMissBacklogResidualMsMax,-14.0,14
+24mp_memory,floorMissUnmetFloorMsMax,1312.0,14
+24mp_memory,floorMissUncountedBudgetMsMin,368.0,14

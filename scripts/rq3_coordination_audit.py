@@ -91,6 +91,48 @@ def enrich(condition, files):
 
         target_demoted = executed < planned
         next_margin = None if next_row is None else next_row.get("timeoutMarginMs")
+
+        # ------------------------------------------------------------------
+        # Where the realized deadline margin came from.
+        # ------------------------------------------------------------------
+        # Substituting the floor's own definition, 2*d_mand = B + 2*C_mand - T,
+        # into margin = (deadline - decision) - wait - C_exec gives an identity
+        # in three separately measured terms:
+        #
+        #   margin = deadline_ref + horizon_reserve + backlog_residual
+        #            - 2*d_mand
+        #
+        # It is exact arithmetic on the realized trace, NOT a counterfactual: it
+        # accounts for the margin that was observed and says nothing about what
+        # a different delay would have produced.  main() asserts it closes.
+        #
+        #   deadline_ref      the controller prices the remaining window from
+        #                     the queue's binding deadline -- backlogDeadlineMs,
+        #                     "the deadline of whatever entered the backlog
+        #                     last, which is the one the whole queue has to fit
+        #                     inside" (CaptureAvailablePacingSession.kt, and
+        #                     timeToDeadlineMsAt); this is the budget between
+        #                     that deadline and the capture's own timeout
+        #                     timestamp, which the floor never counted
+        #   horizon_reserve   2*C_mand - C_exec: the 2C horizon reserves a
+        #                     second Draft for the next capture, while this
+        #                     capture's own deadline has to cover only its own
+        #   backlog_residual  B - wait: how well the measured backlog predicted
+        #                     the wait this capture actually served
+        wait = None if decision is None or draft_start is None else float(draft_start) - float(decision)
+        deadline = pr.get("timeoutDeadlineUptimeMs")
+        deadline_ref = (None if deadline is None or decision is None
+                        else (float(deadline) - float(decision)) - item["time_left_ms"])
+        horizon_reserve = 2 * item["c_mand_ms"] - item["c_exec_ms"]
+        backlog_residual = None if wait is None else item["backlog_ms"] - wait
+        # Unmet: the floor's demand that was not applied, in budget rather than
+        # in delay, because one millisecond of delay both drains the backlog and
+        # moves the next deadline.  Uncounted: the same budget the floor never
+        # charged for.  Their difference is the margin, so on the figure the
+        # diagonal is the deadline itself.
+        unmet = 2 * (item["d_mand"] - item["d"])
+        uncounted = (None if deadline_ref is None or backlog_residual is None
+                     else deadline_ref + horizon_reserve + backlog_residual - 2 * item["d"])
         item.update({
             "capture_index": int(row["captureIndex"]),
             "planned_class": SEQUENCE_CLASS[planned],
@@ -104,9 +146,14 @@ def enrich(condition, files):
             "backlog_ms": float(row["realBacklogMs"]),
             "estimated_backlog_ms": float(pr["beforeBacklogMs"]),
             "backlog_error_ms": float(pr["beforeBacklogMs"]) - float(row["realBacklogMs"]),
-            "wait_ms": None if decision is None or draft_start is None else float(draft_start) - float(decision),
+            "wait_ms": wait,
             "headroom_delta": headroom_delta,
             "floor_gap_ms": max(0.0, item["d_mand"] - item["d"]),
+            "deadline_ref_ms": deadline_ref,
+            "horizon_reserve_ms": horizon_reserve,
+            "backlog_residual_ms": backlog_residual,
+            "unmet_floor_ms": unmet,
+            "uncounted_budget_ms": uncounted,
         })
         output.append(item)
     return output
@@ -126,6 +173,8 @@ def main():
         "mandatoryFloorMs", "floorGapMs", "potentialAvoidedMs", "marginMs", "nextMarginMs",
         "backlogMs", "estimatedBacklogMs", "backlogErrorMs", "waitMs", "headroomDelta",
         "captureTimedOut", "watchdogFailed",
+        "deadlineRefMs", "horizonReserveMs", "backlogResidualMs",
+        "unmetFloorMs", "uncountedBudgetMs",
     ]
 
     def detail(row):
@@ -138,7 +187,36 @@ def main():
             round(row["backlog_error_ms"]), "" if row["wait_ms"] is None else round(row["wait_ms"]),
             "" if row["headroom_delta"] is None else round(row["headroom_delta"], 4),
             row["capture_timed_out"], row["watchdog_failed"],
+            "" if row["deadline_ref_ms"] is None else round(row["deadline_ref_ms"]),
+            round(row["horizon_reserve_ms"]),
+            "" if row["backlog_residual_ms"] is None else round(row["backlog_residual_ms"]),
+            round(row["unmet_floor_ms"]),
+            "" if row["uncounted_budget_ms"] is None else round(row["uncounted_budget_ms"]),
         ]
+
+    def check_identity(rows):
+        """margin = uncountedBudget - unmetFloor, exactly.
+
+        The two ceilings in the floor formulas cost at most 1 ms each, so a
+        residual above 2 ms means a term stopped meaning what it is named after
+        -- most likely a changed deadline or wait field in the export.
+        """
+        worst = 0.0
+        for row in rows:
+            if row["uncounted_budget_ms"] is None or row["margin_ms"] is None:
+                continue
+            if row["time_left_ms"] <= 0 or row["d_mand"] <= 0:
+                continue  # the max(0,.) clip breaks the substitution
+            residual = float(row["margin_ms"]) - (row["uncounted_budget_ms"] - row["unmet_floor_ms"])
+            worst = max(worst, abs(residual))
+            if abs(residual) > 2.0:
+                raise AssertionError(
+                    f"margin decomposition does not close: {row['condition']} "
+                    f"{row['run']} shot {row['shot']} residual {residual:.1f} ms")
+        return worst
+
+    worst_residual = max(check_identity(rows) for rows in all_rows.values())
+    print(f"margin decomposition closes to {worst_residual:.1f} ms (two ceilings)")
 
     for condition, transitions in all_rows.items():
         flexible = [row for row in transitions if row["category"] == "admission_flexible"]
@@ -175,6 +253,14 @@ def main():
                 [condition, "floorMissNextMarginMsMin", round(min(r["next_margin_ms"] for r in floor if r["next_margin_ms"] is not None), 1), len(floor)],
                 [condition, "floorMissActualTimeouts", sum(r["capture_timed_out"] for r in floor), len(floor)],
                 [condition, "floorMissWatchdogs", sum(r["watchdog_failed"] for r in floor), len(floor)],
+                # Where the retained margin came from; see enrich().
+                [condition, "floorMissDeadlineRefMsP50", round(percentile([r["deadline_ref_ms"] for r in floor], .5), 1), len(floor)],
+                [condition, "floorMissDeadlineRefMsMax", round(max(r["deadline_ref_ms"] for r in floor), 1), len(floor)],
+                [condition, "floorMissHorizonReserveMsP50", round(percentile([r["horizon_reserve_ms"] for r in floor], .5), 1), len(floor)],
+                [condition, "floorMissBacklogResidualMsMin", round(min(r["backlog_residual_ms"] for r in floor), 1), len(floor)],
+                [condition, "floorMissBacklogResidualMsMax", round(max(r["backlog_residual_ms"] for r in floor), 1), len(floor)],
+                [condition, "floorMissUnmetFloorMsMax", round(max(r["unmet_floor_ms"] for r in floor), 1), len(floor)],
+                [condition, "floorMissUncountedBudgetMsMin", round(min(r["uncounted_budget_ms"] for r in floor), 1), len(floor)],
             ])
 
         print(f"{coord.LABEL[condition]} flexible n={len(flexible)}: target demoted {actual_target}, "
@@ -190,6 +276,48 @@ def main():
     write_csv(OUT / "action_summary.csv", ["condition", "metric", "value", "denominator"], summary)
     write_csv(OUT / "flexible_cases.csv", detail_header, flexible_detail)
     write_csv(OUT / "mandatory_floor_cases.csv", detail_header, floor_detail)
+
+    # Plot-ready view of the floor misses, split by what admission left running
+    # so the figure can give each class its own mark without filtering on a
+    # string column.  The burst id also loses its "#", which pgfplots' table
+    # reader treats as a TeX parameter character and refuses to read.
+    run_col = detail_header.index("run")
+    shot_col = detail_header.index("shot")
+    gap_col = detail_header.index("floorGapMs")
+    margin_col = detail_header.index("marginMs")
+    next_col = detail_header.index("nextMarginMs")
+    exec_col = detail_header.index("executedClass")
+    # Shares of the Capture Timeout budget, not milliseconds: the budget is an
+    # internal constant that must not be recoverable from a rendered axis, so the
+    # figure plots the share and never the absolute value.  The ms columns stay
+    # for the audit trail.
+    budgets = {row["budget_ms"] for rows in all_rows.values() for row in rows}
+    assert len(budgets) == 1, f"captureTimeoutMs is not constant: {budgets}"
+    budget = budgets.pop()
+    share = lambda value: round(100 * float(value) / budget, 3)
+
+    # unmet_floor and uncounted_budget are the figure's two axes.  Their
+    # difference is the realized margin by the identity checked above, so the
+    # panel's diagonal is the deadline itself and the vertical distance to it is
+    # the margin -- which the earlier margin-against-shortfall pair could not
+    # show, because that diagonal marked nothing physical.
+    unmet_col = detail_header.index("unmetFloorMs")
+    uncounted_col = detail_header.index("uncountedBudgetMs")
+    plot_header = ["burst", "shot", "shortfall_ms", "margin_ms", "next_margin_ms",
+                   "shortfall_pct", "margin_pct", "next_margin_pct",
+                   "unmet_floor_ms", "uncounted_budget_ms",
+                   "unmet_floor_pct", "uncounted_budget_pct"]
+
+    def plot_rows(executed):
+        return [[str(row[run_col]).replace("#", "-"), row[shot_col],
+                 row[gap_col], row[margin_col], row[next_col],
+                 share(row[gap_col]), share(row[margin_col]), share(row[next_col]),
+                 row[unmet_col], row[uncounted_col],
+                 share(row[unmet_col]), share(row[uncounted_col])]
+                for row in floor_detail if row[exec_col] == executed]
+
+    for executed, name in (("Filter only", "filter"), ("Encoding only", "encoding")):
+        write_csv(OUT / f"floor_miss_{name}.csv", plot_header, plot_rows(executed))
 
 
 if __name__ == "__main__":

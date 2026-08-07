@@ -59,7 +59,6 @@ overrun_but_unpaced,24mp_memory,2#23,22,628,3,Bokeh+Filter,Filter only,True,3.84
 overrun_but_unpaced,24mp_memory,2#23,23,629,3,Bokeh+Filter,Filter only,True,5.3143,0,5968,4989,-979,-13.9857,557,798,241,5980,0.94,0.017,0,1,8,1,-30,621|622|623|624|625|626|627|628
 overrun_but_unpaced,24mp_memory,2#24,28,665,1,Bokeh+Filter,Bokeh+Filter,False,2.7714,0,4920,4801,-119,-1.7,938,854,-84,4958,0.9,0.02,1,0,7,0,581,658|659|660|661|662|663|664
 overrun_but_unpaced,24mp_memory,2#24,29,666,1,Bokeh+Filter,Bokeh+Filter,False,5.1429,0,5376,4993,-383,-5.4714,844,854,10,5401,0.897,0.017,1,0,8,0,497,658|659|660|661|662|663|664|665
-overrun_but_unpaced,24mp_memory,2#27,28,756,2,Bokeh+Filter,Bokeh+Filter,False,0.0,0,5129,4036,-1093,-15.6143,792,738,-54,5144,0.917,0.01,0,0,7,0,-345,749|750|751|752|753|754|755
 overrun_but_unpaced,24mp_memory,2#27,29,757,2,Bokeh+Filter,Bokeh+Filter,False,5.0429,0,5457,4455,-1002,-14.3143,788,768,-20,5474,0.917,0.01,0,0,7,0,-326,750|751|752|753|754|755|756
 overrun_but_unpaced,24mp_memory,2#27,30,758,2,Bokeh+Filter,Bokeh+Filter,False,7.2,0,5653,4533,-1120,-16.0,752,768,16,5666,0.917,0.01,0,0,8,0,-346,750|751|752|753|754|755|756|757
 overrun_but_unpaced,24mp_memory,2#28,25,785,2,Bokeh+Filter,Bokeh+Filter,False,2.0,0,5110,3284,-1826,-26.0857,877,609,-268,5134,0.913,0.02,1,0,6,0,-1399,779|780|781|782|783|784

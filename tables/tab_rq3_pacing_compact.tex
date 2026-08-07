@@ -9,6 +9,31 @@
 %   data/rq3/coordination/action_summary.csv
 %
 % ---------------------------------------------------------------------------
+% Naming, and why it changed
+% ---------------------------------------------------------------------------
+% Every printed label now uses a term the manuscript already prints elsewhere.
+% The generated CSVs and scripts/rq3_coordination_*.py keep their own column
+% names, so this is the map between the two vocabularies:
+%
+%   printed here                 elsewhere in the repository
+%   -----------------------------------------------------------------------
+%   pacing decision              transition (one shot-to-shot interval; a
+%                                30-capture run holds 29 of them, which is the
+%                                denominator of "Activated (%)" in
+%                                Table~\ref{tab:rq1_controller_behavior})
+%   run                          burst; a complete 30-capture session, the unit
+%                                counted by "Survived runs" in RQ1(a)/(b)
+%   budget left                  spare (retrospective pressure, negated)
+%   required delay               envelope, d*
+%   missing delay                d* - d: potential avoided delay (flexible
+%                                band), shortfall_ms (mandatory block)
+%   skipped optional work        demotion (Bokeh+Filter -> Filter only ->
+%                                Encoding only), which RQ2 prints as "Skipped"
+%   deadline margin              realized margin; RQ1(a) prints the normalized
+%                                form as "Slack P5"
+%   this / next Draft            target / next
+%
+% ---------------------------------------------------------------------------
 % Layout, and why it is the repository's and not booktabs
 % ---------------------------------------------------------------------------
 % Every other table in this paper is ruled on both axes, sized to \columnwidth by
@@ -17,22 +42,22 @@
 % p{0.50\columnwidth} columns; it read as a foreign object beside Tables II--IV
 % and stopped short of the column edge.  Keep the house form.
 %
-% Every row label is one line.  In the earlier revision about half of them wrapped
-% -- "Activation with $>40\%$ retrospective spare, \% [n]",
-% "Pacing covers realized-work envelope, $d\geq d^{*}_{exec}$", and the two
-% floor-miss \makecell stacks -- which left the metric column ragged and doubled
-% the table's height.  Symbols survive only where they carry the definition: the
-% two envelope formulas sit in the group header, not in a cell.
+% Every row label is one line.  In an earlier revision about half of them wrapped
+% -- the two activation rows and the two floor-miss \makecell stacks -- which left
+% the metric column ragged and doubled the table's height.  Symbols survive only
+% where they carry the definition: the two required-delay formulas sit in the
+% group header, not in a cell.  Any new label has to be checked against the
+% 128pt metric column at \scriptsize before it is committed.
 %
-% The 12MP column prints "--" on the four floor-miss rows because no 12MP
-% transition fell below the mandatory floor.  That is a real zero, not a missing
-% measurement, and the "Below the mandatory floor" row directly above states it as
-% 0 of 79.
+% The 12MP column prints "--" on the four floor-miss rows because no 12MP pacing
+% decision fell below the mandatory floor.  That is a real zero, not a missing
+% measurement, and the "Decisions below the mandatory floor" row directly above
+% states it as 0 of 79.
 %
 % ---------------------------------------------------------------------------
 % What moved off the page, and what still has to come back
 % ---------------------------------------------------------------------------
-% The earlier revision carried a twenty-line \tiny note block under the tabular.
+% An earlier revision carried a twenty-line \tiny note block under the tabular.
 % It held the definitions, the horizon argument, and the claim limits, and it was
 % taller than several of the row groups.  The repository convention is that this
 % material lives in the .tex header and in body text; the definitions are
@@ -44,56 +69,154 @@
 %
 % Definitions
 %   B          measured Draft backlog at the pacing decision
-%   T          remaining deadline window at the decision
+%   T          budget left in the deadline window at the decision
 %   C_exec     realized duration of the admitted Draft sequence
-%   C_mand     DynamicFunction, Encoding and measured Draft overhead, i.e.
-%              C_exec with the admission-skippable optional work removed
+%   C_mand     the mandatory part of C_exec: DynamicFunction, Encoding and
+%              measured Draft overhead, i.e. C_exec with the optional work that
+%              admission can skip removed
 %   d          the applied pacing delay
-%   d*_exec    ceil( [B + 2*C_exec - max(0,T)]^+ / 2 )
-%   d*_mand    the same on C_mand
-%   retrospective pressure  B + 2C - max(0,T); projected overrun is nonnegative
-%              pressure, NOT an observed Capture Timeout
-%   demotion   a reduction from Bokeh+Filter to Filter-only or Encoding-only
-%   spare      retrospective pressure negated, as a share of the budget
+%   d*_exec    ceil( [B + 2*C_exec - max(0,T)]^+ / 2 ), the delay the realized
+%              Draft work required
+%   d*_mand    the same on C_mand: the mandatory floor
+%   budget left after the queued Draft work
+%              max(0,T) - (B + 2C), as a share of the Capture Timeout budget.
+%              A negative value is a projected overrun reconstructed after the
+%              run, NOT an observed Capture Timeout.
+%   no budget left
+%              STRICTLY negative, i.e. a projected overrun, which makes it the
+%              same set as "Decisions that required a delay": d*_exec is
+%              ceil(pressure/2), so a decision at exactly zero budget left needs
+%              no delay.  Both are 79 and 140, and the halves add up: 61+18 and
+%              97+43.  An earlier revision took the population from the
+%              half-open [0, inf) pressure BAND of the historical selectivity
+%              exhibit and printed 141 here against 140 four rows down, a
+%              one-decision disagreement (24MP run 2#27 capture 28, pressure
+%              0.0 ms) that read as an arithmetic error.  The bands are
+%              unchanged; scripts/rq3_policy_metrics.py now carries a separate
+%              strict cut, OVERRUN_PCT, for everything this table prints.
+%   skipped optional work
+%              admission ran less than Bokeh+Filter, i.e. Filter only or
+%              Encoding only
+%
+% ---------------------------------------------------------------------------
+% Units, and the rule that decides them
+% ---------------------------------------------------------------------------
+% The Capture Timeout budget is an internal constant and must not be recoverable
+% from the manuscript.  It becomes recoverable the moment one quantity is printed
+% BOTH as an absolute duration and as a share of the budget, so the rule is per
+% quantity, not per table: each one appears in exactly one unit across the whole
+% paper.
+%
+%   delay -- applied, not applied, and the excess over what was required
+%       Milliseconds.  Table~\ref{tab:rq1_controller_behavior} and
+%       Table~\ref{tab:rq1_ablation} already print the applied delay in ms, and
+%       it is the one number a product owner reads directly.  So the rows here
+%       are ms too: "left to admission", "Applied minus required" and "Per paced
+%       capture".  Printing any of them as a share of the budget would divide
+%       straight into RQ1's milliseconds.
+%   deadline margin
+%       Share of the budget.  RQ1(a) already prints the normalized form as
+%       "Slack P5 (%)", so ms here would be the same mistake in the other
+%       direction.
+%   wait for the Draft worker
+%       Share of the budget.  It has no millisecond counterpart anywhere in the
+%       manuscript, and the share is the more informative form: the median wait
+%       is 73.4% of the whole budget, which is the reason the online backlog
+%       estimate is stale by the time the Draft runs.
+%   budget left, and everything the figure plots
+%       Share of the budget, for the same reason.
+%
+% Before adding a row, check which unit the quantity already uses elsewhere; do
+% not introduce a second one for it.
 %
 % The 2C horizon is the deployed prospective model: (i) the Draft that begins
 % after the pacing decision and (ii) the Draft of the next capture released by
 % that delay.  Waiting one millisecond both drains one millisecond of backlog and
 % shifts the next deadline by one millisecond, hence the division by two.
 %
+% The two rows a reviewer reaches for first, and why they are here
+% ---------------------------------------------------------------------------
+% "Paced although no delay was required" and the "Applied minus required" block
+% close the one gap this table used to have: it reported only the side where
+% pacing fell short of the requirement (the missing-delay row) and never the side
+% where it exceeded it, which is the larger of the two on this data.  Reporting
+% one tail of a two-tailed question reads as selective, and the numbers are easy
+% to derive from the rest of the table anyway: 411 paced minus the 61 paced
+% decisions inside the 79 that required a delay leaves 350, and likewise 374 of
+% 471 in 24MP.  State it rather than let a reviewer compute it.
+%
+% Neither row is a defect on its own.  A preventive controller is supposed to act
+% before the projection reaches the deadline; d*_exec is a lower bound on what
+% was required, reconstructed after the run, not a set point the controller aims
+% at.  What would be a defect is claiming an appropriately sized delay while
+% leaving four fifths of the pacing outside the analysis.
+%
+% The decomposition is exact away from the max(0,.) clip -- on decisions where
+% both d > 0 and d* > 0,
+%
+%   d - d*  =  (Chat - C)  +  (Bhat - B)/2
+%
+% identically, verified in tables/tab_rq3_pacing_calibration.tex at residual mean
+% 0.00 ms.  The Draft-duration estimate carries essentially all of it (+302 and
+% +445 ms) while the backlog estimate is an order of magnitude smaller and
+% usually slightly optimistic (-30 and -60 ms).  The cause is by construction:
+% CaptureAvailablePacingSession.getMaxDraftSequenceDurationMs prices Chat at the
+% run's observed MAXIMUM Draft duration for the capture's size bucket, so a
+% max-based estimate against a typical realized duration necessarily over-covers.
+% That is the sentence the body text needs; it turns the over-shoot from an
+% unexplained excess into a documented design choice with a measured price.
+%
+% Populations differ between the parent row and its two children and the labels
+% cannot carry that: the P50 surplus is over paced decisions (411 and 471), while
+% the two terms are over the paced decisions that also carried a requirement
+% (61 and 97), which is the subset where the identity holds without the clip.
+% Source: data/rq3/calibration/summary.csv, the "All" band of each condition.
+%
+% ---------------------------------------------------------------------------
 % Derived quantities
-%   delay avoided     d*_exec - d within the flexible band.  LIMIT: this is not a
-%                     counterfactual end-to-end speedup.  Pacing is closed-loop,
-%                     so a smaller delay would have changed later arrivals,
-%                     backlog, admission and thermal state.
-%   backlog overlap   sum(min(d,B)) / sum(d) over paced transitions
-%   burst cost        sum(d) divided by the sum of shot-to-shot intervals
+%   missing delay     d* - d, the part of the required delay that was not
+%                     applied.  Against d*_exec inside the admission-flexible
+%                     band, against d*_mand in the mandatory-floor block.
+%                     Figure~\ref{fig:rq3_pacing_compact} plots twice this
+%                     quantity, because one millisecond of waiting buys two of
+%                     budget; see that file's header for the identity that makes
+%                     its diagonal the deadline.
+%                     LIMIT: this is not a counterfactual end-to-end speedup.
+%                     Pacing is closed-loop, so a smaller delay would have
+%                     changed later arrivals, backlog, admission and thermal
+%                     state.
+%   backlog overlap   sum(min(d,B)) / sum(d) over paced decisions
+%   per-run cost      sum(d) divided by the sum of shot-to-shot intervals
 %   P50 / P95         inclusive percentiles
 %
-% LIMIT -- target-or-next.  The flexible-band demotion row reports whether
-% admission demoted the target Draft or the next capture's Draft, which is the
-% same two-Draft horizon the delay is sized against.  It is an observed-action
-% audit over that horizon and must never be phrased as causal attribution of the
-% next admission decision to the current delay.
+% LIMIT -- this Draft or the next.  The flexible-band skip rows report whether
+% admission skipped optional work on the Draft attached to the pacing decision
+% or on the next capture's Draft, which is the same two-Draft horizon the delay
+% is sized against.  It is an observed-action audit over that horizon and must
+% never be phrased as causal attribution of the next admission decision to the
+% current delay.  The generated CSVs call these two columns target and
+% targetOrNext.
 %
-% LIMIT -- the mandatory floor.  d*_mand is a retrospective sufficient
-% reservation condition, not the timeout boundary.  All 14 floor misses had their
-% target demoted, but because d*_mand already excludes optional work, demotion
-% documents coordination rather than erasing the deficit.  The 14 cluster in four
-% 24MP bursts, retained at least 307 ms (target) and 276 ms (next) of realized
-% margin, and none produced an actual Capture Timeout.  Backlog under-estimation
-% in 14/14 and rising headroom in 12/14 over a median 4.78 s of queue residence
-% are observationally consistent with queue and thermal drift after the online
-% decision; do not claim causality from this trace split.
+% LIMIT -- the mandatory floor.  d*_mand is a sufficient reservation condition
+% reconstructed after the run, not the timeout boundary.  All 14 floor misses had
+% optional work skipped on their own Draft, but because d*_mand already excludes
+% optional work, that skip documents coordination rather than erasing the
+% deficit.  The 14 cluster in four 24MP runs, retained at least 307 ms (this
+% Draft) and 276 ms (next) of deadline margin, and none produced an actual
+% Capture Timeout.  Backlog under-estimation in 14/14 and rising headroom in
+% 12/14 over a median 4.78 s of queue residence are observationally consistent
+% with queue and thermal drift after the online decision; do not claim causality
+% from this trace split.
 %
 % Population.  Records affected by the known timeout-measurement error were
 % removed as invalid observations, which is data-quality filtering and NOT
 % outcome-based survival conditioning; no valid analyzed run experienced an actual
 % Capture Timeout, and the manuscript must not describe this population as
-% survival-conditioned.  Watchdog-truncated transitions lack a complete realized
-% Draft duration and are excluded from envelope reconstruction only.  Complete
-% 30-shot runs from data/ablation_sampling/48U_metrics_{12MP_normal,24MP_memory}_0803_{1,2}.xlsx:
-% 70 and 69 bursts, 1,920 and 1,861 analyzed transitions.
+% survival-conditioned.  Watchdog-truncated decisions lack a complete realized
+% Draft duration and are excluded from the required-delay reconstruction only.
+% Complete 30-capture runs from
+% data/ablation_sampling/48U_metrics_{12MP_normal,24MP_memory}_0803_{1,2}.xlsx:
+% 70 and 69 runs, 1,920 and 1,861 analyzed pacing decisions.
 %
 % Regenerate with scripts/rq3_policy_metrics.py, scripts/rq3_coordination_metrics.py
 % and scripts/rq3_coordination_audit.py; see docs/rq3-current.md for the order.
@@ -116,8 +239,8 @@
   \newcommand{\rqthreecmpgroup}[1]{\multicolumn{3}{|l|}{\textbf{#1}}}%
   \newcommand{\rqthreecmphead}[2]{%
     \multicolumn{1}{c|}{\makecell[c]{\textbf{#1}\\\textbf{#2}}}}%
-  % The boundary-mismatch mechanism rates are pooled over both conditions -- the
-  % two classes hold 15 and 62 cases -- so the cell spans the two value columns
+  % The mismatch mechanism rates are pooled over both conditions -- the two
+  % classes hold 15 and 61 cases -- so the cell spans the two value columns
   % rather than printing one number twice as if it were two measurements.
   \newcommand{\rqthreecmpboth}[1]{\multicolumn{2}{c|}{#1}}%
   \newcommand{\rqthreecmptabular}{%
@@ -128,77 +251,59 @@
     \textbf{Metric} & \rqthreecmphead{12MP}{normal}
       & \rqthreecmphead{24MP}{mem.\ press.} \\
     \hline\hline
-    \rqthreecmpgroup{Targeting} \\
+    \rqthreecmpgroup{Where pacing fires, and where hindsight disagrees} \\
     \hline
-    Analyzed / paced transitions & 1{,}920 / 411 & 1{,}861 / 471 \\
+    Pacing decisions: analyzed / paced & 1{,}920 / 411 & 1{,}861 / 471 \\
     \cline{1-3}
-    Paced with over 40\% spare (\%) & 1.4 \,[652] & 1.0 \,[623] \\
+    \quad paced although no delay was required & 350 of 411 & 374 of 471 \\
     \cline{1-3}
-    Paced with no spare left (\%) & 77.2 \,[79] & 68.8 \,[141] \\
+    Paced, over 40\% budget left & 9 of 652 & 6 of 623 \\
+    \cline{1-3}
+    \quad optional work skipped afterwards & \rqthreecmpboth{15 of 15} \\
+    \cline{1-3}
+    Paced, no budget left & 61 of 79 & 97 of 140 \\
+    \cline{1-3}
+    Not paced, no budget left & 18 of 79 & 43 of 140 \\
+    \cline{1-3}
+    \quad backlog under-estimated & \rqthreecmpboth{60 of 61} \\
+    \cline{1-3}
+    \quad wait for the Draft worker, P50 (\%) & \rqthreecmpboth{73.4} \\
     \hline\hline
-    \rqthreecmpgroup{Boundary mismatches; mechanisms pooled} \\
+    \rqthreecmpgroup{Delay required by the realized Draft work} \\
     \hline
-    Paced, yet over 40\% spare & 9 of 652 & 6 of 623 \\
+    Decisions that required a delay & 79 & 140 \\
     \cline{1-3}
-    \quad admission later demoted the target & \rqthreecmpboth{15 of 15} \\
+    \quad pacing covered it alone & 53 & 83 \\
     \cline{1-3}
-    \quad \dots\ and the queued-ahead Drafts & \rqthreecmpboth{55 of 58} \\
+    \quad partly left to admission & 26 & 43 \\
     \cline{1-3}
-    No spare left, yet unpaced & 18 of 79 & 44 of 141 \\
+    \quad\quad left to admission, P50 / P95 (ms) & 72 / 208 & 131 / 443 \\
     \cline{1-3}
-    \quad backlog under-estimated & \rqthreecmpboth{61 of 62} \\
+    \quad\quad optional work skipped, this Draft & 7 of 26 & 17 of 43 \\
     \cline{1-3}
-    \quad thermal headroom rose while queued & \rqthreecmpboth{53 of 62} \\
+    \quad\quad deadline margin, min / P5 (\%) & 1.9 / 2.6 & 0.5 / 1.2 \\
     \cline{1-3}
-    \quad admission demoted the target anyway & \rqthreecmpboth{29 of 62} \\
+    \quad below the mandatory floor & 0 & 14 \\
     \cline{1-3}
-    \quad wait before its own Draft, P50 (s) & \rqthreecmpboth{5.14} \\
+    Applied minus required, P50 (ms) & 357 & 257 \\
     \hline\hline
-    \rqthreecmpgroup{Envelope coverage: delay the realized work needed} \\
+    \rqthreecmpgroup{The 14 decisions below the floor, all 24MP} \\
     \hline
-    Transitions that needed a delay & 79 & 140 \\
+    Received zero delay & \rqthreecmpboth{11 of 14} \\
     \cline{1-3}
-    \quad pacing covers the envelope & 53 & 83 \\
+    Backlog under-estimated & \rqthreecmpboth{14 of 14} \\
     \cline{1-3}
-    \quad admission-flexible band & 26 & 43 \\
-    \cline{1-3}
-    \quad\quad admission demoted the target & 7 of 26 & 17 of 43 \\
-    \cline{1-3}
-    \quad\quad \dots\ or the next Draft & 21 of 26 & 31 of 43 \\
-    \cline{1-3}
-    \quad\quad realized margin, min / P5 (ms) & 134 / 183 & 36 / 84 \\
-    \cline{1-3}
-    \quad\quad delay avoided, P50 / P95 (ms) & 72 / 208 & 131 / 443 \\
+    Deadline margin, this / next Draft (\%) & \rqthreecmpboth{4.4 / 3.9} \\
     \hline\hline
-    \rqthreecmpgroup{Mandatory floor: delay the unskippable work needed} \\
-    \hline
-    Transitions below the floor & 0 of 79 & 14 of 140 \\
-    \cline{1-3}
-    \quad received zero delay & -- & 11 of 14 \\
-    \cline{1-3}
-    \quad admission demoted the target & -- & 14 of 14 \\
-    \cline{1-3}
-    \quad backlog under-estimated & -- & 14 of 14 \\
-    \cline{1-3}
-    \quad thermal headroom rose & -- & 12 of 14 \\
-    \cline{1-3}
-    \quad margin kept, target / next (ms) & -- & 307 / 276 \\
-    \cline{1-3}
-    \quad actual Capture Timeout & -- & 0 of 14 \\
-    \hline\hline
-    \rqthreecmpgroup{Work conservation} \\
+    \rqthreecmpgroup{Pacing cost} \\
     \hline
     Delay overlapping the backlog (\%) & 100.0 & 98.7 \\
     \cline{1-3}
-    Waits longer than the backlog & 0 of 411 & 8 of 471 \\
-    \hline\hline
-    \rqthreecmpgroup{Responsiveness cost, P50 / P95} \\
-    \hline
-    Per paced capture (ms) & 381 / 823 & 278 / 1{,}180 \\
+    Per paced capture, P50 / P95 (ms) & 381 / 823 & 278 / 1{,}180 \\
     \cline{1-3}
-    Per 30-shot burst (\% of elapsed time) & 18.1 / 24.5 & 9.8 / 29.7 \\
+    Per run, P50 / P95 (\% of elapsed time) & 18.1 / 24.5 & 9.8 / 29.7 \\
     \cline{1-3}
-    Bursts with no pacing & 19 of 70 & 13 of 69 \\
+    Runs with no pacing & 19 of 70 & 13 of 69 \\
     \hline\hline
   \end{tabular}}%
   \fittabcolsep{\rqthreecmpbox}{\rqthreecmptabular}{\columnwidth}{6}%

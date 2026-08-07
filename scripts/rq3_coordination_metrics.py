@@ -183,6 +183,19 @@ def load(condition, files):
                     "category": category,
                     "potential_avoided_ms": max(0.0, d_exec - d),
                     "margin_ms": row.get("timeoutMarginMs"),
+                    # The Capture Timeout budget is an internal constant and must
+                    # not be printed in the manuscript, so every rendered
+                    # quantity derived from it is a share of it.  Carried per
+                    # decision rather than hard-coded; main() checks it is one
+                    # value across the whole condition.
+                    "budget_ms": float(pr["captureTimeoutMs"]),
+                    # Raw terms of the two floor formulas, carried so that
+                    # rq3_coordination_audit.py can decompose the realized
+                    # deadline margin without recomputing them here.
+                    "backlog_ms": backlog,
+                    "time_left_ms": time_left,
+                    "c_exec_ms": duration,
+                    "c_mand_ms": mandatory_duration,
                 })
     return transitions
 
@@ -215,6 +228,8 @@ def main():
     summary_rows, envelope_rows = [], []
     row_slot = {"12mp_normal": 1, "24mp_memory": 0}
     for condition, transitions in results.items():
+        budgets = {t["budget_ms"] for t in transitions}
+        assert len(budgets) == 1, f"{condition}: captureTimeoutMs is not constant: {budgets}"
         total = len(transitions)
         counts = {category: sum(t["category"] == category for t in transitions)
                   for category in ("full_covered", "admission_flexible", "below_mandatory")}

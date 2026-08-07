@@ -1,70 +1,70 @@
-condition,run,shot,captureIndex,category,plannedClass,executedClass,targetDemoted,nextDemoted,targetOrNextDemoted,appliedDelayMs,realizedEnvelopeMs,mandatoryFloorMs,floorGapMs,potentialAvoidedMs,marginMs,nextMarginMs,backlogMs,estimatedBacklogMs,backlogErrorMs,waitMs,headroomDelta,captureTimedOut,watchdogFailed
-12mp_normal,1#2,22,53,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,94,0,0,94,534,467,5095,4043,-1052,5108,0.023,False,False
-12mp_normal,1#2,24,55,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,7,0,0,7,419,333,5514,4530,-984,5530,0.01,False,False
-12mp_normal,1#2,25,56,admission_flexible,Bokeh+Filter,Filter only,True,True,True,17,50,0,0,33,333,281,5572,4755,-817,5584,0.01,False,False
-12mp_normal,1#22,16,644,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,88,152,0,0,64,479,367,4987,4584,-403,5004,-0.004,False,False
-12mp_normal,1#24,9,702,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,381,587,0,0,206,160,282,3620,4094,474,3636,0.007,False,False
-12mp_normal,1#27,16,805,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,71,0,0,71,644,535,4848,4013,-835,4863,0.006,False,False
-12mp_normal,1#38,29,1168,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,239,287,0,0,48,134,264,5316,5182,-134,5327,0.003,False,False
-12mp_normal,2#3,22,86,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,82,0,0,82,562,505,5052,3843,-1209,5066,0.01,False,False
-12mp_normal,2#4,18,113,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,209,0,0,209,340,329,5090,3648,-1442,5114,0.0,False,False
-12mp_normal,2#4,19,114,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,60,0,0,60,329,322,5407,3821,-1586,5423,0.0,False,False
-12mp_normal,2#4,20,115,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,55,0,0,55,322,227,5503,4098,-1405,5525,0.0,False,False
-12mp_normal,2#8,8,237,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,582,0,0,582,1027,824,2978,3130,152,3005,0.003,False,False
-12mp_normal,2#24,30,778,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,73,104,0,0,31,493,215,5135,5042,-93,5150,0.007,False,False
-12mp_normal,2#27,25,865,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,127,0,0,127,439,370,5221,4284,-937,5233,0.01,False,False
-12mp_normal,2#27,26,866,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,17,0,0,17,370,304,5584,4579,-1005,5604,0.01,False,False
-12mp_normal,2#27,27,867,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,51,0,0,51,304,295,5600,4747,-853,5617,0.01,False,False
-12mp_normal,2#27,28,868,admission_flexible,Bokeh+Filter,Filter only,True,True,True,25,51,0,0,26,295,280,5615,4953,-662,5628,0.01,False,False
-12mp_normal,2#30,24,956,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,0,72,0,0,72,516,252,5123,4497,-626,5136,0.017,False,False
-12mp_normal,2#30,25,957,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,28,195,0,0,167,252,238,5392,4907,-485,5410,0.017,False,False
-12mp_normal,2#31,24,987,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,0,46,0,0,46,518,266,5158,4467,-691,5170,0.013,False,False
-12mp_normal,2#31,25,988,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,40,189,0,0,149,266,264,5386,4806,-580,5402,0.013,False,False
-12mp_normal,2#33,28,1053,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,0,113,0,0,113,638,284,4878,4393,-485,4890,0.017,False,False
-12mp_normal,2#33,29,1054,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,205,0,0,205,284,247,5333,4540,-793,5350,0.017,False,False
-12mp_normal,2#34,30,1085,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,0,57,0,0,57,554,232,5095,4871,-224,5107,0.013,False,False
-12mp_normal,2#36,30,1147,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,190,0,0,190,447,397,5089,4951,-138,5103,0.023,False,False
-12mp_normal,2#37,19,1168,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,97,0,0,97,1528,1547,3106,2801,-305,3117,0.02,False,False
-24mp_memory,1#7,17,203,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,27,349,0,0,322,239,94,4672,4047,-625,4737,0.007,False,False
-24mp_memory,1#7,19,205,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,57,0,0,57,78,221,4984,4191,-793,5009,0.007,False,False
-24mp_memory,1#10,9,287,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,453,486,0,0,33,582,505,3243,2495,-748,3284,0.0,False,False
-24mp_memory,1#13,7,348,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,106,301,0,0,195,869,626,3208,2175,-1033,3228,0.006,False,False
-24mp_memory,1#19,5,531,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,0,73,0,0,73,1125,386,3200,1386,-1814,3229,0.007,False,False
-24mp_memory,1#19,6,532,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,533,538,0,0,5,386,318,3923,2813,-1110,3945,0.007,False,False
-24mp_memory,1#21,22,608,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,206,230,0,0,24,1193,1048,4544,4551,7,4603,0.013,False,False
-24mp_memory,1#21,24,610,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,213,727,0,0,514,406,423,5021,4713,-308,5034,0.02,False,False
-24mp_memory,1#21,25,611,admission_flexible,Bokeh+Filter,Filter only,True,True,True,279,358,136,0,79,423,774,5707,4888,-819,5733,0.03,False,False
-24mp_memory,1#28,6,781,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,183,0,0,183,845,543,4018,2530,-1488,4050,0.007,False,False
-24mp_memory,1#32,21,919,admission_flexible,Bokeh+Filter,Filter only,True,True,True,319,492,203,0,173,36,154,4595,4233,-362,4694,0.003,False,False
-24mp_memory,2#4,17,106,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,37,0,0,37,374,497,3846,3562,-284,3877,0.013,False,False
-24mp_memory,2#6,19,175,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,153,0,0,153,334,247,3512,2848,-664,3590,0.0,False,False
-24mp_memory,2#10,14,250,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,124,0,0,124,139,741,1924,1434,-490,1978,0.0,False,False
-24mp_memory,2#15,11,377,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,0,530,0,0,530,1104,526,4101,3121,-980,4117,0.017,False,False
-24mp_memory,2#15,12,378,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,292,746,103,0,454,526,332,4704,3961,-743,4733,0.01,False,False
-24mp_memory,2#15,18,384,admission_flexible,Bokeh+Filter,Filter only,True,True,True,275,398,8,0,123,1346,1076,4078,4002,-76,4095,0.004,False,False
-24mp_memory,2#17,28,457,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,0,64,0,0,64,697,391,4626,4328,-298,4647,0.023,False,False
-24mp_memory,2#18,14,475,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,100,0,0,100,1114,711,3464,2991,-473,3502,-0.004,False,False
-24mp_memory,2#18,15,476,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,182,0,0,182,711,852,4142,3223,-919,4167,-0.004,False,False
-24mp_memory,2#22,16,592,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,342,0,0,342,708,512,4535,2991,-1544,4564,0.024,False,False
-24mp_memory,2#22,17,593,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,134,0,0,134,512,478,5380,3061,-2319,5396,0.014,False,False
-24mp_memory,2#23,20,626,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,0,144,0,0,144,613,310,5166,4238,-928,5179,0.014,False,False
-24mp_memory,2#23,21,627,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,280,0,0,280,310,275,5501,4490,-1011,5515,0.014,False,False
-24mp_memory,2#23,22,628,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,135,0,0,135,275,173,5846,4745,-1101,5876,0.017,False,False
-24mp_memory,2#23,23,629,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,186,0,0,186,173,78,5968,4989,-979,5980,0.017,False,False
-24mp_memory,2#23,24,630,admission_flexible,Bokeh+Filter,Filter only,True,True,True,88,276,63,0,188,78,274,5981,5305,-676,5999,0.017,False,False
-24mp_memory,2#24,28,665,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,0,97,0,0,97,706,459,4920,4801,-119,4958,0.02,False,False
-24mp_memory,2#24,29,666,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,180,0,0,180,459,391,5376,4993,-383,5401,0.017,False,False
-24mp_memory,2#27,29,757,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,0,177,0,0,177,418,235,5457,4455,-1002,5474,0.01,False,False
-24mp_memory,2#27,30,758,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,252,0,0,252,235,321,5653,4533,-1120,5666,0.01,False,False
-24mp_memory,2#28,25,785,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,0,70,0,0,70,713,397,5110,3284,-1826,5134,0.02,False,False
-24mp_memory,2#28,26,786,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,208,0,0,208,397,459,5496,3343,-2153,5509,0.017,False,False
-24mp_memory,2#29,25,815,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,56,0,0,56,651,548,5275,3386,-1889,5290,0.013,False,False
-24mp_memory,2#29,27,817,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,49,0,0,49,401,425,5762,3634,-2128,5783,0.013,False,False
-24mp_memory,2#29,28,818,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,11,0,0,11,425,471,5820,3705,-2115,5835,0.01,False,False
-24mp_memory,2#29,29,819,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,4,0,0,4,471,561,5684,3990,-1694,5703,0.0,False,False
-24mp_memory,2#30,16,838,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,0,82,0,0,82,1204,835,4503,2877,-1626,4544,0.01,False,False
-24mp_memory,2#30,18,840,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,323,0,0,323,334,425,5266,3544,-1722,5311,0.01,False,False
-24mp_memory,2#30,19,841,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,26,0,0,26,425,471,5726,3667,-2059,5750,0.013,False,False
-24mp_memory,2#31,23,876,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,100,0,0,100,528,521,5464,3941,-1523,5477,0.016,False,False
-24mp_memory,2#31,25,878,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,131,0,0,131,333,307,5757,4069,-1688,5772,0.02,False,False
-24mp_memory,2#33,29,943,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,0,11,0,0,11,1213,859,4756,4453,-303,4778,0.02,False,False
+condition,run,shot,captureIndex,category,plannedClass,executedClass,targetDemoted,nextDemoted,targetOrNextDemoted,appliedDelayMs,realizedEnvelopeMs,mandatoryFloorMs,floorGapMs,potentialAvoidedMs,marginMs,nextMarginMs,backlogMs,estimatedBacklogMs,backlogErrorMs,waitMs,headroomDelta,captureTimedOut,watchdogFailed,deadlineRefMs,horizonReserveMs,backlogResidualMs,unmetFloorMs,uncountedBudgetMs
+12mp_normal,1#2,22,53,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,94,0,0,94,534,467,5095,4043,-1052,5108,0.023,False,False,0,-175,-13,0,-188
+12mp_normal,1#2,24,55,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,7,0,0,7,419,333,5514,4530,-984,5530,0.01,False,False,0,92,-16,0,76
+12mp_normal,1#2,25,56,admission_flexible,Bokeh+Filter,Filter only,True,True,True,17,50,0,0,33,333,281,5572,4755,-817,5584,0.01,False,False,0,75,-12,-34,29
+12mp_normal,1#22,16,644,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,88,152,0,0,64,479,367,4987,4584,-403,5004,-0.004,False,False,0,-213,-17,-176,-406
+12mp_normal,1#24,9,702,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,381,587,0,0,206,160,282,3620,4094,474,3636,0.007,False,False,-463,-1138,-16,-762,-2379
+12mp_normal,1#27,16,805,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,71,0,0,71,644,535,4848,4013,-835,4863,0.006,False,False,0,-198,-15,0,-213
+12mp_normal,1#38,29,1168,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,239,287,0,0,48,134,264,5316,5182,-134,5327,0.003,False,False,0,-195,-11,-478,-684
+12mp_normal,2#3,22,86,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,82,0,0,82,562,505,5052,3843,-1209,5066,0.01,False,False,0,-193,-14,0,-207
+12mp_normal,2#4,18,113,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,209,0,0,209,340,329,5090,3648,-1442,5114,0.0,False,False,0,-201,-24,0,-225
+12mp_normal,2#4,19,114,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,60,0,0,60,329,322,5407,3821,-1586,5423,0.0,False,False,0,102,-16,0,86
+12mp_normal,2#4,20,115,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,55,0,0,55,322,227,5503,4098,-1405,5525,0.0,False,False,0,91,-22,0,69
+12mp_normal,2#8,8,237,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,582,0,0,582,1027,824,2978,3130,152,3005,0.003,False,False,0,-1423,-27,0,-1450
+12mp_normal,2#24,30,778,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,73,104,0,0,31,493,215,5135,5042,-93,5150,0.007,False,False,0,-155,-15,-146,-316
+12mp_normal,2#27,25,865,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,127,0,0,127,439,370,5221,4284,-937,5233,0.01,False,False,0,-169,-12,0,-181
+12mp_normal,2#27,26,866,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,17,0,0,17,370,304,5584,4579,-1005,5604,0.01,False,False,0,112,-20,0,92
+12mp_normal,2#27,27,867,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,51,0,0,51,304,295,5600,4747,-853,5617,0.01,False,False,0,104,-17,0,87
+12mp_normal,2#27,28,868,admission_flexible,Bokeh+Filter,Filter only,True,True,True,25,51,0,0,26,295,280,5615,4953,-662,5628,0.01,False,False,0,102,-13,-50,39
+12mp_normal,2#30,24,956,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,0,72,0,0,72,516,252,5123,4497,-626,5136,0.017,False,False,0,-133,-13,0,-146
+12mp_normal,2#30,25,957,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,28,195,0,0,167,252,238,5392,4907,-485,5410,0.017,False,False,0,-152,-18,-56,-226
+12mp_normal,2#31,24,987,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,0,46,0,0,46,518,266,5158,4467,-691,5170,0.013,False,False,0,-158,-12,0,-170
+12mp_normal,2#31,25,988,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,40,189,0,0,149,266,264,5386,4806,-580,5402,0.013,False,False,0,-138,-16,-80,-234
+12mp_normal,2#33,28,1053,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,0,113,0,0,113,638,284,4878,4393,-485,4890,0.017,False,False,0,-323,-12,0,-335
+12mp_normal,2#33,29,1054,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,205,0,0,205,284,247,5333,4540,-793,5350,0.017,False,False,0,-153,-17,0,-170
+12mp_normal,2#34,30,1085,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,0,57,0,0,57,554,232,5095,4871,-224,5107,0.013,False,False,0,-158,-12,0,-170
+12mp_normal,2#36,30,1147,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,190,0,0,190,447,397,5089,4951,-138,5103,0.023,False,False,0,-319,-14,0,-333
+12mp_normal,2#37,19,1168,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,97,0,0,97,1528,1547,3106,2801,-305,3117,0.02,False,False,0,-1304,-11,0,-1315
+24mp_memory,1#7,17,203,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,27,349,0,0,322,239,94,4672,4047,-625,4737,0.007,False,False,0,-159,-65,-54,-278
+24mp_memory,1#7,19,205,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,57,0,0,57,78,221,4984,4191,-793,5009,0.007,False,False,-628,87,-25,0,-566
+24mp_memory,1#10,9,287,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,453,486,0,0,33,582,505,3243,2495,-748,3284,0.0,False,False,0,-581,-41,-906,-1528
+24mp_memory,1#13,7,348,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,106,301,0,0,195,869,626,3208,2175,-1033,3228,0.006,False,False,0,-556,-20,-212,-788
+24mp_memory,1#19,5,531,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,0,73,0,0,73,1125,386,3200,1386,-1814,3229,0.007,False,False,0,-190,-29,0,-219
+24mp_memory,1#19,6,532,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,533,538,0,0,5,386,318,3923,2813,-1110,3945,0.007,False,False,0,-491,-22,-1066,-1579
+24mp_memory,1#21,22,608,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,206,230,0,0,24,1193,1048,4544,4551,7,4603,0.013,False,False,793,-285,-59,-412,37
+24mp_memory,1#21,24,610,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,213,727,0,0,514,406,423,5021,4713,-308,5034,0.02,False,False,622,-385,-13,-426,-202
+24mp_memory,1#21,25,611,admission_flexible,Bokeh+Filter,Filter only,True,True,True,279,358,136,0,79,423,774,5707,4888,-819,5733,0.03,False,False,604,117,-26,-286,137
+24mp_memory,1#28,6,781,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,183,0,0,183,845,543,4018,2530,-1488,4050,0.007,False,False,0,-345,-32,0,-377
+24mp_memory,1#32,21,919,admission_flexible,Bokeh+Filter,Filter only,True,True,True,319,492,203,0,173,36,154,4595,4233,-362,4694,0.003,False,False,0,540,-99,-232,-197
+24mp_memory,2#4,17,106,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,37,0,0,37,374,497,3846,3562,-284,3877,0.013,False,False,-636,388,-31,0,-279
+24mp_memory,2#6,19,175,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,153,0,0,153,334,247,3512,2848,-664,3590,0.0,False,False,-565,330,-78,0,-313
+24mp_memory,2#10,14,250,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,124,0,0,124,139,741,1924,1434,-490,1978,0.0,False,False,-1830,-537,-54,0,-2421
+24mp_memory,2#15,11,377,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,0,530,0,0,530,1104,526,4101,3121,-980,4117,0.017,False,False,885,-439,-16,0,430
+24mp_memory,2#15,12,378,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,292,746,103,0,454,526,332,4704,3961,-743,4733,0.01,False,False,749,12,-29,-378,148
+24mp_memory,2#15,18,384,admission_flexible,Bokeh+Filter,Filter only,True,True,True,275,398,8,0,123,1346,1076,4078,4002,-76,4095,0.004,False,False,1170,208,-17,-534,811
+24mp_memory,2#17,28,457,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,0,64,0,0,64,697,391,4626,4328,-298,4647,0.023,False,False,0,-176,-21,0,-197
+24mp_memory,2#18,14,475,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,100,0,0,100,1114,711,3464,2991,-473,3502,-0.004,False,False,0,334,-38,0,296
+24mp_memory,2#18,15,476,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,182,0,0,182,711,852,4142,3223,-919,4167,-0.004,False,False,0,557,-25,0,532
+24mp_memory,2#22,16,592,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,342,0,0,342,708,512,4535,2991,-1544,4564,0.024,False,False,0,-309,-29,0,-338
+24mp_memory,2#22,17,593,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,134,0,0,134,512,478,5380,3061,-2319,5396,0.014,False,False,0,260,-16,0,244
+24mp_memory,2#23,20,626,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,0,144,0,0,144,613,310,5166,4238,-928,5179,0.014,False,False,0,-212,-13,0,-225
+24mp_memory,2#23,21,627,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,280,0,0,280,310,275,5501,4490,-1011,5515,0.014,False,False,0,-140,-14,0,-154
+24mp_memory,2#23,22,628,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,135,0,0,135,275,173,5846,4745,-1101,5876,0.017,False,False,0,154,-30,0,124
+24mp_memory,2#23,23,629,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,186,0,0,186,173,78,5968,4989,-979,5980,0.017,False,False,0,145,-12,0,133
+24mp_memory,2#23,24,630,admission_flexible,Bokeh+Filter,Filter only,True,True,True,88,276,63,0,188,78,274,5981,5305,-676,5999,0.017,False,False,0,222,-18,-50,28
+24mp_memory,2#24,28,665,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,0,97,0,0,97,706,459,4920,4801,-119,4958,0.02,False,False,0,-264,-38,0,-302
+24mp_memory,2#24,29,666,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,180,0,0,180,459,391,5376,4993,-383,5401,0.017,False,False,0,-218,-25,0,-243
+24mp_memory,2#27,29,757,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,0,177,0,0,177,418,235,5457,4455,-1002,5474,0.01,False,False,0,-172,-17,0,-189
+24mp_memory,2#27,30,758,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,252,0,0,252,235,321,5653,4533,-1120,5666,0.01,False,False,0,-200,-13,0,-213
+24mp_memory,2#28,25,785,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,0,70,0,0,70,713,397,5110,3284,-1826,5134,0.02,False,False,0,-149,-24,0,-173
+24mp_memory,2#28,26,786,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,208,0,0,208,397,459,5496,3343,-2153,5509,0.017,False,False,0,-151,-13,0,-164
+24mp_memory,2#29,25,815,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,56,0,0,56,651,548,5275,3386,-1889,5290,0.013,False,False,0,-117,-15,0,-132
+24mp_memory,2#29,27,817,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,49,0,0,49,401,425,5762,3634,-2128,5783,0.013,False,False,0,136,-21,0,115
+24mp_memory,2#29,28,818,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,11,0,0,11,425,471,5820,3705,-2115,5835,0.01,False,False,0,116,-15,0,101
+24mp_memory,2#29,29,819,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,4,0,0,4,471,561,5684,3990,-1694,5703,0.0,False,False,0,124,-19,0,105
+24mp_memory,2#30,16,838,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,0,82,0,0,82,1204,835,4503,2877,-1626,4544,0.01,False,False,450,-256,-41,0,153
+24mp_memory,2#30,18,840,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,323,0,0,323,334,425,5266,3544,-1722,5311,0.01,False,False,0,-191,-45,0,-236
+24mp_memory,2#30,19,841,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,26,0,0,26,425,471,5726,3667,-2059,5750,0.013,False,False,0,103,-24,0,79
+24mp_memory,2#31,23,876,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,True,True,0,100,0,0,100,528,521,5464,3941,-1523,5477,0.016,False,False,0,-123,-13,0,-136
+24mp_memory,2#31,25,878,admission_flexible,Bokeh+Filter,Filter only,True,True,True,0,131,0,0,131,333,307,5757,4069,-1688,5772,0.02,False,False,0,176,-15,0,161
+24mp_memory,2#33,29,943,admission_flexible,Bokeh+Filter,Bokeh+Filter,False,False,False,0,11,0,0,11,1213,859,4756,4453,-303,4778,0.02,False,False,519,-108,-22,0,389

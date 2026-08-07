@@ -129,6 +129,19 @@ BAND_EDGES = [(lo, hi) for lo, hi, _ in BANDS]
 BAND_NAMES = [name for _, _, name in BANDS]
 # The safe-but-paced cut, i.e. the lower edge of the loosest band.
 SAFE_SPARE_PCT = -40.0
+# The overrun cut, and why it is not simply the last band.
+#
+# bin_stats bins half-open [lo, hi), so the projected_overrun BAND collects
+# pressure >= 0.  That is the right form for the historical selectivity exhibit,
+# which bins a shape and must not leave a value unbinned, and those bands are
+# left exactly as they were.  It is the wrong form for a COUNT of decisions that
+# needed a delay: d*_exec = ceil(pressure/2), so pressure == 0 needs none.
+# Everything the compact pair reports as an overrun population therefore uses
+# this strict cut, which makes it the same set as
+# rq3_coordination_metrics.py's positive required delay by construction.  The
+# two forms differ on decisions whose pressure is exactly zero: one in this
+# collection, 24MP run 2#27 capture 28.
+OVERRUN_PCT = 0.0
 # How close to the deadline projection a crossing has to be to count as shallow.
 BOUNDARY_NEAR_PCT = 10.0
 # Quantiles of the backlog error drawn as the marginal strip in panel (b).
@@ -281,7 +294,8 @@ def enrich(condition, files):
 def boundary_class(t):
     if t['riskPct'] < SAFE_SPARE_PCT and t['d'] > 0:
         return 'safe_but_paced'
-    if t['riskPct'] >= 0 and t['d'] == 0:
+    # Strictly positive, NOT >= 0; see OVERRUN_PCT.
+    if t['riskPct'] > OVERRUN_PCT and t['d'] == 0:
         return 'overrun_but_unpaced'
     return 'other'
 
@@ -336,6 +350,11 @@ def analyse(condition, files):
         'neverPaced': sum(1 for s in shares if s == 0),
         'safeButPaced': [t for t in tx if boundary_class(t) == 'safe_but_paced'],
         'overrunButUnpaced': [t for t in tx if boundary_class(t) == 'overrun_but_unpaced'],
+        # The strict overrun population; see OVERRUN_PCT for why this and not
+        # the last band.  It is the denominator of every overrun rate the
+        # compact pair prints, and equals the coordination script's count of
+        # decisions with a positive required delay.
+        'overrun': [t for t in tx if t['riskPct'] > OVERRUN_PCT],
     }
 
 
@@ -549,8 +568,16 @@ def write_summary(results, safe, overrun):
         put('activationPercent', round(res['activation'], 2), res['nAnalyzed'])
         for b, name in zip(res['bands'], BAND_NAMES):
             put(f'activationPercent band {name}', round(b['activation'], 2), b['n'])
+        # The strict overrun population and its activation.  The band row above
+        # keeps the half-open [0, inf) form the historical selectivity exhibit
+        # needs; these two are what the compact pair prints, so that its
+        # denominator matches the coordination script's.  See OVERRUN_PCT.
+        put('projectedOverrunStrict', len(res['overrun']), res['nAnalyzed'])
+        put('activationPercent overrunStrict',
+            round(100 * sum(1 for t in res['overrun'] if t['d'] > 0) / len(res['overrun']), 2),
+            len(res['overrun']))
         put('safeButPaced', len(res['safeButPaced']), res['bands'][0]['n'])
-        put('overrunButUnpaced', len(res['overrunButUnpaced']), res['bands'][-1]['n'])
+        put('overrunButUnpaced', len(res['overrunButUnpaced']), len(res['overrun']))
         put('delayFormulaMatches', res['formulaMatches'], res['nAnalyzed'])
         put('backlogDrainingDelaySharePercent', round(res['overlapPercent'], 2))
         put('waitsOutlastingBacklog', res['outlast'], res['nPaced'])
@@ -562,11 +589,13 @@ def write_summary(results, safe, overrun):
         put('burstDelaySharePercent P95', round(res['shareP95'], 2), res['nBursts'])
         put('burstsNeverPaced', res['neverPaced'], res['nBursts'])
 
-    # The two boundary classes are defined on the outer two pressure bands, so the
-    # band populations are the denominators that make them rates rather than raw
-    # counts.  Pooled over both conditions, as the classes themselves are.
+    # The denominators that make the two boundary classes rates rather than raw
+    # counts, pooled over both conditions as the classes themselves are.
+    # safe-but-paced is defined on the loosest band and takes that band's
+    # population; overrun-but-unpaced takes the strict overrun population, not
+    # the last band, for the reason recorded at OVERRUN_PCT.
     band_pop = {'safeButPaced': sum(res['bands'][0]['n'] for res in results.values()),
-                'overrunButUnpaced': sum(res['bands'][-1]['n'] for res in results.values())}
+                'overrunButUnpaced': sum(len(res['overrun']) for res in results.values())}
 
     for name, cases in (('safeButPaced', safe), ('overrunButUnpaced', overrun)):
         s = boundary_stats(cases)

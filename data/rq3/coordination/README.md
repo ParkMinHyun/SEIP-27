@@ -70,5 +70,19 @@ the timeout boundary. Because it already excludes optional work, demotion in a
 floor-miss case records admission action but does not mathematically remove the
 remaining mandatory-floor deficit.
 
+`deadlineRefMs`, `horizonReserveMs`, and `backlogResidualMs` decompose the
+realized deadline margin:
+
+```text
+margin = deadlineRef + horizonReserve + backlogResidual - 2 * d_mand
+```
+
+`unmetFloorMs = 2 * (d_mand - d)` and `uncountedBudgetMs` are the same identity
+split so that their difference is the margin; the figure uses them as axes, so
+its diagonal is the deadline. `rq3_coordination_audit.py` aborts if the identity
+does not close to 2 ms on every analyzed decision. This is exact arithmetic on
+the realized trace and is not a counterfactual: it explains the margin that was
+observed, not the margin a different delay would have produced.
+
 See `docs/rq3-current.md` for the full paper-level interpretation and current
 artifact inventory.
