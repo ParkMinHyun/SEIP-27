@@ -275,11 +275,15 @@ PUBLISHED_ENFORCED = {
     ('24MP memory', 'Multi-frame'): (554, 1193, 553, 1, 'watchdog'),
     ('24MP memory', 'Single-frame'): (1047, 1192, 1047, 0, ''),
 }
+# The published Always-admit cells are no longer a single source: they pool the
+# 0729 set below with a level-selected subset of pacing_only_0803.  Reproduce
+# them with scripts/rq2_audit_pool.py, which owns the selection rule; the B1/B2
+# blocks here remain the per-source views.
 PUBLISHED_AUDIT = {
-    ('12MP normal', 'Multi-frame'): (622, 12, +1.2, 2, 23, -2.9),
-    ('12MP normal', 'Single-frame'): (630, 4, +0.6, 0, 25, -3.0),
-    ('24MP memory', 'Multi-frame'): (728, 48, +2.6, 1, 50, -3.2),
-    ('24MP memory', 'Single-frame'): (749, 27, +1.6, 2, 49, -3.3),
+    ('12MP normal', 'Multi-frame'): (831, 16, +1.2, 4, 31, -3.0),
+    ('12MP normal', 'Single-frame'): (842, 5, +0.7, 0, 35, -3.5),
+    ('24MP memory', 'Multi-frame'): (892, 50, +2.6, 1, 53, -3.2),
+    ('24MP memory', 'Single-frame'): (905, 27, +1.6, 3, 51, -3.4),
 }
 
 # The 0727 pool reproduces the published 12MP cells exactly and lands within two
@@ -370,7 +374,9 @@ def compare():
 
     print('\n' + '#' * 104)
     print('# BLOCK 2  Always-admit model audit')
-    print('#   published : ML/data/0729_RQ2/48U_metrics_<cond>_0729_PacingOnly_{1,2}.xlsx')
+    print('#   published : the two sources below pooled, the 0803 one level-selected;')
+    print('#               run scripts/rq2_audit_pool.py to reproduce that pooling')
+    print('#   0729      : ML/data/0729_RQ2/48U_metrics_<cond>_0729_PacingOnly_{1,2}.xlsx')
     print('#   new       : data/ablation_sampling/48U_metrics_<cond>_pacing_only_0803.xlsx')
     print('#' * 104)
     hdr = (f'{"condition":13s} {"group":13s} {"source":26s} {"n":>5s} | '
