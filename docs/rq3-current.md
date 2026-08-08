@@ -76,10 +76,17 @@ thing (a) exists to measure: with 1,920 as the denominator the under-sized tail
 reads as 0.8% of decisions, which buries it. Against the population where a
 reservation *was* required it is 10.0%, and that is the number a reviewer needs.
 
-Verifiability survives without the row. (a)'s block labels print 79/1,920 and
-140/1,861, (b) prints 350/1,841 and 374/1,721, and 1,841 + 79 = 1,920 and
-1,721 + 140 = 1,861. **Do not remove the denominators from either place** — they
-are the only remaining path back to the analyzed totals.
+Verifiability survives without the row, but it now takes one addition. The block
+labels used to print 79/1,920 and 140/1,861; they carry the condition alone, so
+the required-set size is (a)'s own row sum — 53 + 26 + 0 = 79 and
+83 + 43 + 14 = 140 — and the analyzed total is that plus (b)'s `n`:
+1,841 + 79 = 1,920 and 1,721 + 140 = 1,861. **Do not remove (b)'s `n` column** —
+with the labels reduced it is the last printed trace of the analyzed totals.
+
+The 4.1% and 7.5% shares left with the labels. They are the first sentence of the
+RQ3 narrative — pacing addresses a tail rather than charging every capture a
+fixed delay — and the prose owns them now; the table never printed them as a
+cell, only as label prose.
 
 ### Layout constraints that are easy to re-break
 
@@ -213,15 +220,19 @@ of \(d-d^{*}\) is 320). Both are still emitted.
 
 #### The block labels carry only the condition
 
-The per-run responsiveness cost — 18.1/24.5 and 9.8/29.7 per cent of a run's
-elapsed time at P50/P95 — is in the **note**, not in a column and not in the
-block labels. It is a per-run quantity, so it does not belong in a row of
-per-decision medians; and a block label is a single unwrappable line in an
-`l` multicolumn spanning every column, so its natural width is a floor on
-`sum(p-widths) + 12 tabcolsep`. A label approaching `\columnwidth` drives
-`\fittabcolsep` to a tabcolsep near zero, and every data cell in the block then
-touches its group rule. An earlier revision carried the cost on (b)'s labels and
-did exactly that. Keep the labels at the condition name alone.
+Both blocks label a condition with its name and nothing else. Two quantities have
+been evicted from these labels in turn: the per-run responsiveness cost —
+18.1/24.5 and 9.8/29.7 per cent of a run's elapsed time at P50/P95 — and then the
+required-set share. Neither is a per-decision quantity, so neither belongs in a
+row of per-decision medians, and **both are now the RQ3 prose's**. Say the cost
+is "visible but bounded"; never "negligible".
+
+There is a mechanical reason too. A block label is a single unwrappable line in
+an `l` multicolumn spanning every column, so its natural width is a floor on
+`sum(p-widths) + 2n·tabcolsep`. A label approaching `\columnwidth` drives
+`\fittabcolsep` to a tabcolsep near zero and every data cell in the block then
+touches its group rule; an earlier revision carried the cost on (b)'s labels and
+did exactly that.
 
 Emitted as `data/rq3/estimator/sizing_summary.csv`, except the per-run cost,
 which is `burstDelaySharePercent` in `data/rq3/policy/summary.csv`.
@@ -310,14 +321,44 @@ Units live in the group headers, `(ms)` and `(%)`. **\(d^{*}\) is no longer
 defined in the table** — the caption is one line, and the RQ3 prose carries
 \(d^{*}=\lceil[B+2C-\max(0,T)]^{+}/2\rceil\). That prose must introduce it before
 the table is read; if it ever drops the formula, put it back in the note beside
-\(d^{*}_{\mathrm{man}}\), not in the caption. The note glosses
-\(d^{*}_{\mathrm{man}}\), the two hatted
-errors and what each is normalised by, which population each error column is a
-median over, \(d/B\) and *inside* \(B\), and then carries the per-run pacing
-cost, the sub-1%-slack tail, and the closed-loop caveat. The last three are not
-symbol definitions and are not optional: the tail is required by `AGENTS.md`, the
-population clause is what keeps each statistic attached to its own population,
-and the caveat is the claim limit. Nothing else belongs in it.
+\(d^{*}_{\mathrm{man}}\), not in the caption.
+
+**The note's admission rule.** It carries only what a printed cell cannot be read
+without, which is now four things: the gloss on \(d^{*}_{\mathrm{man}}\), which
+appears as a row label; what the two `(%)` error columns are a share of, and that
+each ratio is per decision before the median; which population each error column
+is a median over, class-wide in (a) and paced-only in (b); and \(d/B\) with
+*inside* \(B\). That is the whole note — three sentences.
+
+A finding is not a reading aid. If a cell stays legible without the sentence, the
+sentence is prose — that test evicted the per-run pacing cost, the "no analyzed
+run produced an observed Capture Timeout" clause, and finally the thin-slack
+tail, and it is what took this note from nine lines to three. Anything readded
+has to pass it.
+
+**The thin tail was the hard case, and it left.** It was kept through one round
+on the argument that it is how `Slack P5` is read rather than a finding beside
+the table. That argument does not survive checking which population the number
+belongs to. The 0.11% is the minimum of the *no-delay-required* class, which (a)
+excludes and (b) prints no Slack column for — so it is the minimum of **no column
+the table prints**, and 6 of the 11 sub-1% decisions sit in that same unprinted
+class. On the rows (a) does print, P5 understates the class minimum by 1.03x to
+4.1x:
+
+| Printed row | class min | `Slack P5` |
+|---|---:|---:|
+| 12MP \(d\ge d^{*}\) | 0.31 | 1.03 |
+| 12MP \(d^{*}_{\mathrm{man}}\le d<d^{*}\) | 1.91 | 2.61 |
+| 24MP \(d\ge d^{*}\) | 0.61 | 2.48 |
+| 24MP \(d^{*}_{\mathrm{man}}\le d<d^{*}\) | 0.51 | 1.20 |
+| 24MP \(d<d^{*}_{\mathrm{man}}\) | 4.39 | 4.53 |
+
+The 65x gap that once justified keeping it — 0.11 against 7.20 — is min against
+P5 *within the unprinted class*, not a gap in anything the reader sees. So the
+printed column is not being misread without the sentence, and the tail is a
+finding. It is still an important one: `AGENTS.md` now puts it in the RQ3 prose
+with the saturation context and the claim limit attached, and the requirement
+that it never stand as a bare number.
 
 **Which quantity gets which unit.** The rule protects one thing: the Capture
 Timeout budget is an internal constant and must not be recoverable, which it
@@ -620,8 +661,11 @@ these eleven. The last is an RQ1 question and belongs to the controller-off and
 pacing-only arms of the RQ1 ablation. The supportable statement is that the thin
 tail is 0.29% of decisions, that it coincides with a nearly exhausted budget
 rather than with controller inaction, and that both controls were engaged
-throughout it. The table note prints the short form of exactly that, and the RQ3
-prose should not weaken it into "negligible".
+throughout it. **The RQ3 prose has to make that statement itself** — the table
+note carried a short form of it through one revision and no longer does, for the
+population reason given under *The note's admission rule* above. Do not weaken it
+into "negligible", and do not let the 0.11% appear without the saturation context
+in the same breath.
 
 ### Where the thin tail sits relative to the guard-bypassed baseline
 

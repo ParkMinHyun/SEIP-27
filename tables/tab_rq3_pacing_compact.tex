@@ -222,23 +222,33 @@
 % closer to timing out, and do not let the ordering of the rows imply it.
 %
 % ---------------------------------------------------------------------------
-% The realized slack tail, and why the note carries it instead of a min column
+% The realized slack tail, and why this table reports none of it
 % ---------------------------------------------------------------------------
-% An earlier revision printed min AND P5 as two columns.  The minimum on the
-% largest class is 0.11% of the budget against a P5 of 7.20%, a factor of 65, and
-% printed as a column with nothing beside it that single number reads as "no
-% Capture Timeout was luck".  The COLUMN is gone; the NUMBER is not.  AGENTS.md
-% requires the worst observation to stay printed -- P5 alone hides it, and it is
-% the first thing an industrial reviewer asks for -- so the note states the 0.11%
-% itself, next to the tail count and, in the same sentence, what explains it.
-% All three halves must travel together.  Dropping the minimum would be trimming
-% a safety tail; dropping the count would understate it; dropping the backlog
-% context would leave a bare admission with no rebuttal.
+% This table prints Slack P5 per class and nothing else about the tail: no min
+% column, and no sentence in the note.  The RQ3 PROSE owns the minimum.  Both
+% halves of that were argued over more than once, so both are recorded.
 %
-% Do not restore it as a column.  Per class the statistic is not always the one
-% that carries the tail: on the 14-decision floor block the min and P5 are 4.39
-% and 4.53, where the minimum adds nothing, and which of the two is informative
-% depends on the class n.  A prose sentence can say that; a column cannot.
+% No min COLUMN.  An earlier revision printed min and P5 side by side.  Per
+% class the minimum is not always the statistic that carries the tail -- on the
+% 14-decision floor block min and P5 are 4.39 and 4.53, where it adds nothing --
+% and which of the two is informative depends on the class n.  A sentence can
+% say that; a column cannot.  A bare min column also reads as "no Capture
+% Timeout was luck", with nothing beside it to answer that.
+%
+% No sentence in the NOTE either, which is the later and less obvious call.  It
+% looks like a gloss on Slack P5 and is not one: the 0.11% is the minimum of the
+% no-delay-required class, which (a) excludes and (b) prints no Slack column
+% for, so it is the minimum of NO column this table prints.  6 of the 11 sub-1%
+% decisions sit in that same unprinted class.  On the rows (a) does print, P5
+% understates the class minimum by only 1.03x to 4.1x -- 1.03 against 0.31, 2.61
+% against 1.91, 2.48 against 0.61, 1.20 against 0.51, 4.53 against 4.39 -- so
+% the printed column is not being misread without it.  The 65x figure that once
+% justified keeping it, 0.11 against 7.20, is min against P5 WITHIN that
+% unprinted class and is invisible to the reader either way.
+%
+% None of that makes the tail unimportant; it makes it a finding rather than a
+% reading aid, and AGENTS.md now requires the prose to carry it with the
+% saturation context and the claim limit attached.  The facts are below.
 %
 % Eleven of the 3,781 analyzed decisions finished under 1% of the budget, 6 at
 % 12MP and 5 at 24MP (deadline_margin_under_1pct per class in
@@ -410,7 +420,10 @@
   %   12  "P50" 11.3                    14  "max" 12.8
   %   23  "P5 (\%)" 22.1                21  "$\hat C-C$" 19.6 / "$-29.6$" 20.6
   %   21  "$\hat B-B$" 19.9
-  % Sum 203pt, so \fittabcolsep lands tabcolsep near 3.1pt.  A header line wider
+  % Sum 203pt plus four rules, so \fittabcolsep lands tabcolsep near 3.0pt.
+  % Column one is ruled off from Decisions: every other group in the header is
+  % bounded by a rule, and without one the conditions ran into the counts.
+  % A header line wider
   % than its p{} value inside a \makecell OVERFLOWS rather than wrapping, and a
   % plain-text cell wider than it silently wraps to two lines; both happened in
   % an earlier draft at 54pt.  Re-measure before changing any label.
@@ -421,7 +434,7 @@
   % these cells -- "53 (67.1\%)" carries one already, and the error columns
   % declare theirs in the group header, which is what keeps them at 21pt.
   \begin{tabular}{@{}%
-      >{\raggedright\arraybackslash}p{46pt}%  coverage condition
+      >{\raggedright\arraybackslash}p{46pt}|% coverage condition
       >{\raggedleft\arraybackslash}p{33pt}%   decisions n (%)
       >{\raggedleft\arraybackslash}p{33pt}|%  paced n (%)
       >{\raggedleft\arraybackslash}p{12pt}%   unapplied P50
@@ -440,10 +453,10 @@
     % centres the \makecell box in the 60pt parbox; the DATA in this column
     % stays flush left, because the row labels are read as a list.
     \multirow[c]{2}{=}[-2.7pt]{\centering\textbf{Coverage}}
-      & \multicolumn{2}{c|}{\textbf{Decisions}}
+      & \multicolumn{2}{c|}{\textbf{Pacing Decisions}}
       & \multicolumn{2}{c|}{\makecell[c]{\textbf{Unapplied}\\%
         $d^{*}\!-\!d$ \textbf{(ms)}}}
-      & \multicolumn{1}{c|}{\textbf{Slack}}
+      & \multicolumn{1}{c|}{\textbf{Slack P5}}
       & \multicolumn{2}{c}{\makecell[c]{\textbf{Decision-time}\\%
         \textbf{error P50 (\%)}}} \\
     \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(l){7-8}
@@ -451,18 +464,21 @@
       & \multicolumn{1}{c|}{\textbf{paced}}
       & \multicolumn{1}{c}{\textbf{P50}}
       & \multicolumn{1}{c|}{\textbf{max}}
-      & \multicolumn{1}{c|}{\textbf{P5 (\%)}}
+      & \multicolumn{1}{c|}{\textbf{(\%)}}
       & \multicolumn{1}{c}{$\hat{C}\!-\!C$}
       & \multicolumn{1}{c}{$\hat{B}\!-\!B$} \\
     \midrule
 
     % ------------------------------------------------------------- 12MP normal
-    % The label keeps the denominator: with (a) restricted to the required set,
-    % 79/1,920 here and 350/1,841 in (b) are the only remaining path back to the
-    % 1,920 analyzed decisions.  The paced count that used to follow it is gone
-    % because it is the Paced column's own sum (53+8 and 83+11+3).
-    \multicolumn{8}{@{}l}{\textbf{12MP, normal} --- 79 of 1{,}920 decisions
-      required a delay (4.1\%)} \\
+    % Condition only, as in (b).  The label used to read "79 of 1,920 decisions
+    % required a delay (4.1%)" and carried three numbers that the table either
+    % repeats or the prose owns: 79 is this block's own row sum (53+26+0), the
+    % 4.1% share is a sentence of the RQ3 narrative rather than a cell, and the
+    % analyzed total stays recoverable as (b)'s 1,841 plus that row sum.  The
+    % paced count that once followed it was likewise the Paced column's sum.
+    % Keep the labels at the condition: a block label is a single unwrappable
+    % line spanning every column, so it is a floor on the table's width.
+    \multicolumn{8}{@{}l}{\textbf{12MP, normal}} \\
     \addlinespace[1pt]
     $d\ge d^{*}$              & 53 (67.1\%) & 53 (100\%)
       &   0 &   0 & 1.03 & $+41.4$ &  $-0.1$ \\
@@ -475,8 +491,7 @@
     \midrule
 
     % ---------------------------------------------------- 24MP memory pressure
-    \multicolumn{8}{@{}l}{\textbf{24MP, mem.\ pressure} --- 140 of 1{,}861
-      decisions required a delay (7.5\%)} \\
+    \multicolumn{8}{@{}l}{\textbf{24MP, mem.\ pressure}} \\
     \addlinespace[1pt]
     $d\ge d^{*}$              & 83 (59.3\%) & 83 (100\%)
       &   0 &   0 & 2.48 & $+44.4$ &  $-1.6$ \\
@@ -548,7 +563,7 @@
   % second line, which no overfull warning reports.  Check this column by eye
   % after any change to it.
   \begin{tabular}{@{}%
-      >{\raggedright\arraybackslash}p{47pt}%  population condition
+      >{\raggedright\arraybackslash}p{47pt}|% population condition
       >{\raggedleft\arraybackslash}p{16pt}%   source-class n
       >{\raggedleft\arraybackslash}p{36pt}|%  paced n (%)
       >{\raggedleft\arraybackslash}p{34pt}|%  delay dstar -> d
@@ -572,7 +587,7 @@
     % column.  Keep n: with (a) restricted to the required set, 1,841 and 1,721
     % here are half of the only remaining path to the analyzed totals.
     \multirow[c]{2}{=}[-2.7pt]{\centering\textbf{Population}}
-      & \multicolumn{2}{c|}{\textbf{Decisions}}
+      & \multicolumn{2}{c|}{\textbf{Pacing Decisions}}
       & \multicolumn{1}{c|}{\makecell[c]{\textbf{Delay P50}\\\textbf{(ms)}}}
       & \multicolumn{2}{c|}{\makecell[c]{\textbf{Decision-time}\\%
         \textbf{error P50 (\%)}}}
@@ -620,20 +635,53 @@
   %   the queue relation           r = 0.95 and 0.88 between the summed per-Draft
   %                                pricing error and the backlog clock error
   %   the floor repricing          at or above the floor on 11 of 14 misses
+  %   how often a delay was needed 79 of 1,920 (4.1%) and 140 of 1,861 (7.5%).
+  %                                Was on (a)'s block labels.  It is the first
+  %                                thing the narrative says -- pacing addresses a
+  %                                tail, it is not a fixed per-capture delay.
+  %   the responsiveness cost      18.1/24.5% and 9.8/29.7% of a run's elapsed
+  %                                time at P50/P95.  Was in the note.  Say
+  %                                "visible but bounded", never "negligible".
+  %   the thin realized-slack tail 11 of 3,781 decisions under 1% of the budget;
+  %                                the tightest kept 0.11%, which is 8 ms, on
+  %                                12MP run 2#21 shot 10 at overheat 5.  Was in
+  %                                the note until it was found to describe a
+  %                                population the table prints no Slack for --
+  %                                see below.  The prose OWNS this number now
+  %                                and must carry three things with it: the
+  %                                saturation that explains it (backlog already
+  %                                42-79% of the budget, queue wait 31-75%,
+  %                                overheat 5-6 or late in a burst), that pacing
+  %                                or an optional-work skip was engaged on all
+  %                                eleven, and the claim limit -- realized slack
+  %                                is an outcome and not a bound, and what a
+  %                                baseline would have done is RQ1's question.
+  %                                Row-by-row facts: thin_margin_tail.csv.
+  %
+  % Why the tail is prose and not a note.  It reads like a gloss on Slack P5 but
+  % it is not one.  The 0.11% is the minimum of the no-delay-required class,
+  % which (a) does not contain and (b) prints no Slack column for, so it is the
+  % minimum of NO column this table prints; 6 of the 11 thin decisions sit in
+  % that same invisible class.  On the rows (a) does print, P5 understates the
+  % class minimum by only 1.03x to 4.1x -- 1.03 against 0.31, 2.61 against 1.91,
+  % 2.48 against 0.61, 1.20 against 0.51, 4.53 against 4.39 -- so the printed
+  % column is not being misread without the sentence.  The 65x figure that once
+  % justified keeping it (0.11 against 7.20) is min against P5 WITHIN the
+  % invisible class.  It is a real and important finding; it is just not a
+  % reading aid, which is the only thing this note is for.
+  %
+  % THE NOTE'S RULE.  It carries only what a printed cell cannot be read without:
+  % the gloss on a symbol that appears in a row or a header, what the (%) columns
+  % are a share of, and which population each error is a median over.  A finding
+  % is not a reading aid -- if a cell is still legible without the sentence, the
+  % sentence is prose.  All three entries above failed that test and left.
   \par\vspace{3pt}
   {\tiny\raggedright
-  $d^{*}_{\mathrm{man}}$ is the part of $d^{*}$ that the mandatory Draft work
-  alone requires.  $\hat{C}$ and $\hat{B}$ are the Draft reserve and the backlog clock
-  held at the decision, so each error is estimate minus realized, as a share of
-  the quantity it estimates and taken per decision before the median: class-wide
-  in~(a), over the paced decisions alone in~(b).  $d/B$ is the delay as a share
-  of the Draft work still outstanding while it ran, and \emph{inside} $B$ the
-  share of the delay that elapsed against that work.  Pacing consumed 18.1 /
-  24.5\% and 9.8 / 29.7\% of a run's elapsed time at P50 / P95.  Eleven of the
-  3{,}781 decisions finished under 1\% slack and the tightest kept 0.11\%; on
-  all eleven the backlog already held 42--79\% of the budget and pacing or an
-  optional-work skip was engaged.  No analyzed run produced an observed Capture
-  Timeout; realized slack is an outcome and not a deterministic bound, and
-  pacing is closed-loop, so nothing here is a counterfactual.\par}
+  $d^{*}_{\mathrm{man}}$ uses $C$'s mandatory part alone.  $\hat{C}-C$ and
+  $\hat{B}-B$ are estimate minus realized at the decision, each as a share of
+  what it estimates and taken per decision before the median: class-wide in~(a),
+  paced only in~(b).  $d/B$ is the delay over the Draft work still outstanding
+  while it ran, and \emph{inside} $B$ the share of the delay that elapsed
+  against that work.\par}
   }
 \end{table}
