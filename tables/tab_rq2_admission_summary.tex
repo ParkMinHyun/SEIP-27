@@ -96,87 +96,262 @@
 %
 % Every audit count carries the share of its own factual class, so the two
 % Feasible-work cells sum to 100% and the two Unsafe-work cells sum to 100%.
+%
+% ---------------------------------------------------------------------------
+% Why this is two stacked blocks and not one wide row
+% ---------------------------------------------------------------------------
+% Earlier revisions printed a full-width table* whose header put "Controller-
+% enforced runs" and "Always-admit model audit" side by side over eleven
+% columns, with Condition and Group as two leading columns repeated down every
+% row.  Three problems, all fixed by the split, which follows
+% tables/tab_rq3_pacing_compact.tex:
+%
+%   1. The two halves are DIFFERENT POPULATIONS.  (a) is the balanced Full arm;
+%      (b) is a disjoint Pacing-only pool with its own denominators (882 per
+%      group at 12MP, 996 / 986 at 24MP) and its own selection caveat.  Printed
+%      on one row they read as one decision set measured two ways, which is the
+%      single most misleading thing this table could do.  As two blocks with
+%      their own headings each population is stated where its numbers are, which
+%      is the rule AGENTS.md states for the RQ3 table and applies here verbatim.
+%   2. Condition stopped being a column.  It is a spanning block label -- 12MP,
+%      normal and 24MP, mem. pressure -- exactly as in the RQ3 table, so both
+%      blocks lose a \multirow column and Group becomes the row label.  That is
+%      what lets an eleven-column table* become two blocks inside \columnwidth.
+%   3. The stacked \makecell cells are gone.  "59.9%" over "[1,258 of 2,100]"
+%      needed two lines and a bracket convention; "$n$ | admitted" as two
+%      sub-columns under one \cmidrule group prints the same two numbers on one
+%      line each, which is the RQ3 rule that a paired quantity gets sub-columns
+%      rather than a separator inside one cell.  The one place the count and its
+%      share stay together is "1,258 (59.9%)", because a share OF ITS OWN COUNT
+%      is not a second statistic.
+%
+% ---------------------------------------------------------------------------
+% WHAT THE RQ2 PROSE MUST NOW CARRY
+% ---------------------------------------------------------------------------
+% This table deliberately has NO note; the author's decision is that these
+% belong in the body text.  They are not optional, and none of them is
+% recoverable from the cells, so Section RQ2 has to state them before or beside
+% the table:
+%
+%   the two populations   (a) is the balanced Full arm, 70 runs / 2,100 captures
+%                         at 12MP and 73 / 2,116 at 24MP.  (b) is a DISJOINT
+%                         Pacing-only pool, 882 decisions per group at 12MP and
+%                         996 Multi-frame / 986 Single-frame at 24MP.  Without
+%                         this the two blocks read as one decision set measured
+%                         twice, which is the error the split exists to prevent.
+%   the audit's design    (b) scores the fresh shadow-model admit/skip decision,
+%                         taken before session-sticky demotion, against the
+%                         factual outcome; its counts are shares of their own
+%                         factual class and sum to 100% within each.
+%   the selection caveat  (b)'s 0803 part is a starting-overheat-level subset and
+%                         is NOT outcome-neutral; at 24MP the level rule alone
+%                         removes that source's entire unsafe-admitted
+%                         population.  The block comment above owns the detail.
+%   the two medians       Skip margin and skip overrun are medians over the model
+%                         skips of that factual class, as a share of the internal
+%                         Capture Timeout deadline, whose value is not reported.
+%   the group definition  Each capture contributes at most one decision per
+%                         optional-work group: Multi-frame = Bokeh, Single-frame
+%                         = Filter.
+%
+% To restore a full-width float, change table -> table* and both \columnwidth
+% arguments of \fittabcolsep -> \textwidth; the column widths below are measured
+% against 252pt and would then need re-measuring.
+%
+% ---------------------------------------------------------------------------
+% Layout mechanics (same as tables/tab_rq3_pacing_compact.tex)
+% ---------------------------------------------------------------------------
+% \fittabcolsep solves for the \tabcolsep that lands the outer rules on
+% \columnwidth, so the two blocks agree with each other and with the column.
+% Its fourth argument is 2 x the number of columns: 10 for (a), 14 for (b).
+% Every p{} width below is the measured maximum of its own data and its own
+% header at \scriptsize; a header line wider than its p{} value inside a
+% \makecell OVERFLOWS, and a plain cell wider than it silently WRAPS with no
+% warning.  Re-measure with \settowidth before changing any label.
+%
+% (a) sums to 216pt of content in 252pt and (b) to 224pt, so their \tabcolsep
+% lands near 3.5pt and 2.3pt.  The two blocks read as one exhibit because those
+% are close; when (a) carried a single unsafe column it sat at 192pt and 7.4pt
+% and visibly did not match (b).  Splitting the unsafe admits was done for
+% correctness, but it paid for itself in the layout as well.
 
-\begin{table*}[!t]
+\begin{table}[t]
   \centering
   \setlength{\abovecaptionskip}{2pt}%
-  \setlength{\belowcaptionskip}{2pt}%
-  \caption{Admission rate, safety, and fresh-model audit of admission decisions.}
+  \setlength{\belowcaptionskip}{3pt}%
+  % One line, as in Table~\ref{tab:rq3_pacing_compact}.  "TABLE N: " plus the
+  % caption text must clear \columnwidth = 252pt at \footnotesize: the previous
+  % wording, "Admission rate, safety, and fresh-model audit of admission
+  % decisions.", measures 269pt with the prefix and wrapped onto a second line.
+  % This one measures 210pt.  Re-measure before adding a word.
+  \caption{RQ2: admission rate, safety, and fresh-model audit.}
   \label{tab:rq2_admission_audit}
-  {\footnotesize
+
+  {\scriptsize
   \renewcommand{\arraystretch}{1.12}%
-  \newsavebox{\rqtwobox}%
-  \newcommand{\rqtwotabular}{%
-  \begin{tabular}{|c|l|r|r|r|r|r|r|r|r|r|}
-    \hline
-    \multirow{3}{*}[-0.6ex]{\textbf{Condition}} &
-    \multicolumn{1}{c|}{\multirow{3}{*}[-0.6ex]{\textbf{Group}}} &
-    \multicolumn{3}{c|}{\textbf{Controller-enforced runs}} &
-    \multicolumn{6}{c|}{\textbf{Always-admit model audit}} \\
-    \cline{3-11}
-    & &
-    \multicolumn{1}{c|}{\multirow{2}{*}[-0.6ex]{\makecell[c]{\textbf{Admit rate}}}} &
-    \multicolumn{1}{c|}{\multirow{2}{*}[-0.6ex]{\makecell[c]{\textbf{Successful}\\\textbf{admits}}}} &
-    \multicolumn{1}{c|}{\multirow{2}{*}[-0.6ex]{\makecell[c]{\textbf{Unsafe}\\\textbf{admits}}}} &
-    \multicolumn{3}{c|}{\textbf{Feasible work}} &
-    \multicolumn{3}{c|}{\textbf{Unsafe work}} \\
-    \cline{6-11}
-    & & & & &
-    \multicolumn{1}{c|}{\textbf{Admitted}} &
-    \multicolumn{1}{c|}{\textbf{Skipped}} &
-    \multicolumn{1}{c|}{\makecell[c]{\textbf{Skip margin}}} &
-    \multicolumn{1}{c|}{\textbf{Admitted}} &
-    \multicolumn{1}{c|}{\textbf{Skipped}} &
-    \multicolumn{1}{c|}{\makecell[c]{\textbf{Skip overrun}}} \\
-    \hline
-    \multirow{2}{*}[-0.6ex]{\makecell[c]{12MP\\normal}}
-      & Multi-frame
-      & \makecell[r]{59.9\%\\{\scriptsize [1,258 of 2,100]}}
-      & \makecell[r]{99.9\%\\{\scriptsize [1,257]}}
-      & \makecell[r]{0.1\%\\{\scriptsize [1 watchdogs]}}
-      & \makecell[r]{831\\{\scriptsize (98.1\%)}}
-      & \makecell[r]{16\\{\scriptsize (1.9\%)}}
-      & $+1.2\%$
-      & \makecell[r]{2\\{\scriptsize (5.7\%)}}
-      & \makecell[r]{33\\{\scriptsize (94.3\%)}}
-      & $-3.0\%$ \\
-    \cline{2-11}
-      & Single-frame
-      & \makecell[r]{92.2\%\\{\scriptsize [1,936 of 2,099]}}
-      & \makecell[r]{100.0\%\\{\scriptsize [1,936]}}
-      & \makecell[r]{0.0\%\\{\scriptsize [0]}}
-      & \makecell[r]{842\\{\scriptsize (99.4\%)}}
-      & \makecell[r]{5\\{\scriptsize (0.6\%)}}
-      & $+0.7\%$
-      & \makecell[r]{0\\{\scriptsize (0.0\%)}}
-      & \makecell[r]{35\\{\scriptsize (100.0\%)}}
-      & $-3.5\%$ \\
-    \hline
-    \multirow{2}{*}[-0.6ex]{\makecell[c]{24MP\\memory pressure}}
-      & Multi-frame
-      & \makecell[r]{60.3\%\\{\scriptsize [1,276 of 2,116]}}
-      & \makecell[r]{99.8\%\\{\scriptsize [1,274]}}
-      & \makecell[r]{0.2\%\\{\scriptsize [2 watchdogs]}}
-      & \makecell[r]{892\\{\scriptsize (94.7\%)}}
-      & \makecell[r]{50\\{\scriptsize (5.3\%)}}
-      & $+2.6\%$
-      & \makecell[r]{1\\{\scriptsize (1.9\%)}}
-      & \makecell[r]{53\\{\scriptsize (98.1\%)}}
-      & $-3.2\%$ \\
-    \cline{2-11}
-      & Single-frame
-      & \makecell[r]{84.7\%\\{\scriptsize [1,791 of 2,114]}}
-      & \makecell[r]{100.0\%\\{\scriptsize [1,791]}}
-      & \makecell[r]{0.0\%\\{\scriptsize [0]}}
-      & \makecell[r]{905\\{\scriptsize (97.1\%)}}
-      & \makecell[r]{27\\{\scriptsize (2.9\%)}}
-      & $+1.6\%$
-      & \makecell[r]{2\\{\scriptsize (3.7\%)}}
-      & \makecell[r]{52\\{\scriptsize (96.3\%)}}
-      & $-3.4\%$ \\
-    \hline
+  \newsavebox{\rqtwoenfbox}%
+  \newsavebox{\rqtwoaudbox}%
+
+  % =====================================================================
+  % (a)  Controller-enforced runs: the balanced Full arm
+  % =====================================================================
+  % A heading is a centred paragraph at \columnwidth, so anything wider than
+  % about 254pt at \scriptsize wraps and strands its last word on a centred
+  % second line.  "how much optional work was admitted, and was it safe?"
+  % measures 266pt and cannot be set on one line at this size; "ran" carries the
+  % same meaning in 236pt, and "admitted" is the column header directly beneath
+  % it, so nothing is lost.  Measure before lengthening either heading -- (b) is
+  % at 254pt and has no room at all.
+  \textbf{(a) Controller-enforced runs: how much optional work ran, and was it
+  safe?}%
+  \par\vspace{1pt}
+  \newcommand{\rqtwoenftabular}{%
+  % Measured at \scriptsize against \columnwidth = 252pt:
+  %   46  "Single-frame" 36.5      (header "Group" is only 19.7)
+  %   20  "2{,}100" 15.8           (header "$n$" is only 4.9)
+  %   46  "1{,}258 (59.9\%)" 40.9  (header "admitted" is only 26.8)
+  %   46  "1{,}257 (99.9\%)" 40.9  (header "successful" is 29.6)
+  %   32  "watchdog" 28.8          (the header binds; "1 (0.1\%)" is 25.2)
+  % "Admission Decisions" measures 68pt over an 83pt span, "Admitted outcomes"
+  % 59.0pt over an 93pt span.
+  %
+  % WHY THERE IS NO "OVERRUN" COLUMN, AND NO "unsafe (watchdog)" EITHER.  Two
+  % revisions failed here in opposite directions, and a regeneration settles it.
+  %   The first printed one column headed "unsafe" over "(watchdog)".  That reads
+  % as a DEFINITION of unsafe when it only named which cause had fired:
+  % enforced_cells in scripts/rq2_admission_metrics.py defines an unsafe admit as
+  % beforeWatchdogTimedOut OR (cost > budget).
+  %   The second split it into "watchdog" and "overrun" to state the second term
+  % rather than imply it.  That is worse, for a reason worth recording: the
+  % script's overrun is `not watchdog AND cost > budget', so the classification is
+  % WATCHDOG-FIRST, and the column is not "admits that exceeded the budget" but
+  % "admits that exceeded the budget and were not already claimed by the
+  % watchdog".  Printed beside "successful" it invites the reading that the two
+  % columns partition the admits by the budget test.  They do not.
+  %   The measurement decides it.  On BOTH Full sources -- A3
+  % (data/ablation_sampling, the published one) and A2 (data/ablation_original,
+  % untrimmed) -- the [C>B] count is ZERO on all four rows, and the two watchdog
+  % events at 24MP were WITHIN budget.  The watchdog fires on a predicted overrun,
+  % not a realized one, which is the same behaviour
+  % Table~\ref{tab:rq1_controller_behavior}'s aggregation note records from the
+  % other side: its two watchdog captures still had 9 ms and 53 ms of margin left.
+  % So the flag is ORTHOGONAL to the budget test, not a severity step above it,
+  % and a genuine budget partition would print "within budget" identical to
+  % "admitted" beside an all-zero column.  Two redundant columns are not an
+  % improvement on one wrong one.
+  %   What survives is the honest pair: successful and watchdog sum to admitted
+  % exactly, and each label names an event instead of redefining a term.  "No
+  % admitted Draft exceeded its budget in either condition" is a real result and
+  % belongs in the RQ2 prose, stated once, rather than spelled as a column of
+  % zeros.
+  \begin{tabular}{@{}%
+      >{\raggedright\arraybackslash}p{48pt}|% optional-work group
+      >{\raggedleft\arraybackslash}p{22pt}%   decisions n
+      >{\raggedleft\arraybackslash}p{48pt}|%  admitted n (%)
+      >{\raggedleft\arraybackslash}p{48pt}%   successful n (%)
+      >{\raggedleft\arraybackslash}p{32pt}%   watchdog n (%)
+    @{}}
+    \toprule
+    % Both header rows are one line, so \multirow[c]{2} centres on the header
+    % without an offset; (b) needs one because its second row is two lines.
+    \multirow[c]{2}{=}{\centering\textbf{Group}}
+      & \multicolumn{2}{c|}{\textbf{Admission Decisions}}
+      & \multicolumn{2}{c}{\textbf{Admitted outcomes}} \\
+    \cmidrule(lr){2-3}\cmidrule(l){4-5}
+      & \multicolumn{1}{c}{$n$}
+      & \multicolumn{1}{c|}{\textbf{admitted}}
+      & \multicolumn{1}{c}{\textbf{successful}}
+      & \multicolumn{1}{c}{\textbf{watchdog}} \\
+    \midrule
+
+    % ------------------------------------------------------------- 12MP normal
+    % successful + watchdog = admitted on every row, and the two shares sum to
+    % 100.0.  Keep it that way: it is the only check a reader has.
+    \multicolumn{5}{@{}l}{\textbf{12MP, normal}} \\
+    \addlinespace[1pt]
+    Multi-frame  & 2{,}100 & 1{,}258 (59.9\%) & 1{,}257 (99.9\%)  & 1 (0.1\%) \\
+    Single-frame & 2{,}099 & 1{,}936 (92.2\%) & 1{,}936 (100.0\%) & 0 (0.0\%) \\
+    \midrule
+
+    % ---------------------------------------------------- 24MP memory pressure
+    \multicolumn{5}{@{}l}{\textbf{24MP, mem.\ pressure}} \\
+    \addlinespace[1pt]
+    Multi-frame  & 2{,}116 & 1{,}276 (60.3\%) & 1{,}274 (99.8\%)  & 2 (0.2\%) \\
+    Single-frame & 2{,}114 & 1{,}791 (84.7\%) & 1{,}791 (100.0\%) & 0 (0.0\%) \\
+    \bottomrule
   \end{tabular}}%
-  \fittabcolsep{\rqtwobox}{\rqtwotabular}{\textwidth}{22}%
-  \rqtwotabular
+  \fittabcolsep{\rqtwoenfbox}{\rqtwoenftabular}{\columnwidth}{10}%
+  \rqtwoenftabular
+
+  % =====================================================================
+  % (b)  Always-admit model audit: the disjoint Pacing-only pool
+  % =====================================================================
+  % The factual class -- Feasible work or Unsafe work -- is the column group;
+  % the fresh model's own decision is the sub-column.  Admitted and Skipped are
+  % therefore shares of the SAME factual class and sum to 100% across each
+  % group, which is the check a reader should be able to run on every row.
+  %
+  % The Unsafe-work Admitted cells are bold: they are the audit's failure mode --
+  % work the fresh model would have let through although it overran -- and they
+  % are the four cells Figure~\ref{fig:rq2_unsafe_spike_anatomy} then takes apart
+  % one decision at a time.  Bold at \scriptsize widens "2 (5.7\%)" from 25.2 to
+  % 26.5pt, still inside the 29pt the header "Admitted" already demands, so the
+  % emphasis costs no width.  Nothing else in either block is bold, which is what
+  % makes it read as emphasis rather than as another header level.
+  \par\vspace{5pt}
+  \textbf{(b) Always-admit model audit: what the fresh model decided in each
+  factual class.}%
+  \par\vspace{1pt}
+  \newcommand{\rqtwoaudtabular}{%
+  % Measured the same way:
+  %   44  "Single-frame" 36.5      36  "892 (94.7\%)" 35.7 / "35 (100.0\%)" 35.7
+  %   29  "50 (5.3\%)" 28.7        29  "Admitted" 28.4 (the header binds here)
+  %   24  "Skip"/"margin" 22.5     26  "Skip"/"overrun" 26.0
+  % Sum 224pt, so \tabcolsep lands near 2.3pt -- this block is the tight one and
+  % is what to check by eye after any label change.
+  \begin{tabular}{@{}%
+      >{\raggedright\arraybackslash}p{44pt}|% optional-work group
+      >{\raggedleft\arraybackslash}p{36pt}%   feasible, model admits
+      >{\raggedleft\arraybackslash}p{29pt}%   feasible, model skips
+      >{\raggedleft\arraybackslash}p{24pt}|%  median skip margin
+      >{\raggedleft\arraybackslash}p{29pt}%   unsafe, model admits
+      >{\raggedleft\arraybackslash}p{36pt}%   unsafe, model skips
+      >{\raggedleft\arraybackslash}p{26pt}%   median skip overrun
+    @{}}
+    \toprule
+    % Row one is one line and row two is two, so the spanning label is centred
+    % with \multirow[c]{2} plus an offset of half of row two's extra line.
+    \multirow[c]{2}{=}[-2.7pt]{\centering\textbf{Group}}
+      & \multicolumn{3}{c|}{\textbf{Feasible work}}
+      & \multicolumn{3}{c}{\textbf{Unsafe work}} \\
+    \cmidrule(lr){2-4}\cmidrule(l){5-7}
+      & \multicolumn{1}{c}{\textbf{Admitted}}
+      & \multicolumn{1}{c}{\textbf{Skipped}}
+      & \multicolumn{1}{c|}{\makecell[c]{\textbf{Skip}\\\textbf{margin}}}
+      & \multicolumn{1}{c}{\textbf{Admitted}}
+      & \multicolumn{1}{c}{\textbf{Skipped}}
+      & \multicolumn{1}{c}{\makecell[c]{\textbf{Skip}\\\textbf{overrun}}} \\
+    \midrule
+
+    % ------------------------------------------------------------- 12MP normal
+    \multicolumn{7}{@{}l}{\textbf{12MP, normal}} \\
+    \addlinespace[1pt]
+    Multi-frame  & 831 (98.1\%) & 16 (1.9\%) & $+1.2\%$
+      & \textbf{2 (5.7\%)} & 33 (94.3\%)  & $-3.0\%$ \\
+    Single-frame & 842 (99.4\%) &  5 (0.6\%) & $+0.7\%$
+      & \textbf{0 (0.0\%)} & 35 (100.0\%) & $-3.5\%$ \\
+    \midrule
+
+    % ---------------------------------------------------- 24MP memory pressure
+    \multicolumn{7}{@{}l}{\textbf{24MP, mem.\ pressure}} \\
+    \addlinespace[1pt]
+    Multi-frame  & 892 (94.7\%) & 50 (5.3\%) & $+2.6\%$
+      & \textbf{1 (1.9\%)} & 53 (98.1\%)  & $-3.2\%$ \\
+    Single-frame & 905 (97.1\%) & 27 (2.9\%) & $+1.6\%$
+      & \textbf{2 (3.7\%)} & 52 (96.3\%)  & $-3.4\%$ \\
+    \bottomrule
+  \end{tabular}}%
+  \fittabcolsep{\rqtwoaudbox}{\rqtwoaudtabular}{\columnwidth}{14}%
+  \rqtwoaudtabular
   }
-\end{table*}
+\end{table}

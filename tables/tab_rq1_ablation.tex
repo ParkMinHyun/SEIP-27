@@ -91,11 +91,13 @@
 %   Activated  100 * count(RQ3Pacing.transitionDelayMs > 0) / count(nonblank
 %              transitionDelayMs) over observed eligible outgoing-shot
 %              intervals; structurally 0 when the pacer is off
-%   Delay P50  inclusive P50 of positive RQ3Pacing.transitionDelayMs values over
+%   d P50      inclusive P50 of positive RQ3Pacing.transitionDelayMs values over
 %              observed eligible outgoing-shot intervals; -- when pacing is off.
-%              Named "Applied Delay P50" in Table~\ref{tab:rq1_controller_behavior};
-%              shortened here because the Pacing cost group header already
-%              disambiguates it and the single column is 28pt wide.
+%              d is the applied pacing delay, the same symbol
+%              Table~\ref{tab:rq3_pacing_compact} uses throughout and the same
+%              column Table~\ref{tab:rq1_controller_behavior} prints beside its
+%              Sigma-d; it is introduced in the prose of
+%              Section~\ref{sec:guard-limit} beside M and S.
 %
 % Sources per cell -- all four arms now live in this repository, so the table no
 % longer depends on a path in the private implementation clone.  Values are read
@@ -171,8 +173,8 @@
 %     retired the rule that dropped a watchdog-bearing run from the completion
 %     average, which was the sole cause.  See its own aggregation note for why.
 %     The two definitions would still diverge for any arm that FAILS, which is
-%     why the group header here says "delivered" rather than "completion" -- but
-%     that arm does not appear in Table~\ref{tab:rq1_controller_behavior}, so on
+%     why the group header here must NOT say "completion" -- but that arm does
+%     not appear in Table~\ref{tab:rq1_controller_behavior}, so on
 %     the overlap the two tables now agree by construction.  If a future edit
 %     makes a Full cell here disagree with that table's Lv4 row, something has
 %     changed in the run set, not in the metric.
@@ -221,39 +223,76 @@
   {\scriptsize
   \renewcommand{\arraystretch}{1.05}%
   % Explicit column widths rather than one uniform \tabcolsep.  Measured at
-  % \scriptsize, the binding content per column is: Condition 30.0pt (its own
-  % header), Configuration 45.2pt ("Admission only", which must not wrap),
-  % Survived runs 26.6pt, Captures 27.5pt (its own header), M and S 12.3pt of
-  % data each but 34.4pt jointly for the "Draft work" group header, Activated
-  % 28.6pt, Delay 27.1pt ("P50 (ms)").  The eight widths below sum to 233pt.
-  %   Dropping "on time" from the Captures header lowered that column's floor
-  % from 37.5pt to 27.5pt.  The freed 10pt was spent rather than returned to
-  % \tabcolsep, and the total is deliberately held at 233pt so the fitted
-  % \tabcolsep below does not move: 8pt to M and S (17pt each to 21pt each) and
-  % 1pt each to Survived runs and Captures.
-  %   M and S were the table's tight spot: at 17pt their raggedleft data sat
-  % about 2.5pt apart, so "29.0 29.0" read as one number; at 21pt the gap is
-  % about 11.6pt.  The 1pt each to columns 3 and 4 is for the header line, not
-  % the data -- "Survived" and "Captures" nearly fill their boxes (26.6 and
-  % 27.5pt), so at 27/28pt they sat about 3.7pt apart and read as the phrase
-  % "Survived Captures".  At 28/29pt that opens to about 5.7pt.  This is the
-  % same failure mode as "Activated Delay P50" described below, in a milder
-  % form: whenever two neighbouring headers each fill their column, the gap
-  % comes only from \tabcolsep and the words run together.
-  %   Two labels are deliberately short.  "Delay" replaces RQ1(a)'s "Applied
-  % Delay" because at 42.1pt that header alone costs 13pt more than the whole
-  % column needs, and the "Pacing cost" group above it already says which delay
-  % is meant.  "Draft work delivered" must break across two lines: on one line
-  % it measures about 65pt against the 34pt its two columns provide.
-  %   The break point of the last header is load-bearing, not cosmetic.  Split
-  % as "Delay P50" / "(ms)" its first line sits 1pt from "Activated" and the two
-  % headers read as the single phrase "Activated Delay P50" -- which is worse
-  % than merely tight, because "Applied Delay P50" is a real column name in
-  % Table~\ref{tab:rq1_controller_behavior}.  Splitting "Delay" / "P50 (ms)"
-  % puts a short word on the colliding line and opens the gap to about 8pt.
-  %   \fittabcolsep (macros.tex) spreads the 19pt remainder over the 14
+  % \scriptsize with \settowidth, the binding content per column is: Condition
+  % 30.0pt (its own header), Configuration 45.2pt ("Admission only", which must
+  % not wrap), Survived 26.6pt, Captures 27.5pt (both their own headers), M and
+  % S 15.8pt of data each ("100.0") but 34.4pt jointly for the "Draft work"
+  % group header, Activated 28.6pt (its own header), $d$ 18.7pt ("$d$ P50").
+  % The eight widths below sum to 229pt.
+  %
+  % THE READING RULE FOR THIS WHOLE BLOCK.  Every collision in this table is
+  % between two NEIGHBOURING HEADERS that each fill their own column.  When that
+  % happens the only thing separating them is 2 x \tabcolsep, and at the
+  % \tabcolsep this table can afford -- about 1.2pt -- two bold words 2.5pt apart
+  % read as one phrase.  The fix is never to add \tabcolsep, which is global and
+  % costs 14 gaps to buy one; it is to leave slack INSIDE the narrower of the two
+  % columns, because a \multicolumn{1}{c} header is centred and half of that
+  % slack lands in the gap.  Three pairs are managed this way, and the numbers
+  % below are the gaps they currently get.
+  %
+  % WHERE THE WIDTH CAME FROM.  Two header simplifications freed this column set
+  % in sequence, and both were spent rather than returned to \tabcolsep:
+  %   - Dropping "on time" from the Captures header took that column's floor from
+  %     37.5pt to 27.5pt.  8pt of the 10 went to M and S (17pt each to 21pt
+  %     each), which were the table's original tight spot: at 17pt their
+  %     raggedleft data sat about 2.5pt apart and "100.0 100.0" read as one
+  %     number, where at 21pt the gap is 5.3pt of column slack plus \tabcolsep,
+  %     about 7.7pt.  The other 2pt went to Survived and Captures, whose headers
+  %     nearly fill their boxes; they now clear each other by about 3.9pt.
+  %   - Naming the delay $d$ took the last column's floor from 31.8pt
+  %     ("delay (ms)") to 18.7pt.  That is 10.3pt of dead width in a 29pt column,
+  %     and it is the largest single piece of slack this table has ever had.  It
+  %     is spent three ways: 5pt returned to \tabcolsep, which lifts it from
+  %     0.91pt back to 1.24pt and so widens all fourteen gaps at once; 2pt to
+  %     Condition, whose centred header sat 3.0pt from "Configuration" and now
+  %     clears it by 4.0pt; and 1pt to Activated, which was the one column in the
+  %     table whose header was WIDER than its p{} value (28.6 against 28) and was
+  %     therefore silently widening itself through its \multicolumn{1}{c}.
+  %   The delay column keeps 3.3pt of the slack it gave up, as centring room:
+  % "Activated" and "$d$ P50" are the closest pair in the table, and half of that
+  % 3.3pt is what puts 4.3pt between them.  Do not shrink it to its 18.7pt floor.
+  %   The last header is the symbol $d$, not a word.  RQ3 prints the applied
+  % pacing delay as $d$ throughout Table~\ref{tab:rq3_pacing_compact}, and one
+  % quantity carries one printed name in this paper -- the same rule that keeps
+  % "Slack P5" identical across RQ1(a) and RQ3 instead of renaming it "Deadline
+  % margin".  $d$ is introduced in the prose of Section~\ref{sec:guard-limit}
+  % beside $M$ and $S$, which is where this table's other math headers are
+  % defined too.
+  %   It also settles a collision that cost this column two earlier revisions.
+  % The header used to be a word, and the break point was load-bearing: split as
+  % "Delay P50" / "(ms)" its first line sat 1pt from "Activated" and the two
+  % headers read as the single phrase "Activated Delay P50" -- worse than merely
+  % tight, because "Applied Delay P50" was then a real column name in
+  % Table~\ref{tab:rq1_controller_behavior}.  The break is now "$d$ P50" /
+  % "(ms)", which puts the same qualifier back on the first line at 18.7pt where
+  % "Delay P50" needed 27.1 and "delay (ms)" 31.8, and the leading italic letter
+  % is what stops the two headers reading as one phrase even at 4.3pt apart.
+  % Keep the qualifier ON the first line: moving "P50" down to join "(ms)" would
+  % leave a bare 4.9pt "$d$" up against "Activated" and put the widest header
+  % line back on row two.
+  %   "Draft work executed", not "delivered" and not "completion".  The column is
+  % defined on EXECUTION -- the node has a positive observed duration, see the
+  % "Recommendation vs execution" note above -- so the header now names what is
+  % actually counted, and it matches "M executed (\%)" in
+  % Table~\ref{tab:casestudy_selection}, which is the same quantity on one run.
+  % "Completion" remains forbidden here: it is RQ1(a)'s word for a different
+  % denominator.  The group header must still break across two lines; on one line
+  % it measures about 60pt against the 42pt its two columns provide, and the
+  % -8.4pt \multirow nudge below assumes a two-line row one.
+  %   \fittabcolsep (macros.tex) spreads what the p-widths and the three ruled
+  % gaps leave -- 252 - 229 - 5.7 = 17.3pt -- over the 14
   % inter-column gaps (14 = 2 x 8 columns, less the two suppressed by the @{}
-  % ends), giving about 1.4pt of \tabcolsep, so the outer rules land exactly on
+  % ends), giving about 1.24pt of \tabcolsep, so the outer rules land exactly on
   % \columnwidth and the fill survives a change of \columnwidth without
   % re-tuning every p-width.  It iterates because a \multicolumn span makes the
   % width only piecewise linear in \tabcolsep.  A ninth column does not fit;
@@ -264,7 +303,7 @@
   % Table~\ref{tab:timeout_index}.  Leaving them in the second row alone would
   % sit them below the header's optical centre with an empty cell above.
   %   The -8.4pt nudge assumes both header rows hold at most two lines, which is
-  % still true: row one's tallest cell is "Draft work / delivered" and row two's
+  % still true: row one's tallest cell is "Draft work / executed" and row two's
   % are the two-line \makecells.  Re-derive it if \arraystretch, the font size,
   % or either row's line count changes.
   %   Other header cells are wrapped in \multicolumn{1}{c} so that a group
@@ -273,31 +312,55 @@
   % centre.  Note that \multicolumn{1}{c} also releases the p-width, so a header
   % wider than its p{} value silently widens the column; that is why the widths
   % above are measured against the headers and not only against the data.
+  %   Vertical rules mark the three GROUP boundaries and nothing else: after
+  % Configuration, so the two label columns are cut off from the measurements,
+  % and after Captures and after S, where one \cmidrule group ends and the next
+  % begins.  This matches Table~\ref{tab:rq3_pacing_compact} and
+  % Table~\ref{tab:rq2_admission_audit}, which is the point -- the three tables
+  % now rule at the same places.  Do NOT rule between Condition and
+  % Configuration: both are row labels, and a rule there would separate a label
+  % from its own sub-label.  Do not rule inside a group either; every data cell
+  % holds one number, so a rule between M and S would separate nothing.
+  %   A plain `|' does not work at this \tabcolsep.  Every column that a rule
+  % follows is right-aligned and full: "Admission only" fills 45.2pt of its 46pt
+  % box, and Captures and S hold raggedleft numbers flush to their right edge, so
+  % the only thing between the digit and the rule is one \tabcolsep -- about
+  % 1.3pt, which reads as the number touching the line.  The `V' column type
+  % below adds 1.5pt in front of the rule, roughly doubling that gap.  The pad
+  % must be identical in the column spec AND in every \multicolumn that ends on a
+  % rule; a `c|' left behind in a header row would draw its rule 1.5pt to the
+  % left of the body's and show as a jog down the table.
+  %   The three rules and their pads cost 5.7pt, which \fittabcolsep absorbs by
+  % moving \tabcolsep from about 1.4pt to about 0.9pt.  This table has the least
+  % \tabcolsep in the paper, so that is the whole margin -- a fourth rule would
+  % have to be paid for out of a p-width, and the first place to look would be
+  % the 8.7pt of deliberate slack in each of M and S.
+  \newcolumntype{V}{!{\hspace{1.5pt}\vrule}}%
   \newsavebox{\rqablbox}%
   \newcommand{\rqabltabular}{%
   \begin{tabular}{@{}%
-      >{\centering\arraybackslash}p{31pt}%    Condition
-      >{\raggedright\arraybackslash}p{46pt}%  Configuration
+      >{\centering\arraybackslash}p{33pt}%    Condition
+      >{\raggedright\arraybackslash}p{46pt}V% Configuration
       >{\raggedleft\arraybackslash}p{28pt}%   Survived runs
-      >{\raggedleft\arraybackslash}p{29pt}%   Captures
-      >{\raggedleft\arraybackslash}p{21pt}%   M delivered
-      >{\raggedleft\arraybackslash}p{21pt}%   S delivered
-      >{\raggedleft\arraybackslash}p{28pt}%   Pacing activation
-      >{\raggedleft\arraybackslash}p{29pt}%   Delay P50
+      >{\raggedleft\arraybackslash}p{29pt}V%  Captures
+      >{\raggedleft\arraybackslash}p{21pt}%   M executed
+      >{\raggedleft\arraybackslash}p{21pt}V%  S executed
+      >{\raggedleft\arraybackslash}p{29pt}%   Pacing activation
+      >{\raggedleft\arraybackslash}p{22pt}%   d P50
     @{}}
     \toprule
     \multirow[c]{2}{=}[-8.4pt]{\textbf{Condition}}
       & \multirow[c]{2}{=}[-8.4pt]{\textbf{Configuration}}
-      & \multicolumn{2}{c}{\makecell[c]{\textbf{Deadline safety}}}
-      & \multicolumn{2}{c}{\makecell[c]{\textbf{Draft work}\\\textbf{delivered}}}
+      & \multicolumn{2}{cV}{\makecell[c]{\textbf{Deadline safety}}}
+      & \multicolumn{2}{cV}{\makecell[c]{\textbf{Draft work}\\\textbf{executed}}}
       & \multicolumn{2}{c}{\makecell[c]{\textbf{Pacing cost}}} \\
     \cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(l){7-8}
     & & \multicolumn{1}{c}{\makecell[c]{\textbf{Survived}\\\textbf{runs}}}
-      & \multicolumn{1}{c}{\makecell[c]{\textbf{Captures}\\\textbf{(\%)}}}
+      & \multicolumn{1}{cV}{\makecell[c]{\textbf{Captures}\\\textbf{(\%)}}}
       & \multicolumn{1}{c}{\makecell[c]{\mbox{\boldmath$M$}\\\textbf{(\%)}}}
-      & \multicolumn{1}{c}{\makecell[c]{\mbox{\boldmath$S$}\\\textbf{(\%)}}}
+      & \multicolumn{1}{cV}{\makecell[c]{\mbox{\boldmath$S$}\\\textbf{(\%)}}}
       & \multicolumn{1}{c}{\makecell[c]{\textbf{Activated}\\\textbf{(\%)}}}
-      & \multicolumn{1}{c}{\makecell[c]{\textbf{Applied}\\\textbf{delay (ms)}}} \\
+      & \multicolumn{1}{c}{\makecell[c]{\mbox{\boldmath$d$}\textbf{ P50}\\\textbf{(ms)}}} \\
     \midrule
 
     % ---------------------------------------------------------------- 12MP Lv4
