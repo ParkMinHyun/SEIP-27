@@ -1,5 +1,5 @@
-condition,population,n,required_p50_ms,applied_p50_ms,over_applied_p50_ms,over_applied_p95_ms,delay_over_backlog_p50_pct,delay_over_backlog_p95_pct,delay_absorbed_by_backlog_pct,waits_outlasting_backlog
-12mp_normal,paced_none_required,350,0.0,377.0,377.0,832.3,10.8,32.5,100.0,0
-12mp_normal,covered,53,80.0,432.0,320.0,611.0,9.5,16.1,100.0,0
-24mp_memory,paced_none_required,374,0.0,251.5,251.5,1074.8,7.3,57.2,98.3,7
-24mp_memory,covered,83,188.0,685.0,427.0,1155.4,20.3,50.4,99.6,1
+condition,population,n,required_p50_ms,applied_p50_ms,over_applied_p50_ms,over_applied_p95_ms,reserve_error_p50_ms,backlog_error_p50_ms,reserve_error_p50_pct,backlog_error_p50_pct,delay_over_backlog_p50_pct,delay_over_backlog_p95_pct,delay_absorbed_by_backlog_pct,waits_outlasting_backlog
+12mp_normal,paced_none_required,350,0.0,377.0,377.0,832.3,554.9,445.0,87.0,11.9,10.8,32.5,100.0,0
+12mp_normal,covered,53,80.0,432.0,320.0,611.0,308.0,-4.0,41.4,-0.1,9.5,16.1,100.0,0
+24mp_memory,paced_none_required,374,0.0,251.5,251.5,1074.8,653.2,231.0,90.8,6.7,7.3,57.2,98.3,7
+24mp_memory,covered,83,188.0,685.0,427.0,1155.4,487.0,-68.0,44.4,-1.6,20.3,50.4,99.6,1

@@ -1,115 +1,106 @@
-% Compact coordination-aware RQ3 main-paper table, single column.  The original
-% RQ3 policy, selectivity, and calibration tables remain untouched as historical
-% alternatives; docs/rq3-current.md is the authoritative handoff for this exhibit
-% and the source of every claim limit recorded below.
+% Compact coordination-aware RQ3 main-paper table, single column, two blocks.
+% The original RQ3 policy, selectivity, and calibration tables remain untouched
+% as historical alternatives; docs/rq3-current.md is the authoritative handoff
+% for this exhibit and the source of every claim limit recorded below.
 %
 % Sources:
-%   data/rq3/estimator/outcome_matrix.csv   every cell of the matrix
-%   data/rq3/estimator/summary.csv          the identity check, the two error
-%                                           distributions, the repricing
-%   data/rq3/policy/summary.csv             the cost figures in the note
+%   data/rq3/estimator/outcome_matrix.csv     block (a)
+%   data/rq3/estimator/sizing_summary.csv     block (b)
+%   data/rq3/estimator/thin_margin_tail.csv   the note's slack-tail sentence
+%   data/rq3/estimator/summary.csv            the identity check and the repricing
+%   data/rq3/policy/summary.csv               the per-run pacing cost
 %
 % ---------------------------------------------------------------------------
-% What this exhibit has to answer
+% The reading path, and why each block has its own population
 % ---------------------------------------------------------------------------
-% Two questions, in this order: did pacing act where the capture was actually at
-% risk, and was the delay it applied the right size?  The rows answer the first
-% -- they partition every analyzed decision by how much of the required delay it
-% got -- and the columns answer the second in both directions.  Under-sizing is
-% the Unapplied column; over-sizing is the top row, where 350 and 374
-% decisions were paced although none required a delay, and the reserve error
-% beside them says why.
+% Two questions, in this order, and a reviewer must be able to answer each one
+% without leaving its block:
+%
+%   (a) When a reservation was actually required, how much of it did pacing
+%       cover?   Population: the decisions with d* > 0 -- 79 and 140 -- and
+%       every column is a count or a median over ALL decisions in the class,
+%       paced or not.  "Did pacing fire" is therefore a column, because a
+%       decision that received nothing still belongs to the class whose
+%       coverage the row reports.
+%
+%   (b) When pacing fired, was the delay conservative but still work-
+%       conserving?   Population: the paced decisions -- d > 0 -- and every
+%       column is a median over exactly those.
+%
+% The two populations are different sets, so no single row can serve both, and
+% the previous revision's defect was exactly that: it printed one four-class
+% partition of every analyzed decision with the estimator errors as columns, so
+% on the top row "Applied delay P50 = 377 ms" was a median over the 350 PACED
+% decisions while "Draft reserve error P50 = +230 ms" was a median over all
+% 1,841 in the class -- and the caption then offered the second number as the
+% explanation of the first.  Recomputing the errors on the population the
+% sentence is about does not merely sharpen them:
+%
+%                            class-wide (printed before)   paced only (correct)
+%   Draft reserve error       +230 / +250 ms                +555 / +653 ms
+%   Backlog error             -19  /  -43 ms                +445 / +231 ms
+%
+% The backlog error changes SIGN.  The old numbers said the reserve over-covered
+% against a roughly correct backlog clock; the correct ones say that on the
+% decisions pacing actually acted on, BOTH estimates were conservative at once.
 %
 % ---------------------------------------------------------------------------
-% Layout: single column, and what had to go to fit
+% Why (a) prints no "none was required" row, and how the totals stay checkable
 % ---------------------------------------------------------------------------
-% The previous revision was a table* with eleven columns and a four-cell cost
-% block.  tab_rq1_ablation.tex records an eight-column ceiling for
-% \columnwidth at \scriptsize, but that ceiling is a consequence of ITS widths,
-% not a hard count: what binds is the sum of the p-widths against the 252pt
-% column.  Two moves bought the room here.
+% An earlier revision made (a) a partition of every analyzed decision, so its
+% first row was the complement of the required set.  That kept a visible sum but
+% cost the thing (a) exists to measure: with 1,920 as the denominator the
+% under-sized tail reads as 0.8% of decisions, which buries it.  Against the
+% population where a reservation was required it is 10.0%, and that is the
+% number a reviewer needs.
 %
-%   Condition is a spanning block label rather than a column, which frees a
-%   column and its two tabcolsep units and lets every outcome label stay on one
-%   line.
-%
-%   Every paired quantity is SPLIT into its own sub-columns under a \cmidrule
-%   group -- "P50 | max" rather than "P50 / max".  This reads as more columns
-%   but measures narrower, because a cell holding one number needs only that
-%   number's width while "72 / 582" needs both plus a separator.  The nine
-%   columns sum to 203pt where the six merged ones summed to 212pt, and the
-%   grid is easier to scan: four of the six merged columns were slash pairs,
-%   and a reader could not tell at a glance which slash meant which statistic.
-%
-% Vertical rules mark the four group boundaries only.  Every data cell holds one
-% number, so ruling each column would add eight lines that separate nothing.
+% Verifiability is preserved without the row.  (a)'s block labels print
+% 79/1,920 and 140/1,861, (b) prints 350/1,841 and 374/1,721, and
+% 1,841 + 79 = 1,920 and 1,721 + 140 = 1,861.  Do not remove the denominators
+% from either place; they are the only remaining path to the analyzed totals.
 %
 % ---------------------------------------------------------------------------
 % Printed labels, and what each of them replaced
 % ---------------------------------------------------------------------------
-% Column one asks "What the delay covered", so all four rows answer it in the
-% same register -- a noun phrase naming the part of the requirement the delay
-% reached.  The word "floor" is not printed anywhere: a reader meeting "below
-% the floor" has to leave the table to find out what the floor is, whereas
-% mandatory and optional work are already established in Section~2.3.
+% Column one of (a) asks "what did the delay cover", so all three rows answer it
+% in the same register -- a noun phrase naming the part of the requirement the
+% delay reached.  The word "floor" is not printed anywhere: a reader meeting
+% "below the floor" has to leave the table to find out what the floor is,
+% whereas mandatory and optional work are established in Section~2.3.
 %
-%   None was required        d* = 0.  Was "No delay required".
-%   The full requirement     d >= d*_exec.  Was "Covered in full", and before
-%                            that "Covered by pacing".
-%   The mandatory work       d*_mand <= d < d*_exec: the delay reached the
-%                            mandatory work but not the optional work that also
-%                            ran.  Was "Mandatory work covered", and before that
-%                            "Left to admission" -- a name that asserted a
-%                            hand-off to admission this table prints no evidence
-%                            for.
-%   Less than mandatory      d < d*_mand.  Was "Below the mandatory floor".
+%   Full requirement       d >= d*_exec.  Was "Covered in full", and before that
+%                          "Covered by pacing".
+%   Mandatory work         d*_mand <= d < d*_exec: the delay reached the
+%                          mandatory work but not the optional work that also
+%                          ran.  Was "Left to admission" -- a name that asserted
+%                          a hand-off this table prints no evidence for.
+%   Less than mandatory    d < d*_mand.  Was "Below the mandatory floor".
 %
-%   Unapplied, d* - d (ms)   was "Missing delay".  The formula sits under the
-%                            word so the column defines itself.
-%   Decision-time error      was "Estimator error".  Both columns are what the
-%                            controller held AT THE DECISION minus what the
-%                            pipeline went on to do, so the label names the
-%                            instant the estimate was made rather than the
-%                            machinery that made it.
-%   d inside B               was "absorbed", which never said what was absorbed
-%                            into what.  With B defined in the note, the symbols
-%                            carry it: the share of the delay that lies inside
-%                            the outstanding backlog.
+%   Unapplied, d* - d      was "Missing delay".  The formula sits under the word
+%                          so the column defines itself.
+%   Slack                  RQ1(a) already prints this quantity as "Slack P5
+%                          (%)" in Table~\ref{tab:rq1_end_to_end_summary}.  An
+%                          earlier revision of THIS table called it "Deadline
+%                          margin", which gave one quantity two printed names in
+%                          one paper.  Keep "Slack" and keep it normalized.
+%   Decision-time error    was "Estimator error".  Both columns are what the
+%                          controller held AT THE DECISION minus what the
+%                          pipeline went on to do, so the label names the instant
+%                          the estimate was made rather than the machinery.
+%   inside B               was "absorbed", which never said what was absorbed
+%                          into what, and briefly rho_B, which put a Greek symbol
+%                          used nowhere else in the manuscript on a quantity the
+%                          words already name.  With B defined in the note, the
+%                          share of d that lies inside the outstanding backlog
+%                          needs no symbol.
 %
-% Units moved into the group headers -- (ms) and (%) -- so that the note needs
-% no sentence about them.  That is what got the note to three lines.
-%
-% The following were cut:
-%
-%   Applied delay P50        Table~\ref{tab:rq1_end_to_end_summary} and
-%                            Table~\ref{tab:rq1_ablation} already print the
-%                            applied delay per condition, on a different
-%                            population; printing a second per-class value under
-%                            the same name invited two numbers for one quantity.
-%   Per paced capture ms     The same duplication, in the cost block.
-%   Runs with no pacing      "Activated (\%)" in RQ1(a) already carries
-%                            selectivity.
-%   Queued pricing error     Per class it tracks the backlog error to within
-%                            50 ms (+27/-19, -627/-677, -1,278/-1,392), because
-%                            the backlog clock IS that sum.  The relation is
-%                            close to definitional, so it belongs in the RQ3
-%                            prose as one correlation rather than in a column.
+% (b) reuses (a)'s row labels verbatim where the classes coincide, so "Full
+% requirement" names the same set in both blocks.  It is 100% paced, which is
+% why its two error cells are identical in (a) and (b); that identity is the
+% control that makes the "none required" row's difference legible.
 %
 % ---------------------------------------------------------------------------
-% The figure this exhibit replaced
-% ---------------------------------------------------------------------------
-% figures/fig_rq3_pacing_compact.tex was deleted.  Its scatter panels restated
-% the class contrast the two error columns already print, and its ECDF panel
-% carried one claim the table could not: the two estimators have different
-% SHAPES, not just different medians.  That claim now has to be made in the RQ3
-% prose from the population P05/P50/P95 listed at the foot of this file -- the
-% reserve error is positive at P05 in 12MP and only mildly negative in 24MP,
-% while the per-Draft pricing error straddles zero with a long left tail.  Do
-% not write that the reserve error is "almost entirely above zero": its 24MP
-% P05 is -129 ms, so that phrasing holds for 12MP only.
-%
-% ---------------------------------------------------------------------------
-% Definitions (printed in the note in short form)
+% Definitions (short form printed in the note)
 % ---------------------------------------------------------------------------
 %   B          measured Draft backlog at the pacing decision
 %   T          budget left in the deadline window at the decision
@@ -127,12 +118,13 @@
 % after the pacing decision and (ii) the Draft of the next capture released by
 % that delay.  Waiting one millisecond both drains one millisecond of backlog
 % and shifts the next deadline by one millisecond, hence the division by two.
-% A positive unapplied delay is therefore an unmet prospective reservation, not
-% an observed overrun, which is why the deadline margin column is printed beside
-% it: it says what the capture actually kept.
+% A positive UNAPPLIED delay is therefore an unmet prospective reservation and
+% NOT an observed overrun, which is why the Slack column is printed beside it:
+% it says what the capture actually kept.  The caption must keep that clause --
+% without it, "Unapplied max 920 ms" reads as a 920 ms deadline overrun.
 %
 % ---------------------------------------------------------------------------
-% The estimator error column
+% The two error columns
 % ---------------------------------------------------------------------------
 % Away from the max(0,.) clip -- on the 61 and 97 decisions carrying both a
 % positive applied delay and a positive required delay --
@@ -140,26 +132,56 @@
 %     d - d*  =  (Chat - C)  +  (Bhat - B) / 2
 %
 % holds identically.  scripts/rq3_estimator_metrics.py asserts it and it closes
-% to 0.50 and 0.76 ms, which is the two ceilings in the formulas.  Each term
-% owns one failure mode:
+% to 0.50 and 0.76 ms, which is the two ceilings in the formulas.  That identity
+% is what makes these two columns a decomposition rather than two loose
+% diagnostics, so the caption states it.  It does NOT close on (b)'s "none
+% required" row, where d* is clipped at zero: there the two errors are what the
+% controller held, not a decomposition of a positive d*.
+%
+% UNITS.  The identity is in milliseconds; the COLUMNS print each error as a
+% share of the realized quantity it estimates -- (Chat-C)/C and (Bhat-B)/B --
+% because +308 ms does not tell a reader whether the reserve was slightly or
+% grossly conservative, and +41% does.  Two consequences the caption and the
+% note both carry.  First, the printed cells no longer add: the ratios have
+% DIFFERENT denominators, so the decomposition has no percentage form, and the
+% caption states it in ms for that reason.  Second, each ratio is formed per
+% decision and only then taken at P50, so the percentage is not the millisecond
+% median divided by anything a reader can see; both forms are emitted in the
+% CSVs.  Nothing here leaks the Capture Timeout budget, which is what the units
+% rule below actually protects: C and B are not the budget.
 %
 %   Draft reserve Chat.  CaptureAvailablePacingSession.getMaxDraftSequence-
 %   DurationMs prices it at the session's observed MAXIMUM Draft duration for
 %   the capture's size bucket, re-projected onto the admitted sequence.  A
-%   maximum against a typical realized duration over-covers -- P50 +230 and
-%   +250 ms on the decisions that needed no delay at all -- and it enters the
-%   formula twice.  That is what puts 350 and 374 decisions in the top row's
-%   Paced column, and it makes the over-shoot a design choice with a measured
-%   price rather than an unexplained excess.
+%   maximum against a typical realized duration over-covers, and it enters the
+%   formula twice.  It is positive on every row of (b) -- +87.0, +41.4 and
+%   +90.8, +44.4 per cent -- and largest exactly where the delay was least
+%   needed.  Normalised, the size of it is legible: on the decisions that
+%   required nothing the reserve is close to DOUBLE the Draft that actually ran.
 %
 %   Backlog clock Bhat.  queuePacingDecision advances it by each queued Draft's
 %   POINT prediction plus one learned between-node overhead.  Per Draft that is
 %   nearly right (P50 +16 and +19 ms) but widely dispersed (P05 -135 and
 %   -293 ms), and unlike the reserve it is SUMMED over the queue, so the
-%   dispersion accumulates.  The asymmetry is the finding an SEIP reader can act
-%   on: the controller already knows to price a single Draft by a conservative
-%   statistic, and prices a whole queue by a central one.
+%   dispersion accumulates in both directions.  It is the term whose SIGN
+%   separates over-shooting pacing from under-shooting pacing: +11.9 and +6.7 on
+%   (b)'s over-shoot rows, -12.8, -29.6 and -19.8 on (a)'s short-fall rows.  The
+%   reserve only sets the magnitude of the over-shoot.  The gradient down (a)'s
+%   column survives normalisation -- -0.1, -12.8 at 12MP and -1.6, -19.8, -29.6
+%   at 24MP -- which is the mechanism the block exists to show.
 %
+% The asymmetry is the finding an SEIP reader can act on: the controller already
+% knows to price a single Draft by a conservative statistic, and prices a whole
+% queue by a central one.
+%
+% POPULATION RULE.  (a)'s error columns are class-wide and (b)'s are paced-only,
+% and the note says so.  Never quote (a)'s error cells as the explanation of a
+% Paced count, and never copy a value between the blocks except on the row where
+% the class is fully paced.
+%
+% ---------------------------------------------------------------------------
+% LIMITS -- all of these must survive any future edit
+% ---------------------------------------------------------------------------
 % LIMIT -- closed loop.  Every quantity is arithmetic on the realized trace.
 % The repricing in docs/rq3-current.md, the unapplied delay, and the queued
 % pricing error are NOT recoverable time: a different delay changes later
@@ -167,26 +189,79 @@
 % same rule forbids rescaling the recorded delay by 0.5 or 0.75.
 %
 % LIMIT -- the mandatory floor.  d*_mand is a sufficient reservation condition
-% reconstructed after the run, not the timeout boundary.  The 14 floor misses
-% cluster in four 24MP runs, none produced an actual Capture Timeout, and their
-% minimum deadline margin -- 4.39% of the budget -- is the LARGEST of any class
-% in the table, which is the direct evidence that the floor is conservative.
-% On the 11 that received no delay at all the controller's own online pressure
-% Bhat + 2*Chat - T was non-positive (-46 to -1,729 ms), so zero was the correct
-% output of the deployed formula given its inputs; correcting the backlog clock
-% alone flips that sign on 11/11 and reaches the floor on 9/11
+% reconstructed after the run, not the timeout boundary.  The 14 misses cluster
+% in four 24MP runs, none produced an actual Capture Timeout, and their Slack P5
+% -- 4.53% of the budget -- is the LARGEST of the three classes, which is the
+% direct evidence that the floor is conservative.  On the 11 that received no
+% delay at all the controller's own online pressure Bhat + 2*Chat - T was
+% non-positive (-46 to -1,729 ms), so zero was the correct output of the deployed
+% formula given its inputs; correcting the backlog clock alone flips that sign on
+% 11/11 and reaches the floor on 9/11
 % (data/rq3/estimator/floor_zero_delay_account.csv).
 %
-% WHY THERE IS NO "OPTIONAL WORK SKIPPED" COLUMN.  It was printed in an earlier
-% revision of this table and removed, because it could not do the job it looked
-% like it was doing.  The question it appeared to answer is why 11 of the 14
-% floor misses went unpaced, and the floor row already answers that without it:
-% Paced 3 of 14 beside a backlog error of -1,392 ms says the backlog clock was
-% 1.4 s low, and the column reads -19, -4, -677, -1,392 down the rows, so the
-% mechanism is visible as a gradient rather than asserted.  The skip rate cannot
-% answer it at all -- d*_mand is defined on the mandatory work, so skipping
-% optional work cannot close a mandatory-floor deficit -- yet printed beside
-% "Paced 3" it invites exactly that reading.
+% LIMIT -- coverage is not severity.  The classes of (a) say how much of a
+% reconstructed reservation was satisfied.  They do NOT rank realized timeout
+% risk, and the table itself shows why: "Less than mandatory" has the largest
+% Slack P5 of the three classes.  The caption states this; never write that a
+% worse coverage class was closer to timing out.
+%
+% ---------------------------------------------------------------------------
+% The realized slack tail, and why the note carries it instead of a min column
+% ---------------------------------------------------------------------------
+% An earlier revision printed min AND P5 as two columns.  The minimum on the
+% largest class is 0.11% of the budget against a P5 of 7.20%, a factor of 65, and
+% printed as a column with nothing beside it that single number reads as "no
+% Capture Timeout was luck".  The COLUMN is gone; the NUMBER is not.  AGENTS.md
+% requires the worst observation to stay printed -- P5 alone hides it, and it is
+% the first thing an industrial reviewer asks for -- so the note states the 0.11%
+% itself, next to the tail count and, in the same sentence, what explains it.
+% All three halves must travel together.  Dropping the minimum would be trimming
+% a safety tail; dropping the count would understate it; dropping the backlog
+% context would leave a bare admission with no rebuttal.
+%
+% Do not restore it as a column.  Per class the statistic is not always the one
+% that carries the tail: on the 14-decision floor block the min and P5 are 4.39
+% and 4.53, where the minimum adds nothing, and which of the two is informative
+% depends on the class n.  A prose sentence can say that; a column cannot.
+%
+% Eleven of the 3,781 analyzed decisions finished under 1% of the budget, 6 at
+% 12MP and 5 at 24MP (deadline_margin_under_1pct per class in
+% outcome_matrix.csv, and one row each in thin_margin_tail.csv).  On all eleven:
+%
+%   the backlog B at the decision was 42-79% of the budget and the queue wait
+%   alone consumed 31-75% of it, so the slack is thin because the pipeline was
+%   already nearly full of budget-consuming work;
+%   ten of eleven were paced, at 288 to 921 ms; and
+%   eleven of eleven had pacing or an optional-work skip engaged.  There is no
+%   case in this tail where neither control acted.
+%
+% The tightest, 8 ms at 12MP (run 2#21 shot 10, overheat level 5), had 785 ms of
+% pacing applied AND optional work skipped, and its required delay was zero: the
+% reservation was satisfied, and the rest of the budget went to a 2,614 ms wait
+% against a 3,369 ms backlog.  The eleven are the saturated states, either late
+% in a burst (24MP run 1#2 shots 29 and 30, backlog at 79% and 76% of budget) or
+% at overheat 5-6, and they coincide with the captures at which the guard-
+% bypassed baseline of Table~\ref{tab:timeout_index} first times out at the same
+% level.  That last correspondence is across ARMS -- an association between shot
+% index and overheat level, not paired executions -- so it may be written as a
+% coincidence and never as "these would have timed out".
+%
+% Do not claim from any of this that the realized slack was bounded or that the
+% controller guaranteed the deadline.  The counterfactual belongs to the
+% controller-off and pacing-only arms of Table~\ref{tab:rq1_ablation}.
+%
+% ---------------------------------------------------------------------------
+% WHY THERE IS NO "OPTIONAL WORK SKIPPED" COLUMN
+% ---------------------------------------------------------------------------
+% It was printed in an earlier revision and removed, because it could not do the
+% job it looked like it was doing.  The question it appeared to answer is why 11
+% of the 14 floor misses went unpaced, and the "Less than mandatory" row already
+% answers that without it: Paced 3 of 14 beside a backlog error of -1,392 ms
+% says the backlog clock was 1.4 s low, and the column reads -4, -677, -1,392
+% down the rows, so the mechanism is visible as a gradient rather than asserted.
+% The skip rate cannot answer it at all -- d*_mand is defined on the mandatory
+% work, so skipping optional work cannot close a mandatory-floor deficit -- yet
+% printed beside "Paced 3" it invites exactly that reading.
 %
 % Two further reasons it was the weakest column.  Demotion is session-sticky, so
 % the 100% on the floor row is largely "these four runs had already entered the
@@ -204,34 +279,90 @@
 % clause attached.
 %
 % ---------------------------------------------------------------------------
+% Layout mechanics
+% ---------------------------------------------------------------------------
+% \fittabcolsep, not a hardcoded \tabcolsep.  A fixed value leaves the two
+% blocks at different natural widths -- 237pt and 229pt for the values a previous
+% draft used -- so they sit unaligned inside a 252pt column.  \fittabcolsep
+% iterates \tabcolsep until the outer rules land on the target width, which is
+% what makes the two blocks agree with each other and with \columnwidth.  Its
+% fourth argument is 2 x the number of columns: 16 for (a), 14 for (b).
+%
+% Every paired quantity is SPLIT into its own sub-columns under a \cmidrule
+% group -- "P50 | max" rather than "P50 / max" -- because a cell holding one
+% number needs only that number's width while "72 / 582" needs both plus a
+% separator, and because a reader could not tell at a glance which side of a
+% slash was which statistic.  The one exception is (b)'s Delay column, where
+% "0 -> 377" is kept as a single cell: the arrow is directional, so it carries
+% its own reading order, and required-against-applied is the comparison the
+% block exists to make.  Do not convert it back to a slash pair.
+%
+% Vertical rules mark the group boundaries only.  Every data cell holds one
+% number or one arrow pair, so ruling each column would add lines that separate
+% nothing.
+%
+% Widths are measured against the HEADERS as well as the data: a \makecell
+% header line wider than its p{} value overflows rather than widening the
+% column, and a \multicolumn group label wider than its span widens the columns
+% under it.  "Decision-time error P50 (\%)" is the binding label in both blocks
+% and is stacked as "Decision-time" / "error P50 (\%)" for that reason; set on
+% one line it measures 62pt against a 54pt span.
+%
+% The block labels carry only the condition and its population.  A label is a
+% single unwrappable line in an `l' multicolumn spanning every column, so its
+% natural width is a floor on sum(p-widths) + 2*(n-1)*tabcolsep: a label
+% approaching \columnwidth drives \fittabcolsep to a tabcolsep near zero and
+% every data cell then touches its group rule.  Keep them short, and put
+% per-run quantities in the note rather than on them.
+%
+% The 12MP "Less than mandatory" row prints its two counts, 0 and 0, and spans
+% the remaining five columns with a phrase.  The zero is structural -- no 12MP
+% decision fell below the floor -- so the counts are real measurements and are
+% printed; the five quantities behind them are undefined on an empty set, and a
+% row of "--" there would read as measurements that went missing, which is the
+% opposite of what it means.
+%
+% ---------------------------------------------------------------------------
 % Units, and the rule that decides them
 % ---------------------------------------------------------------------------
 % The Capture Timeout budget is an internal constant and must not be recoverable
 % from the manuscript.  It becomes recoverable the moment one quantity is
 % printed BOTH as an absolute duration and as a share of the budget, so the rule
-% is per quantity, not per table: delays and estimator errors in milliseconds
-% (as in the RQ1 tables), deadline margin as a share of the budget (as in RQ1's
-% "Slack P5"), pacing cost as a share of the run's elapsed time.  Before adding
-% a row, check which unit the quantity already uses elsewhere.
+% is per quantity, not per table: delays in milliseconds (as in the RQ1 tables),
+% slack as a share of the budget (as in RQ1's "Slack P5"), the two estimator
+% errors as shares of C and B, d/B and inside-B as shares of the backlog, pacing
+% cost as a share of the run's elapsed time.  Before adding a row, check which
+% unit the quantity already uses elsewhere.
+%
+% Note what the rule does and does not forbid.  A share of the BUDGET beside the
+% same quantity in milliseconds is the leak; a share of C or of B is not, since
+% neither is the budget and neither is printed absolutely anywhere in the paper.
+% That is why the estimator errors could move to per cent while Unapplied stays
+% in milliseconds, and why Slack must stay a share and never gain a ms column.
 %
 % ---------------------------------------------------------------------------
 % Population
 % ---------------------------------------------------------------------------
 % Complete 30-capture runs from
-% data/ablation_sampling/48U_metrics_{12MP_normal,24MP_memory}_0803_{1,2}.xlsx.
-% Records affected by the known timeout-measurement error were removed as
-% invalid observations, which is data-quality filtering and NOT outcome-based
-% survival conditioning; no valid analyzed run experienced an actual Capture
-% Timeout, and the manuscript must not describe this population as
-% survival-conditioned.  Watchdog-truncated decisions lack a complete realized
-% Draft duration and are excluded from the required-delay reconstruction only.
+% data/ablation_sampling/48U_metrics_{12MP_normal,24MP_memory}_0803_{1,2}.xlsx:
+% 70 and 69 runs, 1,920 and 1,861 analyzed pacing decisions.  Records affected
+% by the known timeout-measurement error were removed as invalid observations,
+% which is data-quality filtering and NOT outcome-based survival conditioning;
+% no valid analyzed run experienced an actual Capture Timeout, and the
+% manuscript must not describe this population as survival-conditioned.
+% Watchdog-truncated decisions lack a complete realized Draft duration and are
+% excluded from the required-delay reconstruction only.
 %
 % The device is a Device column in Table~\ref{tab:rq1_end_to_end_summary} and is
 % named in the population paragraph, so the caption does not repeat it.
 %
-% Regenerate with scripts/rq3_estimator_metrics.py (the matrix, the errors, the
-% floor account) and scripts/rq3_policy_metrics.py (the cost figures); see
-% docs/rq3-current.md for the order.
+% Regenerate with scripts/rq3_estimator_metrics.py (both blocks, the errors, the
+% slack tail and the repricing) and scripts/rq3_policy_metrics.py (the per-run
+% cost); see docs/rq3-current.md for the order.  The two scripts build their
+% populations independently and agree on every shared quantity: 411 and 471
+% paced decisions, 100.0% and 98.7% of delay inside the backlog, and 19 of 70
+% and 13 of 69 runs never paced.  Treat a disagreement as a defect, not as a
+% rounding difference.
 
 \begin{table}[t]
   \centering
@@ -240,126 +371,145 @@
   % The definition lives in the caption, not the note: it is what lets a reader
   % recompute every cut in the table, and a caption gets read where a \tiny note
   % does not.
-  \caption{RQ3: how each pacing decision was sized against the delay its Draft
+  \caption{RQ3: pacing coverage and sizing against the delay the realized Draft
   work turned out to require, $d^{*}=\lceil[B+2C-\max(0,T)]^{+}/2\rceil$ for
-  measured backlog $B$, realized Draft duration $C$, remaining window $T$; the
-  last two (a) rows use $C$'s mandatory part.}
+  measured backlog $B$, realized Draft duration $C$ and remaining window $T$;
+  the last two (a) rows use $C$'s mandatory part.  The $2C$ horizon reserves for
+  two Drafts, so a positive \emph{unapplied} delay is an unmet prospective
+  reservation and not an observed overrun --- the Slack column says what the
+  capture kept.  The two errors decompose the applied-against-required gap
+  exactly, $d-d^{*}=(\hat{C}-C)+(\hat{B}-B)/2$ per decision in milliseconds; the
+  columns print each as a share of the realized quantity it estimates.  Coverage
+  describes satisfaction of this reconstructed reservation, not realized timeout
+  severity: \emph{Less than mandatory} keeps the largest Slack P5 of the three
+  classes.}
   \label{tab:rq3_pacing_compact}
 
   {\scriptsize
-  \renewcommand{\arraystretch}{1.15}%
-  \newsavebox{\rqthreecmpbox}%
+  \renewcommand{\arraystretch}{1.12}%
+  \newsavebox{\rqthreecovbox}%
   \newsavebox{\rqthreesizebox}%
-  \textbf{(a) What each pacing decision required, and what it got}%
+
+  % =====================================================================
+  % (a)  Coverage, over every decision that required a delay
+  % =====================================================================
+  \textbf{(a) When a reservation was required, how much did pacing cover?}%
   \par\vspace{1pt}
-  % Widths are measured against the headers as well as the data: a \makecell
-  % header line wider than its p{} value overflows rather than widening the
-  % column, so a change of label means re-checking the build for overfull boxes.
-  \newcommand{\rqthreecmptabular}{%
-  % Each width is the measured maximum of its sub-header and its data, so the
-  % p-widths sum to 185pt; with the four group rules \fittabcolsep lands
-  % tabcolsep near 4.1pt.  "Estimator error" is set in full because its group
-  % span, 20 + 25 + 2 tabcolsep, is 53pt against the label's measured 48.4pt --
-  % the three other group labels do not fit their spans on one line and stay
-  % stacked.  Units live in
-  % the note rather than the headers: a "(ms)" line costs 13pt in a column whose
-  % data needs 12, which would double it.  Every group header fits its span --
-  % "Decisions" 28pt into 42pt, the three two-line ones well inside theirs -- so
-  % none of them silently widens a column through its \multicolumn.
-  % Vertical rules sit on the GROUP boundaries only.  Every data cell holds a
-  % single number, so ruling each column would add eight lines that separate
-  % nothing; ruling the four groups is what tells the eye that "P50 max" belong
-  % to one quantity and "min P5" to another.  The rules break across the two
-  % spanning rows, which is ordinary for a \multicolumn.
+  \newcommand{\rqthreecovtabular}{%
+  % Every width is the measured maximum of its own data and its own header,
+  % taken with \settowidth at \scriptsize against \columnwidth = 252pt:
+  %   60  "Less than mandatory" 59.7   (header lines 48.6 and 44.4)
+  %   33  "11 (25.6\%)" 32.2            33  "83 (59.3\%)" 32.2
+  %   12  "P50" 11.3                    14  "max" 12.8
+  %   23  "P5 (\%)" 22.1                21  "$\hat C-C$" 19.6 / "$-29.6$" 20.6
+  %   21  "$\hat B-B$" 19.9
+  % Sum 217pt, so \fittabcolsep lands tabcolsep near 2.2pt.  A header line wider
+  % than its p{} value inside a \makecell OVERFLOWS rather than wrapping, and a
+  % plain-text cell wider than it silently wraps to two lines; both happened in
+  % an earlier draft at 54pt.  Re-measure before changing any label.
+  %
+  % The count columns went from 24pt to 33pt when the stacked "53" over
+  % "(67.1\%)" became one line, and the errors paid for it: as percentages they
+  % need 21pt where "$-1{,}392$" needed 26.  Percent signs are NOT repeated in
+  % these cells -- "53 (67.1\%)" carries one already, and the error columns
+  % declare theirs in the group header, which is what keeps them at 21pt.
   \begin{tabular}{@{}%
-      >{\raggedright\arraybackslash}p{61pt}|%  What the delay covered
-      >{\raggedleft\arraybackslash}p{16pt}%    Decisions: all
-      >{\raggedleft\arraybackslash}p{18pt}|%   Decisions: paced
-      >{\raggedleft\arraybackslash}p{14pt}%    Unapplied delay: P50
-      >{\raggedleft\arraybackslash}p{16pt}|%   Unapplied delay: max
-      >{\raggedleft\arraybackslash}p{16pt}%    Deadline margin: min
-      >{\raggedleft\arraybackslash}p{16pt}|%   Deadline margin: P5
-      >{\raggedleft\arraybackslash}p{20pt}%    Draft reserve error
-      >{\raggedleft\arraybackslash}p{25pt}%    Backlog clock error
+      >{\raggedright\arraybackslash}p{60pt}%  coverage class
+      >{\raggedleft\arraybackslash}p{33pt}%   decisions n (%)
+      >{\raggedleft\arraybackslash}p{33pt}|%  paced n (%)
+      >{\raggedleft\arraybackslash}p{12pt}%   unapplied P50
+      >{\raggedleft\arraybackslash}p{14pt}|%  unapplied max
+      >{\raggedleft\arraybackslash}p{23pt}|%  slack P5
+      >{\raggedleft\arraybackslash}p{21pt}%   Chat - C, per cent of C
+      >{\raggedleft\arraybackslash}p{21pt}%   Bhat - B, per cent of B
     @{}}
     \toprule
-    \multirow[c]{2}{=}[-4.8pt]{\makecell[l]{\textbf{What the delay}\\%
-      \textbf{covered}}}
+    % Header row one carries the group labels at two lines, row two the
+    % sub-labels at one, so the header is three lines tall.  A label spanning
+    % both rows is therefore centred with \multirow[c]{2} plus an offset: the
+    % box \multirow computes from 2 x the standard row height is shorter than
+    % the header, and the residue is half of row two.  Re-derive the offset if
+    % either row changes its line count.  \centering inside the \multirow
+    % centres the \makecell box in the 60pt parbox; the DATA in this column
+    % stays flush left, because the row labels are read as a list.
+    \multirow[c]{2}{=}[-2.7pt]{\centering\makecell[c]{\textbf{Coverage of the}\\%
+      \textbf{required delay}}}
       & \multicolumn{2}{c|}{\textbf{Decisions}}
       & \multicolumn{2}{c|}{\makecell[c]{\textbf{Unapplied}\\%
         $d^{*}\!-\!d$ \textbf{(ms)}}}
-      & \multicolumn{2}{c|}{\makecell[c]{\textbf{Deadline}\\%
-        \textbf{margin (\%)}}}
+      & \multicolumn{1}{c|}{\textbf{Slack}}
       & \multicolumn{2}{c}{\makecell[c]{\textbf{Decision-time}\\%
-        \textbf{error P50 (ms)}}} \\
-    \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(l){8-9}
-      & \multicolumn{1}{c}{\textbf{All}}
-      & \multicolumn{1}{c|}{\textbf{Paced}}
+        \textbf{error P50 (\%)}}} \\
+    \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(l){7-8}
+      & \multicolumn{1}{c}{$n$}
+      & \multicolumn{1}{c|}{\textbf{paced}}
       & \multicolumn{1}{c}{\textbf{P50}}
       & \multicolumn{1}{c|}{\textbf{max}}
-      & \multicolumn{1}{c}{\textbf{min}}
-      & \multicolumn{1}{c|}{\textbf{P5}}
+      & \multicolumn{1}{c|}{\textbf{P5 (\%)}}
       & \multicolumn{1}{c}{$\hat{C}\!-\!C$}
       & \multicolumn{1}{c}{$\hat{B}\!-\!B$} \\
     \midrule
 
     % ------------------------------------------------------------- 12MP normal
-    \multicolumn{9}{@{}l}{\textbf{12MP, normal} --- 70 runs, 1{,}920
-      pacing decisions} \\
+    % The label keeps the denominator: with (a) restricted to the required set,
+    % 79/1,920 here and 350/1,841 in (b) are the only remaining path back to the
+    % 1,920 analyzed decisions.  The paced count that used to follow it is gone
+    % because it is the Paced column's own sum (53+8 and 83+11+3).
+    \multicolumn{8}{@{}l}{\textbf{12MP, normal} --- 79 of 1{,}920 decisions
+      required a delay (4.1\%)} \\
     \addlinespace[1pt]
-    None was required    & 1{,}841 & 350 &   0 &   0 & 0.11 & 7.20
-      & $+230$ & $-19$ \\
-    The full requirement &      53 &  53 &   0 &   0 & 0.31 & 1.03
-      & $+308$ & $-4$ \\
-    The mandatory work   &      26 &   8 &  72 & 582 & 1.91 & 2.61
-      & $+80$ & $-677$ \\
-    Less than mandatory  &       0 &   0 & \multicolumn{6}{r}{\emph{no such
-      decision in 12MP}} \\
+    Full requirement    & 53 (67.1\%) & 53 (100\%)
+      &   0 &   0 & 1.03 & $+41.4$ &  $-0.1$ \\
+    Mandatory work      & 26 (32.9\%) & 8 (30.8\%)
+      &  72 & 582 & 2.61 & $+11.5$ & $-12.8$ \\
+    % Both counts are printed rather than dashed: the zero is structural, and a
+    % dash reads as a measurement that is missing.
+    Less than mandatory & 0 (0\%) & 0
+      & \multicolumn{5}{r}{\emph{no such decision in 12MP}} \\
     \midrule
 
     % ---------------------------------------------------- 24MP memory pressure
-    \multicolumn{9}{@{}l}{\textbf{24MP, memory pressure} --- 69 runs, 1{,}861
-      pacing decisions} \\
+    \multicolumn{8}{@{}l}{\textbf{24MP, mem.\ pressure} --- 140 of 1{,}861
+      decisions required a delay (7.5\%)} \\
     \addlinespace[1pt]
-    None was required    & 1{,}721 & 374 &   0 &   0 & 0.20 & 7.34
-      & $+250$ & $-43$ \\
-    The full requirement &      83 &  83 &   0 &   0 & 0.61 & 2.48
-      & $+487$ & $-68$ \\
-    The mandatory work   &      43 &  11 & 131 & 530 & 0.51 & 1.20
-      & $-9$ & $-980$ \\
-    Less than mandatory  &      14 &   3 & 308 & 920 & 4.39 & 4.53
-      & $+31$ & $-1{,}392$ \\
+    Full requirement    & 83 (59.3\%) & 83 (100\%)
+      &   0 &   0 & 2.48 & $+44.4$ &  $-1.6$ \\
+    Mandatory work      & 43 (30.7\%) & 11 (25.6\%)
+      & 131 & 530 & 1.20 &  $-0.9$ & $-19.8$ \\
+    Less than mandatory & 14 (10.0\%) & 3 (21.4\%)
+      & 308 & 920 & 4.53 &  $+3.7$ & $-29.6$ \\
     \bottomrule
   \end{tabular}}%
-  \fittabcolsep{\rqthreecmpbox}{\rqthreecmptabular}{\columnwidth}{16}%
-  \rqthreecmptabular
+  \fittabcolsep{\rqthreecovbox}{\rqthreecovtabular}{\columnwidth}{16}%
+  \rqthreecovtabular
 
-  % ---------------------------------------------------------------------------
-  % (b) the leg (a) cannot carry
-  % ---------------------------------------------------------------------------
+  % =====================================================================
+  % (b)  Sizing, over the paced decisions only
+  % =====================================================================
   % (a) says whether the delay was ENOUGH.  It cannot say whether it was MORE
-  % than enough, because it prints no applied delay -- and "appropriately sized"
-  % is a two-sided claim.  These are the only two populations on which the
+  % than enough, because it prints no applied delay, and "appropriately sized" is
+  % a two-sided claim.  These are the only two populations on which the
   % comparison is defined: decisions that required nothing and were paced anyway,
-  % and decisions whose requirement the delay covered.  On the short-fall rows
+  % and decisions whose requirement the delay covered.  On (a)'s short-fall rows
   % the applied delay is below the requirement by construction, and (a)'s
   % Unapplied column already reports that side.
   %
   % The first half of the answer is unflattering and is meant to be: where the
-  % delay covers the requirement it lands at 5.4x and 3.6x it at the median
-  % (432 against 80, 685 against 188), and the reserve error in (a) says why.
+  % delay covers the requirement it lands at 5.4x and 3.6x it at the median.
   %
-  % The second half is why that is not the same as arbitrary, and it is what the
-  % last two columns exist for.  d* is a RESIDUAL -- (B + 2C - T)/2 -- so it goes
-  % to zero whenever the deadline window is wide, however much Draft work is
-  % queued.  Being a multiple of that residual therefore says nothing about
-  % whether the wait was large in absolute terms.  Priced against the Draft work
-  % actually outstanding when it was applied, the same delay is 10.8, 9.5, 7.3
-  % and 20.3 per cent of the backlog, and 98.3 to 100 per cent of every
-  % millisecond of it ran while at least that much work was still in the
-  % pipeline: 0 of 411 waits at 12MP and 8 of 471 at 24MP outlast the backlog
-  % they drain (sizing_summary.csv, waits_outlasting_backlog).  The wait is not
-  % created by pacing; it is moved from after the shutter to before it.
+  % The second half is why that is not the same as arbitrary.  d* is a RESIDUAL
+  % -- (B + 2C - T)/2 -- so it goes to zero whenever the deadline window is wide,
+  % however much Draft work is queued.  Being a multiple of that residual
+  % therefore says nothing about whether the wait was large in absolute terms.
+  % Priced against the Draft work actually outstanding when it was applied, the
+  % same delay is 10.8, 9.5, 7.3 and 20.3 per cent of the backlog, and 98.3 to
+  % 100 per cent of every millisecond of it ran while at least that much work was
+  % still in the pipeline: only 0 of 403 waits at 12MP and 8 of 457 at 24MP
+  % outlast the backlog they drain (sizing_summary.csv,
+  % waits_outlasting_backlog; the denominators are this block's two populations,
+  % 350+53 and 374+83, not the 411 and 471 paced decisions, because the
+  % short-fall rows are not in it).  The wait is not created by pacing; it is
+  % moved from after the shutter to before it.
   %
   % Do NOT upgrade that into a claim that the queue would have been unstable
   % without pacing.  This block is arithmetic on the realized trace.  The
@@ -367,98 +517,111 @@
   % that comparison lives, and the RQ3 prose should cross-refer to them rather
   % than re-derive the claim here.
   %
-  % An earlier revision printed Over-applied d - d* P50/P95 in the last two
-  % columns.  It was replaced: Required against Applied already shows the
-  % over-shoot, and the difference of the two printed medians is not the median
-  % difference (432 - 80 = 352, while the median of d - d* is 320), which cost a
-  % caveat for a column that carried nothing new.  Both are still emitted.
-  %
-  % The per-run cost sits in the block labels because it is a per-run quantity
-  % and has no place among per-decision rows.  Source: policy/summary.csv,
-  % burstDelaySharePercent.
-  %
-  % Source: data/rq3/estimator/sizing_summary.csv.
+  % An earlier revision printed Over-applied d - d* P50/P95 in two more columns.
+  % It was replaced: required-against-applied already shows the over-shoot, and
+  % the difference of the two printed medians is not the median difference
+  % (432 - 80 = 352, while the median of d - d* is 320), which cost a caveat for
+  % a column that carried nothing new.  Both are still emitted.
   \par\vspace{5pt}
-  \textbf{(b) Where pacing acted, how much more than required it applied}%
+  \textbf{(b) Where pacing fired, was the delay conservative but
+  work-conserving?}%
   \par\vspace{1pt}
   \newcommand{\rqthreesizetabular}{%
+  % Measured the same way.  Most of these are set by a HEADER line rather than
+  % by the data, which is the trap in this block:
+  %   55  "What the realized" 54.9      ("Full requirement" is only 47.6)
+  %   29  "350/1{,}841" 28.2            ("Paced" alone is 17.8)
+  %   38  "$d^{*}\to d$ (ms)" 38.0      ("$188\to685$" is 33.7)
+  %   21  "$\hat C-C$" 19.6 / "$+90.8$" 20.5     21  "$\hat B-B$" 19.9
+  %   19  "20.3\%" 18.1             27  "inside $B$" 26.3
+  % Sum 210pt, tabcolsep near 3.0pt, and the "error P50 (\%)" group label at
+  % 44.0pt fits its 45pt span.
   \begin{tabular}{@{}%
-      >{\raggedright\arraybackslash}p{80pt}|%  Population
-      >{\raggedleft\arraybackslash}p{11pt}%    n
-      >{\raggedleft\arraybackslash}p{30pt}%    required
-      >{\raggedleft\arraybackslash}p{27pt}|%   applied
-      >{\raggedleft\arraybackslash}p{21pt}%    d / B
-      >{\raggedleft\arraybackslash}p{36pt}%    d inside B
+      >{\raggedright\arraybackslash}p{55pt}%  population
+      >{\raggedleft\arraybackslash}p{29pt}%   paced n/N over (%)
+      >{\raggedleft\arraybackslash}p{38pt}|%  delay dstar -> d
+      >{\raggedleft\arraybackslash}p{21pt}%   Chat - C, per cent of C
+      >{\raggedleft\arraybackslash}p{21pt}|%  Bhat - B, per cent of B
+      >{\raggedleft\arraybackslash}p{19pt}%   d / B
+      >{\raggedleft\arraybackslash}p{27pt}%   inside B
     @{}}
-    % Headers are centred, as in (a).  That only works if no column is much
-    % wider than its data, so "Required $d^{*}$" -- 39pt against three digits --
-    % is split: the words move into a two-line sub-header and the statistic and
-    % unit into the group above, which takes the pair down to 30 and 27pt.  A
-    % centred label over a 39pt column would have left the number stranded at
-    % the far edge of its own cell.
-    % Population and n span both header rows so they sit on the optical centre
-    % of the header rather than on one of its lines.  \multirow sizes its box
-    % from nrows x the standard row height, but row two holds a two-line
-    % \makecell, so the box it computes is shorter than the header actually is
-    % and the label lands low; -9.7pt is the measured correction.  Re-derive it
-    % if either header row changes its line count.
     \toprule
-    \multirow[c]{2}{=}[-9.7pt]{\textbf{Population}}
-      & \multirow[c]{2}{*}[-9.7pt]{\textbf{n}}
-      & \multicolumn{2}{c|}{\textbf{Delay P50 (ms)}}
-      & \multicolumn{2}{c}{\textbf{Delay vs.\ backlog}} \\
-    \cmidrule(lr){3-4}\cmidrule(l){5-6}
-      &
-      & \multicolumn{1}{c}{\makecell[c]{\textbf{required}\\$d^{*}$}}
-      & \multicolumn{1}{c|}{\makecell[c]{\textbf{applied}\\$d$}}
+    % Same three-line header and the same centred \multirow as (a).  An earlier
+    % revision could not use \multirow here and left both labels top-aligned in
+    % row one; it fails only when row two's first cell is left empty, which
+    % makes \multirow's box shorter than its own content.  Giving the spanning
+    % cells their offset, as in (a), places them on the header's optical centre.
+    %
+    % Paced stays a two-line cell.  Single-line "350/1{,}841 (19.0\%)" measures
+    % 53.4pt against 28.2pt stacked, which alone would drive this block's
+    % \tabcolsep to 1.2pt; (a)'s counts are short enough to go on one line and
+    % these are not.  The (%) left the header instead, since the cell prints it.
+    \multirow[c]{2}{=}[-2.7pt]{\centering\makecell[c]{\textbf{What the realized}\\%
+      \textbf{work required}}}
+      & \multirow[c]{2}{=}[-2.7pt]{\centering\textbf{Paced}}
+      & \multicolumn{1}{c|}{\textbf{Delay P50}}
+      & \multicolumn{2}{c|}{\makecell[c]{\textbf{Decision-time}\\%
+        \textbf{error P50 (\%)}}}
+      & \multicolumn{2}{c}{\makecell[c]{\textbf{Delay against}\\%
+        \textbf{the backlog}}} \\
+    \cmidrule(lr){4-5}\cmidrule(l){6-7}
+      & & \multicolumn{1}{c|}{$d^{*}\!\rightarrow\!d$ \textbf{(ms)}}
+      & \multicolumn{1}{c}{$\hat{C}\!-\!C$}
+      & \multicolumn{1}{c|}{$\hat{B}\!-\!B$}
       & \multicolumn{1}{c}{$d/B$}
-      & \multicolumn{1}{c}{$d$ \textbf{inside} $B$} \\
+      & \multicolumn{1}{c}{\textbf{inside} $B$} \\
     \midrule
-    \multicolumn{6}{@{}l}{\textbf{12MP, normal} --- 18.1 / 24.5\% of run time
-      (P50 / P95)} \\
+
+    \multicolumn{7}{@{}l}{\textbf{12MP, normal}} \\
     \addlinespace[1pt]
-    Paced, no delay required & 350 &   0 & 377 & 10.8\% & 100.0\% \\
-    Paced, requirement covered &  53 &  80 & 432 &  9.5\% & 100.0\% \\
+    None required    & \makecell[r]{350/1{,}841\\(19.0\%)}
+      & $0\!\rightarrow\!377$   & $+87.0$ & $+11.9$ & 10.8\% & 100.0\% \\
+    Full requirement & \makecell[r]{53/53\\(100\%)}
+      & $80\!\rightarrow\!432$  & $+41.4$ &  $-0.1$ &  9.5\% & 100.0\% \\
     \midrule
-    \multicolumn{6}{@{}l}{\textbf{24MP, memory pressure} --- 9.8 / 29.7\% of run
-      time (P50 / P95)} \\
+
+    \multicolumn{7}{@{}l}{\textbf{24MP, mem.\ pressure}} \\
     \addlinespace[1pt]
-    Paced, no delay required & 374 &   0 & 252 &  7.3\% &  98.3\% \\
-    Paced, requirement covered &  83 & 188 & 685 & 20.3\% &  99.6\% \\
+    None required    & \makecell[r]{374/1{,}721\\(21.7\%)}
+      & $0\!\rightarrow\!252$   & $+90.8$ &  $+6.7$ &  7.3\% &  98.3\% \\
+    Full requirement & \makecell[r]{83/83\\(100\%)}
+      & $188\!\rightarrow\!685$ & $+44.4$ &  $-1.6$ & 20.3\% &  99.6\% \\
     \bottomrule
   \end{tabular}}%
-  \fittabcolsep{\rqthreesizebox}{\rqthreesizetabular}{\columnwidth}{10}%
+  \fittabcolsep{\rqthreesizebox}{\rqthreesizetabular}{\columnwidth}{14}%
   \rqthreesizetabular
 
   % \raggedright cancels the \centering the float sets, which would otherwise
   % centre every line of the note; \par inside the group makes it take effect.
-  % The note is three labelled fragments rather than one block: a reader who
-  % only needs the units, or only the closed-loop caveat, should not have to
-  % read a paragraph of \tiny text to find it.
-  \par\vspace{3pt}
-  % MOVED TO THE RQ3 PROSE, NOT DROPPED.  Four results left this note when it
-  % was cut back and now have no other home in the manuscript; Section RQ3 must
-  % carry them or they are lost:
+  %
+  % MOVED TO THE RQ3 PROSE, NOT DROPPED.  These results have no other home in
+  % the manuscript and Section RQ3 must carry them:
   %   population estimator errors  reserve  +24/+232/+808 and -129/+253/+1,025;
   %                                per-Draft price -135/+16/+450 and
-  %                                -293/+19/+503, all P05/P50/P95 in ms
+  %                                -293/+19/+503, all P05/P50/P95 in ms.  Do not
+  %                                write that the reserve error is "almost
+  %                                entirely above zero": its 24MP P05 is -129 ms.
   %   the queue relation           r = 0.95 and 0.88 between the summed per-Draft
   %                                pricing error and the backlog clock error
-  %   the identity                 d - d* = (Chat - C) + (Bhat - B)/2, asserted
-  %                                by the generator, residual 0.50 and 0.76 ms
-  %   responsiveness cost          18.1/24.5 and 9.8/29.7% of a run's elapsed
-  %                                time at P50/P95, of which 100.0 and 98.7% was
-  %                                served while the backlog was draining
-  % Three lines, and nothing here can be moved.  Units went into the headers,
-  % the d* definition into the caption, and the population distributions, the
-  % identity and the queue correlation into the RQ3 prose.  What is left is the
-  % meaning of the two hatted symbols, the meaning of B in (b), and the two
-  % statements a reader must not mis-take: no run timed out, and none of this is
-  % a counterfactual.
+  %   the floor repricing          at or above the floor on 11 of 14 misses
+  \par\vspace{3pt}
   {\tiny\raggedright
-  $\hat{C}$ and $\hat{B}$ are the Draft reserve and backlog clock the controller
-  held at the decision, so both error columns are estimate minus realized; in
-  (b), $B$ is the Draft work still outstanding while the delay ran.  No analyzed
-  run produced an actual Capture Timeout, and pacing is closed-loop, so nothing
-  here is a counterfactual.\par}}
+  $\hat{C}$ and $\hat{B}$ are the Draft reserve and the backlog clock the
+  controller held at the decision, so both error columns are estimate minus
+  realized and a positive value means it reserved more than the pipeline used.
+  Each is normalized by the quantity it estimates --- $\hat{C}-C$ against the
+  realized Draft duration, $\hat{B}-B$ against the measured backlog --- and the
+  ratio is formed per decision before the median is taken, so neither is
+  recoverable from the other columns.  Each is a median over its own row's
+  population: class-wide in~(a), and in~(b) over the paced decisions alone,
+  where $B$ is the Draft work still outstanding while the delay ran and
+  \emph{inside} $B$ is the share of $d$ that elapsed against it.  Pacing consumed 18.1 / 24.5\% and 9.8 / 29.7\% of a run's elapsed
+  time at P50 / P95.  Eleven of the 3{,}781 decisions finished under 1\% slack
+  and the tightest kept 0.11\%; on all eleven the backlog already held 42--79\%
+  of the budget, ten were paced, and every one had pacing or an optional-work
+  skip engaged.  No analyzed run
+  produced an observed Capture Timeout; realized slack is an outcome and not a
+  deterministic bound, and pacing is closed-loop, so nothing here is a
+  counterfactual.\par}
+  }
 \end{table}

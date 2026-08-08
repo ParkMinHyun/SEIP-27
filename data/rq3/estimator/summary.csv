@@ -22,6 +22,9 @@ condition,metric,value,denominator
 12mp_normal,inFlightAtDecision,1865,1920
 12mp_normal,freshestWallLagMsP50,-28.0,1920
 12mp_normal,freshestWallLagMsP95,110.0,1920
+12mp_normal,marginUnder1PctDecisions,6,1920
+12mp_normal,marginUnder1PctPaced,6,6
+12mp_normal,marginUnder1PctEitherControl,6,6
 24mp_memory,analyzedDecisions,1861,
 24mp_memory,pacedDecisions,471,1861
 24mp_memory,requiredDelayDecisions,140,1861
@@ -45,6 +48,9 @@ condition,metric,value,denominator
 24mp_memory,inFlightAtDecision,1810,1861
 24mp_memory,freshestWallLagMsP50,-44.0,1861
 24mp_memory,freshestWallLagMsP95,240.0,1861
+24mp_memory,marginUnder1PctDecisions,5,1861
+24mp_memory,marginUnder1PctPaced,4,5
+24mp_memory,marginUnder1PctEitherControl,5,5
 24mp_memory,floorMissDecisions,14,14
 24mp_memory,floorMissRuns,4,14
 24mp_memory,floorMissZeroDelay,11,14

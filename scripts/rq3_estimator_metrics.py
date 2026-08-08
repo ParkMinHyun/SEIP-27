@@ -97,6 +97,25 @@ def pct(values, q):
     return coord.percentile([v for v in values if v is not None], q)
 
 
+def rel_pct(sel, error_key, base_key):
+    """Median relative estimator error, in per cent of the realized quantity.
+
+    The table prints the two decision-time errors normalised: the Draft reserve
+    against the realized Draft duration it was reserving for, and the backlog
+    clock against the backlog it was measuring.  Each ratio is formed PER
+    DECISION and only then taken at P50, because the median of a ratio is not the
+    ratio of the medians -- these values therefore cannot be derived from the two
+    millisecond columns beside them, and both are emitted.
+
+    A decision whose denominator is zero is dropped.  That is 1 and 4 of the
+    analyzed decisions for the backlog and none at all for the Draft duration,
+    and none of them was paced, so every population the table prints keeps all of
+    its members.
+    """
+    vals = [100.0 * r[error_key] / r[base_key] for r in sel if r[base_key]]
+    return round(pct(vals, .5), 1) if vals else ""
+
+
 def load(condition, files):
     """Every shot of every eligible run, with the pricing terms joined on.
 
@@ -322,7 +341,7 @@ def class_row(condition, name, sel, budget):
     that required none -- the row prints that zero.
     """
     if not sel:
-        return [condition, name, 0] + [""] * 14
+        return [condition, name, 0] + [""] * 16
     queued = [r["queued_pricing_error_ms"] for r in sel
               if r["queued_pricing_error_ms"] is not None]
     paced = [r for r in sel if r["d"] > 0]
@@ -342,6 +361,9 @@ def class_row(condition, name, sel, budget):
         sum(v < 1.0 for v in margins),
         round(pct([r["reserve_error_ms"] for r in sel], .5), 1),
         round(pct([r["backlog_error_ms"] for r in sel], .5), 1),
+        # The table prints these two, not the millisecond pair above them.
+        rel_pct(sel, "reserve_error_ms", "duration_ms"),
+        rel_pct(sel, "backlog_error_ms", "backlog_ms"),
         round(pct(queued, .5), 1) if queued else "",
         sum(r["backlog_error_ms"] < 0 for r in sel),
     ]
@@ -349,7 +371,7 @@ def class_row(condition, name, sel, budget):
 
 def main():
     summary, class_rows, scatter_rows, zero_delay_rows = [], [], [], []
-    sizing_rows = []
+    sizing_rows, thin_rows = [], []
     report = {}
 
     for condition, files in coord.CONDITIONS.items():
@@ -423,15 +445,70 @@ def main():
             ratio = [100 * r["d"] / r["backlog_ms"] for r in sel if r["backlog_ms"] > 0]
             applied = sum(r["d"] for r in sel)
             overlap = sum(min(r["d"], r["backlog_ms"]) for r in sel)
+            # WHY THE TWO ERRORS ARE RECOMPUTED HERE INSTEAD OF READ OFF THE
+            # OUTCOME MATRIX.  The matrix's error columns are medians over a whole
+            # class, which is the right population for its own question -- why a
+            # class received less than it required -- because a decision that got
+            # no delay still belongs to the class.  It is the wrong population for
+            # THIS question.  paced_none_required is 350 of 1,841 and 374 of
+            # 1,721, so a class-wide median describes the 81% and 78% that were
+            # never paced, and the difference is not a refinement:
+            #
+            #                       class-wide      this population
+            #   reserve error       +230 / +250      +555 / +653 ms
+            #   backlog error        -19 /  -43      +445 / +231 ms
+            #
+            # The backlog error changes SIGN.  Read class-wide, the over-shoot
+            # looks like the Draft reserve acting alone against a roughly correct
+            # backlog clock; read on the decisions pacing actually acted on, both
+            # estimates were conservative at once.  Never quote the matrix's error
+            # cells as the explanation of its Paced count.
             sizing_rows.append([
                 condition, name, len(sel),
                 round(pct([r["required_ms"] for r in sel], .5), 1),
                 round(pct([r["d"] for r in sel], .5), 1),
                 round(pct(over, .5), 1), round(pct(over, .95), 1),
+                round(pct([r["reserve_error_ms"] for r in sel], .5), 1),
+                round(pct([r["backlog_error_ms"] for r in sel], .5), 1),
+                rel_pct(sel, "reserve_error_ms", "duration_ms"),
+                rel_pct(sel, "backlog_error_ms", "backlog_ms"),
                 round(pct(ratio, .5), 1), round(pct(ratio, .95), 1),
                 round(100 * overlap / applied, 1) if applied else "",
                 sum(1 for r in sel if r["d"] > r["backlog_ms"]),
             ])
+
+        # --- the thin deadline-margin tail --------------------------------------
+        # The table prints the minimum realized margin, and on the largest class
+        # that minimum is 0.11% of the budget.  Printed alone it reads as "no
+        # Capture Timeout was luck", so the tail is emitted decision by decision
+        # and the note characterises it instead: on all eleven the backlog was
+        # already 42-79% of the budget, ten were paced, and every one had pacing
+        # or an optional-work skip engaged.  Nothing here says a baseline would
+        # have timed out on them; that is an RQ1 question.
+        thin = sorted((r for r in analyzed
+                       if r["margin_ms"] is not None
+                       and 100 * r["margin_ms"] / budget < 1.0),
+                      key=lambda r: r["margin_ms"])
+        expected = sum(1 for r in analyzed if r["margin_ms"] is not None
+                       and 100 * r["margin_ms"] / budget < 1.0)
+        assert len(thin) == expected, f"{condition}: thin-tail count is unstable"
+        for r in thin:
+            thin_rows.append([
+                condition, r["run"], r["shot"], r["capture_index"], r["level"],
+                r["class"], round(r["margin_ms"], 1),
+                round(100 * r["margin_ms"] / budget, 2),
+                round(r["d"], 1), round(r["required_ms"], 1),
+                round(r["backlog_ms"], 1), round(100 * r["backlog_ms"] / budget, 1),
+                round(r["wait_ms"], 1) if r["wait_ms"] is not None else "",
+                round(100 * r["wait_ms"] / budget, 1) if r["wait_ms"] is not None else "",
+                round(r["duration_ms"], 1),
+                "yes" if r["skipped_this"] else "no",
+                "yes" if (r["d"] > 0 or r["skipped_this"]) else "no",
+            ])
+        put("marginUnder1PctDecisions", len(thin), len(analyzed))
+        put("marginUnder1PctPaced", sum(1 for r in thin if r["d"] > 0), len(thin))
+        put("marginUnder1PctEitherControl",
+            sum(1 for r in thin if r["d"] > 0 or r["skipped_this"]), len(thin))
 
         # --- the outcome matrix ------------------------------------------------
         for name in CLASSES:
@@ -518,14 +595,24 @@ def main():
                "skipped_either_pct", "deadline_margin_min_pct",
                "deadline_margin_p5_pct", "deadline_margin_under_1pct",
                "reserve_error_p50_ms", "backlog_error_p50_ms",
+               "reserve_error_p50_pct", "backlog_error_p50_pct",
                "queued_pricing_error_p50_ms", "backlog_under_estimated"],
               class_rows)
     write_csv(OUT / "sizing_summary.csv",
               ["condition", "population", "n", "required_p50_ms",
                "applied_p50_ms", "over_applied_p50_ms", "over_applied_p95_ms",
+               "reserve_error_p50_ms", "backlog_error_p50_ms",
+               "reserve_error_p50_pct", "backlog_error_p50_pct",
                "delay_over_backlog_p50_pct", "delay_over_backlog_p95_pct",
                "delay_absorbed_by_backlog_pct", "waits_outlasting_backlog"],
               sizing_rows)
+    write_csv(OUT / "thin_margin_tail.csv",
+              ["condition", "run", "shot", "captureIndex", "level", "class",
+               "margin_ms", "margin_pct_of_budget", "applied_delay_ms",
+               "required_delay_ms", "backlog_ms", "backlog_pct_of_budget",
+               "queue_wait_ms", "queue_wait_pct_of_budget", "draft_duration_ms",
+               "optional_work_skipped", "either_control_engaged"],
+              thin_rows)
     write_csv(OUT / "floor_zero_delay_account.csv",
               ["condition", "run", "shot", "captureIndex", "controller_saw_ms",
                "backlog_term_ms", "reserve_term_ms", "account_ms",
@@ -552,9 +639,12 @@ def main():
                   [[round(v, 1), round(c, 3)]
                    for v, c in ecdf([r["reserve_error_ms"] for r in data["analyzed"]])])
 
+    # Positional, so it must track the column order of class_row exactly; the
+    # two percentage columns the table prints sit between the millisecond pair
+    # and the queued pricing error.
     header = ("class", "n", "paced", "paced%", "delay", "miss50", "missMax",
               "skip", "skipEither", "margMin", "margP5", "marg<1%", "reserve",
-              "backlog", "queued")
+              "backlog", "reserve%", "backlog%", "queued")
     for condition, data in report.items():
         analyzed = data["analyzed"]
         print(f"{LABEL[condition]}: analyzed {len(analyzed)}, paced {len(data['paced'])}, "
@@ -570,7 +660,7 @@ def main():
         for name in CLASSES:
             sel = [r for r in analyzed if r["class"] == name]
             row = class_row(condition, name, sel, data["budget"])
-            print("    " + f"{name:>12s}" + "".join(f"{str(v):>12s}" for v in row[2:16]))
+            print("    " + f"{name:>12s}" + "".join(f"{str(v):>12s}" for v in row[2:18]))
 
 
 if __name__ == "__main__":

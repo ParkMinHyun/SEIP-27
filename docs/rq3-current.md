@@ -49,13 +49,61 @@ The earlier policy, selectivity, and calibration TeX pairs are retained and
 must not be deleted or silently overwritten. They are historical alternatives,
 not additional exhibits to ship beside the current table.
 
-The table is a single-column `table` float carrying two blocks. Block (a) is
-the outcome matrix: the four classes as rows under a spanning condition label,
-with each paired quantity split into its own sub-columns under a `\cmidrule`
-group. Block (b) is the sizing comparison described below. Review the result
-from a real `pdflatex` render; the browser-preview route that earlier revisions
-used is no longer maintained, and the preview PNGs it produced are not in the
-repository.
+The table is a single-column `table` float carrying two blocks, and **each block
+has its own population**, which is the point of the split:
+
+- **(a) When a reservation was required, how much did pacing cover?** Population
+  \(d^{*}>0\) — 79 and 140. Rows are the three coverage classes; every column is
+  a count or a median over *all* decisions in the class, paced or not, so *did
+  pacing fire* is a column rather than a filter.
+- **(b) Where pacing fired, was the delay conservative but work-conserving?**
+  Population \(d>0\). Every column is a median over exactly those decisions.
+
+Each paired quantity is split into its own sub-columns under a `\cmidrule` group,
+except (b)'s `Delay P50`, where `0 → 377` stays one cell because the arrow
+carries its own reading order and required-against-applied is the comparison the
+block exists to make.
+
+Review the result from a real `pdflatex` render; the browser-preview route that
+earlier revisions used is no longer maintained, and the preview PNGs it produced
+are not in the repository.
+
+### Why (a) prints no "none required" row, and how the totals stay checkable
+
+An earlier revision made (a) a partition of every analyzed decision, so its first
+row was the complement of the required set. That kept a visible sum but cost the
+thing (a) exists to measure: with 1,920 as the denominator the under-sized tail
+reads as 0.8% of decisions, which buries it. Against the population where a
+reservation *was* required it is 10.0%, and that is the number a reviewer needs.
+
+Verifiability survives without the row. (a)'s block labels print 79/1,920 and
+140/1,861, (b) prints 350/1,841 and 374/1,721, and 1,841 + 79 = 1,920 and
+1,721 + 140 = 1,861. **Do not remove the denominators from either place** — they
+are the only remaining path back to the analyzed totals.
+
+### Layout constraints that are easy to re-break
+
+Every `p{}` width in both blocks is the measured maximum of that column's own
+data *and* its own header, taken with `\settowidth` at `\scriptsize` against
+`\columnwidth = 252pt`. Two failure modes bit earlier drafts:
+
+- a header line wider than its `p{}` value **inside a `\makecell` overflows**
+  rather than wrapping (`What the realized` is 54.9pt, which overflowed a 54pt
+  column by exactly the 0.89pt the log reported);
+- a plain-text cell wider than its `p{}` value **silently wraps to two lines**
+  (`Less than mandatory` is 59.7pt and was wrapping at 54pt).
+
+So: re-measure before changing any label, and use `\fittabcolsep` rather than a
+hardcoded `\tabcolsep`. A fixed value leaves the two blocks at different natural
+widths — 237pt and 229pt for the values one draft used — so they sit unaligned
+inside the column.
+
+`\multirow` is used for (a)'s first column and **not** for (b)'s. (a)'s header is
+four lines tall, so a `\multirow[c]{2}` box is tall enough for a two-line label
+with a `-4.8pt` centring correction. (b)'s header is three lines, so the same
+construct produces a box shorter than its own content and reports an overfull
+`\vbox` on every `\fittabcolsep` iteration whatever offset it is given; (b)'s
+label therefore sits in header row one with row two's first cell empty.
 
 ### Block (b): why "enough" is not the whole claim
 
@@ -64,17 +112,60 @@ it was *more than sufficient*, because it prints no applied delay, and
 "appropriately sized" is a two-sided claim. Block (b) supplies the second side
 on the only two populations where the comparison is defined:
 
-| Population | n | Required \(d^{*}\) P50 | Applied \(d\) P50 | \(d/B\) P50 | absorbed |
-|---|---:|---:|---:|---:|---:|
-| 12MP, paced, no delay required | 350 | 0 | 377 | 10.8% | 100.0% |
-| 12MP, paced, requirement covered | 53 | 80 | 432 | 9.5% | 100.0% |
-| 24MP, paced, no delay required | 374 | 0 | 252 | 7.3% | 98.3% |
-| 24MP, paced, requirement covered | 83 | 188 | 685 | 20.3% | 99.6% |
+The two error columns print per cent, not milliseconds; both forms are in
+`sizing_summary.csv` and the millisecond pair is given here in brackets.
 
-Both row labels start with *Paced* because both are subsets of the decisions
-where pacing acted; the printed `n` is therefore smaller than the matching class
-count in (a). The `covered` population is the same set as (a)'s *Covered in
-full* row, so 53 and 83 agree; 350 and 374 are (a)'s top-row *Paced* counts.
+| Population | n | Required \(d^{*}\) P50 | Applied \(d\) P50 | \(\hat{C}-C\) P50 | \(\hat{B}-B\) P50 | \(d/B\) P50 | inside \(B\) |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 12MP, none required | 350 | 0 | 377 | +87.0% [+555 ms] | +11.9% [+445 ms] | 10.8% | 100.0% |
+| 12MP, full requirement | 53 | 80 | 432 | +41.4% [+308 ms] | −0.1% [−4 ms] | 9.5% | 100.0% |
+| 24MP, none required | 374 | 0 | 252 | +90.8% [+653 ms] | +6.7% [+231 ms] | 7.3% | 98.3% |
+| 24MP, full requirement | 83 | 188 | 685 | +44.4% [+487 ms] | −1.6% [−68 ms] | 20.3% | 99.6% |
+
+Both populations are subsets of the decisions where pacing acted, so the printed
+`n` is smaller than the matching class count in (a). The row labels are (a)'s
+own, because these are (a)'s first two rows restricted to the paced: the
+`covered` population is the whole of (a)'s *The full requirement* class, so 53
+and 83 agree, and 350 and 374 are (a)'s top-row *Paced* counts. Required against
+applied, both estimator errors, \(d/B\) and *inside \(B\)* are all columns of this
+block, which is what lets it answer the over-pacing question without a backward
+jump. Only the per-run cost sits in the note, because it is not a per-decision
+quantity; see *The block labels carry only the condition* below.
+
+#### The two error columns appear in both blocks on purpose
+
+They are the same two quantities under the same header on two different
+populations, and printing them twice is what makes each block's claim
+population-correct. (a) needs the whole class, because a decision that received
+no delay still belongs to the class whose coverage the row reports. (b) needs
+the paced decisions alone, because its question is why the delay that *was*
+applied exceeded the requirement.
+
+Reserve / backlog error P50, as the table prints them (per cent), with the
+millisecond pair in brackets:
+
+|  | (a), whole class | (b), paced only |
+|---|---:|---:|
+| None was required, 12MP | +38.2 / −1.3 [+230 / −19 ms] | **+87.0 / +11.9** [+555 / +445 ms] |
+| None was required, 24MP | +36.4 / −2.8 [+250 / −43 ms] | **+90.8 / +6.7** [+653 / +231 ms] |
+| The full requirement, both | +41.4 / −0.1 and +44.4 / −1.6 | identical |
+
+*The full requirement* class is 100% paced, so its row is the same in both
+blocks. That is the control that makes the top row's difference legible, and the
+difference is not a refinement: **the backlog error changes sign.** Read on the
+class, the over-shoot looks like the Draft reserve acting alone against a roughly
+correct backlog clock. Read on the 350 and 374 decisions pacing actually acted
+on, both estimates were conservative at once, and after the \(/2\) the clock
+contributes +222 and +116 ms of the over-shoot beside the reserve's +555 and
++653.
+
+Two rules follow. **Never quote (a)'s error cells as the explanation of the
+`Paced` count on the same row** — 350 of 1,841 and 374 of 1,721 were paced, so a
+class-wide median describes the 81% and 78% that were not, and an earlier
+revision wrote exactly that attribution. And do not expect the identity
+\(d-d^{*}=(\hat{C}-C)+(\hat{B}-B)/2\) to close on the *none was required* rows:
+\(d^{*}\) is clipped at zero there, so the two errors are what the controller
+held, not a decomposition of a positive \(d^{*}\).
 
 Read left to right, the block makes two statements and needs both.
 
@@ -82,20 +173,23 @@ Read left to right, the block makes two statements and needs both.
 it covers the requirement it is 5.4x and 3.6x that requirement at the median.
 With the short-fall rows of (a), whose median applied delay is zero, the sizing
 is **bimodal**: pacing either over-covers by multiples or does not fire, and
-rarely lands near \(d^{*}\). The two estimator conventions in (a) are what
-produces that shape. State it plainly — it is what converts an unverifiable
-self-assessment into a measured cost with a named cause.
+rarely lands near \(d^{*}\). The two estimator conventions produce that shape,
+and (b)'s own error columns are the ones to cite for it. State it plainly — it is
+what converts an unverifiable self-assessment into a measured cost with a named
+cause.
 
-**That is not the same as arbitrary, and the last two columns are why.**
+**That is not the same as arbitrary, and the \(d/B\) column is why.**
 \(d^{*}\) is a *residual*, \((B+2C-T)/2\), so it falls to zero whenever the
 deadline window is wide however much Draft work is queued; being a multiple of
 it says nothing about whether the wait was large in absolute terms. Priced
 instead against the Draft work actually outstanding when it was applied, the
 same delay is 7 to 20 per cent of the backlog, and 98.3 to 100 per cent of every
 millisecond of it ran while at least that much work was still in the pipeline.
-Only 0 of 411 waits at 12MP and 8 of 471 at 24MP outlast the backlog they drain
-(`waits_outlasting_backlog`). The wait is not created by pacing; it is moved
-from after the shutter to before it.
+Only 0 of 403 waits at 12MP and 8 of 457 at 24MP outlast the backlog they drain
+(`waits_outlasting_backlog`; the denominators are this block's two populations,
+350+53 and 374+83, not the 411 and 471 paced decisions, because the short-fall
+rows are not in it). The wait is not created by pacing; it is moved from after
+the shutter to before it.
 
 Do **not** upgrade this into a claim that the queue would have been unstable
 without pacing. This block is arithmetic on the realized trace. The
@@ -108,9 +202,17 @@ instead of the two backlog columns. It was replaced because *Required* against
 printed medians is not the median difference (432 − 80 = 352, while the median
 of \(d-d^{*}\) is 320). Both are still emitted.
 
+#### The block labels carry only the condition
+
 The per-run responsiveness cost — 18.1/24.5 and 9.8/29.7 per cent of a run's
-elapsed time at P50/P95 — is printed in the block labels, because it is a
-per-run quantity with no place among per-decision rows.
+elapsed time at P50/P95 — is in the **note**, not in a column and not in the
+block labels. It is a per-run quantity, so it does not belong in a row of
+per-decision medians; and a block label is a single unwrappable line in an
+`l` multicolumn spanning every column, so its natural width is a floor on
+`sum(p-widths) + 12 tabcolsep`. A label approaching `\columnwidth` drives
+`\fittabcolsep` to a tabcolsep near zero, and every data cell in the block then
+touches its group rule. An earlier revision carried the cost on (b)'s labels and
+did exactly that. Keep the labels at the condition name alone.
 
 Emitted as `data/rq3/estimator/sizing_summary.csv`, except the per-run cost,
 which is `burstDelaySharePercent` in `data/rq3/policy/summary.csv`.
@@ -140,13 +242,13 @@ keep the older analysis vocabulary, so use this map when moving between them.
 | required delay | envelope, \(d^{*}\) |
 | unapplied \(d^{*}-d\) | potential avoided delay (flexible band), `shortfall_ms` (mandatory-floor block) |
 | skipped optional work (no longer printed) | demotion (Bokeh+Filter → Filter only → Encoding only) |
-| None was required | \(d^{*}=0\), the *no_delay_required* class |
-| The full requirement | \(d\ge d^{*}_{exec}\), the *covered* class |
-| The mandatory work | \(d^{*}_{mand}\le d<d^{*}_{exec}\), the *flexible* band |
+| None required | \(d^{*}=0\), the *no_delay_required* class. Printed in (b) only |
+| Full requirement | \(d\ge d^{*}_{exec}\), the *covered* class |
+| Mandatory work | \(d^{*}_{mand}\le d<d^{*}_{exec}\), the *flexible* band |
 | Less than mandatory | \(d<d^{*}_{mand}\), the mandatory-floor block |
-| decision-time error | the two estimator errors, \(\hat{C}-C\) and \(\hat{B}-B\) |
-| \(d\) inside \(B\) | the share of the applied delay overlapping outstanding backlog |
-| deadline margin | realized margin |
+| decision-time error | the two estimator errors, \(\hat{C}-C\) and \(\hat{B}-B\); printed as a share of \(C\) and of \(B\), kept in ms in this document and in both CSVs |
+| inside \(B\) | the share of the applied delay overlapping outstanding backlog |
+| Slack | realized margin |
 | this / next Draft | target / next |
 | Draft reserve error | `draftSequenceReserveErrorMs`, \(\hat{C}-C\) |
 | backlog error | `backlogEstimateErrorMs`, \(\hat{B}-B\) |
@@ -165,24 +267,48 @@ information as the required delay itself.
 
 The printed terms are anchored in the rest of the paper: *budget* is in the
 paper title and Section~2.4, *run* and *capture* are the units of the RQ1
-tables, *Skipped* is RQ2's column, *deadline margin* is the case-study table's
-row, and *Draft*, *optional work*, and *mandatory* come from Section~2.3.
+tables, *Skipped* is RQ2's column, and *Draft*, *optional work*, and *mandatory*
+come from Section~2.3.
 Do not reintroduce *spare*, *transition*, *burst*, *target*, *demotion*,
 *shortfall*, *envelope*, or *retrospective* into printed labels or body text.
 
-The word **floor** is also no longer printed. Column one of (a) asks *What the
-delay covered*, and all four rows answer it in one register — *None was
-required*, *The full requirement*, *The mandatory work*, *Less than mandatory* —
-because a reader meeting "below the floor" has to leave the table to find out
-what the floor is, and the mandatory/optional distinction is already established
-in Section~2.3. This document and the CSVs keep \(d^{*}_{mand}\) and the *floor*
-vocabulary.
+**Slack, not deadline margin.** Table~\ref{tab:rq1_end_to_end_summary} already
+prints this quantity as `Slack P5 (%)`, and an earlier revision of the RQ3 table
+called the same quantity `Deadline margin`, which gave one quantity two printed
+names in one paper. RQ3 now prints `Slack P5 (%)` too. *Deadline margin* survives
+as the case-study table's row label and as the name used in this document and in
+the CSV column `deadline_margin_p5_pct`; if that row is ever revised, align it
+with `Slack` rather than reverting RQ3.
+
+**No Greek for the overlap share.** A draft briefly printed \(\rho_B\) for the
+share of \(d\) that elapsed against outstanding backlog. \(\rho\) appears nowhere
+else in the manuscript or in `macros.tex`, so it put a new symbol, defined only
+in a `\tiny` note, on a quantity the words already name. The column is headed
+`inside B`.
+
+The word **floor** is also no longer printed. Column one of (a) asks *Coverage of
+the required delay*, and all three rows answer it in one register — *Full
+requirement*, *Mandatory work*, *Less than mandatory* — because a reader meeting
+"below the floor" has to leave the table to find out what the floor is, and the
+mandatory/optional distinction is already established in Section~2.3. This
+document and the CSVs keep \(d^{*}_{mand}\) and the *floor* vocabulary.
 
 Units live in the group headers, `(ms)` and `(%)`, and the \(d^{*}\) definition
-lives in the caption. That is what keeps the table note to three lines: it
-carries only the two hatted symbols, the meaning of \(B\) in (b), the fact that
-no analyzed run timed out, and the closed-loop caveat. Do not grow it back —
-anything else belongs in the caption, a header, or the RQ3 prose.
+lives in the caption. The note carries the two hatted symbols, what each error is
+normalised by, which population each error column is a median over, the meaning
+of \(B\) and *inside* \(B\) in (b), the per-run pacing cost, the sub-1%-slack
+tail, and the closed-loop caveat. Nothing else belongs in it — anything more goes
+in the caption, a header, or the RQ3 prose.
+
+**Which quantity gets which unit.** The rule protects one thing: the Capture
+Timeout budget is an internal constant and must not be recoverable, which it
+becomes the moment a single quantity is printed both in milliseconds and as a
+share of the budget. So: delays in ms, slack as a share of the budget, the two
+estimator errors as shares of \(C\) and \(B\), \(d/B\) and *inside* \(B\) as
+shares of the backlog, pacing cost as a share of run time. A share of \(C\) or
+\(B\) is not a leak — neither is the budget, and neither is printed absolutely
+anywhere in the paper — which is why the errors could move to per cent while
+*Unapplied* stayed in ms. *Slack* may never gain a millisecond column.
 
 ## Population and data-quality rule
 
@@ -238,8 +364,12 @@ and shifts the next deadline by one millisecond, hence division by two.
 ## The outcome matrix
 
 Every analyzed decision falls into exactly one of four classes. The first is the
-complement of the required set; the other three partition it. The table prints
-them as rows so both sums are visible without arithmetic on the reader's part.
+complement of the required set; the other three partition it. `outcome_matrix.csv`
+carries one row per class. The table does **not** print all four as rows: (a) is
+the required set alone, so its percentages are not diluted by the complement, and
+the complement appears only in (b), restricted to the paced. The totals stay
+checkable from the denominators the two blocks print — see *Why (a) prints no
+"none required" row, and how the totals stay checkable* above.
 
 | Class | Condition | 12MP | 24MP |
 |---|---|---:|---:|
@@ -306,10 +436,13 @@ different conventions, and each owns one failure mode.
 at the session's observed **maximum** Draft duration for the capture's size
 bucket, re-projected onto the admitted sequence, and the delay formula uses it
 twice. A maximum priced against a typical realized duration necessarily
-over-covers: the median reserve error is +230 ms and +250 ms on decisions that
-required no delay at all. That is why pacing also fires on 19.0% and 21.7% of
-those decisions — 350 and 374 of them, at a median 377 ms and 252 ms. State this
-as a design choice with a measured price, not as an unexplained excess.
+over-covers: across the class that required no delay at all the median reserve
+error is +230 ms and +250 ms, and on the 350 and 374 of them that pacing did act
+on it is **+555 ms and +653 ms**, at a median applied delay of 377 ms and 252 ms.
+Quote the second pair when explaining why pacing fires on 19.0% and 21.7% of
+decisions that required nothing — the first pair is a median over a population
+that is 81% and 78% unpaced. State this as a design choice with a measured price,
+not as an unexplained excess.
 
 **The backlog clock under-covers in its tail, because a point price is summed.**
 `CaptureAvailablePacingSession.queuePacingDecision` advances \(\hat{B}\) by each
@@ -320,17 +453,24 @@ over the queue, so the dispersion accumulates. Summing the per-Draft pricing
 error over the Drafts queued ahead of a decision reproduces that decision's
 backlog error at Pearson \(r=0.95\) and \(0.88\).
 
-The class contrast is the evidence:
+The class contrast is the evidence. Every value below is a median over the
+**whole class**, which is the population for the question "why did this class
+receive less than it required"; for the complementary question, see the paced-only
+figures above. Milliseconds here, per cent in the table; the normalised gradient
+is in the last column and it survives the change of units.
 
-| Class | Queued pricing error P50 | Backlog error P50 | Reserve error P50 |
-|---|---:|---:|---:|
-| No delay was required | +27 / +9 ms | −19 / −43 ms | +230 / +250 ms |
-| Covered by pacing alone | +25 / −46 ms | −4 / −68 ms | +308 / +487 ms |
-| Part left to admission | −627 / −930 ms | −677 / −980 ms | +80 / −9 ms |
-| Below the mandatory floor | — / −1,278 ms | — / −1,392 ms | — / +31 ms |
+| Class | Queued pricing error P50 | Backlog error P50 | Reserve error P50 | Backlog error P50, printed |
+|---|---:|---:|---:|---:|
+| No delay was required | +27 / +9 ms | −19 / −43 ms | +230 / +250 ms | −1.3 / −2.8% |
+| Covered by pacing alone | +25 / −46 ms | −4 / −68 ms | +308 / +487 ms | −0.1 / −1.6% |
+| Part left to admission | −627 / −930 ms | −677 / −980 ms | +80 / −9 ms | −12.8 / −19.8% |
+| Below the mandatory floor | — / −1,278 ms | — / −1,392 ms | — / +31 ms | — / −29.6% |
 
 The decisions pacing covered look exactly like the population. The decisions
 where it fell short are the ones whose queue accumulated 0.6–1.3 s of optimism.
+Read down the backlog column the gradient is the mechanism — −19, −4, −677,
+−1,392 ms — and the top row is the only one where restricting to the paced
+changes it materially, because it is the only class that is mostly unpaced.
 
 ### The asymmetry is the actionable finding
 
@@ -416,6 +556,87 @@ reviewer asks whether admission was engaged on the floor misses, the answer is
 14/14 target Drafts demoted, and it belongs in prose with the "does not close the
 deficit" clause attached.
 
+## The thin deadline-margin tail, and why the minimum stays printed
+
+The minimum realized margin on the largest class is **0.11% of the budget**.
+Printed alone that reads as "no Capture Timeout was luck", so the tail has to be
+characterised rather than trimmed. A proposal to drop the minimum and keep only
+P5 was rejected: on the largest class the two are 0.11% and 7.20% — a factor of
+65 — so P5 alone hides the worst observation in the collection, while on the
+14-decision floor block they are 4.39 and 4.53 and the minimum adds nothing.
+Which statistic carries the tail depends on \(n\), and an industrial reader asks
+for the worst case first.
+
+**Where it is printed.** The class rows carry P5 only; the minimum is stated in
+the table note, as the *tightest* of the eleven sub-1% decisions, in the same
+sentence as the tail count and the backlog context that explains it. That is the
+resolution of the two constraints, and both halves are binding: the redesign
+brief asked for the min *column* to go, because per class it is one execution and
+is not always the statistic that carries the tail, while `AGENTS.md` requires the
+worst observation itself to stay printed. A sentence can carry a number together
+with the condition under which it is informative; a column cannot. Do not restore
+the column, and do not drop the 0.11% from the note.
+
+Eleven of the 3,781 analyzed decisions finished under 1% of the budget — 6 at
+12MP and 5 at 24MP; the per-class counts are `deadline_margin_under_1pct` in
+`outcome_matrix.csv`. On all eleven:
+
+- the backlog \(B\) at the decision was **42–79% of the budget**, and the queue
+  wait alone consumed **31–75%** of it, so the margin is thin because the
+  pipeline was already nearly full of budget-consuming work;
+- **ten of eleven were paced**, at 288 to 921 ms; and
+- **eleven of eleven had pacing or an optional-work skip engaged.** There is no
+  case in this tail where neither control acted.
+
+The tightest is 8 ms at 12MP, run 2#21 shot 10 at overheat level 5: 785 ms of
+pacing applied *and* optional work skipped, with a required delay of zero. The
+reservation was satisfied; the rest of the budget went to a 2,614 ms wait against
+a 3,369 ms backlog. The eleven are not a random draw either — they are the
+saturated states, either late in a burst (24MP run 1#2 shots 29 and 30, backlog
+at 79% and 76% of the budget) or at overheat 5–6.
+
+Do **not** claim from this that the realized margin was bounded, that the
+controller guaranteed the deadline, or that a baseline would have timed out on
+these eleven. The last is an RQ1 question and belongs to the controller-off and
+pacing-only arms of the RQ1 ablation. The supportable statement is that the thin
+tail is 0.29% of decisions, that it coincides with a nearly exhausted budget
+rather than with controller inaction, and that both controls were engaged
+throughout it. The table note prints the short form of exactly that, and the RQ3
+prose should not weaken it into "negligible".
+
+### Where the thin tail sits relative to the guard-bypassed baseline
+
+There is one further observation, and it is the strongest available answer to
+"then no timeout was luck" — but it must be stated as an association across arms,
+never as a matched counterfactual.
+
+All six 12MP thin-margin decisions sit at or within two captures of the *earliest
+first-timeout index* that the guard-bypassed baseline reaches at their own
+starting overheat level in Table~\ref{tab:timeout_index} (M+S, normal capture):
+
+| Overheat | Baseline earliest / median first timeout | Thin-margin decisions here |
+|---|---:|---|
+| Lv3 | 13 / 18 | capture 13 |
+| Lv5 | 8 / 10 | captures 8, 9, 10, 10 |
+| Lv6 | 7 / 9 | capture 9 |
+
+So the thin tail is not scattered: it lands exactly on the states where the
+uncontrolled pipeline fails outright, and there the controlled runs completed
+instead — the tightest with 8 ms in hand.
+
+The caveats are load-bearing. The two populations are **different arms**: the
+Table~\ref{tab:timeout_index} figures are guard-bypassed trials without the
+controller, and the RQ3 population is Full-controller runs. The correspondence is
+therefore between *shot index and overheat level*, not between paired executions.
+Write it as "the thin tail coincides with the states where the guard-bypassed
+baseline first times out", and leave the causal claim to the RQ1 ablation arms.
+Do not write that any of the eleven "would have" timed out.
+
+All eleven are emitted, one row each, as
+`data/rq3/estimator/thin_margin_tail.csv`, so every number in the paragraph above
+is checkable without rerunning an ad-hoc query. The generator asserts that the row
+count matches the sum of `deadline_margin_under_1pct` across the classes.
+
 ## Mandatory-floor audit
 
 No 12MP transition fell below \(d^*_{mand}\). Fourteen of 140 positive-envelope
@@ -430,7 +651,8 @@ No 12MP transition fell below \(d^*_{mand}\). Fourteen of 140 positive-envelope
   (`floorMissWaitMsP50`; an earlier revision of this document printed 4.78 s,
   which the generator does not produce);
 - the minimum realized margin was **4.39% of the budget**, and the class P5 is
-  4.53% — the *largest* minimum of any class in the table; and
+  4.53% — the *largest* minimum of any class in `outcome_matrix.csv`, and the
+  largest P5 of the three classes the table prints; and
 - 0/14 produced an actual Capture Timeout.
 
 The floor is a retrospective sufficient reservation condition, not the actual
@@ -594,13 +816,14 @@ backlog clock would have produced end to end.
 
 ### What a reviewer should be able to check without asking
 
-- every population is cut by \(d^{*}\), and the four classes sum to the analyzed
-  total in the printed column;
+- every population is cut by \(d^{*}\), and the analyzed totals are recoverable
+  from the denominators the two blocks print: 1,841 + 79 = 1,920 in (b) and (a)'s
+  12MP label, 1,721 + 140 = 1,861 for 24MP;
 - the identity \(d-d^{*}=(\hat{C}-C)+(\hat{B}-B)/2\) is asserted in the
-  generator and closes to 0.8 ms;
-- the class contrast in the estimator-error column is the mechanism, and the
-  population P05/P50/P95 in the table note shows the two estimators differ in
-  shape and not only at P50;
+  generator and closes to 0.8 ms, and the caption states it;
+- the class contrast in the estimator-error columns is the mechanism, and the
+  population P05/P50/P95 — which the RQ3 prose carries, not the note — shows the
+  two estimators differ in shape and not only at P50;
 - every count in the exhibits is reproducible from the four commands above; and
 - each claim that could be read as counterfactual — the repricing, the missing
   delay, the queued pricing error — carries its qualification in the caption,

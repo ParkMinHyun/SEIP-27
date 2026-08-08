@@ -85,9 +85,10 @@ run, not a record of an intent expressed at the decision.
 | File | Contents |
 |---|---|
 | `summary.csv` | Scalars: populations, both error distributions, the identity check, the floor block, and the floor repricing |
-| `outcome_matrix.csv` | One row per (condition, class): every cell the table prints, plus `skipped_either_pct` and `deadline_margin_under_1pct`, which it does not |
-| `sizing_summary.csv` | The two populations on which applied-against-required is defined: decisions paced although none was required, and decisions whose requirement the delay covered. Feeds block (b) of the table |
+| `outcome_matrix.csv` | One row per (condition, class): every cell the table prints, plus `skipped_either_pct` and `deadline_margin_under_1pct`, which it does not. The two estimator errors are carried both ways — `*_p50_ms` and `*_p50_pct` — and the table prints the **pct** pair; the ratio is formed per decision before the median, so the two are not convertible into each other |
+| `sizing_summary.csv` | The two populations on which applied-against-required is defined: decisions paced although none was required, and decisions whose requirement the delay covered. Feeds block (b) of the table. Carries its **own** `reserve_error_p50_ms` and `backlog_error_p50_ms`, and the matching `_pct` pair, recomputed on the paced subset rather than read from `outcome_matrix.csv`; on `paced_none_required` the two differ by more than a rounding (+555/+653 ms against +230/+250, and the backlog error changes sign), because that class is 81% and 78% unpaced |
 | `floor_zero_delay_account.csv` | One row per below-the-floor decision that received no delay at all (11, all 24MP): what the controller priced online and how that differs from the realized mandatory pressure. See below |
+| `thin_margin_tail.csv` | One row per decision that finished under 1% of the budget (11 of 3,781): the backlog and queue wait that consumed the budget, the delay applied, and whether either control was engaged. Backs the table note's characterisation of the printed minimum margin, so the minimum can be published without reading as a lucky escape. Row count is asserted against `deadline_margin_under_1pct` |
 | `queued_pricing_scatter.csv` | One row per decision with a reconstructible queue |
 | `scatter_<condition>_<class>.csv` | The same rows split per class |
 | `draft_pricing_ecdf_<condition>.csv` | ECDF of the per-Draft pricing error, thinned to at most 360 points with both endpoints kept |
