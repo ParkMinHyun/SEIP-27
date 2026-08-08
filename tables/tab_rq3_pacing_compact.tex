@@ -62,19 +62,33 @@
 % ---------------------------------------------------------------------------
 % Printed labels, and what each of them replaced
 % ---------------------------------------------------------------------------
-% Column one of (a) asks "what did the delay cover", so all three rows answer it
-% in the same register -- a noun phrase naming the part of the requirement the
-% delay reached.  The word "floor" is not printed anywhere: a reader meeting
-% "below the floor" has to leave the table to find out what the floor is,
-% whereas mandatory and optional work are established in Section~2.3.
+% Column one of both blocks prints the CONDITION that defines the row, not a
+% name for it.  Successive revisions named these classes "Covered by pacing" /
+% "Left to admission" / "Below the mandatory floor", then "Covered in full" /
+% "Mandatory work" / "Less than mandatory"; each round argued about what the
+% name asserted -- "Left to admission" claimed a hand-off the table prints no
+% evidence for -- while the inequality asserts exactly the cut and nothing more.
+% Printing it removes the naming problem instead of relitigating it, and it
+% removes three glosses from the note.
 %
-%   Full requirement       d >= d*_exec.  Was "Covered in full", and before that
-%                          "Covered by pacing".
-%   Mandatory work         d*_mand <= d < d*_exec: the delay reached the
-%                          mandatory work but not the optional work that also
-%                          ran.  Was "Left to admission" -- a name that asserted
-%                          a hand-off this table prints no evidence for.
-%   Less than mandatory    d < d*_mand.  Was "Below the mandatory floor".
+%   d >= d*                 was "Full requirement" / "Covered in full".
+%   d*_man <= d < d*        was "Mandatory work" / "Left to admission": the
+%                           delay reached the mandatory work but not the
+%                           optional work that also ran.
+%   d < d*_man              was "Less than mandatory" / "Below the floor".
+%   d > 0, d* = 0    (b)    paced although the realized work required nothing.
+%   d >= d* > 0      (b)    the covered class, restricted to the paced; it is
+%                           100% paced, so this is the whole of (a)'s top row.
+%
+% Use \mathrm for the subscript.  "d^{*}_{man}" sets m, a and n as three math
+% variables, which both reads wrong and measures 7pt wider than
+% "d^{*}_{\mathrm{man}}" -- enough to have cost (a) a full point of \tabcolsep.
+%
+% d* itself is NOT defined in this table any more.  The RQ3 PROSE carries the
+% definition, d* = ceil([B + 2C - max(0,T)]+ / 2), and must introduce it before
+% this table is read; the note glosses only d*_man, the two hatted errors, d/B
+% and inside B.  If the prose ever drops the formula, put it back in the note
+% beside d*_man -- not in the caption, which is deliberately one line.
 %
 %   Unapplied, d* - d      was "Missing delay".  The formula sits under the word
 %                          so the column defines itself.
@@ -201,9 +215,11 @@
 %
 % LIMIT -- coverage is not severity.  The classes of (a) say how much of a
 % reconstructed reservation was satisfied.  They do NOT rank realized timeout
-% risk, and the table itself shows why: "Less than mandatory" has the largest
-% Slack P5 of the three classes.  The caption states this; never write that a
-% worse coverage class was closer to timing out.
+% risk, and the table itself shows why: the d < d*_man row has the LARGEST Slack
+% P5 of the three, 4.53 against 1.03 and 2.61.  The caption used to say so in
+% words; now that the rows are inequalities and the caption is one line, the
+% burden moves to the RQ3 prose.  Never write that a worse coverage class was
+% closer to timing out, and do not let the ordering of the rows imply it.
 %
 % ---------------------------------------------------------------------------
 % The realized slack tail, and why the note carries it instead of a min column
@@ -255,10 +271,10 @@
 % ---------------------------------------------------------------------------
 % It was printed in an earlier revision and removed, because it could not do the
 % job it looked like it was doing.  The question it appeared to answer is why 11
-% of the 14 floor misses went unpaced, and the "Less than mandatory" row already
-% answers that without it: Paced 3 of 14 beside a backlog error of -1,392 ms
-% says the backlog clock was 1.4 s low, and the column reads -4, -677, -1,392
-% down the rows, so the mechanism is visible as a gradient rather than asserted.
+% of the 14 floor misses went unpaced, and the d < d*_man row already answers
+% that without it: Paced 3 of 14 beside a backlog error of -29.6% says the
+% backlog clock was badly low, and the column reads -1.6, -19.8, -29.6 down the
+% rows, so the mechanism is visible as a gradient rather than asserted.
 % The skip rate cannot answer it at all -- d*_mand is defined on the mandatory
 % work, so skipping optional work cannot close a mandatory-floor deficit -- yet
 % printed beside "Paced 3" it invites exactly that reading.
@@ -315,7 +331,7 @@
 % every data cell then touches its group rule.  Keep them short, and put
 % per-run quantities in the note rather than on them.
 %
-% The 12MP "Less than mandatory" row prints its two counts, 0 and 0, and spans
+% The 12MP d < d*_man row prints its two counts, 0 and 0, and spans
 % the remaining five columns with a phrase.  The zero is structural -- no 12MP
 % decision fell below the floor -- so the counts are real measurements and are
 % printed; the five quantities behind them are undefined on an empty set, and a
@@ -368,21 +384,12 @@
   \centering
   \setlength{\abovecaptionskip}{2pt}%
   \setlength{\belowcaptionskip}{3pt}%
-  % The definition lives in the caption, not the note: it is what lets a reader
-  % recompute every cut in the table, and a caption gets read where a \tiny note
-  % does not.
-  \caption{RQ3: pacing coverage and sizing against the delay the realized Draft
-  work turned out to require, $d^{*}=\lceil[B+2C-\max(0,T)]^{+}/2\rceil$ for
-  measured backlog $B$, realized Draft duration $C$ and remaining window $T$;
-  the last two (a) rows use $C$'s mandatory part.  The $2C$ horizon reserves for
-  two Drafts, so a positive \emph{unapplied} delay is an unmet prospective
-  reservation and not an observed overrun --- the Slack column says what the
-  capture kept.  The two errors decompose the applied-against-required gap
-  exactly, $d-d^{*}=(\hat{C}-C)+(\hat{B}-B)/2$ per decision in milliseconds; the
-  columns print each as a share of the realized quantity it estimates.  Coverage
-  describes satisfaction of this reconstructed reservation, not realized timeout
-  severity: \emph{Less than mandatory} keeps the largest Slack P5 of the three
-  classes.}
+  % One line.  The rows are now the conditions themselves, so the prose that used
+  % to name and rank the coverage classes has no work left to do, and $d^{*}$ is
+  % defined in the RQ3 prose rather than here.  The table no longer carries the
+  % formula anywhere, so that prose has to introduce it before this table is
+  % read; see the d* note at the top of this file.
+  \caption{RQ3: pacing coverage and delay sizing.}
   \label{tab:rq3_pacing_compact}
 
   {\scriptsize
@@ -398,12 +405,12 @@
   \newcommand{\rqthreecovtabular}{%
   % Every width is the measured maximum of its own data and its own header,
   % taken with \settowidth at \scriptsize against \columnwidth = 252pt:
-  %   60  "Less than mandatory" 59.7   (header lines 48.6 and 44.4)
+  %   46  "$d^*_{man}\le d<d^*$" 46.0  (header "Coverage" is only 28.2)
   %   33  "11 (25.6\%)" 32.2            33  "83 (59.3\%)" 32.2
   %   12  "P50" 11.3                    14  "max" 12.8
   %   23  "P5 (\%)" 22.1                21  "$\hat C-C$" 19.6 / "$-29.6$" 20.6
   %   21  "$\hat B-B$" 19.9
-  % Sum 217pt, so \fittabcolsep lands tabcolsep near 2.2pt.  A header line wider
+  % Sum 203pt, so \fittabcolsep lands tabcolsep near 3.1pt.  A header line wider
   % than its p{} value inside a \makecell OVERFLOWS rather than wrapping, and a
   % plain-text cell wider than it silently wraps to two lines; both happened in
   % an earlier draft at 54pt.  Re-measure before changing any label.
@@ -414,7 +421,7 @@
   % these cells -- "53 (67.1\%)" carries one already, and the error columns
   % declare theirs in the group header, which is what keeps them at 21pt.
   \begin{tabular}{@{}%
-      >{\raggedright\arraybackslash}p{60pt}%  coverage class
+      >{\raggedright\arraybackslash}p{46pt}%  coverage condition
       >{\raggedleft\arraybackslash}p{33pt}%   decisions n (%)
       >{\raggedleft\arraybackslash}p{33pt}|%  paced n (%)
       >{\raggedleft\arraybackslash}p{12pt}%   unapplied P50
@@ -432,8 +439,7 @@
     % either row changes its line count.  \centering inside the \multirow
     % centres the \makecell box in the 60pt parbox; the DATA in this column
     % stays flush left, because the row labels are read as a list.
-    \multirow[c]{2}{=}[-2.7pt]{\centering\makecell[c]{\textbf{Coverage of the}\\%
-      \textbf{required delay}}}
+    \multirow[c]{2}{=}[-2.7pt]{\centering\textbf{Coverage}}
       & \multicolumn{2}{c|}{\textbf{Decisions}}
       & \multicolumn{2}{c|}{\makecell[c]{\textbf{Unapplied}\\%
         $d^{*}\!-\!d$ \textbf{(ms)}}}
@@ -458,13 +464,13 @@
     \multicolumn{8}{@{}l}{\textbf{12MP, normal} --- 79 of 1{,}920 decisions
       required a delay (4.1\%)} \\
     \addlinespace[1pt]
-    Full requirement    & 53 (67.1\%) & 53 (100\%)
+    $d\ge d^{*}$              & 53 (67.1\%) & 53 (100\%)
       &   0 &   0 & 1.03 & $+41.4$ &  $-0.1$ \\
-    Mandatory work      & 26 (32.9\%) & 8 (30.8\%)
+    $d^{*}_{\mathrm{man}}\!\le\!d\!<\!d^{*}$ & 26 (32.9\%) & 8 (30.8\%)
       &  72 & 582 & 2.61 & $+11.5$ & $-12.8$ \\
     % Both counts are printed rather than dashed: the zero is structural, and a
     % dash reads as a measurement that is missing.
-    Less than mandatory & 0 (0\%) & 0
+    $d<d^{*}_{\mathrm{man}}$  & 0 (0\%) & 0
       & \multicolumn{5}{r}{\emph{no such decision in 12MP}} \\
     \midrule
 
@@ -472,11 +478,11 @@
     \multicolumn{8}{@{}l}{\textbf{24MP, mem.\ pressure} --- 140 of 1{,}861
       decisions required a delay (7.5\%)} \\
     \addlinespace[1pt]
-    Full requirement    & 83 (59.3\%) & 83 (100\%)
+    $d\ge d^{*}$              & 83 (59.3\%) & 83 (100\%)
       &   0 &   0 & 2.48 & $+44.4$ &  $-1.6$ \\
-    Mandatory work      & 43 (30.7\%) & 11 (25.6\%)
+    $d^{*}_{\mathrm{man}}\!\le\!d\!<\!d^{*}$ & 43 (30.7\%) & 11 (25.6\%)
       & 131 & 530 & 1.20 &  $-0.9$ & $-19.8$ \\
-    Less than mandatory & 14 (10.0\%) & 3 (21.4\%)
+    $d<d^{*}_{\mathrm{man}}$  & 14 (10.0\%) & 3 (21.4\%)
       & 308 & 920 & 4.53 &  $+3.7$ & $-29.6$ \\
     \bottomrule
   \end{tabular}}%
@@ -527,19 +533,25 @@
   work-conserving?}%
   \par\vspace{1pt}
   \newcommand{\rqthreesizetabular}{%
-  % Measured the same way.  Most of these are set by a HEADER line rather than
-  % by the data, which is the trap in this block:
-  %   55  "What the realized" 54.9      ("Full requirement" is only 47.6)
-  %   29  "350/1{,}841" 28.2            ("Paced" alone is 17.8)
-  %   38  "$d^{*}\to d$ (ms)" 38.0      ("$188\to685$" is 33.7)
+  % Measured the same way:
+  %   47  "$d>0$, $d^{*}=0$" 46.2       (header "Population" is only 32.5)
+  %   16  "1{,}841" 15.8            36  "350 (19.0\%)" 35.7
+  %   34  "$188\to685$" 33.7            (header "Delay P50" is only 31.0)
   %   21  "$\hat C-C$" 19.6 / "$+90.8$" 20.5     21  "$\hat B-B$" 19.9
   %   19  "20.3\%" 18.1             27  "inside $B$" 26.3
-  % Sum 210pt, tabcolsep near 3.0pt, and the "error P50 (\%)" group label at
-  % 44.0pt fits its 45pt span.
+  % Sum 221pt, tabcolsep near 1.9pt -- this block runs tighter than (a)'s 3.1pt
+  % and is the one to watch when a label grows.
+  %
+  % The unit moved from the sub-label to the group label, "Delay P50" over
+  % "(ms)", because "$d^{*}\to d$ (ms)" measures 38.0pt where the arrow cell
+  % alone needs 34: at 32pt the 24MP cell silently wrapped "$188\to685$" onto a
+  % second line, which no overfull warning reports.  Check this column by eye
+  % after any change to it.
   \begin{tabular}{@{}%
-      >{\raggedright\arraybackslash}p{55pt}%  population
-      >{\raggedleft\arraybackslash}p{29pt}%   paced n/N over (%)
-      >{\raggedleft\arraybackslash}p{38pt}|%  delay dstar -> d
+      >{\raggedright\arraybackslash}p{47pt}%  population condition
+      >{\raggedleft\arraybackslash}p{16pt}%   source-class n
+      >{\raggedleft\arraybackslash}p{36pt}|%  paced n (%)
+      >{\raggedleft\arraybackslash}p{34pt}|%  delay dstar -> d
       >{\raggedleft\arraybackslash}p{21pt}%   Chat - C, per cent of C
       >{\raggedleft\arraybackslash}p{21pt}|%  Bhat - B, per cent of B
       >{\raggedleft\arraybackslash}p{19pt}%   d / B
@@ -552,39 +564,43 @@
     % makes \multirow's box shorter than its own content.  Giving the spanning
     % cells their offset, as in (a), places them on the header's optical centre.
     %
-    % Paced stays a two-line cell.  Single-line "350/1{,}841 (19.0\%)" measures
-    % 53.4pt against 28.2pt stacked, which alone would drive this block's
-    % \tabcolsep to 1.2pt; (a)'s counts are short enough to go on one line and
-    % these are not.  The (%) left the header instead, since the cell prints it.
-    \multirow[c]{2}{=}[-2.7pt]{\centering\makecell[c]{\textbf{What the realized}\\%
-      \textbf{work required}}}
-      & \multirow[c]{2}{=}[-2.7pt]{\centering\textbf{Paced}}
-      & \multicolumn{1}{c|}{\textbf{Delay P50}}
+    % Decisions is split into n and paced, exactly as in (a), instead of the one
+    % "350/1{,}841 (19.0\%)" cell an earlier revision stacked over two lines.
+    % That cell was the widest thing in the block at 53.4pt on one line, and it
+    % also hid the source-class size inside a ratio; as two columns the same
+    % information costs 52pt, prints on one line, and matches (a) column for
+    % column.  Keep n: with (a) restricted to the required set, 1,841 and 1,721
+    % here are half of the only remaining path to the analyzed totals.
+    \multirow[c]{2}{=}[-2.7pt]{\centering\textbf{Population}}
+      & \multicolumn{2}{c|}{\textbf{Decisions}}
+      & \multicolumn{1}{c|}{\makecell[c]{\textbf{Delay P50}\\\textbf{(ms)}}}
       & \multicolumn{2}{c|}{\makecell[c]{\textbf{Decision-time}\\%
         \textbf{error P50 (\%)}}}
       & \multicolumn{2}{c}{\makecell[c]{\textbf{Delay against}\\%
         \textbf{the backlog}}} \\
-    \cmidrule(lr){4-5}\cmidrule(l){6-7}
-      & & \multicolumn{1}{c|}{$d^{*}\!\rightarrow\!d$ \textbf{(ms)}}
+    \cmidrule(lr){2-3}\cmidrule(lr){5-6}\cmidrule(l){7-8}
+      & \multicolumn{1}{c}{$n$}
+      & \multicolumn{1}{c|}{\textbf{paced}}
+      & \multicolumn{1}{c|}{$d^{*}\!\rightarrow\!d$}
       & \multicolumn{1}{c}{$\hat{C}\!-\!C$}
       & \multicolumn{1}{c|}{$\hat{B}\!-\!B$}
       & \multicolumn{1}{c}{$d/B$}
       & \multicolumn{1}{c}{\textbf{inside} $B$} \\
     \midrule
 
-    \multicolumn{7}{@{}l}{\textbf{12MP, normal}} \\
+    \multicolumn{8}{@{}l}{\textbf{12MP, normal}} \\
     \addlinespace[1pt]
-    None required    & \makecell[r]{350/1{,}841\\(19.0\%)}
+    $d>0$, $d^{*}=0$ & 1{,}841 & 350 (19.0\%)
       & $0\!\rightarrow\!377$   & $+87.0$ & $+11.9$ & 10.8\% & 100.0\% \\
-    Full requirement & \makecell[r]{53/53\\(100\%)}
+    $d\ge d^{*}>0$   & 53      & 53 (100\%)
       & $80\!\rightarrow\!432$  & $+41.4$ &  $-0.1$ &  9.5\% & 100.0\% \\
     \midrule
 
-    \multicolumn{7}{@{}l}{\textbf{24MP, mem.\ pressure}} \\
+    \multicolumn{8}{@{}l}{\textbf{24MP, mem.\ pressure}} \\
     \addlinespace[1pt]
-    None required    & \makecell[r]{374/1{,}721\\(21.7\%)}
+    $d>0$, $d^{*}=0$ & 1{,}721 & 374 (21.7\%)
       & $0\!\rightarrow\!252$   & $+90.8$ &  $+6.7$ &  7.3\% &  98.3\% \\
-    Full requirement & \makecell[r]{83/83\\(100\%)}
+    $d\ge d^{*}>0$   & 83      & 83 (100\%)
       & $188\!\rightarrow\!685$ & $+44.4$ &  $-1.6$ & 20.3\% &  99.6\% \\
     \bottomrule
   \end{tabular}}%
@@ -606,22 +622,18 @@
   %   the floor repricing          at or above the floor on 11 of 14 misses
   \par\vspace{3pt}
   {\tiny\raggedright
-  $\hat{C}$ and $\hat{B}$ are the Draft reserve and the backlog clock the
-  controller held at the decision, so both error columns are estimate minus
-  realized and a positive value means it reserved more than the pipeline used.
-  Each is normalized by the quantity it estimates --- $\hat{C}-C$ against the
-  realized Draft duration, $\hat{B}-B$ against the measured backlog --- and the
-  ratio is formed per decision before the median is taken, so neither is
-  recoverable from the other columns.  Each is a median over its own row's
-  population: class-wide in~(a), and in~(b) over the paced decisions alone,
-  where $B$ is the Draft work still outstanding while the delay ran and
-  \emph{inside} $B$ is the share of $d$ that elapsed against it.  Pacing consumed 18.1 / 24.5\% and 9.8 / 29.7\% of a run's elapsed
-  time at P50 / P95.  Eleven of the 3{,}781 decisions finished under 1\% slack
-  and the tightest kept 0.11\%; on all eleven the backlog already held 42--79\%
-  of the budget, ten were paced, and every one had pacing or an optional-work
-  skip engaged.  No analyzed run
-  produced an observed Capture Timeout; realized slack is an outcome and not a
-  deterministic bound, and pacing is closed-loop, so nothing here is a
-  counterfactual.\par}
+  $d^{*}_{\mathrm{man}}$ is the part of $d^{*}$ that the mandatory Draft work
+  alone requires.  $\hat{C}$ and $\hat{B}$ are the Draft reserve and the backlog clock
+  held at the decision, so each error is estimate minus realized, as a share of
+  the quantity it estimates and taken per decision before the median: class-wide
+  in~(a), over the paced decisions alone in~(b).  $d/B$ is the delay as a share
+  of the Draft work still outstanding while it ran, and \emph{inside} $B$ the
+  share of the delay that elapsed against that work.  Pacing consumed 18.1 /
+  24.5\% and 9.8 / 29.7\% of a run's elapsed time at P50 / P95.  Eleven of the
+  3{,}781 decisions finished under 1\% slack and the tightest kept 0.11\%; on
+  all eleven the backlog already held 42--79\% of the budget and pacing or an
+  optional-work skip was engaged.  No analyzed run produced an observed Capture
+  Timeout; realized slack is an outcome and not a deterministic bound, and
+  pacing is closed-loop, so nothing here is a counterfactual.\par}
   }
 \end{table}

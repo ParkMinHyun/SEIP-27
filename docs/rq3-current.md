@@ -90,20 +90,29 @@ data *and* its own header, taken with `\settowidth` at `\scriptsize` against
 - a header line wider than its `p{}` value **inside a `\makecell` overflows**
   rather than wrapping (`What the realized` is 54.9pt, which overflowed a 54pt
   column by exactly the 0.89pt the log reported);
-- a plain-text cell wider than its `p{}` value **silently wraps to two lines**
-  (`Less than mandatory` is 59.7pt and was wrapping at 54pt).
+- a plain-text or math cell wider than its `p{}` value **silently wraps to two
+  lines**, and no overfull warning reports it. The old `Less than mandatory`
+  label wrapped at 54pt against its 59.7pt; more recently `\(188\to685\)`
+  wrapped in (b)'s delay column at 32pt against its 33.7pt. Check that column by
+  eye after any change to it.
 
 So: re-measure before changing any label, and use `\fittabcolsep` rather than a
 hardcoded `\tabcolsep`. A fixed value leaves the two blocks at different natural
 widths — 237pt and 229pt for the values one draft used — so they sit unaligned
 inside the column.
 
-`\multirow` is used for (a)'s first column and **not** for (b)'s. (a)'s header is
-four lines tall, so a `\multirow[c]{2}` box is tall enough for a two-line label
-with a `-4.8pt` centring correction. (b)'s header is three lines, so the same
-construct produces a box shorter than its own content and reports an overfull
-`\vbox` on every `\fittabcolsep` iteration whatever offset it is given; (b)'s
-label therefore sits in header row one with row two's first cell empty.
+`\multirow` is used for the first column of **both** blocks, with a `-2.7pt`
+centring correction and `\centering` inside it. Both headers are three lines
+tall — row one holds two-line group labels, row two single-line sub-labels — so
+the box `\multirow[c]{2}` computes from twice the standard row height is shorter
+than the header, and the residue is half of row two.
+
+An earlier draft could not use `\multirow` in (b): it reported an overfull
+`\vbox` on every `\fittabcolsep` iteration whatever offset it was given, and the
+label was left sitting in header row one, top-aligned. That failure needs row
+two's first cell to be **empty**; once the spanning cells are given their offset
+and row two is filled, the same construct works in both blocks. Re-derive the
+offset if either row changes its line count.
 
 ### Block (b): why "enough" is not the whole claim
 
@@ -242,10 +251,10 @@ keep the older analysis vocabulary, so use this map when moving between them.
 | required delay | envelope, \(d^{*}\) |
 | unapplied \(d^{*}-d\) | potential avoided delay (flexible band), `shortfall_ms` (mandatory-floor block) |
 | skipped optional work (no longer printed) | demotion (Bokeh+Filter → Filter only → Encoding only) |
-| None required | \(d^{*}=0\), the *no_delay_required* class. Printed in (b) only |
-| Full requirement | \(d\ge d^{*}_{exec}\), the *covered* class |
-| Mandatory work | \(d^{*}_{mand}\le d<d^{*}_{exec}\), the *flexible* band |
-| Less than mandatory | \(d<d^{*}_{mand}\), the mandatory-floor block |
+| \(d>0,\ d^{*}=0\) | the *no_delay_required* class. Printed in (b) only. Was *None required* |
+| \(d\ge d^{*}\) | the *covered* class. Was *Full requirement*, and *Covered in full* before that |
+| \(d^{*}_{\mathrm{man}}\le d<d^{*}\) | the *flexible* band. Was *Mandatory work*, and *Left to admission* before that |
+| \(d<d^{*}_{\mathrm{man}}\) | the mandatory-floor block. Was *Less than mandatory* |
 | decision-time error | the two estimator errors, \(\hat{C}-C\) and \(\hat{B}-B\); printed as a share of \(C\) and of \(B\), kept in ms in this document and in both CSVs |
 | inside \(B\) | the share of the applied delay overlapping outstanding backlog |
 | Slack | realized margin |
@@ -275,10 +284,11 @@ Do not reintroduce *spare*, *transition*, *burst*, *target*, *demotion*,
 **Slack, not deadline margin.** Table~\ref{tab:rq1_end_to_end_summary} already
 prints this quantity as `Slack P5 (%)`, and an earlier revision of the RQ3 table
 called the same quantity `Deadline margin`, which gave one quantity two printed
-names in one paper. RQ3 now prints `Slack P5 (%)` too. *Deadline margin* survives
-as the case-study table's row label and as the name used in this document and in
-the CSV column `deadline_margin_p5_pct`; if that row is ever revised, align it
-with `Slack` rather than reverting RQ3.
+names in one paper. Every printed instance is now `Slack`: RQ3, the case-study
+table's row label in `tables/tab_casestudy_selection.tex`, and the margin panel's
+axis in `figures/fig_casestudy_12mp.tex`. *Deadline margin* survives only as the
+name used in this document and in the CSV column `deadline_margin_p5_pct`. Do not
+reintroduce it into a label.
 
 **No Greek for the overlap share.** A draft briefly printed \(\rho_B\) for the
 share of \(d\) that elapsed against outstanding backlog. \(\rho\) appears nowhere
@@ -286,19 +296,28 @@ else in the manuscript or in `macros.tex`, so it put a new symbol, defined only
 in a `\tiny` note, on a quantity the words already name. The column is headed
 `inside B`.
 
-The word **floor** is also no longer printed. Column one of (a) asks *Coverage of
-the required delay*, and all three rows answer it in one register — *Full
-requirement*, *Mandatory work*, *Less than mandatory* — because a reader meeting
-"below the floor" has to leave the table to find out what the floor is, and the
-mandatory/optional distinction is already established in Section~2.3. This
-document and the CSVs keep \(d^{*}_{mand}\) and the *floor* vocabulary.
+**The classes are no longer named at all.** Column one of both blocks prints the
+inequality that defines the row. Successive revisions argued over what each name
+asserted — *Left to admission* claimed a hand-off the table shows no evidence
+for, *Below the mandatory floor* sent a reader out of the table to find out what
+the floor was — and an inequality asserts exactly the cut and nothing else. It
+also deletes three glosses from the note. This document and the CSVs keep the
+`covered` / `flexible` / `below_floor` keys and the *floor* vocabulary; the map
+above is the bridge. Use `\mathrm` for the subscript in LaTeX: `d^{*}_{man}` sets
+*m*, *a*, *n* as three math variables and measures 7pt wider.
 
-Units live in the group headers, `(ms)` and `(%)`, and the \(d^{*}\) definition
-lives in the caption. The note carries the two hatted symbols, what each error is
-normalised by, which population each error column is a median over, the meaning
-of \(B\) and *inside* \(B\) in (b), the per-run pacing cost, the sub-1%-slack
-tail, and the closed-loop caveat. Nothing else belongs in it — anything more goes
-in the caption, a header, or the RQ3 prose.
+Units live in the group headers, `(ms)` and `(%)`. **\(d^{*}\) is no longer
+defined in the table** — the caption is one line, and the RQ3 prose carries
+\(d^{*}=\lceil[B+2C-\max(0,T)]^{+}/2\rceil\). That prose must introduce it before
+the table is read; if it ever drops the formula, put it back in the note beside
+\(d^{*}_{\mathrm{man}}\), not in the caption. The note glosses
+\(d^{*}_{\mathrm{man}}\), the two hatted
+errors and what each is normalised by, which population each error column is a
+median over, \(d/B\) and *inside* \(B\), and then carries the per-run pacing
+cost, the sub-1%-slack tail, and the closed-loop caveat. The last three are not
+symbol definitions and are not optional: the tail is required by `AGENTS.md`, the
+population clause is what keeps each statistic attached to its own population,
+and the caveat is the claim limit. Nothing else belongs in it.
 
 **Which quantity gets which unit.** The rule protects one thing: the Capture
 Timeout budget is an internal constant and must not be recoverable, which it
