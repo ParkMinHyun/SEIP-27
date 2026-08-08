@@ -1,7 +1,7 @@
 # RQ3 Estimator Artifact
 
-Generated evidence for the compact RQ3 pair: what each pacing decision
-required, what it got, and where the difference came from. Do not edit
+Generated evidence for the RQ3 summary table: the retrospective matched-policy
+target for each pacing decision, what it got, and where the difference came from. Do not edit
 generated CSV cells by hand.
 
 ## Generator
@@ -42,7 +42,7 @@ controller reserved more than the pipeline used.
 Derived:
 
 ```text
-required delay        d*      = ceil( [B + 2C - max(0,T)]^+ / 2 )
+matched-policy target d*      = ceil( [B + 2C - max(0,T)]^+ / 2 )
 mandatory floor       d*_mand = the same on C with skippable optional work removed
 backlog error                 = Bhat - B
 Draft reserve error           = Chat - C
@@ -53,6 +53,10 @@ queued Draft pricing error    = the Draft pricing error summed over the Drafts
                                 that had not finished at the decision and
                                 started before the target's own Draft
 ```
+
+Here `required` in existing CSV fields and class keys is a compatibility name
+for this retrospective heuristic target, not a physical minimum or an optimal
+counterfactual delay.
 
 Away from the `max(0, .)` clip the first three close an identity,
 
@@ -94,7 +98,7 @@ run, not a record of an intent expressed at the decision.
 | `draft_pricing_ecdf_<condition>.csv` | ECDF of the per-Draft pricing error, thinned to at most 360 points with both endpoints kept |
 | `reserve_error_ecdf_<condition>.csv` | ECDF of the Draft reserve error, thinned the same way |
 
-The last four backed the compact RQ3 figure, which was deleted. They are still
+The last four backed an earlier RQ3 figure, which was deleted. They are still
 generated and are still the fastest way to check the population P05/P50/P95 the
 RQ3 prose has to quote, but nothing in the manuscript reads them directly.
 

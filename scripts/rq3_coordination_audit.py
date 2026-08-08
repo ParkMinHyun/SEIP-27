@@ -1,4 +1,4 @@
-"""Audit admission action and mandatory-floor misses for compact RQ3.
+"""Audit admission action and mandatory-floor misses for the RQ3 summary.
 
 The audit joins the envelope partition to factual planned/executed optional-work
 classes. Target-or-next means that admission demoted either the post-decision

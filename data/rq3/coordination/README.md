@@ -1,7 +1,7 @@
 # RQ3 Coordination Artifact
 
-This directory contains generated evidence for the compact RQ3 table and
-figure. Do not edit generated CSV cells by hand.
+This directory contains generated evidence for the RQ3 summary table. Do not
+edit generated CSV cells by hand.
 
 ## Generators
 
@@ -26,7 +26,7 @@ exports directly through ZIP/XML.
 | File | Contents |
 |---|---|
 | `summary.csv` | Envelope totals, coverage, flexible share, floor misses, and flexible-band avoided-delay diagnostics |
-| `envelope_share.csv` | Counts and percentages consumed by panel (c) |
+| `envelope_share.csv` | Counts and percentages for the envelope partition |
 | `action_summary.csv` | Flexible-band target/next demotion and mandatory-floor audit aggregates |
 | `flexible_cases.csv` | One auditable row per admission-flexible transition |
 | `mandatory_floor_cases.csv` | One auditable row per below-floor transition |
@@ -44,7 +44,10 @@ below mandatory floor: d < d_mand
 Here `d_exec` uses the realized admitted Draft duration. `d_mand` replaces
 admission-skippable work with DynamicFunction, Encoding, and measured Draft
 overhead. The `2C` term spans the post-decision Draft and the next capture's
-Draft released by the delay.
+Draft released by the delay. Both values are retrospective matched-policy
+targets, not physical minima: the deployed heuristic halves positive projected
+pressure to limit user-visible delay and relies on admission to shed optional
+work under residual pressure.
 
 `targetOrNextDemoted` is an observed action anywhere in this two-Draft horizon.
 It is not causal attribution of the next admission decision to the current

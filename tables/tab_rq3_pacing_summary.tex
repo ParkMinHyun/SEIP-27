@@ -1,7 +1,6 @@
-% Compact coordination-aware RQ3 main-paper table, single column, two blocks.
-% The original RQ3 policy, selectivity, and calibration tables remain untouched
-% as historical alternatives; docs/rq3-current.md is the authoritative handoff
-% for this exhibit and the source of every claim limit recorded below.
+% Coordination-aware RQ3 main-paper summary table, single column, two blocks.
+% docs/rq3-current.md is the authoritative handoff for this exhibit and the
+% source of every claim limit recorded below.
 %
 % Sources:
 %   data/rq3/estimator/outcome_matrix.csv     block (a)
@@ -123,15 +122,19 @@
 %              Draft overhead, i.e. C with the optional work admission can skip
 %              removed
 %   d          the applied pacing delay
-%   d*         ceil( [B + 2C - max(0,T)]^+ / 2 ), the required delay
+%   d*         ceil( [B + 2C - max(0,T)]^+ / 2 ), the retrospective
+%              matched-policy target
 %   d*_mand    the same expression on C_mand: the mandatory floor
 %   Bhat       PacingReplay.beforeBacklogMs, the controller's backlog clock
 %   Chat       beforeDraftSequenceReservedDurationMs, the Draft reserve
 %
 % The 2C horizon is the deployed prospective model: (i) the Draft that begins
 % after the pacing decision and (ii) the Draft of the next capture released by
-% that delay.  Waiting one millisecond both drains one millisecond of backlog
-% and shifts the next deadline by one millisecond, hence the division by two.
+% that delay.  Pacing deliberately applies half of the positive projected
+% deficit so it does not turn all residual pressure into user-visible delay,
+% relying on node-time admission to skip optional work when its suffix bound
+% exceeds the live budget.  This is an intuitive coordination heuristic, not an exact
+% fixed-point derivation or a literal transfer of a half-deficit to admission.
 % A positive UNAPPLIED delay is therefore an unmet prospective reservation and
 % NOT an observed overrun, which is why the Slack column is printed beside it:
 % it says what the capture actually kept.  The caption must keep that clause --
@@ -383,7 +386,7 @@
 % named in the population paragraph, so the caption does not repeat it.
 %
 % Regenerate with scripts/rq3_estimator_metrics.py (both blocks, the errors, the
-% slack tail and the repricing) and scripts/rq3_policy_metrics.py (the per-run
+% slack tail and the repricing) and scripts/rq3_pacing_summary_metrics.py (the per-run
 % cost); see docs/rq3-current.md for the order.  The two scripts build their
 % populations independently and agree on every shared quantity: 411 and 471
 % paced decisions, 100.0% and 98.7% of delay inside the backlog, and 19 of 70
@@ -399,8 +402,8 @@
   % defined in the RQ3 prose rather than here.  The table no longer carries the
   % formula anywhere, so that prose has to introduce it before this table is
   % read; see the d* note at the top of this file.
-  \caption{RQ3: pacing coverage and delay sizing.}
-  \label{tab:rq3_pacing_compact}
+  \caption{RQ3: pacing-target coverage and delay sizing.}
+  \label{tab:rq3_pacing_summary}
 
   {\scriptsize
   \renewcommand{\arraystretch}{1.12}%
@@ -410,7 +413,7 @@
   % =====================================================================
   % (a)  Coverage, over every decision that required a delay
   % =====================================================================
-  \textbf{(a) When a reservation was required, how much did pacing cover?}%
+  \textbf{(a) Coverage of positive retrospective targets.}%
   \par\vspace{1pt}
   \newcommand{\rqthreecovtabular}{%
   % Every width is the measured maximum of its own data and its own header,

@@ -1,15 +1,34 @@
-\section{Experiments}\label{sec:experiments}
+\section{Evaluation}\label{sec:evaluation}
 
-In this section, we assess the effectiveness of $\ourtool$ through the following research questions:
+We evaluate the coordinated controller through the following research
+questions:
 
-\begin{enumerate}[label=(\arabic*), leftmargin=1.7em]
-  \item \textbf{Branch Coverage}: 
-  \item \textbf{Bug-finding Ability}: 
-  \item \textbf{Stage Evaluation}: 
-  \item \textbf{Generality}: 
-  % \item \textcolor{blue}{\textbf{Comparison with Fuzzing Techniques}: Is $\ourtool$ more effective than recent fuzzing-based techniques for testing program options in terms of branch coverage and bug detection?} %Is $\ourtool$ more effective than these approaches in symbolic execution?}
-  \iffalse
-  \item \textbf{Hyper-parameter Impact}: How do the hyper-parameters of $\ourtool$ affect its performance?
-  \fi
+\begin{enumerate}[label=\textbf{RQ\arabic*:}, leftmargin=4.8em]
+  \item \textbf{End-to-end effectiveness.} Does joint control prevent Capture
+  Timeout while retaining optional Draft work at an acceptable pacing cost?
+
+  \item \textbf{Admission decision quality.} Does admission execute optional
+  work when it can finish within the remaining budget and reject it when
+  execution would exceed that budget?
+
+  \item \textbf{Pacing-delay sizing.} Does the Budget-Aware Draft Controller
+  compute an appropriately sized capture-availability delay for the Draft
+  backlog and the remaining Capture Timeout budget?
 \end{enumerate}
-\fi
+
+% TODO: Add the experimental setup and the RQ1--RQ3 result prose.
+
+\subsection{RQ1: End-to-End Effectiveness}
+\input{tables/tab_rq1_end_to_end_summary.tex}
+\input{tables/tab_rq1_ablation.tex}
+
+\subsection{RQ2: Admission Decision Quality}
+\input{tables/tab_rq2_admission_summary.tex}
+\input{figures/fig_rq2_unsafe_spike_anatomy.tex}
+
+\subsection{RQ3: Pacing-Delay Sizing}
+\input{tables/tab_rq3_pacing_summary.tex}
+
+\subsection{Case Study}
+\input{tables/tab_casestudy_selection.tex}
+\input{figures/fig_casestudy_12mp.tex}

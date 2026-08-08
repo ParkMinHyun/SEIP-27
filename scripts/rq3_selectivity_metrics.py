@@ -1,7 +1,8 @@
-"""RQ3 pacing selectivity: where the controller intervenes, and what it costs.
+"""Shared RQ3 selectivity, binning, and bootstrap support.
 
-Emits everything Table~\\ref{tab:rq3_pacing_selectivity} and
-Figure~\\ref{fig:rq3_pacing_selectivity} report.
+The current summary pipeline imports this module's burst, binning, and
+cluster-bootstrap helpers. It also emits the retained data/rq3/selectivity/
+diagnostics describing where the controller intervenes and what it costs.
 
 Scope.  This script answers "does pacing fire selectively under high measured
 backlog pressure, and what responsiveness cost does that impose", which is a
@@ -37,9 +38,8 @@ calibration diagnostics.
 Uncertainty.  Every interval is a 95% percentile bootstrap over 2,000 replicates
 resampling *bursts*, not transitions: the 29 transitions of one 30-shot run share
 a thermal trajectory and a queue, so a transition-level resample would overstate
-precision by roughly the square root of the cluster size.  The seed and the
-resampling order are shared with scripts/rq3_policy_evidence.py, so the intervals
-printed by the two scripts are identical rather than merely compatible.
+precision by roughly the square root of the cluster size. The fixed seed and
+stable resampling order keep regenerated intervals deterministic.
 
 Run:
     python scripts/rq3_selectivity_metrics.py sampling
@@ -93,9 +93,9 @@ BIN_WIDTH_PCT = 10
 # Projected overrun = B + 2C - max(0,T), as a share of budget.  Negative is spare
 # time.  The top bin is open at 0 rather than continuing in 10-point steps: past
 # zero the counts thin out fast, and "at or past the projection" is the boundary
-# that matters -- the strictly positive part of this bin is exactly the required
-# set of Table~\ref{tab:rq3_pacing_calibration} (79 and 140 transitions; the 24MP
-# bin holds one more, whose overrun is exactly zero).
+# that matters -- the strictly positive part of this bin is exactly the current
+# summary's required-delay set (79 and 140 transitions; the 24MP bin holds one
+# more, whose overrun is exactly zero).
 # The range stops at 0 inclusive, so with open_top the final entry is [0, inf).
 OVERRUN_BINS = [(lo, lo + BIN_WIDTH_PCT) for lo in range(-90, 1, BIN_WIDTH_PCT)]
 MARGIN_BINS = [(lo, lo + BIN_WIDTH_PCT) for lo in range(0, 90, BIN_WIDTH_PCT)]
@@ -111,8 +111,8 @@ DELAY_PLOT_MIN_N = 10
 
 
 def bursts(tx):
-    """Transitions grouped by run.  Insertion order matters: the bootstrap draws
-    from list(bursts(tx)) and the seed is shared with rq3_policy_evidence.py."""
+    """Transitions grouped by run. Insertion order matters because the bootstrap
+    draws from list(bursts(tx)) with a fixed seed."""
     out = {}
     for t in tx:
         out.setdefault(t['run'], []).append(t)

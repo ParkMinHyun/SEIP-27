@@ -1,11 +1,7 @@
-"""RQ3 pacing policy: selectivity, boundary diagnosis and admission-aware delay
-sizing.
+"""RQ3 pacing-summary support: targeting, boundary diagnosis, admission-aware
+delay sizing, and responsiveness cost.
 
-Emits everything Table~\\ref{tab:rq3_pacing_policy} and
-Figure~\\ref{fig:rq3_pacing_policy} report, into data/rq3/policy/.
-
-The current compact pair consumes this script's targeting and boundary outputs;
-the policy-pair references above are retained for historical reproducibility.
+Emits the data/rq3/policy/ inputs consumed by the current RQ3 summary and prose.
 See docs/rq3-current.md for the current artifact map.
 
 Scope, and how it relates to the two sibling scripts
@@ -26,18 +22,19 @@ answers:
 
          d = ceil( max(0, Bhat + 2*Chat_adm - max(0,T)) / 2 )
 
-     which is the least integer delay that closes the predicted deficit under the
-     deployed two-Draft model: waiting d ms drains d ms of outstanding backlog
-     and shifts the next capture's deadline by d ms, so the residual deficit
-     falls by 2d.  The script checks the recorded delay against that value and
-     measures how much of the applied delay overlapped outstanding work.
+     The deployed policy deliberately applies half of the positive projected
+     deficit over its two-Draft horizon so pacing does not convert all residual
+     pressure into user-visible delay. Node-time admission independently skips
+     optional work when its suffix bound exceeds the live budget; no numeric
+     half-deficit is transferred between the two controls. The script checks the
+     recorded delay against that policy value and measures how much of the
+     applied delay overlapped outstanding work.
 
 Loader, populations and intervals are inherited rather than reimplemented: the
 eligible transition set comes from rq3_calibration_metrics.load, and the binning
 and cluster bootstrap come from rq3_selectivity_metrics.  Every population count
-printed here therefore matches those scripts exactly, and the interval for the
-projected-overrun band is the same number as the "overrun >= 0% of budget" row of
-Table~\\ref{tab:rq3_pacing_selectivity} rather than merely compatible with it.
+printed here therefore matches those scripts exactly, including the interval
+for the projected-overrun band.
 
 What may and may not be reported
 --------------------------------
@@ -96,8 +93,8 @@ out, so do not describe the population as survival-conditioned. The 12MP thermal
 rows still carry the RQ1(a) balancing-trim bias. See docs/rq3-current.md.
 
 Run:
-    python scripts/rq3_policy_metrics.py sampling
-    python scripts/rq3_policy_metrics.py sampling --no-write
+    python scripts/rq3_pacing_summary_metrics.py sampling
+    python scripts/rq3_pacing_summary_metrics.py sampling --no-write
 """
 import csv
 import math
@@ -115,10 +112,10 @@ PAPER = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(PAPER, 'data', 'rq3', 'policy')
 
 # The pressure bands.  Twenty points wide rather than the ten of
-# Figure~\ref{fig:rq3_pacing_selectivity}(a), because what this pair supports is a
-# threshold claim and not a shape claim, and because the two boundary classes are
-# defined on the outer two bands.  Half-open [lo, hi); the last is open at its
-# lower edge and is exactly the required set of the calibration exhibit.
+# The shared selectivity helper uses narrower bands for distribution inspection;
+# this summary support uses twenty-point bands because its boundary classes are
+# defined on the outer two bands. Half-open [lo, hi); the last is open at its
+# lower edge and is exactly the required set of the retrospective envelope.
 BANDS = ((-10 ** 9, -40.0, 'spare_over_40'),
          (-40.0, -20.0, 'spare_20_40'),
          (-20.0, 0.0, 'spare_0_20'),
@@ -136,7 +133,7 @@ SAFE_SPARE_PCT = -40.0
 # which bins a shape and must not leave a value unbinned, and those bands are
 # left exactly as they were.  It is the wrong form for a COUNT of decisions that
 # needed a delay: d*_exec = ceil(pressure/2), so pressure == 0 needs none.
-# Everything the compact pair reports as an overrun population therefore uses
+# Everything the summary reports as a required-delay population therefore uses
 # this strict cut, which makes it the same set as
 # rq3_coordination_metrics.py's positive required delay by construction.  The
 # two forms differ on decisions whose pressure is exactly zero: one in this
@@ -352,7 +349,7 @@ def analyse(condition, files):
         'overrunButUnpaced': [t for t in tx if boundary_class(t) == 'overrun_but_unpaced'],
         # The strict overrun population; see OVERRUN_PCT for why this and not
         # the last band.  It is the denominator of every overrun rate the
-        # compact pair prints, and equals the coordination script's count of
+        # summary table prints, and equals the coordination script's count of
         # decisions with a positive required delay.
         'overrun': [t for t in tx if t['riskPct'] > OVERRUN_PCT],
     }
@@ -520,8 +517,7 @@ def write_all(results, safe, overrun):
         # (c) plots the applied delay against the backlog it drains, both as a
         # share of the budget so that the panel shares the unit of (a) and (b).
         # Both axes have to carry the same unit or the d = B locus is not a line;
-        # see the DISCLOSURE note in tables/tab_rq3_pacing_policy.tex for what
-        # that costs.
+        # see docs/rq3-current.md for the disclosure rule that motivates this.
         write(f'delay_vs_backlog_{slug}.csv', ['backlog_pct', 'delay_pct'],
               [[round(100 * t['B'] / t['budget'], 4),
                 round(100 * t['d'] / t['budget'], 4)]
@@ -570,7 +566,7 @@ def write_summary(results, safe, overrun):
             put(f'activationPercent band {name}', round(b['activation'], 2), b['n'])
         # The strict overrun population and its activation.  The band row above
         # keeps the half-open [0, inf) form the historical selectivity exhibit
-        # needs; these two are what the compact pair prints, so that its
+        # needs; these two are what the summary table prints, so that its
         # denominator matches the coordination script's.  See OVERRUN_PCT.
         put('projectedOverrunStrict', len(res['overrun']), res['nAnalyzed'])
         put('activationPercent overrunStrict',

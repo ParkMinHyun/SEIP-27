@@ -1,4 +1,4 @@
-"""Build admission--pacing coordination evidence for the compact RQ3 pair.
+"""Build admission--pacing coordination evidence for the RQ3 summary.
 
 The standard-library XLSX reader evaluates transitions with a positive
 retrospective realized-work envelope and partitions them into:

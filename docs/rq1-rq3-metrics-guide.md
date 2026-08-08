@@ -9,7 +9,7 @@ by `CaptureMetricsExcelExporter`.
 The definitions were checked against:
 
 - paper commit `d181dea3ce5bfbe37bb4568edeade3b6aa9101e6`;
-- implementation commit `1904ec0098fd203ed7f34e9375e4e66ece4b4118`;
+- implementation commit `99aae0af8c3fa1ceb784083446e83c40d0fb917f`;
 - `CaptureMetricsExcelExporter.kt`;
 - `data/rq1_metrics_aggregation.md`;
 - `data/rq2_metrics_aggregation.md`.
@@ -19,7 +19,7 @@ The authoritative RQ3 handoff is `docs/rq3-current.md`, and the generated
 coordination-artifact dictionary is `data/rq3/coordination/README.md`. Legacy
 `pacingPolicy` fields and four-policy aggregation material remain below only as
 historical collection notes; do not use them to frame or regenerate the current
-compact RQ3 exhibits.
+RQ3 summary.
 
 ## 2. Research-question overview
 
@@ -767,6 +767,12 @@ d_exec = ceil(max(0, B + 2*C_exec - max(0,T)) / 2)
 d_mand = ceil(max(0, B + 2*C_mand - max(0,T)) / 2)
 ```
 
+These are retrospective matched-policy targets: they apply the deployed
+two-Draft heuristic to realized work. The controller halves positive projected
+pressure to limit user-visible delay and relies on admission to shed optional
+work under the residual pressure. They are not physical minima or optimal
+counterfactual delays.
+
 Positive realized-work envelopes are partitioned into pacing-covered
 ($d >= d_exec$), admission-flexible ($d_mand <= d < d_exec$), and below-floor
 ($d < d_mand$) transitions. The $2C$ horizon comprises the Draft that begins
@@ -787,11 +793,12 @@ state, throttling, and realized work. Such a study requires new matched runs or
 a validated closed-loop replay/simulator. Do not mechanically rescale the delay
 column. Do not make domain-mismatched policy comparison the default RQ3 baseline.
 
-The current artifact is `tables/tab_rq3_pacing_compact.tex` alone, with the
+The current artifact is `tables/tab_rq3_pacing_summary.tex` alone, with the
 generated CSVs documented in `data/rq3/coordination/README.md` and
-`data/rq3/estimator/README.md`; the compact RQ3 figure was deleted. The older policy, selectivity, calibration,
-trajectory, and four-policy aggregation material below is retained only as
-historical design context and must not drive the current manuscript.
+`data/rq3/estimator/README.md`; RQ3 ships no figure. The superseded policy,
+selectivity, and calibration TeX exhibits have been deleted. Historical
+trajectory and four-policy aggregation material below remains only as
+collection context and must not drive the current manuscript.
 
 ### 6.H Historical four-policy RQ3 material (retired)
 
@@ -1127,7 +1134,7 @@ to approximate the event-level P50/P95.
 
 ## 7. Historical four-policy pre-collection checks (retired)
 
-These checks are retained for the retired comparison design. Current compact-RQ3 validity and regeneration rules are in `docs/rq3-current.md`.
+These checks are retained for the retired comparison design. Current RQ3-summary validity and regeneration rules are in `docs/rq3-current.md`.
 
 These checks determine whether an exported workbook can factually populate the
 RQ3 table and figure.
@@ -1191,9 +1198,9 @@ removed more work, and RQ3 would no longer isolate pacing ability.
 ### Paper tables
 
 - `tables/tab_rq1_ablation.tex`
-- `tables/tab_rq1_result.tex`
+- `tables/tab_rq1_end_to_end_summary.tex`
 - `tables/tab_rq2_admission_summary.tex`
-- `tables/tab_rq3_pacing_compact.tex`
+- `tables/tab_rq3_pacing_summary.tex`
 
 ### RQ2 figure
 
@@ -1226,10 +1233,10 @@ no longer produced; review from a `pdflatex` render.
 Regenerate the current RQ3 evidence from the repository root:
 
 ```text
-python3 scripts/rq3_policy_metrics.py sampling  # requires openpyxl
+python3 scripts/rq3_pacing_summary_metrics.py sampling  # requires openpyxl
 python3 scripts/rq3_coordination_metrics.py
 python3 scripts/rq3_coordination_audit.py
-python3 scripts/render_rq3_compact_preview.py
+python3 scripts/rq3_estimator_metrics.py
 ```
 
 Do not edit generated CSV cells by hand. See

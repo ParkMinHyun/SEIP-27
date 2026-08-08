@@ -1,9 +1,8 @@
-"""RQ3 pacing calibration: applied delay against the delay the same admissibility
-condition requires on measured inputs.
+"""Shared RQ3 loader and pacing-calibration generator.
 
-Emits everything Table~\\ref{tab:rq3_pacing_calibration} and
-Figure~\\ref{fig:rq3_pacing_calibration} report, plus the quantities their header
-comments quote.  Definitions follow those headers:
+The current summary pipeline imports this module's source definitions, workbook
+loader, and inclusive-percentile helpers. It also emits the retained
+data/rq3/calibration/ diagnostics. The core definitions are:
 
     d  = ceil( max(0, Bhat + 2*Chat - max(0,T)) / 2 )   the deployed pacer
     d* = ceil( max(0, B    + 2*C    - max(0,T)) / 2 )   the same condition on

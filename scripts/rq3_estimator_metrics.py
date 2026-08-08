@@ -1,12 +1,16 @@
-"""What each pacing decision required, what it got, and where the difference came from.
+"""What matched-policy target each pacing decision had, what it got, and why they differed.
 
-The compact RQ3 pair reports four outcome classes -- decisions that required no
-delay, decisions whose required delay pacing covered, decisions that left part of
-it to admission, and decisions that fell below the mandatory floor -- and the
+The RQ3 summary reports four outcome classes -- a zero retrospective target,
+a target pacing covered, a target inside the admission-aware band, and a target
+below the mandatory floor -- and the
 previous revision could show that the last two under-estimated backlog without
 showing what produced the under-estimate.  This generator supplies that
-mechanism, and emits every cell of the outcome matrix so the table and the figure
-are driven by one population.
+mechanism, and emits every cell of the outcome matrix so the table is driven by
+one population.
+
+The generated field and class names retain ``required`` for compatibility. In
+paper prose d* is a retrospective matched-policy target: the deployed heuristic
+replayed on realized B and C, not a physical minimum or optimal delay.
 
 The controller prices two quantities with two different conventions, and the
 difference between the applied and the required delay is exactly their two

@@ -1,12 +1,12 @@
 # Current RQ3 Design and Interpretation
 
-This document is the authoritative handoff for the current RQ3 candidate. It
-supersedes the earlier four-policy RQ3 design still retained as historical
-material in `docs/rq1-rq3-metrics-guide.md`.
+This document is the authoritative handoff for the current RQ3 design. It
+supersedes the earlier four-policy design documented in historical collection
+notes in `docs/rq1-rq3-metrics-guide.md`.
 
 ## Research question
 
-RQ3 asks whether the Context-Aware Draft Sequence Controller computes an
+RQ3 asks whether the Budget-Aware Draft Controller computes an
 appropriately sized capture-availability delay for the Draft backlog and the
 remaining Capture Timeout budget.
 
@@ -23,8 +23,8 @@ structure, in the order the table presents them:
 3. where the difference between applied and required delay comes from, which is
    an exact decomposition into the errors of the two estimators the controller
    builds; and
-4. whether the resulting wait drains measured backlog at bounded user-visible
-   cost.
+4. whether the resulting wait drains measured backlog at a reported
+   user-visible cost.
 
 Property 3 is the one earlier revisions were missing. They could report that the
 short-fall decisions under-estimated backlog but not what produced the
@@ -34,7 +34,8 @@ act on.
 
 ### No threshold the reader cannot recompute
 
-Every population in the current table is cut by the required delay \(d^{*}\)
+Every population in the current table is cut by the retrospective matched-policy
+target \(d^{*}\)
 itself. It prints no band edge, no "over 40% budget left", and no constant that
 is not derivable from the two formulas below. An earlier revision printed a 40%
 cut inherited from the historical selectivity exhibit, which the current table
@@ -42,12 +43,9 @@ does not ship; a reader had no way to know where it came from.
 
 ## Current artifacts
 
-The current main-paper exhibit is `tables/tab_rq3_pacing_compact.tex`, and it
-is the only one: `figures/fig_rq3_pacing_compact.tex` was deleted.
-
-The earlier policy, selectivity, and calibration TeX pairs are retained and
-must not be deleted or silently overwritten. They are historical alternatives,
-not additional exhibits to ship beside the current table.
+The current main-paper exhibit is `tables/tab_rq3_pacing_summary.tex`, and it
+is the only RQ3 exhibit; RQ3 ships no figure. The superseded policy,
+selectivity, and calibration TeX pairs have been removed.
 
 The table is a single-column `table` float carrying two blocks, and **each block
 has its own population**, which is the point of the split:
@@ -372,7 +370,7 @@ anywhere in the paper — which is why the errors could move to per cent while
 
 ## Population and data-quality rule
 
-The compact analysis uses the Full controller workbooks:
+The summary analysis uses the Full controller workbooks:
 
 - `data/ablation_sampling/48U_metrics_12MP_normal_0803_{1,2}.xlsx`;
 - `data/ablation_sampling/48U_metrics_24MP_memory_0803_{1,2}.xlsx`.
@@ -386,7 +384,7 @@ measurement fault and exclusion manifest wherever the experiment-validity
 protocol is described; do not invent those details if the implementation or
 manifest is unavailable.
 
-Complete 30-shot runs are required. The current compact population contains 70
+Complete 30-shot runs are required. The current summary population contains 70
 12MP-normal bursts and 69 24MP-memory-pressure bursts, producing 1,920 and
 1,861 analyzed transitions. A transition additionally requires a recorded
 pacing decision and a complete prior-Draft timeline. Watchdog-truncated
@@ -418,8 +416,17 @@ d^*_{mand}=\left\lceil\frac{[B+2C_{mand}-\max(0,T)]^+}{2}\right\rceil.
 
 The factor \(2C\) is the deployed prospective horizon: (i) the Draft that
 begins after the pacing decision and (ii) the Draft of the next capture released
-by that delay. Waiting one millisecond both drains one millisecond of backlog
-and shifts the next deadline by one millisecond, hence division by two.
+by that delay. The policy deliberately applies half of the positive projected
+deficit so pacing does not convert all residual pressure into user-visible
+delay, relying on node-time admission to skip optional work when its suffix
+bound exceeds the live budget. This is an intuitive coordination heuristic, not an
+exact fixed-point derivation or a literal transfer of a half-deficit value to
+admission.
+
+Accordingly, \(d^{*}\) is the retrospective target obtained by applying the
+deployed heuristic to realized \(B\) and \(C\). It is not a physically required,
+minimum, or globally optimal delay. Generated fields and class keys that contain
+`required` retain their historical names for artifact compatibility.
 
 ## The outcome matrix
 
@@ -455,7 +462,7 @@ without the margin column beside them.
 
 ### The overrun population is strict
 
-Retained because `scripts/rq3_policy_metrics.py` still emits it for the
+Retained because `scripts/rq3_pacing_summary_metrics.py` still emits it for the
 historical selectivity exhibit; the current pair no longer prints a pressure
 band at all.
 
@@ -464,7 +471,7 @@ band at all.
 decision at exactly zero pressure needs no delay and is not an overrun. Both
 populations are therefore **pressure > 0**: 79 at 12MP and 140 at 24MP.
 
-`rq3_policy_metrics.py` keeps its half-open `[0, inf)` pressure *band* unchanged,
+`rq3_pacing_summary_metrics.py` keeps its half-open `[0, inf)` pressure *band* unchanged,
 because the historical exhibit bins a shape and must leave no value unbinned,
 and carries a separate strict cut `OVERRUN_PCT` for everything else. The two
 forms differ on one decision in this collection, 24MP run 2#27 capture 28 at
@@ -836,7 +843,7 @@ minimal delay, or a counterfactual end-to-end speedup.
 Run from the repository root:
 
 ```text
-python3 scripts/rq3_policy_metrics.py sampling  # requires openpyxl
+python3 scripts/rq3_pacing_summary_metrics.py sampling  # requires openpyxl
 python3 scripts/rq3_coordination_metrics.py
 python3 scripts/rq3_coordination_audit.py
 python3 scripts/rq3_estimator_metrics.py
