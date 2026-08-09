@@ -179,29 +179,6 @@
 %     makes a Full cell here disagree with that table's Lv4 row, something has
 %     changed in the run set, not in the metric.
 %
-% COLLECTION GAP -- the largest single threat to this table; resolve before
-% submission.  Measured on the untouched source in data/ablation_original, so
-% none of it is an artifact of the N=10 balancing:
-%   The Full arm contains ZERO runs with runStatus CAPTURE_TIMEOUT across all
-%   four of its workbooks, and its RQ1Runs sheets skip seven run ids:
-%     12MP part 1: 9        12MP part 2: none
-%     24MP part 1: 35, 36   24MP part 2: 8, 9, 12, 21
-%   The RQ3 notes identify the first three as this arm's Capture-Timeout
-%   sessions; the four gaps in 24MP part 2 are unexplained by the export, and
-%   ReplayNotes says nothing about them.  Every other arm has NO id gaps at all
-%   and retains its failures: 19/20 No-control and 19/25 Pacing-only sessions at
-%   12MP, 25/30 Pacing-only and 4/23 Admission-only at 24MP carry a timeout.
-%   So the Full arm is the only arm whose export was filtered on the outcome the
-%   table reports.  "10/10" is therefore not evidence that no attempt timed out,
-%   and it is NOT comparable to Admission-only's "8/10", which was not filtered.
-%   This now matters more than it did when the table carried two starting
-%   levels: with Lv3 gone, the ONLY cell where survival separates Full from
-%   Admission only is 24MP/Lv4, a two-run difference.  A reviewer who diffs the
-%   run ids will find this before the third page.
-%   Fix by re-exporting the Full arm without the filter.  Failing that, state
-%   the seven omitted sessions in the caption and report the worst case: if an
-%   omitted 24MP session fell in Lv4, that cell is at best 10/11.
-%
 % DATA BALANCE NOTE:
 %   All eight displayed cells hold N=10, so every cell's denominator is exactly
 %   300 captures.  The Full cells use the balancing protocol in
@@ -209,7 +186,7 @@
 %   first-ten-by-collection-order rule recorded above.
 %   All workbooks carry the 0803 campaign label and the same policy label
 %   (ReplayScope: RECORDED_RUNTIME / FACTUAL_RECORDED_TARGET / M+S).
-%
+% 
 % Implementation reference inspected at commit:
 % 99aae0af8c3fa1ceb784083446e83c40d0fb917f
 

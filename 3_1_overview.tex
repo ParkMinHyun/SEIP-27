@@ -1,36 +1,32 @@
 \subsection{Design Objectives and Execution Contract}
 \label{sec:overview}
 
-We introduce the \emph{Budget-Aware Draft Controller} to prevent cross-shot
-Capture Timeout without reverting to uniform suppression of optional Draft
-processing.  The controller coordinates two actuators with different scopes.
-\emph{Remaining-sequence admission} reduces the service demand of the capture
-that owns the Draft worker, whereas \emph{capture-availability pacing} delays
-the earliest application-facing opportunity to start a future capture.  The
-former may reduce Draft quality; the latter increases the shot-to-shot
-interval.  The objective is to retain optional work when the live budget
-supports it while making both costs explicit, preserving the existing
-single-worker pipeline and HAL contract.
+We introduce the \emph{Budget-Aware Draft Controller} to prevent cross-shot Capture Timeout without reverting to uniform suppression of optional Draft processing.
+The controller coordinates two actuators with different scopes.
+\emph{Remaining-sequence admission} reduces the service demand of the capture that owns the Draft worker, whereas \emph{capture-availability pacing} delays the earliest application-facing opportunity to start a future capture.
+The former may reduce Draft quality; the latter increases the shot-to-shot interval.
+The objective is to retain optional work when the live budget supports it while making both costs explicit, preserving the existing single-worker pipeline and HAL contract.
 
 \begin{figure*}[!t]
   \centering
-  \resizebox{\textwidth}{!}{\input{figures/fig_controller_timeline.tex}}
+  \input{figures/fig_controller_timeline.tex}
   \caption{Execution contract of the Budget-Aware Draft Controller. Pacing
   delays the application-facing opportunity for a future capture, while
-  admission controls optional work at node execution. A new demotion affects
-  later pacing only after a subsequent Draft-start refresh. The horizontal
-  layout is schematic, not a time scale.}
+  admission controls optional work at node execution. At the decision instant
+  \(t_i\), \(\hat B_i\) is the admitted work still queued, \(2\hat C_i\)
+  reserves the Draft that follows the decision and the Draft the delay
+  releases, and \(T_i\) is the window left on the newest committed deadline.
+  A new demotion affects later pacing only after a subsequent Draft-start
+  refresh, so the \(S\) rejection in Draft~\(i\) is a fresh model decision
+  whereas the one in Draft~\(i{+}1\) is forced by \(G\). The horizontal layout
+  is schematic, not a time scale.}
   \label{fig:controller-timeline}
 \end{figure*}
 
-Figure~\ref{fig:controller-timeline} summarizes the execution contract.  On the
-normal parallel-capture path, the pacer compares the time-valued Draft backlog
-and reserve with the newest committed deadline, records a callback decision,
-and requests release of \texttt{captureAvailable} after \(d_i\).  This changes neither an
-active deadline nor a HAL request.  At every Draft start, the controller
-consumes the oldest pending decision.  If that Draft has a modeled workload
-sequence, the controller also refreshes the reserve.
-Admission then rereads the live budget before each optional node and tests its
-remaining modeled suffix.  A rejection
-demotes the workload group until queue drain; Draft completion updates the
-model, and drain clears the burst-local control state.
+Figure~\ref{fig:controller-timeline} summarizes the execution contract.
+On the normal parallel-capture path, the pacer compares the time-valued Draft backlog and reserve with the newest committed deadline, records a callback decision, and requests release of \texttt{captureAvailable} after \(d_i\).
+This changes neither an active deadline nor a HAL request.
+At every Draft start, the controller consumes the oldest pending decision.
+If that Draft has a modeled workload sequence, the controller also refreshes the reserve.
+Admission then rereads the live budget before each optional node and tests its remaining modeled suffix.
+A rejection demotes the workload group until queue drain; Draft completion updates the model, and drain clears the burst-local control state.

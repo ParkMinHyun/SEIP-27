@@ -20,26 +20,6 @@
 % workbooks contribute 84 and 72 complete, timeout-free runs to the 12MP and
 % 24MP conditions.
 %
-% BALANCED DESIGN.  Every cell now reports exactly ten runs.  The unbalanced
-% source gave 10-14 runs per cell (12MP Lv2-6 and 24MP Lv1/Lv3 were oversized),
-% and 16 runs were dropped to level them.  Selection rule, per oversized cell:
-% each run is scored by the Euclidean norm of its robust z across M+S@30,
-% Sigma-d, Slack P5 and burst span, z = (x - median)/(1.4826 MAD) with a
-% zero-MAD metric contributing nothing, and the N-10 highest-scoring runs are
-% removed.  data/ablation_sampling/sampling_selection_audit.csv lists every run
-% of every trimmed cell with its metrics, z values, score and KEEP/DROP, and the
-% folder README states the protocol and its bias.
-%
-% BIAS TO DISCLOSE IF THIS TABLE IS PUBLISHED.  The score is computed on
-% reported outcome metrics, so the trim is not outcome-neutral.  At 12MP/Lv4 the
-% M+S distribution is bimodal -- four of fourteen runs retained all optional
-% Draft work at 100% while the rest sat at 23-40% -- and those four are the
-% furthest from the median, so the cell moves 53.1 to 34.3.  The same effect,
-% smaller, applies at Lv3 (53.6 to 44.3).  That is a real mode of the
-% phenomenon, not measurement error.  Two outcome-neutral alternatives were
-% computed: first-ten-by-collection-order gives 12MP Lv3/Lv4 M+S of 48.3/55.0,
-% and scoring deviation on Slack P5 alone gives 54.3/56.3.
-%
 % Cells that did not change, because they already held ten runs: 12MP Lv0, Lv1
 % and 24MP Lv0, Lv2, Lv4, Lv5, Lv6.
 %

@@ -1,39 +1,22 @@
 \subsection{Production Integration and Operational Boundaries}
 \label{sec:implementation}
 
-We integrated the controller at two existing ownership points in the Samsung
-Android camera framework.  On the normal path, the Draft-saving manager owns
-the predictor, sticky admission policy, and pacer, and executes Draft tasks on
-its existing single-thread executor.  A profiler created per Draft task binds
-the configured node chain to node-time admission, watchdog handling, and model
-updates.  On the normal parallel-capture path, the application-facing policy
-invokes the published decider and requests callback release from a delayed
-scheduler after the computed \(d_i\).  Pacer operations are synchronized:
-callback decisions update one backlog clock serially, and each Draft start
-consumes the oldest pending decision before rebasing that clock.  If Draft-task
-submission is rejected, the manager falls back to a shared executor; this
-exceptional path is outside the controller's single-worker queue model.
+We integrated the controller at two existing ownership points in the Samsung Android camera framework.
+On the normal path, the Draft-saving manager owns the predictor, sticky admission policy, and pacer, and executes Draft tasks on its existing single-thread executor.
+A profiler created per Draft task binds the configured node chain to node-time admission, watchdog handling, and model updates.
+On the normal parallel-capture path, the application-facing policy invokes the published decider and requests callback release from a delayed scheduler after the computed \(d_i\).
+Pacer operations are synchronized: callback decisions update one backlog clock serially, and each Draft start consumes the oldest pending decision before rebasing that clock.
+If Draft-task submission is rejected, the manager falls back to a shared executor; this exceptional path is outside the controller's single-worker queue model.
 
-The learned predictor persists across bursts, whereas the callback FIFO,
-backlog clock, size-scoped maxima, and group set \(G\) are cleared when the
-Draft queue drains.  Decision-time records retain the planned suffix, point and
-upper estimates, live budget, effective admission action, watchdog state,
-pacing inputs, and node/Draft timeline.  Device-state, GC, CPU, and legacy
-capture-availability measurements remain observability only.
+The learned predictor persists across bursts, whereas the callback FIFO, backlog clock, size-scoped maxima, and group set \(G\) are cleared when the Draft queue drains.
+Decision-time records retain the planned suffix, point and upper estimates, live budget, effective admission action, watchdog state, pacing inputs, and node/Draft timeline.
+Device-state, GC, CPU, and legacy capture-availability measurements remain observability only.
 
-Cold state is fail-open: a fully unpriced suffix is admitted, callbacks before
-the first modeled Draft-start snapshot are unpaced, and \textsc{Optional} work
-is only watchdog-contained.  Immediate paths and scheduler rejection can also
-bypass waiting; on rejection, the callback proceeds while the computed decision
-remains in the FIFO.  Because scheduler acceptance is not persisted, \(d_i\)
-records the requested delay rather than realized waiting.
+Cold state is fail-open: a fully unpriced suffix is admitted, callbacks before the first modeled Draft-start snapshot are unpaced, and \textsc{Optional} work is only watchdog-contained.
+Immediate paths and scheduler rejection can also bypass waiting; on rejection, the callback proceeds while the computed decision remains in the FIFO.
+Because scheduler acceptance is not persisted, \(d_i\) records the requested delay rather than realized waiting.
 
-The controller governs Draft workload admission and capture-availability
-pacing only.  The existing platform retains responsibility for deferred final
-processing, recovery, and Draft/final publication arbitration; the controller
-neither triggers background final composition nor changes the HAL or sensor
-protocol.  Because online estimates can err, callbacks can follow fail-open
-paths, and an application may issue a shutter request after callback release,
-the design provides neither a formal deadline guarantee nor a globally minimum
-delay.  Its timeout-prevention claim is therefore empirical and limited to the
-evaluated configurations and bursts.
+The controller governs Draft workload admission and capture-availability pacing only.
+The existing platform retains responsibility for deferred final processing, recovery, and Draft/final publication arbitration; the controller neither triggers background final composition nor changes the HAL or sensor protocol.
+Because online estimates can err, callbacks can follow fail-open paths, and an application may issue a shutter request after callback release, the design provides neither a formal deadline guarantee nor a globally minimum delay.
+Its timeout-prevention claim is therefore empirical and limited to the evaluated configurations and bursts.
