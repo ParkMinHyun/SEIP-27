@@ -165,9 +165,9 @@ def print_audit(cond, rows):
             tf, tu = fa + fs, ua + us
             print(f'{group:13s} {name:28s} {tf + tu:5d} | '
                   f'{fa:5d} ({M.pct(fa, tf):5.1f}%) {fs:5d} ({M.pct(fs, tf):5.1f}%) '
-                  f'{("--" if m is None else f"+{m:.1f}%"):>8s} | '
+                   f'{("--" if m is None else f"{m:.1f}%"):>8s} | '
                   f'{ua:4d} ({M.pct(ua, tu):5.1f}%) {us:5d} ({M.pct(us, tu):5.1f}%) '
-                  f'{("--" if o is None else f"-{abs(o):.1f}%"):>8s}')
+                   f'{("--" if o is None else f"{abs(o):.1f}%"):>8s}')
         print()
 
 
@@ -176,7 +176,9 @@ def main(show_runs=False):
         cur, added, pool, D, census, keep = build(cond)
         if show_runs:
             print_runs(cond, census, keep)
-        print(f'\ndeadline D: 0729={D[0]}, 0803={D[1]}, pooled={D[2]}')
+        deadline_consistent = D[0] == D[1] == D[2]
+        print(f'\ndeadline metadata consistent across pools: '
+              f'{"yes" if deadline_consistent else "no"}')
         rows = [('published table', {g: PUBLISHED[(cond, g)]
                                      for g in ('Multi-frame', 'Single-frame')}),
                 ('current  0729 only', audit_cells(cur, D[0])),

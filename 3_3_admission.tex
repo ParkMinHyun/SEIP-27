@@ -19,8 +19,8 @@
     \Procedure{OnDraftStart}{$i$}
       \State pop the oldest pending decision; rebase $E$ from queued work \label{ln:rebase}
       \If{capture $i$ has a modeled workload sequence}
-        \State $\sigma^{\mathrm{eff}}_i\gets$ configured sequence projected through $G$
-        \State $\hat C\gets\max(C^{\max}_s-\widehat W_{\mathrm{demoted},i},\;\hat P(\sigma^{\mathrm{eff}}_i)+\hat H)$ \label{ln:reserve}\Comment{Eq.~\ref{eq:reserve}}
+        \State $\sigma^G_i\gets$ configured sequence after applying $G$
+        \State $\hat C\gets\max(C^{\max}_s-\widehat W_{\mathrm{demoted},i},\;\hat P(\sigma^G_i)+\hat H)$ \label{ln:reserve}\Comment{Eq.~\ref{eq:reserve}}
       \EndIf
     \EndProcedure
     \Procedure{BeforeOptionalNode}{$i,j$}
@@ -41,9 +41,9 @@
   \end{algorithmic}}
 \end{algorithm}
 
-Algorithm~\ref{alg:controller} states the controller as the five events of Figure~\ref{fig:controller-timeline}; this subsection explains \Call{BeforeOptionalNode}{} and Section~\ref{sec:pacing} the two pacing events.
+Algorithm~\ref{alg:controller} states the two decisions of Figure~\ref{fig:controller-overview} as five runtime events; this subsection explains \Call{BeforeOptionalNode}{} and Section~\ref{sec:pacing} the two pacing events.
 
-\smallskip\noindent\textbf{Fresh admission.}
+\smallskip\noindent\textbf{Model decision.}
 Admission protects the capture that currently owns the Draft worker.
 Directly before node \(j\), the profiler constructs \(\sigma_{i,j}\) from the configured node chain and rereads \(R_{i,j}\) from the Capture Timeout clock (Algorithm~\ref{alg:controller}, line~\ref{ln:suffix}).
 For an \textsc{Optional} head, the model recommends admission when
@@ -60,15 +60,15 @@ It admits that fully unpriced suffix; if any component already has a point estim
 Once only \textsc{Required} or \textsc{Reserved} work remains, admission has no further corrective action for capture \(i\); pacing can affect only future capture arrivals.
 
 \smallskip\noindent\textbf{Sticky product policy.}
-The product-policy layer converts this fresh recommendation into the effective action.
+The product-policy layer maps this model recommendation to the action the controller takes.
 The first eligible rejection of each group adds that group to the burst-local set \(G\) (line~\ref{ln:demote}): \textsc{Portrait} contains \(M\), and \textsc{Decoration} contains decoding, Filter, and overlay watermark.
 Each demotion remains in force until the Draft task queue drains (line~\ref{ln:drain}), preventing optional-effect availability from alternating across captures.
-It can therefore override a later fresh admit (line~\ref{ln:sticky}), an intentional quality-consistency cost that we distinguish from model selectivity in RQ2.
+It can therefore override a later model admit (line~\ref{ln:sticky}), an intentional quality-consistency cost that we distinguish from model selectivity in RQ2.
 Already executed nodes are not rolled back.
 Frame watermark and the decoding that it requires remain exceptions because they are required for the configured output.
 
 \smallskip\noindent\textbf{Watchdog containment.}
-An effective admit is still exposed to slowdown after execution begins.
+An optional node that passes both the model test and session policy is still exposed to slowdown after execution begins.
 Each admitted optional node therefore runs under a watchdog budget: whatever remains of \(R_{i,j}\) once the upper estimate of the \textsc{Reserved} Encoding interval is set aside, floored at zero and rounded to the nearest millisecond.
 That interval closes when the saved-Draft task completes.
 \textsc{Required} work remains priced in upstream suffixes but receives no watchdog capacity; this asymmetry does not exempt it from the capture deadline.
@@ -80,4 +80,4 @@ The watchdog is containment, not reliable native preemption, a substitute for ad
 RQ2 labels each decision retrospectively from realized traces, so we fix the two labels here rather than at first use.
 A decision is \emph{feasible} when the measured duration from node \(j\) through Draft completion fits the \(R_{i,j}\) that the decision read, and \emph{unsafe} when it exceeds that budget or the watchdog intervenes.
 The pair is the realized counterpart of Equation~\ref{eq:admission}, which the runtime tests against \(U\) precisely because the realized duration is not yet available.
-Under the always-admit audit these labels record model misjudgement rather than outcomes an enforced build would produce, because that audit applies neither the effective action nor the watchdog.
+Under the always-admit audit these labels record model misjudgement rather than outcomes an enforced build would produce, because that audit applies neither session policy nor the watchdog.

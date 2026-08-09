@@ -1,9 +1,16 @@
 % Two-capture execution contract for the Budget-Aware Draft Controller.
 %
+% NO NOTATION IN THIS DRAWING, DELIBERATELY.  It is the overview figure and it
+% appears before Section III-B defines the model and Section III-D defines the
+% pacing quantities, so every label here is prose.  An earlier revision anchored
+% the symbols of Eq. (3) on the drawing; that tied figure to equation nicely but
+% forward-referenced notation the reader had not met yet.  If a quantity needs a
+% symbol, it belongs in Section III-D, not here.
+%
 % DRAWN AT FINAL SIZE.  Do not wrap this in \resizebox: every label size is
 % chosen to sit between \tiny and \scriptsize against the body text, and
-% scaling the box breaks that relation.  Natural width is ~16.5cm including
-% the lane labels, against \textwidth ~18.1cm in IEEEtran conference mode.
+% scaling the box breaks that relation.  Natural width is ~17.3cm including the
+% lane labels, against \textwidth ~18.1cm in IEEEtran conference mode.
 %
 % TWO RULES KEEP THIS DRAWING FROM COLLIDING WITH ITSELF.  An earlier revision
 % broke both and every box in the Draft lane overlapped its neighbour.
@@ -11,24 +18,23 @@
 %   1. Every box in the Draft lane carries `minimum width`, and the centres
 %      below are spaced by that width plus a gap.  Never let a Draft-lane box
 %      size itself from its text: one wider label then pushes into the next.
+%      Prose labels are wider than symbols were, which is why the boxes are on
+%      two lines and the Draft blocks are wider than in the notation version.
 %   2. Every multi-line box breaks its lines with an explicit \\ and declares
 %      NO `text width`.  Automatic wrapping is font-metric dependent, so the
 %      same source gave three lines here and four elsewhere, and the fourth
 %      line dropped out of the band into the channel below it.
 %
 % Horizontal positions show event order and relative occupancy, not measured
-% duration.  The quantities Eq. (5) prices are anchored as BARE SYMBOLS --
-% \hat B_i over the admitted backlog, 2\hat C_i over the two Drafts the
-% horizon covers, T_i between the two full-height guides -- and the caption
-% carries their prose.  The drawing is consistent with a positive delay:
-% \hat B_i + 2\hat C_i reaches past the deadline guide that ends T_i.
+% duration.  The drawing is still consistent with a positive delay: the queued
+% work plus the two-Draft reserve reach past the deadline guide.
 %
 % Vertical geometry.  The two guides span the whole height so the measure rows
 % at the bottom can reference the deadline drawn on the top lane.  Do not move
 % a band without the channel beside it:
-%   app band     3.35 .. 4.15     lane channel  2.90 .. 3.35
-%   ctrl band    1.85 .. 2.90     G channel     1.10 .. 1.85  (sticky arc)
-%   worker band  0.15 .. 1.10     measure rows  0.02 .. -0.64
+%   app band     3.40 .. 4.20     lane channel  2.95 .. 3.40
+%   ctrl band    1.90 .. 2.95     skip channel  1.20 .. 1.90  (sticky arc)
+%   worker band  0.10 .. 1.20     measure rows  0.02 .. -0.64
 %
 % NOTE: 'cap' is a reserved TikZ key (line cap); the commit tick is 'commit'.
 \begin{tikzpicture}[
@@ -45,10 +51,10 @@
   dbox/.style={draw=blue!52!black, fill=blue!5, rounded corners=2.5pt,
     semithick},
   nbox/.style={draw=blue!52!black, fill=white, rounded corners=1.5pt,
-    align=center, inner sep=1pt, minimum height=0.36cm, minimum width=1.20cm},
+    align=center, inner sep=1.5pt, minimum height=0.52cm, minimum width=1.60cm},
   sbox/.style={draw=purple!62!black, fill=purple!8, rounded corners=1.5pt,
-    dash pattern=on 2pt off 1.3pt, align=center, inner sep=1pt,
-    minimum height=0.36cm, minimum width=1.20cm, text=purple!55!black},
+    dash pattern=on 2pt off 1.3pt, align=center, inner sep=1.5pt,
+    minimum height=0.52cm, minimum width=1.60cm, text=purple!55!black},
   flow/.style={->, semithick, black!45},
   sticky/.style={->, semithick, densely dashed, purple!62!black},
   commit/.style={black!75, line width=1pt},
@@ -58,108 +64,109 @@
 ]
 
   %% ---------------------------------------------------------------- lanes
-  \fill[band, black!4] (0.10,3.35) rectangle (15.15,4.15);
-  \fill[band, black!4] (0.10,1.85) rectangle (15.15,2.90);
-  \fill[band, black!4] (0.10,0.15) rectangle (15.15,1.10);
-  \node[lanelab] at (0.00,3.75) {App-facing\\capture};
-  \node[lanelab] at (0.00,2.38) {Controller};
-  \node[lanelab] at (0.00,0.62) {Draft worker};
+  \fill[band, black!4] (0.10,3.40) rectangle (15.90,4.20);
+  \fill[band, black!4] (0.10,1.90) rectangle (15.90,2.95);
+  \fill[band, black!4] (0.10,0.10) rectangle (15.90,1.20);
+  \node[lanelab] at (0.00,3.80) {App-facing\\capture};
+  \node[lanelab] at (0.00,2.42) {Controller};
+  \node[lanelab] at (0.00,0.65) {Draft worker};
 
   %% --------------------------------------------------- full-height guides
-  % The t_i guide is also the link from the decision box up to the start of
-  % the delay span, which is why neither carries its own arrow.
-  \draw[black!35, densely dotted] (2.90,-0.76) -- (2.90,4.27);
-  \node[tag, anchor=south] at (2.90,4.27) {decision instant $t_i$};
-  % x=12.01 is the gap between Draft i+1's S and Encoding boxes, so the guide
-  % crosses the worker lane in clear space rather than behind a box fill.  It
-  % must stay equal to the right end of the T_i measure at the bottom.
-  \draw[red!62!black, dashed, semithick] (12.01,-0.76) -- (12.01,4.21);
-  \node[tag, anchor=south, text=red!62!black] at (12.01,4.21) {deadline $i$};
+  % The decision guide is also the link from the decision box up to the start
+  % of the delay span, which is why neither carries its own arrow.
+  \draw[black!35, densely dotted] (2.20,-0.76) -- (2.20,4.32);
+  \node[tag, anchor=south] at (2.20,4.32) {decision instant};
+  % x=12.63 is the gap between the next Draft's skipped and Encoding boxes, so
+  % the guide crosses the worker lane in clear space rather than behind a box
+  % fill.  It must stay equal to the right end of the deadline measure below.
+  \draw[red!62!black, dashed, semithick] (12.63,-0.76) -- (12.63,4.26);
+  \node[tag, anchor=south, text=red!62!black] at (12.63,4.26)
+    {this capture's deadline};
 
   %% ------------------------------------------------------- app-facing lane
-  \draw[commit] (0.62,3.31) -- (0.62,4.19);
+  \draw[commit] (0.50,3.36) -- (0.50,4.24);
   \node[tag, anchor=south, align=center, text=black!75]
-    at (0.62,4.21) {capture $i$\\committed};
-  \node[evt] (hal) at (1.78,3.75) {HAL ready};
+    at (0.50,4.26) {this capture\\committed};
+  \node[evt] (hal) at (1.42,3.80) {HAL ready};
 
   % The delay is the one user-visible cost; give it a filled span, not a rule.
-  \fill[orange!22, rounded corners=1pt] (2.90,3.58) rectangle (4.95,3.92);
+  \fill[orange!22, rounded corners=1pt] (2.20,3.63) rectangle (4.30,3.97);
   \draw[orange!72!black, semithick, rounded corners=1pt]
-    (2.90,3.58) rectangle (4.95,3.92);
-  \node[font=\scriptsize, text=orange!42!black] at (3.92,3.75) {delay $d_i$};
+    (2.20,3.63) rectangle (4.30,3.97);
+  \node[font=\scriptsize, text=orange!42!black] at (3.25,3.80) {pacing delay};
 
   % `rel' sizes itself from \texttt{captureAvailable} (~2.5cm wide), so leave
   % half a centimetre on each side or its two arrows collapse to arrowheads.
-  \node[evt] (rel) at (6.75,3.75) {release\\\texttt{captureAvailable}};
-  \draw[flow] (4.95,3.75) -- (rel.west);
-  \draw[flow, densely dotted] (rel.east) -- (8.31,3.75);
-  \draw[commit] (8.45,3.31) -- (8.45,4.19);
+  \node[evt] (rel) at (5.80,3.80) {release\\\texttt{captureAvailable}};
+  \draw[flow] (4.30,3.80) -- (rel.west);
+  \draw[flow, densely dotted] (rel.east) -- (7.26,3.80);
+  \draw[commit] (7.40,3.36) -- (7.40,4.24);
   \node[tag, anchor=south, align=center, text=black!75]
-    at (8.45,4.21) {capture $i{+}1$\\committed};
+    at (7.40,4.26) {next capture\\committed};
 
   %% ----------------------------------------------------------- controller
-  \node[ctrl] (dec) at (2.90,2.38)
+  \node[ctrl] (dec) at (2.20,2.42)
     {\textbf{pacing decision}\\
-     $\hat B_i\!+\!2\hat C_i$ against $T_i$\\
-     $\Rightarrow$ delay $d_i$};
-  \draw[flow] (hal.south) -- (1.78,2.90);
+     weigh queued work and\\
+     reserve against time left};
+  \draw[flow] (hal.south) -- (1.42,2.95);
 
-  \node[ctrl] (drain) at (14.10,2.38) {queue drain\\clears $G,E,C^{\max}_s$};
+  \node[ctrl] (drain) at (14.80,2.42) {queue drain\\clears burst state};
 
   %% --------------------------------------------------------- Draft worker
   % Everything still admitted when the decision is taken is the backlog.
   \draw[pattern=north east lines, pattern color=black!20, draw=black!30]
-    (0.62,0.20) rectangle (4.28,1.05);
-  \node[ontop, tag] at (1.55,0.85) {earlier Drafts};
-  \draw[meas] (2.90,0.52) -- (4.28,0.52);
-  \node[ontop, font=\scriptsize] at (3.59,0.52) {$\hat B_i$};
+    (0.50,0.15) rectangle (3.40,1.15);
+  \node[ontop, tag] at (1.32,0.95) {earlier Drafts};
+  % No measure arrow here: the span is only 1.2cm and its own label leaves no
+  % room for the two arrowheads.  The decision guide marks where the backlog
+  % starts and the Draft block marks where it ends, so a plain tag is enough.
+  \node[ontop, tag] at (2.80,0.52) {still queued};
 
-  % Draft i: a fresh model rejection demotes the Decoration group into G.
-  \draw[dbox] (4.28,0.20) rectangle (8.62,1.05);
+  % This Draft: a model rejection skips the single-frame stage for the burst.
+  \draw[dbox] (3.40,0.15) rectangle (8.44,1.15);
   \node[anchor=west, font=\scriptsize\bfseries, text=blue!45!black]
-    at (4.38,0.87) {Draft $i$};
-  \node[nbox] at (5.05,0.51) {$M$ admit};
-  \node[sbox] (skip) at (6.45,0.51) {$S$ skip};
-  \node[nbox] at (7.85,0.51) {Encoding};
+    at (3.50,0.97) {this Draft};
+  \node[nbox] at (4.37,0.52) {multi-frame\\admitted};
+  \node[sbox] (skip) at (6.12,0.52) {single-frame\\skipped};
+  \node[nbox, minimum width=1.20cm] at (7.67,0.52) {Encoding\\mandatory};
 
   \draw[pattern=north east lines, pattern color=black!20, draw=black!30]
-    (8.62,0.20) rectangle (9.26,1.05);
+    (8.44,0.15) rectangle (9.04,1.15);
 
-  % Draft i+1: the same skip, now forced by the sticky set rather than tested.
-  \draw[dbox] (9.26,0.20) rectangle (13.42,1.05);
+  % Next Draft: the same skip, now forced by the burst state, not re-tested.
+  \draw[dbox] (9.04,0.15) rectangle (14.08,1.15);
   \node[anchor=west, font=\scriptsize\bfseries, text=blue!45!black]
-    at (9.36,0.87) {Draft $i{+}1$};
-  \node[nbox] at (10.00,0.51) {$M$ admit};
-  \node[sbox] (forced) at (11.34,0.51) {$S$ skip};
-  \node[nbox] at (12.68,0.51) {Encoding};
+    at (9.14,0.97) {next Draft};
+  \node[nbox] at (10.01,0.52) {multi-frame\\admitted};
+  \node[sbox] (forced) at (11.76,0.52) {single-frame\\skipped};
+  \node[nbox, minimum width=1.20cm] at (13.31,0.52) {Encoding\\mandatory};
 
-  \draw[flow] (13.42,0.62) -| (drain.south);
+  \draw[flow] (14.08,0.65) -| (drain.south);
 
   %% --------------------------- FIFO hinges: one Draft start per decision
-  % anchor=south east, not east: the hinge disc reaches y=1.14, so a caption
-  % centred on the channel would sit on top of it.
-  \node[hinge] at (4.28,1.05) {};
-  \node[hinge] at (9.26,1.05) {};
+  \node[hinge] at (3.40,1.15) {};
+  \node[hinge] at (9.04,1.15) {};
   % Placed to the RIGHT of the first hinge.  To its left the caption would have
-  % to straddle the t_i guide, which then prints through the text.
-  \node[tag, anchor=south west, align=left] at (4.42,1.16)
-    {each Draft start consumes one\\pending decision and refreshes $\hat C$};
+  % to straddle the decision guide, which then prints through the text.
+  \node[tag, anchor=south west, align=left] at (3.54,1.31)
+    {each Draft start consumes one pending\\decision and refreshes the reserve};
 
-  %% ------------------- the coupling: a demotion reshapes the later reserve
-  % Shallow out/in angles on purpose.  The arc spans ~4.9cm, so anything past
-  % ~45 degrees puts its apex through the Controller band above.
-  \draw[sticky] (skip.north) to[out=42, in=138] (forced.north);
+  %% --------------------- the coupling: a skip reshapes the later reserve
+  % Shallow out/in angles on purpose.  The arc spans ~5.6cm, so anything past
+  % ~40 degrees puts its apex through the Controller band above.
+  \draw[sticky] (skip.north) to[out=35, in=145] (forced.north);
   \node[ontop, font=\tiny, text=purple!55!black, anchor=south]
-    at (8.90,1.50) {$G$: demotion persists and reshapes $\hat C$};
+    at (8.94,1.60) {the skip sticks and shrinks the next reserve};
 
-  %% ---------------------------- what the two priced spans cover (symbols
-  %% only; the caption carries the prose)
+  %% ---------------------------- what the two priced spans cover, in prose
   \draw[decorate, decoration={brace, mirror, amplitude=4pt}, black!55]
-    (4.28,0.02) -- (13.42,0.02);
-  \node[anchor=north, font=\scriptsize] at (8.85,-0.14) {$2\hat C_i$};
+    (3.40,0.02) -- (14.08,0.02);
+  \node[anchor=north, font=\scriptsize] at (8.74,-0.14)
+    {reserve for this Draft and the one the delay releases};
 
-  % Offset left of the brace label so the two spans never read as one row.
-  \draw[meas] (2.90,-0.64) -- (12.01,-0.64);
-  \node[ontop, font=\scriptsize] at (5.60,-0.64) {$T_i$};
+  \draw[meas] (2.20,-0.64) -- (12.63,-0.64);
+  \node[ontop, font=\scriptsize] at (7.42,-0.64)
+    {time left on the newest committed deadline};
 
 \end{tikzpicture}

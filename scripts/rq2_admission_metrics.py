@@ -172,12 +172,22 @@ def load_decisions(paths, max_shot=30):
                     if d is None:
                         continue
                     b = num(cell(d, ai['beforeBudgetMs']))
+                    bound = num(cell(d, ai.get('beforeSequencePredictedUpperBoundMs')))
+                    margin = num(cell(d, ai.get('beforeAdmissionMarginMs')))
+                    if margin is None and b is not None and bound is not None:
+                        margin = b - bound
+                    model_cell = cell(d, ai.get('inferredBeforeModelAdmit'))
+                    model_admit = (None if model_cell in (None, '')
+                                   else truthy(model_cell))
                     start = num(cell(d, ai['nodeStartUptimeMs']))
                     end = draft_end.get(c)
                     cost = end - start if (end is not None and start is not None) else None
                     out.append(dict(
                         book=base, run=k, shot=shot, capture=c, group=group,
-                        budget=b, cost=cost,
+                        budget=b, bound=bound, admission_margin=margin, cost=cost,
+                        model_admit_before=model_admit,
+                        skip_reason=cell(d, ai.get('beforeAdmissionSkipReason')),
+                        session_demotion=truthy(cell(d, ai.get('beforeSessionDemotionApplied'))),
                         watchdog=truthy(cell(d, ai['beforeWatchdogTimedOut'])) or
                                  truthy(cell(d, ai['beforeCaptureWatchdogFailed'])),
                         timed_out=truthy(cell(d, ai['beforeCaptureTimedOut'])),
@@ -207,30 +217,78 @@ def pct(a, b):
 
 
 def enforced_block(label, sets):
+    def summarize(g, context):
+        run = [d for d in g if d['eff_admit']]
+        skip = [d for d in g if d['skip_reason'] == 'upper bound']
+        policy_skip = [d for d in g if d['skip_reason'] == 'session demotion']
+        if any(d['model_admit_before'] is None for d in g):
+            raise ValueError(f'missing inferred model decision: {context}')
+        if any(not d['model_admit_before'] for d in run + policy_skip):
+            raise ValueError(f'run/policy-skip row is not a model admit: {context}')
+        if any(d['model_admit_before'] for d in skip):
+            raise ValueError(f'upper-bound skip is not a model skip: {context}')
+        if len(run) + len(skip) + len(policy_skip) != len(g):
+            raise ValueError(f'incomplete action partition: {context}')
+        shortfall = [100.0 * (-d['admission_margin']) / d['deadline_ms']
+                     for d in skip
+                     if d['admission_margin'] is not None and d.get('deadline_ms')]
+        missing_shortfall = len(skip) - len(shortfall)
+        if missing_shortfall:
+            raise ValueError(f'{missing_shortfall} model skips lack admission margin: {context}')
+        miss = [d for d in run if d['cost'] is None]
+        wd = [d for d in run if d['watchdog']]
+        over = [d for d in run if not d['watchdog'] and d['cost'] is not None
+                and d['cost'] > d['budget']]
+        unsafe = len(wd) + len(over)
+        return dict(
+            n=len(g), model_admit=len(run) + len(policy_skip), run=len(run),
+            skip=len(skip), policy_skip=len(policy_skip),
+            shortfall50_pct=statistics.median(shortfall) if shortfall else None,
+            succ=len(run) - unsafe - len(miss), unsafe=unsafe,
+            wd=len(wd), over=len(over), miss=len(miss),
+        )
+
+    def print_row(condition, group, runs, captures, m):
+        shortfall_text = ('--' if m['shortfall50_pct'] is None
+                          else f'{m["shortfall50_pct"]:.1f}%')
+        print(f'{condition:13s} {group:13s} {runs:5d} {captures:5d} '
+              f'{m["n"]:9d} {m["model_admit"]:11d} '
+              f'{pct(m["model_admit"], m["n"]):7.1f} '
+              f'{m["skip"]:6d} {pct(m["skip"], m["n"]):7.1f} '
+              f'{shortfall_text:>11s} '
+              f'{m["run"]:7d} {pct(m["run"], m["n"]):7.1f} '
+              f'{m["policy_skip"]:11d} {pct(m["policy_skip"], m["n"]):8.1f} '
+              f'{m["succ"]:6d} {pct(m["succ"], m["run"]):7.1f} '
+              f'{m["unsafe"]:6d} {pct(m["unsafe"], m["run"]):7.1f} '
+              f'{m["wd"]:5d} {m["over"]:6d} {m["miss"]:4d}')
+
     print(f'\n{"=" * 100}\nCONTROLLER-ENFORCED RUNS   {label}\n{"=" * 100}')
     print(f'{"condition":13s} {"group":13s} {"runs":>5s} {"caps":>5s} '
-          f'{"decisions":>9s} {"admits":>7s} {"admit%":>7s} '
+          f'{"decisions":>9s} {"model-admit":>11s} {"model%":>7s} '
+          f'{"skip":>6s} {"skip%":>7s} {"shortfall50%":>11s} '
+          f'{"run":>7s} {"run%":>7s} {"policy-skip":>11s} {"policy%":>8s} '
           f'{"succ":>6s} {"succ%":>7s} {"unsafe":>6s} {"unsafe%":>7s} '
           f'{"[wd]":>5s} {"[C>B]":>6s} {"noC":>4s}')
+    pooled, total_runs, total_captures = [], 0, 0
     for cond, paths in sets.items():
         dec, st = load_decisions(paths)
+        D = deadline_of(paths)
+        if not D:
+            raise ValueError(f'missing Capture Timeout deadline: {cond}')
+        for d in dec:
+            d['deadline_ms'] = D
+        total_runs += st['runs_kept']
+        total_captures += st['captures']
         for group in ('Multi-frame', 'Single-frame'):
             g = [d for d in dec if d['group'] == group]
-            adm = [d for d in g if d['eff_admit']]
-            miss = [d for d in adm if d['cost'] is None]
-            wd = [d for d in adm if d['watchdog']]
-            over = [d for d in adm if not d['watchdog'] and d['cost'] is not None
-                    and d['cost'] > d['budget']]
-            unsafe = len(wd) + len(over)
-            succ = len(adm) - unsafe - len(miss)
-            print(f'{cond:13s} {group:13s} {st["runs_kept"]:5d} {st["captures"]:5d} '
-                  f'{len(g):9d} {len(adm):7d} {pct(len(adm), len(g)):7.1f} '
-                  f'{succ:6d} {pct(succ, len(adm)):7.1f} '
-                  f'{unsafe:6d} {pct(unsafe, len(adm)):7.1f} '
-                  f'{len(wd):5d} {len(over):6d} {len(miss):4d}')
+            pooled.extend(g)
+            print_row(cond, group, st['runs_kept'], st['captures'],
+                      summarize(g, f'{cond} / {group}'))
         print(f'  ({cond}: {st["runs_seen"]} runs read, {st["runs_dup"]} duplicate, '
               f'{st["runs_manifest"]} manifest-dropped, {st["runs_kept"]} kept, '
               f'{st["short_runs"]} shorter than 30 shots)')
+    print_row('ALL', 'All decisions', total_runs, total_captures,
+              summarize(pooled, 'ALL / All decisions'))
 
 
 def audit_block(label, sets, decision_field='model_admit'):
@@ -263,7 +321,7 @@ def audit_block(label, sets, decision_field='model_admit'):
         print(f'  ({cond}: {st["runs_seen"]} runs read, {st["runs_dup"]} duplicate, '
               f'{st["runs_manifest"]} manifest-dropped, {st["runs_kept"]} kept, '
               f'{st["captures"]} captures, {st["short_runs"]} shorter than 30 shots, '
-              f'deadline D={D})')
+              f'deadline metadata present={"yes" if D else "no"})')
 
 
 # ---------------------------------------------------------------- comparison

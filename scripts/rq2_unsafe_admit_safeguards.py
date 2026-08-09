@@ -1,11 +1,11 @@
-"""RQ2: for every unsafe fresh-model admit, which shipped safeguard would have
+"""RQ2: for every unsafe model admit, which shipped safeguard would have
 prevented the overrun.
 
 Python port of data/rq2_spike_anatomy.mjs (ML implementation repository,
 commit 99aae0a), re-pointed at data/ablation_sampling.  Same definitions:
 
   suffix        per-node rows with nodeOrder >= the decision node's
-  skipsModel(r) r carries an admission decision the fresh model rejected
+  skipsModel(r) r carries an admission decision the model rejected
   droppedMs     work in the suffix the model itself would not have run
                 (the decision under test always stays in the sum)
   budgetGainMs  work BEFORE the decision the model would have skipped, which

@@ -9,7 +9,7 @@ Pacer operations are synchronized: callback decisions update one backlog clock s
 If Draft-task submission is rejected, the manager falls back to a shared executor; this exceptional path is outside the controller's single-worker queue model.
 
 The learned predictor persists across bursts, whereas the callback FIFO, backlog clock, size-scoped maxima, and group set \(G\) are cleared when the Draft queue drains.
-Decision-time records retain the planned suffix, point and upper estimates, live budget, effective admission action, watchdog state, pacing inputs, and node/Draft timeline.
+Decision-time records retain the planned suffix, point and upper estimates, live budget, model recommendation, controller action, watchdog state, pacing inputs, and node/Draft timeline.
 Device-state, GC, CPU, and legacy capture-availability measurements remain observability only.
 
 Cold state is fail-open: a fully unpriced suffix is admitted, callbacks before the first modeled Draft-start snapshot are unpaced, and \textsc{Optional} work is only watchdog-contained.

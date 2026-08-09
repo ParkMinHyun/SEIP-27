@@ -5,28 +5,28 @@ We introduce the \emph{Budget-Aware Draft Controller} to prevent cross-shot Capt
 The controller coordinates two actuators with different scopes.
 \emph{Remaining-sequence admission} reduces the service demand of the capture that owns the Draft worker, whereas \emph{capture-availability pacing} delays the earliest application-facing opportunity to start a future capture.
 The former may reduce Draft quality; the latter increases the shot-to-shot interval.
-The objective is to retain optional work when the live budget supports it while making both costs explicit, preserving the existing single-worker pipeline and HAL contract.
+The objective is to selectively retain optional work within the live budget while making the trade-off between Draft image quality and shot-to-shot responsiveness explicit.
+The design is deliberately framework-local: it preserves the existing single-worker pipeline and changes neither the HAL nor the application interface.
 
 \begin{figure*}[!t]
   \centering
-  \input{figures/fig_controller_timeline.tex}
-  \caption{Execution contract of the Budget-Aware Draft Controller. Pacing
-  delays the application-facing opportunity for a future capture, while
-  admission controls optional work at node execution. At the decision instant
-  \(t_i\), \(\hat B_i\) is the admitted work still queued, \(2\hat C_i\)
-  reserves the Draft that follows the decision and the Draft the delay
-  releases, and \(T_i\) is the window left on the newest committed deadline.
-  A new demotion affects later pacing only after a subsequent Draft-start
-  refresh, so the \(S\) rejection in Draft~\(i\) is a fresh model decision
-  whereas the one in Draft~\(i{+}1\) is forced by \(G\). The horizontal layout
-  is schematic, not a time scale.}
-  \label{fig:controller-timeline}
+  \input{figures/fig_controller_overview.tex}
+  \caption{Overview of the Budget-Aware Draft Controller. Parallel capture
+  keeps several requests in flight, and they serialize on one Draft thread;
+  the controller sits between the two and holds both actuators. Pacing is the
+  only part that acts backwards, on arrivals, returning a release delay to the
+  capture path; admission acts on the sequence already running, at each
+  optional node. Their coupling runs one way---a demoted group reaches later
+  pacing decisions, whereas pacing reaches admission only through queue wait
+  and the budget it leaves behind. Completed Draft Sequences return their
+  measured durations to the model both actuators read.
+  Section~\ref{sec:model} defines that model and Section~\ref{sec:pacing} the
+  pacing quantities.}
+  \label{fig:controller-overview}
 \end{figure*}
 
-Figure~\ref{fig:controller-timeline} summarizes the execution contract.
-On the normal parallel-capture path, the pacer compares the time-valued Draft backlog and reserve with the newest committed deadline, records a callback decision, and requests release of \texttt{captureAvailable} after \(d_i\).
-This changes neither an active deadline nor a HAL request.
-At every Draft start, the controller consumes the oldest pending decision.
-If that Draft has a modeled workload sequence, the controller also refreshes the reserve.
-Admission then rereads the live budget before each optional node and tests its remaining modeled suffix.
-A rejection demotes the workload group until queue drain; Draft completion updates the model, and drain clears the burst-local control state.
+Figure~\ref{fig:controller-overview} shows how the two actuators coordinate across successive Draft Sequences.
+On the normal parallel-capture path, the \emph{pacer} uses estimates of queued and upcoming Draft Sequence work, together with the remaining deadline window, to schedule the release of \texttt{captureAvailable}.
+At each Draft Sequence start, the controller consumes the oldest pending pacing decision and updates the workload estimate used by later pacing decisions.
+Before each optional processing stage within a Draft Sequence, \emph{admission} compares the predicted duration of the sequence's remaining processing with the live budget.
+If admission rejects an optional processing group, the demotion remains in force until the Draft-processing queue drains; after each Draft Sequence completes, the controller updates the execution-time estimates used by later decisions.

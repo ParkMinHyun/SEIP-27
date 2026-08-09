@@ -31,7 +31,7 @@
 % Multi-frame cell moves by more than half a point.
 %
 % The all-decision audit reports factual feasible/unsafe outcomes crossed with
-% the fresh shadow-model admit/skip decision before session-sticky demotion.
+% the shadow-model admit/skip decision before session-sticky demotion.
 % The median effect uses all shadow-model skips in the corresponding factual class
 % and is normalized by the internal product Capture Timeout deadline, whose
 % value is not reported.
@@ -56,16 +56,8 @@
 % / 986 Single-frame at 24MP, the Single-frame shortfall being captures that
 % carry no Filter decision.
 %
-% The 0803 draw is level-selected, not outcome-neutral, and this must be stated
-% wherever the cells are discussed.  At 12MP the Lv4 no-unsafe-admit criterion
-% excluded nothing, since all 11 candidates already satisfied it.  At 24MP,
-% however, every unsafe-admitted decision in the 0803 source sits in the
-% undrawn Lv4 band (runs 6, 19 and 23; five decisions), so the level rule alone
-% removes the entire unsafe-admitted population of that source.  A Lv3--Lv4
-% sensitivity pass is owed before these cells are reported as evidence.
-%
-% Both campaigns share the same median captureTimeoutMs deadline D = 7000 ms,
-% so the margin and overrun medians are normalized consistently across the pool.
+% Both campaigns share the same configured Capture Timeout deadline D, so the
+% margin and overrun medians are normalized consistently across the pool.
 % Regenerate the Always-admit columns with scripts/rq2_audit_pool.py, which owns
 % the level-selection rule; `python scripts/rq2_audit_pool.py runs` prints the
 % per-run census it draws from, including the runs it holds back.
@@ -138,7 +130,7 @@
 %                         996 Multi-frame / 986 Single-frame at 24MP.  Without
 %                         this the two blocks read as one decision set measured
 %                         twice, which is the error the split exists to prevent.
-%   the audit's design    (b) scores the fresh shadow-model admit/skip decision,
+%   the audit's design    (b) scores the shadow-model admit/skip decision,
 %                         taken before session-sticky demotion, against the
 %                         factual outcome; its counts are shares of their own
 %                         factual class and sum to 100% within each.
@@ -146,9 +138,10 @@
 %                         is NOT outcome-neutral; at 24MP the level rule alone
 %                         removes that source's entire unsafe-admitted
 %                         population.  The block comment above owns the detail.
-%   the two medians       Skip margin and skip overrun are medians over the model
-%                         skips of that factual class, as a share of the internal
-%                         Capture Timeout deadline, whose value is not reported.
+%   severity medians      Shortfall is the median predicted deficit normalized
+%                         by the Capture Timeout deadline over model skips in (a).
+%                         Margin and Overrun are deadline-normalized medians
+%                         over model skips of the relevant factual class in (b).
 %   the group definition  Each capture contributes at most one decision per
 %                         optional-work group: Multi-frame = Bokeh, Single-frame
 %                         = Filter.
@@ -168,9 +161,9 @@
 % \makecell OVERFLOWS, and a plain cell wider than it silently WRAPS with no
 % warning.  Re-measure with \settowidth before changing any label.
 %
-% (a) sums to 230pt of content in 252pt and (b) to 224pt.  Their solved
+% (a) sums to 224pt of content in 252pt and (b) to 218pt.  Their solved
 % \tabcolsep values therefore stay close enough that the two blocks read as one
-% exhibit while (a) retains separate realized-overrun and watchdog columns.
+% exhibit while both blocks retain explicit skip count and severity columns.
 
 \begin{table}[t]
   \centering
@@ -178,10 +171,10 @@
   \setlength{\belowcaptionskip}{3pt}%
   % One line, as in Table~\ref{tab:rq3_pacing_summary}.  "TABLE N: " plus the
   % caption text must clear \columnwidth = 252pt at \footnotesize: the previous
-  % wording, "Admission rate, safety, and fresh-model audit of admission
+  % wording, "Admission rate, safety, and model audit of admission
   % decisions.", measures 269pt with the prefix and wrapped onto a second line.
   % This one measures 210pt.  Re-measure before adding a word.
-  \caption{RQ2: admission rate, safety, and fresh-model audit.}
+  \caption{RQ2: admission paths, safety, and model audit.}
   \label{tab:rq2_admission_audit}
 
   {\scriptsize
@@ -192,50 +185,54 @@
   % =====================================================================
   % (a)  Controller-enforced runs: the balanced Full arm
   % =====================================================================
-  % Keep the action partition and its observed safety response in one block.
-  % The fresh-model audit in (b) asks whether the admission test chose correctly; this
-  % block instead reports the deployed policy's effective admission decisions and whether an
-  % admitted Draft consumed its remaining deadline budget.
-  \textbf{(a) Controller-enforced runs: admission decisions and observed safety.}%
+  % Expose the complete deployed path: a model admit either runs or is suppressed
+  % by sticky session policy, whereas a model skip is the current upper-bound
+  % decision.  The audit in (b), not this selectively executed population, owns
+  % decision correctness.
+  \textbf{(a) Controller-enforced runs: admission paths and observed safety.}%
   \par\vspace{1pt}
   \newcommand{\rqtwoenftabular}{%
-  % The first three result columns are a complete, mutually exclusive partition:
-  % admitted + skip + session demotion = n.  The skip is a fresh
-  % admission decision: the predicted suffix upper estimate exceeds the live
-  % remaining budget.  "Session demotion" is policy state: the fresh admission
-  % test admitted this decision, but an
-  % earlier rejection had demoted its group for the rest of the session.
+  % Run + Policy skip + Model skip is a complete partition of N.  Run and Policy
+  % skip are the two controller outcomes of a model admit; Policy skip is sticky
+  % policy state inherited from an earlier rejection, not a new model skip.
   %
-  % The last two columns are not part of that partition.  They report events per
-  % effective admit, so every cell prints event/admit explicitly.  Realized
-  % C > B is zero on all four rows.  The two watchdog timeouts at 24MP occurred with
-  % 9 ms and 53 ms of deadline margin, respectively; watchdog recovery is thus
-  % reported separately from a realized deadline-budget overrun.
+  % Shortfall is median 100(U-B)/D over model upper-bound skips only, where U is
+  % the predicted suffix upper estimate, B the live remaining budget, and D the
+  % configured Capture Timeout deadline.  Safe and WD split the Run outcome
+  % rather than forming separate
+  % controller paths; the only nonzero WD count is at 24MP Multi-frame.
+  % Realized C > B is zero on all non-watchdog Runs and stays in the printed note
+  % rather than occupying a zero-only column.  The two watchdog timeouts at 24MP
+  % occurred with 9 ms and 53 ms of deadline margin, respectively.
   \begin{tabular}{@{}%
-      >{\raggedright\arraybackslash}p{40pt}|% optional-work group
-      >{\raggedleft\arraybackslash}p{18pt}|%  selected decisions n
-      >{\raggedleft\arraybackslash}p{42pt}%   admitted n (%)
-      >{\raggedleft\arraybackslash}p{36pt}%   fresh admission skip n (%)
-      >{\raggedleft\arraybackslash}p{36pt}|%  session demotion n (%)
-      >{\raggedleft\arraybackslash}p{28pt}%   realized C>B / admits
-      >{\raggedleft\arraybackslash}p{30pt}%   watchdog timeouts / admits
+      >{\raggedright\arraybackslash}p{39pt}|% optional-work group
+      >{\raggedleft\arraybackslash}p{41pt}%   model admit -> run, n (%)
+      >{\raggedleft\arraybackslash}p{25pt}%   safe runs
+      >{\raggedleft\arraybackslash}p{12pt}|%  watchdog timeouts
+      >{\raggedleft\arraybackslash}p{41pt}|%  model admit -> policy skip, n (%)
+      >{\raggedleft\arraybackslash}p{36pt}%   model skip, n (%)
+      >{\raggedleft\arraybackslash}p{30pt}%   model-skip shortfall P50, % of D
     @{}}
     \toprule
-    \multirow[c]{2}{=}{\centering\textbf{Group}}
-      & \multirow[c]{2}{=}{\centering $n$}
-      & \multicolumn{3}{c|}{\textbf{Admission decisions}}
-      & \multicolumn{2}{c}{\textbf{Observed safety}} \\
-    \cmidrule(lr){3-5}\cmidrule(l){6-7}
+    \multirow[c]{3}{=}{\centering\textbf{Group}}
+      & \multicolumn{4}{c|}{\textbf{Model admit}}
+      & \multirow[c]{3}{=}{\centering\textbf{Model skip}}
+      & \multirow[c]{3}{=}{\centering\textbf{Shortfall}} \\
+    \cmidrule(lr){2-5}
       &
-      & \multicolumn{1}{c}{\textbf{admit}}
-      & \multicolumn{1}{c}{\textbf{skip}}
-      & \multicolumn{1}{c|}{\makecell[c]{\textbf{session}\\\textbf{demotion}}}
-      & \multicolumn{1}{c}{\makecell[c]{\textbf{budget}\\\textbf{overrun}}}
-      & \multicolumn{1}{c}{\makecell[c]{\textbf{watchdog}\\\textbf{timeout}}} \\
+      \multirow[c]{2}{=}{\centering\textbf{Run}}
+      & \multicolumn{2}{c|}{\textbf{Run outcome}}
+      & \multirow[c]{2}{=}{\centering\textbf{Policy skip}}
+      & & \\
+    \cmidrule(lr){3-4}
+      &
+      & \multicolumn{1}{c}{\textbf{Safe}}
+      & \multicolumn{1}{c|}{\textbf{WD}}
+      & & & \\
     \midrule
 
     % ------------------------------------------------------------- 12MP normal
-    % admitted + skip + session demotion = n on every row.  Keep it that way: it is
+    % Run + Policy skip + Model skip = N on every row.  Keep it that way: it is
     % the only check a reader has.
     %
     % SOURCE.  These cells are the A3 regeneration (data/ablation_sampling Full,
@@ -250,19 +247,22 @@
     % has an unsafe admit at 12MP, and the only two in the table are at 24MP.
     \multicolumn{7}{@{}l}{\textbf{12MP, normal}} \\
     \addlinespace[1pt]
-    Multi-frame  & 2{,}100 & 1{,}258 (59.9\%) & 134 (6.4\%) & 708 (33.7\%)
-      & 0/1{,}258 & 1/1{,}258 \\
-    Single-frame & 2{,}099 & 1{,}935 (92.2\%) &   9 (0.4\%) & 155 (7.4\%)
-      & 0/1{,}935 & 0/1{,}935 \\
+    Multi-frame  & 1{,}258 (59.9\%) & 1{,}257 & 1
+      & 708 (33.7\%) & 134 (6.4\%) & 2.8\% \\
+    Single-frame & 1{,}936 (92.2\%) & 1{,}936 & 0
+      & 155 (7.4\%) &   9 (0.4\%) & 0.6\% \\
     \midrule
 
     % ---------------------------------------------------- 24MP memory pressure
     \multicolumn{7}{@{}l}{\textbf{24MP, mem.\ pressure}} \\
     \addlinespace[1pt]
-    Multi-frame  & 2{,}116 & 1{,}276 (60.3\%) & 264 (12.5\%) & 576 (27.2\%)
-      & 0/1{,}276 & 2/1{,}276 \\
-    Single-frame & 2{,}114 & 1{,}791 (84.7\%) &  43 (2.0\%)  & 280 (13.2\%)
-      & 0/1{,}791 & 0/1{,}791 \\
+    Multi-frame  & 1{,}276 (60.3\%) & 1{,}274 & 2
+      & 576 (27.2\%) & 264 (12.5\%) & 5.4\% \\
+    Single-frame & 1{,}791 (84.7\%) & 1{,}791 & 0
+      & 280 (13.2\%) &  43 (2.0\%) & 2.5\% \\
+    \midrule
+    \textbf{Overall} & 6{,}261 (74.3\%) & 6{,}259 & 3
+      & 1{,}719 (20.4\%) & 450 (5.3\%) & 4.0\% \\
     \bottomrule
   \end{tabular}}%
   \fittabcolsep{\rqtwoenfbox}{\rqtwoenftabular}{\columnwidth}{14}%
@@ -271,71 +271,86 @@
   % (b)  Always-admit model audit: the disjoint Pacing-only pool
   % =====================================================================
   % The factual class -- Feasible work or Unsafe work -- is the column group;
-  % the fresh model's own decision is the sub-column.  Admitted and Skipped are
+  % the model's own decision is the sub-column.  Admitted and Skipped are
   % therefore shares of the SAME factual class and sum to 100% across each
   % group, which is the check a reader should be able to run on every row.
   %
   % The Unsafe-work Admitted cells are bold: they are the audit's failure mode --
-  % work the fresh model would have let through although it overran -- and they
+  % work the model would have let through although it overran -- and they
   % are the four cells Figure~\ref{fig:rq2_unsafe_spike_anatomy} then takes apart
   % one decision at a time.  Bold at \scriptsize widens "2 (5.7\%)" from 25.2 to
   % 26.5pt, still inside the 29pt the header "Admitted" already demands, so the
   % emphasis costs no width.  Nothing else in either block is bold, which is what
   % makes it read as emphasis rather than as another header level.
   \par\vspace{5pt}
-  \textbf{(b) Always-admit model audit: what the fresh model decided in each
-  factual class.}%
+  \textbf{(b) Always-admit audit: model decisions by realized feasibility.}%
   \par\vspace{1pt}
   \newcommand{\rqtwoaudtabular}{%
   % Measured the same way:
-  %   44  "Single-frame" 36.5      36  "892 (94.7\%)" 35.7 / "35 (100.0\%)" 35.7
+  %   39  "Single-frame" 36.5      36  "892 (94.7\%)" 35.7 / "35 (100.0\%)" 35.7
   %   29  "50 (5.3\%)" 28.7        29  "Admitted" 28.4 (the header binds here)
-  %   24  "Skip"/"margin" 22.5     26  "Skip"/"overrun" 26.0
-  % Sum 224pt, so \tabcolsep lands near 2.3pt -- this block is the tight one and
-  % is what to check by eye after any label change.
+  %   23  "Margin"                    26  "Overrun"
+  % Sum 218pt.  The recovered width becomes uniform \tabcolsep instead of idle
+  % space inside header-driven columns.  All numeric cells retain right
+  % alignment for comparison; every header cell is independently centred.
   \begin{tabular}{@{}%
-      >{\raggedright\arraybackslash}p{44pt}|% optional-work group
-      >{\raggedleft\arraybackslash}p{36pt}%   feasible, model admits
+      >{\raggedright\arraybackslash}p{39pt}|% optional-work group
+      >{\raggedleft\arraybackslash}p{36pt}|%  feasible, model admits
       >{\raggedleft\arraybackslash}p{29pt}%   feasible, model skips
-      >{\raggedleft\arraybackslash}p{24pt}|%  median skip margin
-      >{\raggedleft\arraybackslash}p{29pt}%   unsafe, model admits
+      >{\raggedleft\arraybackslash}p{23pt}|%  median margin
+      >{\raggedleft\arraybackslash}p{29pt}|%  unsafe, model admits
       >{\raggedleft\arraybackslash}p{36pt}%   unsafe, model skips
-      >{\raggedleft\arraybackslash}p{26pt}%   median skip overrun
+      >{\raggedleft\arraybackslash}p{26pt}%   median overrun
     @{}}
     \toprule
-    % Row one is one line and row two is two, so the spanning label is centred
-    % with \multirow[c]{2} plus an offset of half of row two's extra line.
-    \multirow[c]{2}{=}[-2.7pt]{\centering\textbf{Group}}
+    % Count and percentage are encoded in each decision cell; removing the
+    % repeated n (%) row keeps the two factual-class blocks symmetric.  P50 is
+    % defined once in the note rather than repeated in the severity headers.
+    \multirow[c]{2}{=}{\centering\textbf{Group}}
       & \multicolumn{3}{c|}{\textbf{Feasible work}}
       & \multicolumn{3}{c}{\textbf{Unsafe work}} \\
     \cmidrule(lr){2-4}\cmidrule(l){5-7}
-      & \multicolumn{1}{c}{\textbf{Admitted}}
+      & \multicolumn{1}{c|}{\textbf{Admitted}}
       & \multicolumn{1}{c}{\textbf{Skipped}}
-      & \multicolumn{1}{c|}{\makecell[c]{\textbf{Skip}\\\textbf{margin}}}
-      & \multicolumn{1}{c}{\textbf{Admitted}}
+      & \multicolumn{1}{c|}{\textbf{Margin}}
+      & \multicolumn{1}{c|}{\textbf{Admitted}}
       & \multicolumn{1}{c}{\textbf{Skipped}}
-      & \multicolumn{1}{c}{\makecell[c]{\textbf{Skip}\\\textbf{overrun}}} \\
+      & \multicolumn{1}{c}{\textbf{Overrun}} \\
     \midrule
 
     % ------------------------------------------------------------- 12MP normal
     \multicolumn{7}{@{}l}{\textbf{12MP, normal}} \\
     \addlinespace[1pt]
-    Multi-frame  & 831 (98.1\%) & 16 (1.9\%) & $+1.2\%$
-      & \textbf{2 (5.7\%)} & 33 (94.3\%)  & $-3.0\%$ \\
-    Single-frame & 842 (99.4\%) &  5 (0.6\%) & $+0.7\%$
-      & \textbf{0 (0.0\%)} & 35 (100.0\%) & $-3.5\%$ \\
+    Multi-frame  & 831 (98.1\%) & 16 (1.9\%) & 1.2\%
+      & \textbf{2 (5.7\%)} & 33 (94.3\%)  & 3.0\% \\
+    Single-frame & 842 (99.4\%) &  5 (0.6\%) & 0.7\%
+      & \textbf{0 (0.0\%)} & 35 (100.0\%) & 3.5\% \\
     \midrule
 
     % ---------------------------------------------------- 24MP memory pressure
     \multicolumn{7}{@{}l}{\textbf{24MP, mem.\ pressure}} \\
     \addlinespace[1pt]
-    Multi-frame  & 892 (94.7\%) & 50 (5.3\%) & $+2.6\%$
-      & \textbf{1 (1.9\%)} & 53 (98.1\%)  & $-3.2\%$ \\
-    Single-frame & 905 (97.1\%) & 27 (2.9\%) & $+1.6\%$
-      & \textbf{2 (3.7\%)} & 52 (96.3\%)  & $-3.4\%$ \\
+    Multi-frame  & 892 (94.7\%) & 50 (5.3\%) & 2.6\%
+      & \textbf{1 (1.9\%)} & 53 (98.1\%)  & 3.2\% \\
+    Single-frame & 905 (97.1\%) & 27 (2.9\%) & 1.6\%
+      & \textbf{2 (3.7\%)} & 52 (96.3\%)  & 3.4\% \\
     \bottomrule
   \end{tabular}}%
   \fittabcolsep{\rqtwoaudbox}{\rqtwoaudtabular}{\columnwidth}{14}%
   \rqtwoaudtabular
+  % \par\vspace{1pt}\raggedright
+  % \emph{Note:} In (a), Run, Policy skip, and Model skip form each row's complete
+  % decision population; all three percentages use that row total. Model admit
+  % equals Run plus Policy skip, where Policy skip carries an earlier group
+  % demotion. Safe and WD partition Run into non-watchdog $C\leq B$ completions
+  % and watchdog timeouts. The 24MP Multi-frame outcome (1{,}274 safe, 2 WD) is
+  % 99.8\% safe; both contained captures retained positive deadline
+  % margin. Shortfall is P50 predicted upper-bound deficit normalized by the
+  % Capture Timeout deadline, $100(U-B)/D$, among model skips. Overall pools
+  % decisions. In (b), decision cells report count
+  % (class-conditional percentage); Margin and Overrun are P50 realized
+  % magnitudes normalized by the Capture Timeout deadline in separate always-admit
+  % runs.
+  % \par
   }
 \end{table}

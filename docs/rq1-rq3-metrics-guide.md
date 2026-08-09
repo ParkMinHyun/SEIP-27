@@ -9,7 +9,7 @@ by `CaptureMetricsExcelExporter`.
 The definitions were checked against:
 
 - paper commit `d181dea3ce5bfbe37bb4568edeade3b6aa9101e6`;
-- implementation commit `99aae0af8c3fa1ceb784083446e83c40d0fb917f`;
+- implementation commit `cdd524fbd86e390446cbbd15c0e4f7923d4f1c58`;
 - `CaptureMetricsExcelExporter.kt`;
 - `data/rq1_metrics_aggregation.md`;
 - `data/rq2_metrics_aggregation.md`.
@@ -47,7 +47,7 @@ The intended argument is:
 - \(B\): the remaining deadline budget at an admission decision.
 - \(C\): the factual remaining wall time from the selected Bokeh or Filter
   node start to Draft completion.
-- \(C_{\mathrm{model}}\), \(B_{\mathrm{model}}\): \(C\) and \(B\) with the fresh
+- \(C_{\mathrm{model}}\), \(B_{\mathrm{model}}\): \(C\) and \(B\) with the
   model's own skips honoured. They are **never** the classifier — every reported
   cell uses \(C\) and \(B\) — and exist only for the outcome interpretation in
   section 5.4, which asks whether a shipped build would have emitted the
@@ -218,7 +218,7 @@ them.
 `S(30)` alone is **not** sufficient and must never be the only reported column.
 An arm can reach zero timeouts trivially by discarding optional Draft work, and
 Pacing only can execute all optional work before failure while surviving only
-one run per condition. Each row therefore also reports effective retained work,
+one run per condition. Each row therefore also reports retained optional work,
 the incidence of pacing, and the conditional magnitude of the applied delay.
 RQ3 separately evaluates whether that delay is appropriately sized.
 
@@ -362,34 +362,68 @@ admission metrics.
 
 ### 5.2 Controller-enforced metrics
 
-#### Admit rate
+#### Run share
 
 ```text
-Admit rate
-    = 100 * effective admits / all selected decisions
+Run share
+    = 100 * decisions that run / all selected decisions
 ```
 
 This measures feature availability, not correctness by itself.
 
-#### Admit result: successful / unsafe
+#### Model-decision path and skip shortfall
 
-For each factual admitted decision:
+Each selected decision belongs to exactly one admission-path leaf:
 
 ```text
-B = beforeBudgetMs
-C = draftEndUptimeMs - nodeStartUptimeMs
+run:
+    beforeEffectiveAdmit == true
 
-successful:
-    no watchdog and C <= B
+model skip:
+    beforeAdmissionSkipReason == "upper bound"
 
-unsafe:
-    watchdog invoked, or
-    no watchdog and C > B
+policy skip:
+    beforeAdmissionSkipReason == "session demotion"
 ```
 
-The successful and unsafe percentages use all effective admits in that group
-as their denominator. A watchdog-contained execution is unsafe for admission
-quality even if the watchdog prevents the end-to-end Capture Timeout.
+The table omits a separate total column because the three path counts reconstruct
+it. Each count carries its share of the row total; run, model skip, and
+policy-skip counts must sum to that total in every row. A session demotion is
+sticky policy state inherited from an earlier decision; it is not a new
+upper-bound test at the current decision. A model admit is the recommendation
+before session policy and equals run plus policy skip.
+
+For each model skip, let (U) be `beforeSequencePredictedUpperBoundMs`, (B) be
+`beforeBudgetMs`, and (D) be the configured Capture Timeout deadline:
+
+```text
+modelSkipShortfallPct = 100 * (U - B) / D
+```
+
+The `Shortfall` column reports the median of this positive, deadline-normalized
+quantity over model skips only. It excludes session demotions. This is the
+severity of the controller's predicted rejection, not a realized overrun:
+skipped work has no factual suffix cost in the controller-enforced run.
+
+#### Run outcome: safe / watchdog containment
+
+For each decision that ran:
+
+```text
+safe:
+    no watchdog and C <= B
+
+watchdog-contained:
+    watchdog invoked
+```
+
+Here, `B = beforeBudgetMs` and
+`C = draftEndUptimeMs - nodeStartUptimeMs`. The table's separate `Safe` and `WD`
+columns report the two counts within Run. The current controller-enforced set
+has neither a missing `C` nor a non-watchdog `C > B`, so the two counts partition
+Run. A watchdog-contained Run is an admission-safety exception even when the
+capture retains positive deadline margin. Report it as shipped containment, not
+as proof that the watchdog counterfactually prevented a Capture Timeout.
 
 `beforeBudgetMs` is the time left until the Capture Timeout deadline at that
 node, so \(C > B\) and the capture timing out are the same event. In the three
@@ -425,7 +459,7 @@ successful-admit denominator counts only the sessions present in the export.
 ### 5.3 Always-admit audit metrics
 
 The audit forces optional work to execute while a shadow controller records
-the fresh model decision it would make before applying session-sticky
+the model decision it would make before applying session-sticky
 demotion. This supplies factual outcomes for both model-admitted and
 model-skipped work without attributing later policy-carried skips to the model.
 
@@ -474,7 +508,7 @@ The confusion matrix uses `afterModelAdmit` for every capture-level selected
 Bokeh or Filter decision; it is not restricted to the first skip in a run.
 It does not use `afterEffectiveAdmit`, because that field carries an earlier
 group demotion through the remainder of the burst and would attribute
-session-policy state to the fresh model decision.
+session-policy state to the model decision.
 
 #### The audit decision set
 
@@ -512,11 +546,13 @@ For an unsafe skip, calculate the normalized budget-overrun magnitude:
 unsafeSkipOverrunPercent = 100 * (C - B) / D
 ```
 
-The table reports the median (P50) within each positive-magnitude class, then
-prefixes `+` to the feasible-skip margin and `-` to the unsafe-skip overrun to
-expose their opposite directions. A large positive margin indicates severe
-over-conservatism, whereas a larger-magnitude negative overrun indicates that
-the rejection prevented a substantial deadline violation. The deadline
+The table labels the two severity columns `Margin` and `Overrun`; its common
+note defines both as P50 magnitudes. The factual-class header and the divider
+after `Admitted` establish that both columns describe model-skipped work, so the
+cells print unsigned magnitudes without repeating `residual`, `prevented`, or
+`P50` in every header. A large margin indicates severe over-conservatism,
+whereas a large overrun indicates that the rejection identified a substantial
+deadline violation. The deadline
 constant is internal and must not appear in the manuscript; report only the
 normalized percentage, consistently with RQ1's Slack P5.
 
@@ -677,7 +713,7 @@ Test the node that carried the decision under test. Ignore nodes the model would
 have skipped: their recorded budget is often zero only because the forced prefix
 had already consumed the deadline, and they would not run at all.
 
-**B — the model's own decision set.** Honour the fresh model's skips on both
+**B — the model's own decision set.** Honour the model's skips on both
 sides of the comparison. Work it rejected after the decision leaves the cost;
 work it rejected *before* the decision shortens the path to it and therefore
 raises that decision's budget:
@@ -726,7 +762,7 @@ and `Capture`.
 | Selected decision row | `AdmissionReplay` | `admissionStage` (`Bokeh` or `Filter`), `nodeOrder`, `workloadKey` |
 | Factual decision | `AdmissionReplay` | `beforeEffectiveAdmit` |
 | Shadow model decision | `AdmissionReplay` | `afterModelAdmit` |
-| Shadow effective-policy decision (not used by the RQ2 audit) | `AdmissionReplay` | `afterEffectiveAdmit` |
+| Shadow controller action (not used by the RQ2 audit) | `AdmissionReplay` | `afterEffectiveAdmit` |
 | Remaining budget \(B\) | `AdmissionReplay` | `beforeBudgetMs` |
 | Selected decision time | `AdmissionReplay` | `nodeStartUptimeMs` |
 | Timeout deadline | `AdmissionReplay` | `timeoutDeadlineUptimeMs` |

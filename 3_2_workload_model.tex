@@ -4,7 +4,7 @@
 The controller maps each modeled Draft node execution to a \emph{workload} keyed by stage, a stable output-size bucket, and required variants.
 For capture \(i\), the remaining sequence \(\sigma_{i,j}\) is the ordered workload suffix from node \(j\) through the Encoding tail; a \emph{whole Draft} is the profiled interval from profiler initialization through task completion.
 A workload has one of three runtime policies.
-\textsc{Optional} workloads---the multi-frame stage \(M\) and degradable stages in \(S\)---may be skipped and are watchdog-guarded when admitted.
+\textsc{Optional} workloads---the multi-frame stage \(M\) and degradable stages in \(S\)---may be skipped and, when admitted, are guarded by a watchdog (WD).
 \textsc{Required} workloads, including Dynamic Function and frame watermark, always run and are measured but receive no watchdog reserve.
 \textsc{Reserved} work also always runs and is protected in that reserve; in the current pipeline, it is the Encoding interval, which closes when the saved Draft task completes.
 Every remaining workload contributes to the suffix estimate regardless of policy.
