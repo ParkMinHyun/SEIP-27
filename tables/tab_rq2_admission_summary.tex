@@ -19,9 +19,9 @@
 % measured behaviour and not only in the level mix.
 %
 % The Full export contains no Capture-Timeout session -- the collection gap
-% recorded in docs/rq1-rq3-metrics-guide.md section 4.3.1 -- so the
-% Successful-admit denominator counts only the sessions present in the export.
-% The 0727 cells were filtered the same way, by dropping timeout-bearing runs.
+% recorded in docs/rq1-rq3-metrics-guide.md section 4.3.1 -- so the observed
+% safety cells characterize only the sessions present in that export.  The 0727
+% cells were filtered the same way, by dropping timeout-bearing runs.
 %
 % These cells inherit the balancing protocol of data/ablation_sampling/README.md,
 % whose deviation score reads reported outcomes and is therefore not
@@ -128,10 +128,9 @@
 % ---------------------------------------------------------------------------
 % WHAT THE RQ2 PROSE MUST NOW CARRY
 % ---------------------------------------------------------------------------
-% This table deliberately has NO note; the author's decision is that these
-% belong in the body text.  They are not optional, and none of them is
-% recoverable from the cells, so Section RQ2 has to state them before or beside
-% the table:
+% Block (a) now carries a local note for its action partition and outcome
+% denominators.  The following population and audit-design facts still belong
+% in the body text because they govern the relation between (a) and (b):
 %
 %   the two populations   (a) is the balanced Full arm, 70 runs / 2,100 captures
 %                         at 12MP and 73 / 2,116 at 24MP.  (b) is a DISJOINT
@@ -163,17 +162,15 @@
 % ---------------------------------------------------------------------------
 % \fittabcolsep solves for the \tabcolsep that lands the outer rules on
 % \columnwidth, so the two blocks agree with each other and with the column.
-% Its fourth argument is 2 x the number of columns: 10 for (a), 14 for (b).
+% Its fourth argument is 2 x the number of columns: 14 for both blocks.
 % Every p{} width below is the measured maximum of its own data and its own
 % header at \scriptsize; a header line wider than its p{} value inside a
 % \makecell OVERFLOWS, and a plain cell wider than it silently WRAPS with no
 % warning.  Re-measure with \settowidth before changing any label.
 %
-% (a) sums to 216pt of content in 252pt and (b) to 224pt, so their \tabcolsep
-% lands near 3.5pt and 2.3pt.  The two blocks read as one exhibit because those
-% are close; when (a) carried a single unsafe column it sat at 192pt and 7.4pt
-% and visibly did not match (b).  Splitting the unsafe admits was done for
-% correctness, but it paid for itself in the layout as well.
+% (a) sums to 230pt of content in 252pt and (b) to 224pt.  Their solved
+% \tabcolsep values therefore stay close enough that the two blocks read as one
+% exhibit while (a) retains separate realized-overrun and watchdog columns.
 
 \begin{table}[t]
   \centering
@@ -195,94 +192,81 @@
   % =====================================================================
   % (a)  Controller-enforced runs: the balanced Full arm
   % =====================================================================
-  % A heading is a centred paragraph at \columnwidth, so anything wider than
-  % about 254pt at \scriptsize wraps and strands its last word on a centred
-  % second line.  "how much optional work was admitted, and was it safe?"
-  % measures 266pt and cannot be set on one line at this size; "ran" carries the
-  % same meaning in 236pt, and "admitted" is the column header directly beneath
-  % it, so nothing is lost.  Measure before lengthening either heading -- (b) is
-  % at 254pt and has no room at all.
-  \textbf{(a) Controller-enforced runs: how much optional work ran, and was it
-  safe?}%
+  % Keep the action partition and its observed safety response in one block.
+  % The fresh-model audit in (b) asks whether the admission test chose correctly; this
+  % block instead reports the deployed policy's effective admission decisions and whether an
+  % admitted Draft consumed its remaining deadline budget.
+  \textbf{(a) Controller-enforced runs: admission decisions and observed safety.}%
   \par\vspace{1pt}
   \newcommand{\rqtwoenftabular}{%
-  % Measured at \scriptsize against \columnwidth = 252pt:
-  %   46  "Single-frame" 36.5      (header "Group" is only 19.7)
-  %   20  "2{,}100" 15.8           (header "$n$" is only 4.9)
-  %   46  "1{,}258 (59.9\%)" 40.9  (header "admitted" is only 26.8)
-  %   46  "1{,}257 (99.9\%)" 40.9  (header "successful" is 29.6)
-  %   32  "watchdog" 28.8          (the header binds; "1 (0.1\%)" is 25.2)
-  % "Admission Decisions" measures 68pt over an 83pt span, "Admitted outcomes"
-  % 59.0pt over an 93pt span.
+  % The first three result columns are a complete, mutually exclusive partition:
+  % admitted + skip + session demotion = n.  The skip is a fresh
+  % admission decision: the predicted suffix upper estimate exceeds the live
+  % remaining budget.  "Session demotion" is policy state: the fresh admission
+  % test admitted this decision, but an
+  % earlier rejection had demoted its group for the rest of the session.
   %
-  % WHY THERE IS NO "OVERRUN" COLUMN, AND NO "unsafe (watchdog)" EITHER.  Two
-  % revisions failed here in opposite directions, and a regeneration settles it.
-  %   The first printed one column headed "unsafe" over "(watchdog)".  That reads
-  % as a DEFINITION of unsafe when it only named which cause had fired:
-  % enforced_cells in scripts/rq2_admission_metrics.py defines an unsafe admit as
-  % beforeWatchdogTimedOut OR (cost > budget).
-  %   The second split it into "watchdog" and "overrun" to state the second term
-  % rather than imply it.  That is worse, for a reason worth recording: the
-  % script's overrun is `not watchdog AND cost > budget', so the classification is
-  % WATCHDOG-FIRST, and the column is not "admits that exceeded the budget" but
-  % "admits that exceeded the budget and were not already claimed by the
-  % watchdog".  Printed beside "successful" it invites the reading that the two
-  % columns partition the admits by the budget test.  They do not.
-  %   The measurement decides it.  On BOTH Full sources -- A3
-  % (data/ablation_sampling, the published one) and A2 (data/ablation_original,
-  % untrimmed) -- the [C>B] count is ZERO on all four rows, and the two watchdog
-  % events at 24MP were WITHIN budget.  The watchdog fires on a predicted overrun,
-  % not a realized one, which is the same behaviour
-  % Table~\ref{tab:rq1_controller_behavior}'s aggregation note records from the
-  % other side: its two watchdog captures still had 9 ms and 53 ms of margin left.
-  % So the flag is ORTHOGONAL to the budget test, not a severity step above it,
-  % and a genuine budget partition would print "within budget" identical to
-  % "admitted" beside an all-zero column.  Two redundant columns are not an
-  % improvement on one wrong one.
-  %   What survives is the honest pair: successful and watchdog sum to admitted
-  % exactly, and each label names an event instead of redefining a term.  "No
-  % admitted Draft exceeded its budget in either condition" is a real result and
-  % belongs in the RQ2 prose, stated once, rather than spelled as a column of
-  % zeros.
+  % The last two columns are not part of that partition.  They report events per
+  % effective admit, so every cell prints event/admit explicitly.  Realized
+  % C > B is zero on all four rows.  The two watchdog timeouts at 24MP occurred with
+  % 9 ms and 53 ms of deadline margin, respectively; watchdog recovery is thus
+  % reported separately from a realized deadline-budget overrun.
   \begin{tabular}{@{}%
-      >{\raggedright\arraybackslash}p{48pt}|% optional-work group
-      >{\raggedleft\arraybackslash}p{22pt}%   decisions n
-      >{\raggedleft\arraybackslash}p{48pt}|%  admitted n (%)
-      >{\raggedleft\arraybackslash}p{48pt}%   successful n (%)
-      >{\raggedleft\arraybackslash}p{32pt}%   watchdog n (%)
+      >{\raggedright\arraybackslash}p{40pt}|% optional-work group
+      >{\raggedleft\arraybackslash}p{18pt}|%  selected decisions n
+      >{\raggedleft\arraybackslash}p{42pt}%   admitted n (%)
+      >{\raggedleft\arraybackslash}p{36pt}%   fresh admission skip n (%)
+      >{\raggedleft\arraybackslash}p{36pt}|%  session demotion n (%)
+      >{\raggedleft\arraybackslash}p{28pt}%   realized C>B / admits
+      >{\raggedleft\arraybackslash}p{30pt}%   watchdog timeouts / admits
     @{}}
     \toprule
-    % Both header rows are one line, so \multirow[c]{2} centres on the header
-    % without an offset; (b) needs one because its second row is two lines.
     \multirow[c]{2}{=}{\centering\textbf{Group}}
-      & \multicolumn{2}{c|}{\textbf{Admission Decisions}}
-      & \multicolumn{2}{c}{\textbf{Admitted outcomes}} \\
-    \cmidrule(lr){2-3}\cmidrule(l){4-5}
-      & \multicolumn{1}{c}{$n$}
-      & \multicolumn{1}{c|}{\textbf{admitted}}
-      & \multicolumn{1}{c}{\textbf{successful}}
-      & \multicolumn{1}{c}{\textbf{watchdog}} \\
+      & \multirow[c]{2}{=}{\centering $n$}
+      & \multicolumn{3}{c|}{\textbf{Admission decisions}}
+      & \multicolumn{2}{c}{\textbf{Observed safety}} \\
+    \cmidrule(lr){3-5}\cmidrule(l){6-7}
+      &
+      & \multicolumn{1}{c}{\textbf{admit}}
+      & \multicolumn{1}{c}{\textbf{skip}}
+      & \multicolumn{1}{c|}{\makecell[c]{\textbf{session}\\\textbf{demotion}}}
+      & \multicolumn{1}{c}{\makecell[c]{\textbf{budget}\\\textbf{overrun}}}
+      & \multicolumn{1}{c}{\makecell[c]{\textbf{watchdog}\\\textbf{timeout}}} \\
     \midrule
 
     % ------------------------------------------------------------- 12MP normal
-    % successful + watchdog = admitted on every row, and the two shares sum to
-    % 100.0.  Keep it that way: it is the only check a reader has.
-    \multicolumn{5}{@{}l}{\textbf{12MP, normal}} \\
+    % admitted + skip + session demotion = n on every row.  Keep it that way: it is
+    % the only check a reader has.
+    %
+    % SOURCE.  These cells are the A3 regeneration (data/ablation_sampling Full,
+    % the documented source), not the previous revision's numbers, because the
+    % demoted and upper-bound counts exist only in that regeneration and the row
+    % has to sum.  Two cells move as a result, and both were already recorded as
+    % failing to reproduce: 12MP Single-frame $n$ was printed as 2,099 where the
+    % regeneration gives 2,100 (and 1,936 + 155 + 9 = 2,100, so the old value
+    % cannot close), and 12MP Multi-frame's watchdog was printed as 1 where both
+    % A3 and A2 give 0.  Every other cell is unchanged, including all four
+    % admitted counts and rates.  The consequence for the prose: no arm of RQ2
+    % has an unsafe admit at 12MP, and the only two in the table are at 24MP.
+    \multicolumn{7}{@{}l}{\textbf{12MP, normal}} \\
     \addlinespace[1pt]
-    Multi-frame  & 2{,}100 & 1{,}258 (59.9\%) & 1{,}257 (99.9\%)  & 1 (0.1\%) \\
-    Single-frame & 2{,}099 & 1{,}936 (92.2\%) & 1{,}936 (100.0\%) & 0 (0.0\%) \\
+    Multi-frame  & 2{,}100 & 1{,}258 (59.9\%) & 134 (6.4\%) & 708 (33.7\%)
+      & 0/1{,}258 & 1/1{,}258 \\
+    Single-frame & 2{,}099 & 1{,}935 (92.2\%) &   9 (0.4\%) & 155 (7.4\%)
+      & 0/1{,}935 & 0/1{,}935 \\
     \midrule
 
     % ---------------------------------------------------- 24MP memory pressure
-    \multicolumn{5}{@{}l}{\textbf{24MP, mem.\ pressure}} \\
+    \multicolumn{7}{@{}l}{\textbf{24MP, mem.\ pressure}} \\
     \addlinespace[1pt]
-    Multi-frame  & 2{,}116 & 1{,}276 (60.3\%) & 1{,}274 (99.8\%)  & 2 (0.2\%) \\
-    Single-frame & 2{,}114 & 1{,}791 (84.7\%) & 1{,}791 (100.0\%) & 0 (0.0\%) \\
+    Multi-frame  & 2{,}116 & 1{,}276 (60.3\%) & 264 (12.5\%) & 576 (27.2\%)
+      & 0/1{,}276 & 2/1{,}276 \\
+    Single-frame & 2{,}114 & 1{,}791 (84.7\%) &  43 (2.0\%)  & 280 (13.2\%)
+      & 0/1{,}791 & 0/1{,}791 \\
     \bottomrule
   \end{tabular}}%
-  \fittabcolsep{\rqtwoenfbox}{\rqtwoenftabular}{\columnwidth}{10}%
+  \fittabcolsep{\rqtwoenfbox}{\rqtwoenftabular}{\columnwidth}{14}%
   \rqtwoenftabular
-
   % =====================================================================
   % (b)  Always-admit model audit: the disjoint Pacing-only pool
   % =====================================================================

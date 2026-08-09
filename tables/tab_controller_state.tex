@@ -1,0 +1,23 @@
+\begin{table}[t]
+  \centering
+  \caption{Runtime quantities, consumers, and state scope.}
+  \label{tab:controller-state}
+  {\footnotesize
+  \renewcommand{\arraystretch}{1.08}
+  \setlength{\tabcolsep}{3pt}
+  \begin{tabular}{@{}>{\raggedright\arraybackslash}p{37pt}
+                       >{\raggedright\arraybackslash}p{105pt}
+                       >{\raggedright\arraybackslash}p{71pt}@{}}
+    \toprule
+    \textbf{Quantity} & \textbf{Source and update} & \textbf{Consumer; scope} \\
+    \midrule
+    \(R_{i,j}\) & Deadline minus now; reread before each node & Admission; node \\
+    \(\bar b_w,\gamma\)\newline\(\hat P,U\) & Baseline (equal sample weights) \(\times\) recency-median factor; suffix residuals; update at completion & Admission; \(\hat P\) also backlog; pipeline \\
+    \(\hat H\) & Recency-weighted mean of Draft-minus-profiled interval & Backlog/reserve; pipeline \\
+    \(G\) & First eligible rejection per group; clear at queue drain & Admission/reserve; burst \\
+    \(E,\hat B\) & \(E\) advances at decisions and rebases at Draft starts; \(\hat B\) sampled at callbacks & Pacing; burst \\
+    \(T\) & Newest committed deadline; clamp and sample at callbacks & Pacing; burst \\
+    \(M_s,\hat C\) & Maxima update at completion; \(\hat C\) refreshes at modeled Draft starts & Pacing; burst \\
+    \bottomrule
+  \end{tabular}}
+\end{table}

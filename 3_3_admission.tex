@@ -1,0 +1,58 @@
+\subsection{Remaining-Sequence Admission}
+\label{sec:admission}
+
+\smallskip\noindent\textbf{Fresh admission.}
+Admission protects the capture that currently owns the Draft worker.  Directly
+before node \(j\), the profiler constructs \(\sigma_{i,j}\) from the configured
+node chain and rereads \(R_{i,j}\) from the Capture Timeout clock.  For an
+\textsc{Optional} head, the fresh model recommendation is
+\begin{equation}
+  a^{\mathrm{fresh}}_{i,j} =
+    (\hat P(\sigma_{i,j}) \le 0)
+    \;\lor\;
+    (U(\sigma_{i,j}) \le R_{i,j}).
+  \label{eq:admission}
+\end{equation}
+Here, \(a^{\mathrm{fresh}}_{i,j}=\mathrm{true}\) denotes an admit recommendation.
+Testing the suffix rather than the head alone accounts for the estimated cost
+of every modeled node that follows.  \textsc{Required} and \textsc{Reserved} heads bypass this
+gate and always run.  The zero-prediction branch applies only when the point
+sum of the entire remaining suffix is zero.  It admits that fully unpriced
+suffix; if any component already has a point estimate, the upper-estimate test
+applies to the sequence as a whole.  Once only \textsc{Required} or
+\textsc{Reserved} work remains, admission has no further corrective action for
+capture \(i\); pacing can affect only future capture arrivals.
+
+\smallskip\noindent\textbf{Sticky product policy.}
+The product-policy layer converts this fresh recommendation into the effective
+action.  The first eligible rejection of each group adds that group to the
+burst-local set \(G\): \textsc{Portrait} contains \(M\), and
+\textsc{Decoration} contains decoding, Filter, and overlay watermark.  Each
+demotion remains in force until the Draft
+task queue drains, preventing optional-effect availability from alternating
+across captures.  It can therefore override a later fresh admit, an intentional
+quality-consistency cost that we distinguish from model selectivity in
+RQ2.  Already executed nodes are not rolled back.  Frame watermark and the
+decoding that it requires remain exceptions because they are required for the
+configured output.
+
+\smallskip\noindent\textbf{Watchdog containment.}
+An effective admit is still exposed to slowdown after execution begins.  Each
+admitted optional node therefore receives a watchdog budget
+\begin{equation}
+  \tau_{i,j} =
+  \max\!\left(0,
+    R_{i,j} - U(\sigma^{\mathrm{rsv}}_{i,j})\right),
+  \label{eq:watchdog}
+\end{equation}
+where \(\sigma^{\mathrm{rsv}}_{i,j}\) contains only the \textsc{Reserved}
+Encoding interval, which closes when the saved-Draft task completes.
+\textsc{Required} work remains priced in upstream suffixes but receives no
+watchdog capacity; this asymmetry does not exempt it from the capture deadline.
+The result is rounded to the nearest integer millisecond.  On expiration, the
+controller records the failure, releases any \texttt{DirectBuffer} result that
+arrives late, and defers node-chain teardown until the detached worker finishes.
+Because expiration detaches rather than preempts execution, that worker may
+consume CPU concurrently with a later Draft; the drain path therefore suppresses
+richer processing in queued tasks.  The watchdog is containment, not reliable
+native preemption, a substitute for admission, or a deadline guarantee.

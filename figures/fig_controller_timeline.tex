@@ -1,0 +1,97 @@
+% Two-capture execution contract for the Budget-Aware Draft Controller.
+% Horizontal positions show event order rather than measured duration.
+\begin{tikzpicture}[
+  x=0.92cm,
+  y=0.78cm,
+  font=\scriptsize,
+  >=latex,
+  lane/.style={anchor=east,font=\scriptsize\bfseries,align=right},
+  event/.style={draw=black!60,fill=gray!10,rounded corners=1pt,
+    align=center,minimum height=0.52cm,inner sep=2pt},
+  control/.style={draw=orange!65!black,fill=orange!13,rounded corners=1pt,
+    align=center,minimum height=0.62cm,inner sep=2pt},
+  draft/.style={draw=blue!55!black,fill=blue!13,rounded corners=1pt},
+  nodebox/.style={draw=blue!55!black,fill=white,rounded corners=1pt,
+    align=center,minimum height=0.42cm,inner sep=1.5pt},
+  skipped/.style={draw=purple!65!black,fill=purple!12,rounded corners=1pt,
+    align=center,minimum height=0.42cm,inner sep=1.5pt},
+  flow/.style={->,thick,black!65},
+  state/.style={->,densely dashed,thick,purple!65!black},
+  deadline/.style={red!70!black,dashed,thick}
+]
+  % Swimlanes.
+  \node[lane] at (0,5.0) {App-facing\\capture};
+  \node[lane] at (0,3.15) {Controller};
+  \node[lane] at (0,1.35) {Draft worker};
+  \draw[black!20] (0.25,5.0) -- (17.2,5.0);
+  \draw[black!20] (0.25,3.15) -- (17.2,3.15);
+  \draw[black!20] (0.25,1.35) -- (17.2,1.35);
+
+  % Current capture and the normal capture-availability callback.
+  \draw[very thick] (0.9,4.66) -- (0.9,5.34);
+  \node[anchor=south,align=center] at (0.9,5.38) {capture $i$\\committed};
+  \node[event] (hal) at (2.35,5.0) {HAL ready};
+  \node[control,text width=2.15cm] (pace) at (2.75,3.15)
+    {compare backlog and reserve\\with deadline; choose $d_i$};
+  \draw[flow] (hal) -- (pace);
+
+  % The user-visible delay moves the earliest callback release.
+  \draw[orange!70!black,very thick] (3.45,5.0) -- (5.45,5.0);
+  \draw[orange!70!black] (3.45,4.78) -- (3.45,5.22);
+  \draw[orange!70!black] (5.45,4.78) -- (5.45,5.22);
+  \node[anchor=south,text=orange!70!black] at (4.45,5.06) {delay $d_i$};
+  \node[event,text width=1.65cm] (release) at (6.35,5.0)
+    {release app\\callback};
+  \draw[flow] (pace.north east) -- ++(0,0.35) -| (4.45,4.78);
+  \draw[flow] (5.45,5.0) -- (release.west);
+  \draw[flow,densely dotted] (release.east) -- (7.75,5.0);
+  \draw[very thick] (7.9,4.66) -- (7.9,5.34);
+  \node[anchor=south,align=center] at (7.9,5.38)
+    {capture $i{+}1$\\may be committed};
+
+  % Deadlines remain attached to accepted captures.
+  \draw[deadline] (10.5,4.58) -- (10.5,5.42);
+  \node[anchor=south,text=red!70!black] at (10.5,5.47) {deadline $i$};
+  \draw[deadline] (16.65,4.58) -- (16.65,5.42);
+  \node[anchor=south,text=red!70!black] at (16.65,5.47)
+    {deadline $i{+}1$};
+
+  % The post-decision Draft consumes the oldest FIFO record at its start.
+  \node[control,text width=1.85cm] (starti) at (5.15,3.15)
+    {Draft $i$ start\\consume FIFO; refresh state};
+  \draw[flow] (starti.south) -- ++(0,-0.35) -| (3.55,1.84);
+  \draw[draft] (3.55,0.88) rectangle (8.00,1.82);
+  \node[anchor=west,font=\scriptsize\bfseries] at (3.70,1.64) {Draft $i$};
+  \node[nodebox] at (4.70,1.20) {admit};
+  \node[skipped] (demote) at (5.95,1.20) {skip; add $G$};
+  \node[nodebox] at (7.25,1.20) {Encoding};
+
+  % Waiting is queue occupancy, outside either worker-execution box.
+  \draw[pattern=north east lines,pattern color=black!25,draw=black!30]
+    (8.00,0.88) rectangle (8.75,1.82);
+  \node[font=\tiny,fill=white,inner sep=0.6pt] at (8.375,1.35) {queued};
+
+  % The next modeled Draft projects sticky demotions into a refreshed reserve.
+  \draw[draft] (8.75,0.88) rectangle (13.75,1.82);
+  \node[anchor=west,font=\scriptsize\bfseries] at (8.90,1.64)
+    {Draft $i{+}1$};
+  \node[nodebox] at (10.35,1.20) {admit};
+  \node[nodebox] at (12.55,1.20) {Encoding};
+  \node[control,text width=2.05cm] (refresh) at (10.15,3.15)
+    {next Draft start\\consume FIFO; refresh reserve};
+  \draw[flow] (refresh.south) -- ++(0,-0.35) -| (8.75,1.84);
+  \draw[state] (demote.north) -- (5.95,2.15) -| (refresh.west);
+  \node[fill=white,text=purple!65!black,inner sep=1pt] at (7.45,2.22)
+    {$G$ shapes the next reserve};
+
+  \node[control,text width=1.75cm] (drain) at (14.7,3.15)
+    {queue drain\\clear burst state};
+  \draw[flow] (13.75,1.84) |- (drain.south);
+
+  % Prospective horizon and event-order axis.
+  \draw[decorate,decoration={brace,mirror,amplitude=4pt}]
+    (3.55,-0.08) -- (13.75,-0.08);
+  \node[anchor=north] at (8.65,-0.31) {two-Draft prospective reserve horizon};
+  \draw[->] (0.25,-0.82) -- (17.2,-0.82)
+    node[anchor=north east] {schematic flow};
+\end{tikzpicture}

@@ -26,5 +26,5 @@ Some trials starting at overheat levels 0--3 timed out even though the productio
 Conversely, at starting levels 4--6, several captures completed optional Draft processing before the earliest timeout, even though the guard would suppress it from the first capture.
 Together, these results show that a fixed thermal threshold cannot reliably identify which captures have sufficient budget to execute \(M\).
 Neither executing \(M\) unconditionally nor adjusting only the current capture's work resolves this mismatch: the former requires spacing subsequent captures farther apart to prevent queued work from consuming their budgets, whereas the latter can neither recover budget already lost while waiting for the Draft worker nor account for a throttling-induced slowdown after the workload has been fixed.
-Reliable multi-frame composition therefore requires coordinated runtime control that scales each capture's Draft work to its remaining budget and delays the next capture only as much as the current backlog requires.
-We write \(d\) for that applied pacing delay.
+Reliable multi-frame composition therefore requires coordinated runtime control that scales each capture's Draft work to its remaining budget and derives capture-availability pacing from the admitted backlog and the live deadline window.
+We write \(d\) for that computed pacing delay.

@@ -1,0 +1,92 @@
+\subsection{Admission-Aware Capture-Availability Pacing}
+\label{sec:pacing}
+
+\smallskip\noindent\textbf{Backlog and reserve construction.}
+Pacing controls future arrivals using time rather than queue length.  Let
+\(E\) be a burst-local clock for the predicted time at which admitted Draft
+work will leave the worker, and let \(t_i\) be callback-decision time.  The
+online backlog is
+\begin{equation}
+  \hat B_i = [E-t_i]^+.
+  \label{eq:backlog}
+\end{equation}
+Here, \([x]^+=\max(0,x)\).  Let \(\hat P_i^{\mathrm{snap}}\) and
+\(\hat H_i^{\mathrm{snap}}\) be the point sum and overhead stored in decision
+\(i\)'s snapshot.  After choosing \(d_i\), the pacer updates
+\(E\leftarrow\max(E,t_i+d_i)+\lceil\hat P_i^{\mathrm{snap}}+
+\hat H_i^{\mathrm{snap}}\rceil\).
+At every actual Draft start, it removes the oldest pending decision and rebases
+\(E\) from the current and still-queued work.  Rebasing keeps prediction error
+from accumulating unchecked across a burst.
+
+For a Draft with a modeled workload sequence, the representative whole-Draft
+reserve is also refreshed at Draft start.  Let \(\sigma_i^{\mathrm{eff}}\) and
+\(s(i)\) denote the effective sequence and size bucket stored in the snapshot
+used by decision \(i\).  The pacer projects the configured sequence through the
+current sticky demotions and computes
+\begin{equation}
+  \hat C_i = \max\!\left(
+    M_{s(i)}-\widehat W_{\mathrm{demoted},i},
+    \widehat C_{\mathrm{whole},i}
+  \right).
+  \label{eq:reserve}
+\end{equation}
+Here, \(M_{s(i)}\) is the burst-local maximum profiled Draft interval for that
+size (with the largest maximum among observed size buckets as a cold fallback),
+\(\widehat W_{\mathrm{demoted},i}\) is the point cost removed by sticky
+demotion, and
+\(\widehat C_{\mathrm{whole},i}=\hat P(\sigma_i^{\mathrm{eff}})+\hat H\)
+is the effective whole-Draft floor, with both estimates sampled at that
+Draft-start refresh.  The coupling is
+explicitly asymmetric.  Admission changes later pacing through \(G\) and
+\(\widehat W_{\mathrm{demoted}}\), but cannot revise an issued delay.  Pacing
+passes no numeric state to admission.  Its immediate path to later admission is
+through changed arrival time, queue wait, and hence \(R_{i,j}\).  Over subsequent
+captures, the altered drain and execution trajectory can also change burst and
+learned predictor state.
+
+\smallskip\noindent\textbf{Delay computation.}
+Let \(T_i\) be the remaining window on the newest capture deadline committed
+to the Draft pipeline.  The runtime accessor confines it to the Capture
+Timeout window and uses a fresh full window before a deadline is available.
+We retain \(\max(0,T_i)\) in the equation to make the expired-window boundary
+explicit.  The computed delay is
+\begin{equation}
+  d_i = \max\!\left(
+    0,
+    \left\lceil
+      \frac{\hat B_i+2\hat C_i-\max(0,T_i)}{2}
+    \right\rceil
+  \right).
+  \label{eq:pacing}
+\end{equation}
+The two occurrences of \(2\) implement one deployment constant \(K=2\):
+\(K\hat C_i\) sets a two-Draft horizon, while division by \(K\) applies a
+\(1/K\) gain to its positive projected deficit.  The horizon and gain are
+therefore tied, not tuned independently or by mode.  This heuristic limits
+user-visible delay and leaves admission to skip optional work based on its live
+budget; it neither passes a numeric share of the deficit to admission nor
+constitutes a fixed-point derivation.
+Because \(T_i\geq0\), Equation~\ref{eq:pacing} gives the decision-local bound
+\(d_i\leq\lceil(\hat B_i+2\hat C_i)/2\rceil\); it is not a global latency cap
+because \(\hat B_i\) and \(\hat C_i\) depend on burst state.
+Section~\ref{sec:evaluation} evaluates the resulting responsiveness cost.
+
+\smallskip\noindent\textbf{Boundary and coordinated paths.}
+Callbacks before the first Draft-start snapshot proceed without a pacing
+decision; a nonpositive deficit produces a recorded zero delay.  A Draft with
+no modeled workload sequence still consumes the oldest pending decision and
+rebases the clock, but retains the prior reserve snapshot.  When the Draft
+queue drains, both pacing state and sticky demotions are cleared.  For an
+\textsc{Optional} head not already demoted, a suffix whose empirical upper estimate
+fits is admitted; otherwise the eligible group joins \(G\).  The next modeled
+Draft-start refresh recomputes \(\hat C\) for the reduced workload shape, and
+any positive residual
+\(\hat B_i+2\hat C_i-\max(0,T_i)\) determines a future callback delay through
+Equation~\ref{eq:pacing}.
+All hatted terms in Equation~\ref{eq:pacing} are online quantities.  RQ3
+separately reconstructs a retrospective matched-policy target from realized
+traces; that target is not a runtime input, physical minimum, or causal
+counterfactual.  Coefficient sensitivity likewise requires matched runs or a
+validated closed-loop replay because changing \(K\) alters subsequent system
+state.

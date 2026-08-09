@@ -2,16 +2,18 @@
 %
 % Implementation evidence: private ML repository
 % (https://github.com/ParkMinhyun/ML), commit
-% 99aae0af8c3fa1ceb784083446e83c40d0fb917f. Key sources:
+% cdd524fbd86e390446cbbd15c0e4f7923d4f1c58. Key sources:
 % DraftSequenceExecutionPredictor.kt (model, admission, watchdog),
-% CaptureAvailablePacer.kt (pacing), DraftSequenceExecutionProfiler.kt
-% (node classification, integration), WorkloadKey.kt /
-% WorkloadSequenceKey.kt (taxonomy), CaptureMetrics.kt (observability).
+% DraftSequenceAdmissionPolicy.kt (sticky product rules),
+% CaptureAvailablePacer.kt / CaptureAvailablePacingSession.kt (pacing),
+% DraftSequenceExecutionProfiler.kt (node classification and integration),
+% WorkloadKey.kt / WorkloadSequenceKey.kt (taxonomy), and
+% CaptureMetrics.kt (observability).
 
 \section{The Budget-Aware Draft Controller}\label{sec:approach}
 
-% \input{3_1_overview.tex}
-% \input{3_2_workload_model.tex}
-% \input{3_3_admission.tex}
-% \input{3_4_pacing.tex}
-% \input{3_5_implementation.tex}
+\input{3_1_overview.tex}
+\input{3_2_workload_model.tex}
+\input{3_3_admission.tex}
+\input{3_4_pacing.tex}
+\input{3_5_implementation.tex}

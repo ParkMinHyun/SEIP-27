@@ -1,0 +1,41 @@
+\subsection{Runtime State and Estimation Model}
+\label{sec:model}
+
+The controller maps each modeled Draft node execution to a \emph{workload}
+keyed by stage, a stable output-size bucket, and required variants.  For capture \(i\),
+the remaining sequence \(\sigma_{i,j}\) is the ordered workload suffix from node
+\(j\) through the Encoding tail; a \emph{whole Draft} is the profiled interval
+from profiler initialization through task completion.  A workload has one of
+three runtime policies.  \textsc{Optional} workloads---the multi-frame stage
+\(M\) and degradable stages in \(S\)---may be skipped and are watchdog-guarded
+when admitted.  \textsc{Required} workloads, including Dynamic Function and
+frame watermark, always run and are measured but receive no watchdog reserve.
+\textsc{Reserved} work also always runs and is protected in that reserve; in the
+current pipeline, it is the Encoding interval, which closes when the saved Draft
+task completes.  Every remaining workload contributes to the suffix estimate
+regardless of policy.  Thus, an upstream Optional decision prices following
+Required work, while frame watermark retains its prerequisite decoding when the
+rest of the decoration chain is demoted.
+
+Table~\ref{tab:controller-state} summarizes the controller state.  For workload
+\(w\), \(\hat p_w=\bar b_w\gamma\), where \(\bar b_w\) is a per-workload
+baseline computed with equal sample weights and \(\gamma\) is the
+recency-weighted median of observed duration-to-baseline ratios.  The median
+dampens an isolated stall while carrying sustained slowdown across workload
+families and sizes.
+
+\input{tables/tab_controller_state.tex}
+
+At Draft completion, both quantities are updated from their pre-completion
+values, preventing within-capture feedback.
+The suffix sum gives \(\hat P(\sigma_{i,j})\); exact-suffix residuals, with a
+pooled fallback and monotone tail correction, form the empirical upper estimate
+\(U(\sigma_{i,j})\).  The model updates at Draft completion.  A cold size can
+reuse a same-family estimate scaled by megapixels, whereas a wholly unseen
+family contributes zero until observed.
+
+Two additional quantities price whole-Draft occupancy.  The predictor learns
+\(\hat H\) as a recency-weighted mean of residual profiled-Draft time not
+covered by workload intervals and adds it once per Draft; during a burst, the
+pacer retains \(M_s\), the largest observed profiled Draft interval for size
+bucket \(s\).
