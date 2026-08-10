@@ -1,8 +1,8 @@
 \subsection{Workload Model and Online Duration Estimation}
 \label{sec:model}
 
-The controller represents Draft processing as an ordered sequence \(\mathcal{W}=(k_1,\ldots,k_n)\) of modeled workload intervals.
-Each workload key \(k_r\) identifies a processing stage, an output-size bucket, and the applicable configuration variant.
+The controller represents Draft processing as an ordered sequence \(\mathcal{W}=(k_1,\ldots,k_n)\) of modeled workloads.
+Each workload key \(k_r\) identifies a processing stage together with its output-size bucket and applicable configuration variant.
 For capture \(i\), \(\mathcal{W}_{i,j}\) denotes the remaining sequence at admission point \(j\), in execution order and ending with the Draft encoding-and-saving phase.
 All duration-valued quantities below are measured in milliseconds.
 
@@ -12,17 +12,18 @@ For any modeled sequence,
   \hat P(\mathcal{W})=\sum_{r=1}^{n}\hat p(k_r).
   \label{eq:point-estimate}
 \end{equation}
-The point estimator learns from completed executions at the workload-key level and shares observed slowdown across keys.
+The point estimator learns a baseline duration for each workload key from completed executions.
+It scales these baselines by a shared adjustment factor computed as the recency-weighted median of observed-to-baseline duration ratios.
 
-For each executed sequence observed through completion, the controller records a residual: its realized time from the admission point through saved-Draft completion minus the point estimate captured at that decision.
-The empirical upper estimate \(U(\mathcal{W})\) adjusts \(\hat P(\mathcal{W})\) with sequence-specific residual evidence and uses a pooled fallback when such evidence is unavailable.
+For each fully observed workload sequence, the controller records a nonnegative log ratio of its realized duration to the point estimate captured at the decision.
+The empirical upper estimate \(U(\mathcal{W})\) inflates \(\hat P(\mathcal{W})\) using sequence-specific residual evidence, with a pooled fallback when such evidence is unavailable.
 It is a high-side predictor, not a formal timing bound or deadline guarantee.
 
 Each decision snapshots the current model; only completed Draft measurements update learned state, preventing a Draft from revising estimates used by its own earlier decisions.
 A workload with neither a learned estimate nor an applicable fallback contributes zero to \(\hat P\).
 A zero contribution therefore denotes missing evidence, not an observed zero duration; the controller treats a sequence as unestimated only when its entire point sum is zero.
 
-Equation~\ref{eq:point-estimate} covers only modeled workload intervals.
+Equation~\ref{eq:point-estimate} covers only the modeled workloads in the Draft Sequence.
 A \emph{whole Draft} is the profiled interval from the start of Draft profiling through saved-Draft task completion.
 The learned estimate \(\hat H\) represents whole-Draft time outside the modeled intervals and is added once per Draft.
 During a burst, pacing updates \(C^{\max}_s\) at Draft completion to the largest whole-Draft duration observed for size bucket \(s\).

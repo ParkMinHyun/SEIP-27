@@ -418,8 +418,12 @@
   \newcommand{\rqthreecovtabular}{%
   % Every width is the measured maximum of its own data and its own header,
   % taken with \settowidth at \scriptsize against \columnwidth = 252pt:
-  %   46  "$d^*_{man}\le d<d^*$" 46.0  (header "Coverage" is only 28.2)
-  %   33  "11 (25.6\%)" 32.2            33  "83 (59.3\%)" 32.2
+  %   50  "$d^*_{man}\le d<d^*$" 46.0  (header "Coverage" is only 28.2)
+  %   16  "83" 7.0, as in (b)          33  "11 (25.6\%)" 32.2
+  % $n$ cannot go below 16 even though its data needs 7: the "Pacing Decisions"
+  % group label spans it together with paced, and that span is 16+33+2 tabcolsep.
+  % (b) proves the label fits 55.9pt; at 10pt for $n$ the span falls to 51.5pt
+  % and the label would widen both columns from above.
   %   12  "P50" 11.3                    14  "max" 12.8
   %   23  "P5 (\%)" 22.1                21  "$\hat C-C$" 19.6 / "$-29.6$" 20.6
   %   21  "$\hat B-B$" 19.9
@@ -437,8 +441,8 @@
   % these cells -- "53 (67.1\%)" carries one already, and the error columns
   % declare theirs in the group header, which is what keeps them at 21pt.
   \begin{tabular}{@{}%
-      >{\raggedright\arraybackslash}p{46pt}|% coverage condition
-      >{\raggedleft\arraybackslash}p{33pt}%   decisions n (%)
+      >{\raggedright\arraybackslash}p{50pt}|% coverage condition
+      >{\raggedleft\arraybackslash}p{16pt}%   decisions n
       >{\raggedleft\arraybackslash}p{33pt}|%  paced n (%)
       >{\raggedleft\arraybackslash}p{12pt}%   unapplied P50
       >{\raggedleft\arraybackslash}p{14pt}|%  unapplied max
@@ -463,44 +467,76 @@
       & \multicolumn{2}{c}{\makecell[c]{\textbf{Decision-time}\\%
         \textbf{error P50 (\%)}}} \\
     \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(l){7-8}
+      % Plain $n$, matching (b) column for column, and the same 16pt.  Two
+      % rejected alternatives, in order:
+      %
+      %   $n$ with a share beside it -- "53 (67.1\%)" -- needs 33pt and puts a
+      %   second percentage next to the paced share, which is a share of a
+      %   different denominator.  Two percentages per row, two denominators.
+      %
+      %   $n/N$ -- "53 / 79" -- reads well and is narrower still at 24.3pt, but
+      %   it repeats a constant three times per condition and states in six
+      %   cells what one block label states once.  If it is ever reinstated, N
+      %   must be this block's own population and NOT the analyzed total:
+      %   14/1{,}861 prints the under-sized tail as 0.8\% where 14/140 is
+      %   10.0\%, a 13x dilution of the one finding this block exists to show.
+      %
+      % The population moved to the block label instead, which is where a
+      % reader starts and where it costs one line rather than six cells.
       & \multicolumn{1}{c}{$n$}
       & \multicolumn{1}{c|}{\textbf{paced}}
       & \multicolumn{1}{c}{\textbf{P50}}
       & \multicolumn{1}{c|}{\textbf{max}}
       & \multicolumn{1}{c|}{\textbf{(\%)}}
-      & \multicolumn{1}{c}{$\hat{C}\!-\!C$}
-      & \multicolumn{1}{c}{$\hat{B}\!-\!B$} \\
+      % Stacked fractions, not "$\hat C-C$".  The cells hold percentages, so a
+      % header written as a difference of two durations names a quantity in
+      % milliseconds and not the one printed underneath it.  The fraction costs
+      % nothing: 18.46pt against 19.61pt for the difference, so it is NARROWER
+      % than the notation it replaces, and 1.2pt taller, which the sub-header row
+      % absorbs without gaining a line.  Do not "simplify" it back.
+      & \multicolumn{1}{c}{$\frac{\hat{C}-C}{C}$}
+      & \multicolumn{1}{c}{$\frac{\hat{B}-B}{B}$} \\
     \midrule
 
     % ------------------------------------------------------------- 12MP normal
-    % Condition only, as in (b).  The label used to read "79 of 1,920 decisions
-    % required a delay (4.1%)" and carried three numbers that the table either
-    % repeats or the prose owns: 79 is this block's own row sum (53+26+0), the
-    % 4.1% share is a sentence of the RQ3 narrative rather than a cell, and the
-    % analyzed total stays recoverable as (b)'s 1,841 plus that row sum.  The
-    % paced count that once followed it was likewise the Paced column's sum.
-    % Keep the labels at the condition: a block label is a single unwrappable
-    % line spanning every column, so it is a floor on the table's width.
-    \multicolumn{8}{@{}l}{\textbf{12MP, normal}} \\
+    % The label carries this block's population and its share of the analyzed
+    % total, and it is the only place either appears.  A revision that stripped
+    % it to the condition alone argued that 79 is the row sum (53+26+0) and the
+    % 4.1% share is a sentence the prose owns.  Both are true and neither
+    % survives contact with a reader: 79 and 140 then appear NOWHERE in the
+    % table, so the reader sums a column to learn what the percentages in the
+    % paced column are shares of, and 1,920 needs that sum plus (b)'s 1,841.
+    % The share is also the first thing the RQ3 narrative says -- pacing
+    % addresses a tail, it is not a fixed per-capture delay -- and a reader who
+    % meets the table before that sentence has no way to see it.
+    %
+    % A block label is a single unwrappable line spanning every column, so it is
+    % a floor on the table's width.  These two measure 149pt and 175pt against a
+    % 244pt span, so there is room; re-measure with \settowidth before extending
+    % either, and do not add the paced sum back (61 and 97 are the Paced
+    % column's own total).
+    \multicolumn{8}{@{}l}{\textbf{12MP, normal} --- delay required on 79 of
+      1{,}920 decisions (4.1\%)} \\
     \addlinespace[1pt]
-    $d\ge d^{*}$              & 53 (67.1\%) & 53 (100\%)
+    $d\ge d^{*}$              & 53 & 53 (100\%)
       &   0 &   0 & 1.03 & $+41.4$ &  $-0.1$ \\
-    $d^{*}_{\mathrm{man}}\!\le\!d\!<\!d^{*}$ & 26 (32.9\%) & 8 (30.8\%)
+    $d^{*}_{\mathrm{man}}\!\le\!d\!<\!d^{*}$ & 26 & 8 (30.8\%)
       &  72 & 582 & 2.61 & $+11.5$ & $-12.8$ \\
     % Both counts are printed rather than dashed: the zero is structural, and a
     % dash reads as a measurement that is missing.
-    $d<d^{*}_{\mathrm{man}}$  & 0 (0\%) & 0
+    $d<d^{*}_{\mathrm{man}}$  & 0 & 0
       & \multicolumn{5}{r}{\emph{no such decision in 12MP}} \\
     \midrule
 
     % ---------------------------------------------------- 24MP memory pressure
-    \multicolumn{8}{@{}l}{\textbf{24MP, mem.\ pressure}} \\
+    \multicolumn{8}{@{}l}{\textbf{24MP, mem.\ pressure} --- delay required on
+      140 of 1{,}861 decisions (7.5\%)} \\
     \addlinespace[1pt]
-    $d\ge d^{*}$              & 83 (59.3\%) & 83 (100\%)
+    $d\ge d^{*}$              & 83 & 83 (100\%)
       &   0 &   0 & 2.48 & $+44.4$ &  $-1.6$ \\
-    $d^{*}_{\mathrm{man}}\!\le\!d\!<\!d^{*}$ & 43 (30.7\%) & 11 (25.6\%)
+    $d^{*}_{\mathrm{man}}\!\le\!d\!<\!d^{*}$ & 43 & 11 (25.6\%)
       & 131 & 530 & 1.20 &  $-0.9$ & $-19.8$ \\
-    $d<d^{*}_{\mathrm{man}}$  & 14 (10.0\%) & 3 (21.4\%)
+    $d<d^{*}_{\mathrm{man}}$  & 14 & 3 (21.4\%)
       & 308 & 920 & 4.53 &  $+3.7$ & $-29.6$ \\
     \bottomrule
   \end{tabular}}%
@@ -600,15 +636,21 @@
       & \multicolumn{1}{c}{$n$}
       & \multicolumn{1}{c|}{\textbf{paced}}
       & \multicolumn{1}{c|}{$d^{*}\!\rightarrow\!d$}
-      & \multicolumn{1}{c}{$\hat{C}\!-\!C$}
-      & \multicolumn{1}{c|}{$\hat{B}\!-\!B$}
+      & \multicolumn{1}{c}{$\frac{\hat{C}-C}{C}$}
+      & \multicolumn{1}{c|}{$\frac{\hat{B}-B}{B}$}
       & \multicolumn{1}{c}{$d/B$}
       & \multicolumn{1}{c}{\textbf{inside} $B$} \\
     \midrule
 
     \multicolumn{8}{@{}l}{\textbf{12MP, normal}} \\
     \addlinespace[1pt]
-    $d>0$, $d^{*}=0$ & 1{,}841 & 350 (19.0\%)
+    % The label is the condition $n$ COUNTS, exactly as in (a), and $d>0$ is not
+    % part of it: 1,841 is the whole $d^{*}=0$ class and the paced column is what
+    % restricts it to 350.  An earlier revision labelled this row
+    % "$d>0$, $d^{*}=0$" and so asserted a conjunction its own $n$ does not
+    % satisfy -- read literally it claims 1,841 paced decisions at 12MP, where
+    % the analyzed total is 1,920 and only 411 were paced at all.
+    $d^{*}=0$        & 1{,}841 & 350 (19.0\%)
       & $0\!\rightarrow\!377$   & $+87.0$ & $+11.9$ & 10.8\% & 100.0\% \\
     $d\ge d^{*}>0$   & 53      & 53 (100\%)
       & $80\!\rightarrow\!432$  & $+41.4$ &  $-0.1$ &  9.5\% & 100.0\% \\
@@ -616,7 +658,7 @@
 
     \multicolumn{8}{@{}l}{\textbf{24MP, mem.\ pressure}} \\
     \addlinespace[1pt]
-    $d>0$, $d^{*}=0$ & 1{,}721 & 374 (21.7\%)
+    $d^{*}=0$        & 1{,}721 & 374 (21.7\%)
       & $0\!\rightarrow\!252$   & $+90.8$ &  $+6.7$ &  7.3\% &  98.3\% \\
     $d\ge d^{*}>0$   & 83      & 83 (100\%)
       & $188\!\rightarrow\!685$ & $+44.4$ &  $-1.6$ & 20.3\% &  99.6\% \\
