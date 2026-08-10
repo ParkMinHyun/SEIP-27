@@ -1,32 +1,31 @@
 \subsection{Design Objectives and Execution Contract}
 \label{sec:overview}
 
-We introduce the \emph{Budget-Aware Draft Controller} to prevent cross-shot Capture Timeout without reverting to uniform suppression of optional Draft processing.
-The controller coordinates two actuators with different scopes.
-\emph{Remaining-sequence admission} reduces the service demand of the capture that owns the Draft worker, whereas \emph{capture-availability pacing} delays the earliest application-facing opportunity to start a future capture.
-The former may reduce Draft quality; the latter increases the shot-to-shot interval.
-The objective is to selectively retain optional work within the live budget while making the trade-off between Draft image quality and shot-to-shot responsiveness explicit.
-The design is deliberately framework-local: it preserves the existing single-worker pipeline and changes neither the HAL nor the application interface.
+We introduce the \emph{Budget-Aware Draft Controller} to prevent Capture Timeout caused by inter-capture interference without uniformly suppressing optional Draft image processing.
+The controller coordinates two framework-local modules.
+\emph{Remaining-Sequence Admission} controls the active Draft Sequence's service demand: using an estimate of its remaining work and live budget, it admits or skips optional image processing.
+\emph{Capture-Availability Pacing} controls the timing of application's next capture initiation: using estimated worker occupancy and the remaining deadline window, it postpones delivery of the \texttt{captureAvailable} callback.
+Admission may reduce Draft quality, whereas pacing may lengthen the shot-to-shot interval.
+Both modules operate within the existing single-worker execution model and require no changes to the HAL or application interface
 
 \begin{figure*}[!t]
   \centering
-  \input{figures/fig_controller_overview.tex}
+  \includegraphics[width=\textwidth]{figures/fig_controller_interaction.pdf}
   \caption{Overview of the Budget-Aware Draft Controller. Parallel capture
-  keeps several requests in flight, and they serialize on one Draft thread;
-  the controller sits between the two and holds both actuators. Pacing is the
-  only part that acts backwards, on arrivals, returning a release delay to the
-  capture path; admission acts on the sequence already running, at each
-  optional node. Their coupling runs one way---a demoted group reaches later
-  pacing decisions, whereas pacing reaches admission only through queue wait
-  and the budget it leaves behind. Completed Draft Sequences return their
-  measured durations to the model both actuators read.
-  Section~\ref{sec:model} defines that model and Section~\ref{sec:pacing} the
-  pacing quantities.}
+  enqueues Draft Sequences in capture order for single-worker execution.
+  Capture-Availability Pacing postpones delivery of \texttt{captureAvailable}
+  to the application, whereas Remaining-Sequence Admission admits or skips
+  optional work in the active Draft Sequence. Draft completion updates the duration model shared by both modules.}
   \label{fig:controller-overview}
 \end{figure*}
 
-Figure~\ref{fig:controller-overview} shows how the two actuators coordinate across successive Draft Sequences.
-On the normal parallel-capture path, the \emph{pacer} uses estimates of queued and upcoming Draft Sequence work, together with the remaining deadline window, to schedule the release of \texttt{captureAvailable}.
-At each Draft Sequence start, the controller consumes the oldest pending pacing decision and updates the workload estimate used by later pacing decisions.
-Before each optional processing stage within a Draft Sequence, \emph{admission} compares the predicted duration of the sequence's remaining processing with the live budget.
-If admission rejects an optional processing group, the demotion remains in force until the Draft-processing queue drains; after each Draft Sequence completes, the controller updates the execution-time estimates used by later decisions.
+Figure~\ref{fig:controller-overview} traces one control cycle.
+Pacing first decides whether to defer the \texttt{captureAvailable} callback, which determines when the application may issue the next capture.
+When a Draft Sequence reaches the worker, the controller refreshes its estimates of queued work and Draft processing time.
+During execution, admission compares the estimated remaining work with the live Capture Timeout budget before each optional image-processing stage and decides whether to execute or skip that stage.
+After the Draft Sequence completes, the controller updates the online model with the measured duration.
+If no Draft remains queued, it also resets the temporary state used to coordinate consecutive captures.
+
+The modules coordinate through their effects on subsequent decisions.
+By skipping optional work, admission reduces the workload seen by later pacing decisions, but it cannot recover budget spent waiting for the worker or revise a scheduled delay.
+Pacing changes the queue wait and remaining Capture Timeout budget seen by later admission decisions, but it cannot change ongoing work.

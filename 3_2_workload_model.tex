@@ -1,25 +1,31 @@
-\subsection{Runtime State and Estimation Model}
+\subsection{Workload Model and Online Duration Estimation}
 \label{sec:model}
 
-The controller maps each modeled Draft node execution to a \emph{workload} keyed by stage, a stable output-size bucket, and required variants.
-For capture \(i\), the remaining sequence \(\sigma_{i,j}\) is the ordered workload suffix from node \(j\) through the Encoding tail; a \emph{whole Draft} is the profiled interval from profiler initialization through task completion.
-A workload has one of three runtime policies.
-\textsc{Optional} workloads---the multi-frame stage \(M\) and degradable stages in \(S\)---may be skipped and, when admitted, are guarded by a watchdog (WD).
-\textsc{Required} workloads, including Dynamic Function and frame watermark, always run and are measured but receive no watchdog reserve.
-\textsc{Reserved} work also always runs and is protected in that reserve; in the current pipeline, it is the Encoding interval, which closes when the saved Draft task completes.
-Every remaining workload contributes to the suffix estimate regardless of policy.
-Thus, an upstream Optional decision prices following Required work, while frame watermark retains its prerequisite decoding when the rest of the decoration chain is demoted.
+The controller represents Draft processing as an ordered sequence \(\mathcal{W}=(k_1,\ldots,k_n)\) of modeled workload intervals.
+Each workload key \(k_r\) identifies a processing stage, an output-size bucket, and the applicable configuration variant.
+For capture \(i\), \(\mathcal{W}_{i,j}\) denotes the remaining sequence at admission point \(j\), in execution order and ending with the Draft encoding-and-saving phase.
+All duration-valued quantities below are measured in milliseconds.
 
-Table~\ref{tab:controller-state} summarizes the controller state.
-Each workload is estimated as the product of its own baseline, computed with equal sample weights, and one slowdown factor shared by every workload: the recency-weighted median of observed duration-to-baseline ratios.
-The median dampens an isolated stall while carrying sustained slowdown across workload families and sizes.
+Let \(\hat p(k)\) be the online point estimate for workload key \(k\).
+For any modeled sequence,
+\begin{equation}
+  \hat P(\mathcal{W})=\sum_{r=1}^{n}\hat p(k_r).
+  \label{eq:point-estimate}
+\end{equation}
+The point estimator learns from completed executions at the workload-key level and shares observed slowdown across keys.
 
-\input{tables/tab_controller_state.tex}
+For each executed sequence observed through completion, the controller records a residual: its realized time from the admission point through saved-Draft completion minus the point estimate captured at that decision.
+The empirical upper estimate \(U(\mathcal{W})\) adjusts \(\hat P(\mathcal{W})\) with sequence-specific residual evidence and uses a pooled fallback when such evidence is unavailable.
+It is a high-side predictor, not a formal timing bound or deadline guarantee.
 
-At Draft completion, both quantities are updated from their pre-completion values, preventing within-capture feedback.
-The suffix sum gives \(\hat P(\sigma_{i,j})\); exact-suffix residuals, with a pooled fallback and monotone tail correction, form the empirical upper estimate \(U(\sigma_{i,j})\).
-The model updates at Draft completion.
-A cold size can reuse a same-family estimate scaled by megapixels, whereas a wholly unseen family contributes zero until observed.
+Each decision snapshots the current model; only completed Draft measurements update learned state, preventing a Draft from revising estimates used by its own earlier decisions.
+A workload with neither a learned estimate nor an applicable fallback contributes zero to \(\hat P\).
+A zero contribution therefore denotes missing evidence, not an observed zero duration; the controller treats a sequence as unestimated only when its entire point sum is zero.
 
-Two additional quantities price whole-Draft occupancy.
-The predictor learns \(\hat H\) as a recency-weighted mean of residual profiled-Draft time not covered by workload intervals and adds it once per Draft; during a burst, the pacer retains \(C^{\max}_s\), the largest whole-Draft duration it has observed for size bucket \(s\).
+Equation~\ref{eq:point-estimate} covers only modeled workload intervals.
+A \emph{whole Draft} is the profiled interval from the start of Draft profiling through saved-Draft task completion.
+The learned estimate \(\hat H\) represents whole-Draft time outside the modeled intervals and is added once per Draft.
+During a burst, pacing updates \(C^{\max}_s\) at Draft completion to the largest whole-Draft duration observed for size bucket \(s\).
+The learned quantities \(\hat P\), \(U\), and \(\hat H\) persist across bursts, whereas \(C^{\max}_s\) is cleared when the Draft queue drains and is not a bound on future Draft duration.
+
+Remaining-Sequence Admission consumes \(\hat P\) and \(U\); Capture-Availability Pacing consumes \(\hat P\), \(\hat H\), and \(C^{\max}_s\).
