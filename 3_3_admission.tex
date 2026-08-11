@@ -1,51 +1,20 @@
 \subsection{Remaining-Sequence Admission}
 \label{sec:admission}
 
-\begin{algorithm}[t]
-  \caption{Budget-Aware Draft Controller}
-  \label{alg:controller}
-  {\footnotesize
-  \begin{algorithmic}[1]
-    \Statex \textbf{Burst state:} backlog clock $E$, pending-decision FIFO,
-      size-bucket maxima $C^{\max}_s$, demoted groups $G$, reserve $\hat C$
-    \Statex \textbf{Learned state:} $\hat P$, $U$, $\hat H$; persist across bursts
-    \Procedure{OnCaptureAvailable}{$t$}\Comment{application-facing callback}
-      \State $\hat B\gets\max(0,E-t)$;\quad $T\gets$ window on newest committed deadline
-      \State $d\gets\max(0,\lceil(\hat B+2\hat C-\max(0,T))/2\rceil)$ \label{ln:delay}\Comment{Eq.~\ref{eq:pacing}}
-      \State push the decision, with the $\hat P,\hat H$ of its snapshot, onto the FIFO
-      \State $E\gets\max(E,t+d)+\lceil\hat P+\hat H\rceil$ \label{ln:advance}
-      \State release \texttt{captureAvailable} after $d$
-    \EndProcedure
-    \Procedure{OnDraftStart}{$i$}
-      \State pop the oldest pending decision; rebase $E$ from queued work \label{ln:rebase}
-      \If{capture $i$ has a modeled workload sequence}
-        \State $\sigma^G_i\gets$ configured sequence after applying $G$
-        \State $\hat C\gets\max(C^{\max}_s-\widehat W_{\mathrm{demoted},i},\;\hat P(\sigma^G_i)+\hat H)$ \label{ln:reserve}\Comment{Eq.~\ref{eq:reserve}}
-      \EndIf
-    \EndProcedure
-    \Procedure{BeforeOptionalNode}{$i,j$}
-      \State $\sigma_{i,j}\gets$ configured suffix from node $j$;\quad reread $R_{i,j}$ \label{ln:suffix}
-      \If{$\mathrm{group}(j)\in G$} \State \textbf{skip} \label{ln:sticky}\Comment{sticky until drain}
-      \ElsIf{$\hat P(\sigma_{i,j})\le0$ \textbf{or} $U(\sigma_{i,j})\le R_{i,j}$}
-        \State \textbf{admit} under a watchdog budget \label{ln:admit}\Comment{Eq.~\ref{eq:admission}}
-      \Else
-        \State $G\gets G\cup\{\mathrm{group}(j)\}$; \textbf{ skip} \label{ln:demote}
-      \EndIf
-    \EndProcedure
-    \Procedure{OnDraftComplete}{$i$}
-      \State update $\hat P,U,\hat H$ from pre-completion values; update $C^{\max}_s$
-    \EndProcedure
-    \Procedure{OnQueueDrain}{\,}
-      \State clear $E$, the FIFO, $C^{\max}$, and $G$ \label{ln:drain}
-    \EndProcedure
-  \end{algorithmic}}
-\end{algorithm}
+\begin{figure*}[!t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/fig_controller_runtime_sequence.pdf}
+  \caption{Normal-path runtime sequence and state lifetime of the Budget-Aware Draft Controller.
+  A callback event records a pacing decision and schedules \texttt{captureAvailable}; Draft start consumes the oldest pending decision and refreshes pacing state before admission runs at each optional node.
+  Completion updates learned and burst-local duration state, whereas queue drain clears only burst-local state.}
+  \label{fig:controller-runtime}
+\end{figure*}
 
-Algorithm~\ref{alg:controller} states the two decisions of Figure~\ref{fig:controller-overview} as five runtime events; this subsection explains \Call{BeforeOptionalNode}{} and Section~\ref{sec:pacing} the two pacing events.
+Figure~\ref{fig:controller-runtime} separates event ordering from decision arithmetic: this subsection specifies the optional-node event, Section~\ref{sec:pacing} defines the callback and Draft-start computations, and Section~\ref{sec:implementation} covers completion, drain, and fail-open paths.
 
 \smallskip\noindent\textbf{Model decision.}
 Admission protects the capture that currently owns the Draft worker.
-Directly before node \(j\), the profiler constructs \(\sigma_{i,j}\) from the configured node chain and rereads \(R_{i,j}\) from the Capture Timeout clock (Algorithm~\ref{alg:controller}, line~\ref{ln:suffix}).
+Directly before node \(j\), the profiler constructs \(\sigma_{i,j}\) from the configured node chain and rereads \(R_{i,j}\) from the Capture Timeout clock.
 For an \textsc{Optional} head, the model recommends admission when
 \begin{equation}
   \hat P(\sigma_{i,j}) \le 0
@@ -61,9 +30,9 @@ Once only \textsc{Required} or \textsc{Reserved} work remains, admission has no 
 
 \smallskip\noindent\textbf{Sticky product policy.}
 The product-policy layer maps this model recommendation to the action the controller takes.
-The first eligible rejection of each group adds that group to the burst-local set \(G\) (line~\ref{ln:demote}): \textsc{Portrait} contains \(M\), and \textsc{Decoration} contains decoding, Filter, and overlay watermark.
-Each demotion remains in force until the Draft task queue drains (line~\ref{ln:drain}), preventing optional-effect availability from alternating across captures.
-It can therefore override a later model admit (line~\ref{ln:sticky}), an intentional quality-consistency cost that we distinguish from model selectivity in RQ3.
+The first eligible rejection in a group adds that group to the burst-local set \(G\): \textsc{Portrait} contains \(M\), and \textsc{Decoration} contains decoding, Filter, and overlay watermark.
+Each demotion remains in force until the Draft task queue drains, preventing optional-effect availability from alternating across captures.
+Consequently, the product policy can override a later model admit, an intentional quality-consistency cost that we distinguish from model selectivity in RQ3.
 Already executed nodes are not rolled back.
 Frame watermark and the decoding that it requires remain exceptions because they are required for the configured output.
 

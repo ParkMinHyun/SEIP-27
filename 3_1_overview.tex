@@ -1,20 +1,21 @@
-\subsection{Design Objectives and Execution Contract}
+\subsection{Controller Overview and Execution Contract}
 \label{sec:overview}
 
 We introduce the \emph{Budget-Aware Draft Controller} to prevent cross-shot Capture Timeout without uniformly suppressing optional Draft image processing.
 The controller coordinates two framework-local modules.
 \emph{Remaining-Sequence Admission} controls the active Draft Sequence's service demand: using an estimate of its remaining work and live budget, it admits or skips optional image processing.
 \emph{Capture-Availability Pacing} controls the application's earliest opportunity to initiate the next capture: using estimated worker occupancy and the remaining deadline window, it schedules the \texttt{captureAvailable} callback for immediate or delayed delivery.
-Both modules operate within the existing single-worker execution model and require no changes to the HAL or application interface.
+Both modules consume shared runtime state and online duration estimates, operate within the existing single-worker execution model, and require no changes to the HAL or application interface.
 
 \begin{figure*}[!t]
   \centering
   \includegraphics[width=\textwidth]{figures/fig_controller_interaction.pdf}
-  \caption{Overview of the Budget-Aware Draft Controller.}
+  \caption{Architecture of the Budget-Aware Draft Controller.
+  Capture-Availability Pacing gates the application's earliest next-capture opportunity, whereas Remaining-Sequence Admission governs optional work in the active Draft; both use shared runtime state and online duration estimates.}
   \label{fig:controller-overview}
 \end{figure*}
 
-Figure~\ref{fig:controller-overview} illustrates the controller's execution contract across overlapping captures.
+Figure~\ref{fig:controller-overview} shows the controller's two control surfaces and their shared state.
 Its two modules interact asymmetrically: admission can reduce the service demand projected by later pacing decisions, but it cannot recover budget already consumed by queueing or revise a callback delay already scheduled.
 Pacing can reduce the queue wait experienced by later Draft Sequences and preserve more Capture Timeout budget for admission, but it cannot alter work already in progress.
 These actions carry different costs: admission may reduce Draft image quality, whereas pacing may lengthen the shot-to-shot interval.
