@@ -7,6 +7,9 @@ questions:
   \item \textbf{End-to-end effectiveness.} Does joint control prevent Capture
   Timeout while retaining optional Draft work at an acceptable pacing cost?
 
+  \item \textbf{Control-loop contribution.} Does each control loop contribute
+  to that outcome, and does coordinating the two dominate either loop alone?
+
   \item \textbf{Admission decision quality.} Does admission execute optional
   work when it can finish within the remaining budget and reject it when
   execution would exceed that budget?
@@ -16,18 +19,20 @@ questions:
   backlog and the remaining Capture Timeout budget?
 \end{enumerate}
 
-% TODO: Add the experimental setup and the RQ1--RQ3 result prose.
+% TODO: Add the experimental setup and the RQ1--RQ4 result prose.
 
 \subsection{RQ1: End-to-End Effectiveness}
 \input{tables/tab_rq1_end_to_end_summary.tex}
-\input{tables/tab_rq1_ablation.tex}
 
-\subsection{RQ2: Admission Decision Quality}
-\input{tables/tab_rq2_admission_summary.tex}
-\input{figures/fig_rq2_unsafe_spike_anatomy.tex}
+\subsection{RQ2: Control-Loop Contribution}
+\input{tables/tab_rq2_ablation.tex}
 
-\subsection{RQ3: Pacing-Delay Sizing}
-\input{tables/tab_rq3_pacing_summary.tex}
+\subsection{RQ3: Admission Decision Quality}
+\input{tables/tab_rq3_admission_summary.tex}
+\input{figures/fig_rq3_unsafe_spike_anatomy.tex}
+
+\subsection{RQ4: Pacing-Delay Sizing}
+\input{tables/tab_rq4_pacing_summary.tex}
 
 \subsection{Case Study}
 \input{tables/tab_casestudy_selection.tex}

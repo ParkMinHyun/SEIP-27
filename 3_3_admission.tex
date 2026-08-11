@@ -63,7 +63,7 @@ Once only \textsc{Required} or \textsc{Reserved} work remains, admission has no 
 The product-policy layer maps this model recommendation to the action the controller takes.
 The first eligible rejection of each group adds that group to the burst-local set \(G\) (line~\ref{ln:demote}): \textsc{Portrait} contains \(M\), and \textsc{Decoration} contains decoding, Filter, and overlay watermark.
 Each demotion remains in force until the Draft task queue drains (line~\ref{ln:drain}), preventing optional-effect availability from alternating across captures.
-It can therefore override a later model admit (line~\ref{ln:sticky}), an intentional quality-consistency cost that we distinguish from model selectivity in RQ2.
+It can therefore override a later model admit (line~\ref{ln:sticky}), an intentional quality-consistency cost that we distinguish from model selectivity in RQ3.
 Already executed nodes are not rolled back.
 Frame watermark and the decoding that it requires remain exceptions because they are required for the configured output.
 
@@ -76,8 +76,8 @@ On expiration, the controller records the failure, releases any \texttt{DirectBu
 Because expiration detaches rather than preempts execution, that worker may consume CPU concurrently with a later Draft; the drain path therefore suppresses richer processing in queued tasks.
 The watchdog is containment, not reliable native preemption, a substitute for admission, or a deadline guarantee.
 
-\smallskip\noindent\textbf{What RQ2 scores.}
-RQ2 labels each decision retrospectively from realized traces, so we fix the two labels here rather than at first use.
+\smallskip\noindent\textbf{What RQ3 scores.}
+RQ3 labels each decision retrospectively from realized traces, so we fix the two labels here rather than at first use.
 A decision is \emph{feasible} when the measured duration from node \(j\) through Draft completion fits the \(R_{i,j}\) that the decision read, and \emph{unsafe} when it exceeds that budget or the watchdog intervenes.
 The pair is the realized counterpart of Equation~\ref{eq:admission}, which the runtime tests against \(U\) precisely because the realized duration is not yet available.
 Under the always-admit audit these labels record model misjudgement rather than outcomes an enforced build would produce, because that audit applies neither session policy nor the watchdog.

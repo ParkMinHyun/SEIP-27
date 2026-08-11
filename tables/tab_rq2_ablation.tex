@@ -1,6 +1,16 @@
-% RQ1(b): Two-factor controller ablation across two stress conditions.
-% This is the second RQ1 table: RQ1(a) characterizes the full controller across
-% starting levels, and this one isolates what each control loop contributes.
+% RQ2: Two-factor controller ablation across two stress conditions.
+% Split out of RQ1 and promoted to its own research question on 2026-08-11:
+% RQ1 characterizes the full controller across starting levels, and RQ2 isolates
+% what each control loop contributes.  The file was tables/tab_rq1_ablation.tex
+% and the label was tab:rq1_ablation before that split.
+%
+% This table still reports M and S as PERCENTAGES, whereas RQ1 now prints
+% per-run capture counts.  That is deliberate, not an oversight: RQ1's
+% denominator is a fixed 30-capture session, so a count reads directly, while
+% every rate here is over the 300 captures the cell REQUESTED and most arms
+% never reach them -- 12MP No control reaches a mean of 9.7 captures of 30, so a
+% count column would print "8.7" beside Full's "30.0" and hide that the two are
+% shares of the same requested burst.  See THE DENOMINATOR note below.
 %
 % Reviewer-facing structure:
 %   - Admission and Pacing remain the two axes of a factorial design; the 2x2 is
@@ -10,7 +20,7 @@
 %     discarding optional Draft work or by pacing arbitrarily slowly, so each
 %     row also reports how many of the requested captures actually completed,
 %     how much M and S work those captures delivered, and how often and how
-%     hard the pacer intervened.  RQ3 separately evaluates whether that delay is
+%     hard the pacer intervened.  RQ4 separately evaluates whether that delay is
 %     appropriately sized for the observed backlog.
 %
 % Condition definition:
@@ -94,7 +104,7 @@
 %   d P50      inclusive P50 of positive RQ3Pacing.transitionDelayMs values over
 %              observed eligible outgoing-shot intervals; -- when pacing is off.
 %              d is the applied pacing delay, the same symbol
-%              Table~\ref{tab:rq3_pacing_summary} uses throughout and the same
+%              Table~\ref{tab:rq4_pacing_summary} uses throughout and the same
 %              column Table~\ref{tab:rq1_controller_behavior} prints beside its
 %              Sigma-d; it is introduced in the prose of
 %              Section~\ref{sec:guard-limit} beside M and S.
@@ -164,9 +174,11 @@
 %     shadow outputs rather than applied pacing.  Activated is therefore 0 and
 %     Delay P50 is undefined (--) for this arm.  The baseline workbooks behave
 %     the same way; the 24MP baseline records no pacing decision at all.
-%   - Cross-table consistency: the Full rows here now match
+%   - Cross-table consistency: the Full rows here still match
 %     Table~\ref{tab:rq1_controller_behavior}'s Lv4 rows EXACTLY, on all four
-%     values -- 12MP 34.3/97.3 and 24MP 41.7/80.3.  Every run in that table is a
+%     values -- 12MP 34.3/97.3 and 24MP 41.7/80.3.  SINCE 2026-08-11 THAT TABLE
+%     PRINTS COUNTS, so the check is now against 30 x the rate: 12MP 10.3/29.2
+%     and 24MP 12.5/24.1.  Every run in that table is a
 %     complete, timeout-free 30-capture session, so its H x 10 denominator and
 %     this table's 300-capture denominator are the same number.  The earlier
 %     24MP/Lv4 mismatch (41.7 here against 39.3 there) is gone: that table has
@@ -194,8 +206,11 @@
   \centering
   \setlength{\abovecaptionskip}{2pt}%
   \setlength{\belowcaptionskip}{3pt}%
-  \caption{RQ1(b) two-factor controller ablation.}
-  \label{tab:rq1_ablation}
+  % "two-factor" was design vocabulary and could be misread as the table's two
+  % CONDITIONS.  Naming the two factors settles it and matches the subsection
+  % title, RQ2: Control-Loop Contribution.
+  \caption{RQ2 control-loop ablation: admission $\times$ pacing.}
+  \label{tab:rq2_ablation}
 
   {\scriptsize
   \renewcommand{\arraystretch}{1.05}%
@@ -238,10 +253,11 @@
   %   The delay column keeps 3.3pt of the slack it gave up, as centring room:
   % "Activated" and "$d$ P50" are the closest pair in the table, and half of that
   % 3.3pt is what puts 4.3pt between them.  Do not shrink it to its 18.7pt floor.
-  %   The last header is the symbol $d$, not a word.  RQ3 prints the applied
-  % pacing delay as $d$ throughout Table~\ref{tab:rq3_pacing_summary}, and one
-  % quantity carries one printed name in this paper -- the same rule that keeps
-  % "Slack P5" identical across RQ1(a) and RQ3 instead of renaming it "Deadline
+  %   The last header is the symbol $d$, not a word.  RQ4 prints the applied
+  % pacing delay as $d$ throughout Table~\ref{tab:rq4_pacing_summary}, and one
+  % quantity carries one printed name in this paper -- the same rule that kept
+  % "Slack P5" identical across RQ1 and RQ4 while RQ1 still printed that column,
+  % instead of renaming it "Deadline
   % margin".  $d$ is introduced in the prose of Section~\ref{sec:guard-limit}
   % beside $M$ and $S$, which is where this table's other math headers are
   % defined too.
@@ -262,7 +278,7 @@
   % "Recommendation vs execution" note above -- so the header now names what is
   % actually counted, and it matches "M executed (\%)" in
   % Table~\ref{tab:casestudy_selection}, which is the same quantity on one run.
-  % "Completion" remains forbidden here: it is RQ1(a)'s word for a different
+  % "Completion" remains forbidden here: it is RQ1's word for a different
   % denominator.  The group header must still break across two lines; on one line
   % it measures about 60pt against the 42pt its two columns provide, and the
   % -8.4pt \multirow nudge below assumes a two-line row one.
@@ -292,8 +308,8 @@
   %   Vertical rules mark the three GROUP boundaries and nothing else: after
   % Configuration, so the two label columns are cut off from the measurements,
   % and after Captures and after S, where one \cmidrule group ends and the next
-  % begins.  This matches Table~\ref{tab:rq3_pacing_summary} and
-  % Table~\ref{tab:rq2_admission_audit}, which is the point -- the three tables
+  % begins.  This matches Table~\ref{tab:rq4_pacing_summary} and
+  % Table~\ref{tab:rq3_admission_audit}, which is the point -- the three tables
   % now rule at the same places.  Do NOT rule between Condition and
   % Configuration: both are row labels, and a rule there would separate a label
   % from its own sub-label.  Do not rule inside a group either; every data cell

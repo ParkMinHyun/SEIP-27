@@ -43,7 +43,7 @@ does not ship; a reader had no way to know where it came from.
 
 ## Current artifacts
 
-The current main-paper exhibit is `tables/tab_rq3_pacing_summary.tex`, and it
+The current main-paper exhibit is `tables/tab_rq4_pacing_summary.tex`, and it
 is the only RQ3 exhibit; RQ3 ships no figure. The superseded policy,
 selectivity, and calibration TeX pairs have been removed.
 

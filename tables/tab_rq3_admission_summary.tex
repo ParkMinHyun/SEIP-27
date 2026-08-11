@@ -1,0 +1,384 @@
+% RQ3 results from the balanced Full-controller arm of this repository and the
+% always-admit audit on one device.
+% Each capture contributes at most one selected decision per optional-work
+% group: Multi-frame = Bokeh; Single-frame = Filter.
+%
+% ---------------------------------------------------------------------------
+% 2026-08-11 REVISION.  Advisor feedback: merge the two stacked blocks into one
+% table and drop the Feasible-work Margin and Unsafe-work Overrun columns.
+% docs/rq-restructure-2026-08-11.md holds both removed columns, the deleted note
+% text that defined their shared sign convention, and the restore procedure.
+% The file was tables/tab_rq2_admission_summary.tex and the label was
+% tab:rq2_admission_audit before the RQ renumbering of the same date.
+%
+% THE MERGED TABLE STAYS INSIDE \columnwidth, AND THAT IS WHAT SETS THE CELL
+% FORMAT.  Nine columns carrying "1{,}966 (93.6\%)" measure 312pt against the
+% 252pt available -- 60pt over with the column spacing already at zero, so no
+% width tuning reaches it.  Two things bought it back, and both are load-bearing:
+%   - Data rows print the COUNT alone and the Overall row prints the SHARE alone.
+%     The widest cell in a share column falls from 40.9pt to 18.1pt, and the
+%     percent sign is what tells a reader the last row changed unit.
+%   - The "[watchdog]" annotation left the Unsafe cells for the note.  That
+%     column held one digit inside 36.5pt, the worst ratio in the table, and
+%     dropping the annotation alone is worth 16pt.
+% The result sums to 224.5pt and solves to about 1.5pt of \tabcolsep, which is
+% more room than Table~\ref{tab:rq2_ablation} runs on.  Restoring either
+% convention puts the table back over \columnwidth and forces table* again.
+%
+% WHAT THE COUNT/SHARE SPLIT COSTS, so nobody re-derives it as a discovery.  The
+% per-condition admit RATE is no longer printed -- 93.6% at 12MP Multi-frame
+% against 87.5% at 24MP is a comparison the reader must now do by division, and
+% the row denominators are not in the table body, which is why the note lists
+% them.  The alternative that keeps every rate is printing shares on every row
+% and counts nowhere; it also fits (231.5pt), but it would delete the deployed
+% volumes and the "3 adverse events in 8,430 decisions" reading with them.
+%
+% THE ONE THING THE MERGE PUT AT RISK, and what now guards it.  The two halves
+% are DIFFERENT POPULATIONS: the left four columns are the balanced Full arm
+% (8,430 deployed decisions), the right four a DISJOINT Pacing-only pool (3,746
+% audited decisions).  The earlier two-block layout existed precisely so that
+% one row could not be read as one decision set measured two ways, and merging
+% removes that structural guard.  Three things replace it and none of them is
+% optional:
+%   1. The NOTE names both populations and prints the four deployed row
+%      denominators.  This used to be a subtitle line under each top-level
+%      header, which put it inside the exhibit; the subtitles were removed on
+%      advisor instruction and the note inherited the whole job, which is why it
+%      is not optional.
+%   2. The row totals do not close ACROSS the boundary and are not meant to.
+%      Model admit + Model skip = the left population; Admitted + Skipped closes
+%      within each factual class of the right one.  On the Overall row the
+%      percentages therefore sum to 100 within a half, never across.
+%   3. The prose must still state both denominators.  See WHAT THE RQ3 PROSE
+%      MUST CARRY below.
+% If a reviewer ever reads a left cell against a right cell as the same
+% decisions, restore the two-block layout from the revision document.
+% ---------------------------------------------------------------------------
+%
+% The Controller-enforced cells come from the balanced Full arm,
+% data/ablation_sampling/48U_metrics_<condition>_0803_{1,2}.xlsx, with both parts
+% pooled, runs delimited by a ppSequenceId reset, identical run signatures
+% counted once and shots after 30 excluded: 70 runs / 2,100 captures at 12MP
+% normal and 73 runs / 2,116 captures at 24MP memory pressure.  Two 24MP captures
+% carry no Filter decision, which is why the Single-frame denominator is 2,114.
+% Regenerate with scripts/rq2_admission_metrics.py.
+%
+% This arm replaces the earlier unbalanced 0727 pool, and the two are not
+% directly comparable: the Full arm holds ten runs at each starting overheat
+% level Lv0--Lv6, whereas the 0727 pool was weighted towards the hot levels.
+% Standardizing on an equal weight per level, the Multi-frame admit rate moves
+% 72.1% -> 59.9% at 12MP and 56.0% -> 60.5% at 24MP, so the change is a change in
+% measured behaviour and not only in the level mix.
+%
+% The Full export contains no Capture-Timeout session -- the collection gap
+% recorded in docs/rq1-rq3-metrics-guide.md section 4.3.1 -- so the observed
+% safety cells characterize only the sessions present in that export.  The 0727
+% cells were filtered the same way, by dropping timeout-bearing runs.
+%
+% These cells inherit the balancing protocol of data/ablation_sampling/README.md,
+% whose deviation score reads reported outcomes and is therefore not
+% outcome-neutral.  Against the untrimmed data/ablation_original the trim moves
+% the Multi-frame admit rate 63.1% -> 59.9% at 12MP and 60.2% -> 60.3% at 24MP,
+% and the Single-frame rate 92.2% -> 92.2% and 85.1% -> 84.7%; only the 12MP
+% Multi-frame cell moves by more than half a point.
+%
+% The all-decision audit reports factual feasible/unsafe outcomes crossed with
+% the shadow-model admit/skip decision before session-sticky demotion.
+% The Always-admit cells pool two Pacing-only sources.  Runs are reconstructed
+% identically in both: split on a ppSequenceId reset, identical run signatures
+% counted once, shots after 30 excluded.  No run signature is shared across the
+% two campaigns, so the pools are disjoint.
+%
+% (a) 0729: 659 captures from 34 unique runs in
+% 48U_metrics_12MP_normal_0729_PacingOnly_{1,2}.xlsx -- updated workbook 1
+% contains all 22 runs in workbook 2 plus 12 additional runs -- and 827 captures
+% from 53 included runs in 48U_metrics_24MP_memory_0729_PacingOnly_{1,2}.xlsx,
+% where source run 16 of workbook 1 was invalid/incomplete and excluded.
+%
+% (b) 0803: a starting-overheat-level subset of
+% data/ablation_sampling/48U_metrics_<condition>_pacing_only_0803.xlsx.  At 12MP
+% normal this adds every Lv1 and Lv2 run (2 and 1) plus the Lv4 runs carrying no
+% unsafe-admitted decision, which is all 11 Lv4 runs, for 14 runs / 223
+% captures; Lv3 was not drawn.  At 24MP memory pressure it adds every Lv0, Lv1
+% and Lv2 run (3, 1 and 3), for 7 runs / 169 captures; Lv3 and Lv4 were not
+% drawn.  Pooled totals are 882 decisions per group at 12MP and 996 Multi-frame
+% / 986 Single-frame at 24MP, the Single-frame shortfall being captures that
+% carry no Filter decision.
+%
+% Regenerate the Always-admit columns with scripts/rq2_audit_pool.py, which owns
+% the level-selection rule; `python scripts/rq2_audit_pool.py runs` prints the
+% per-run census it draws from, including the runs it holds back.
+% Shadow model decision = afterModelAdmit; factual cost
+% C = draftEndUptimeMs - nodeStartUptimeMs, the suffix as executed.
+%
+% !! OPEN DISCREPANCY, PRE-DATING THE 2026-08-11 REVISION AND NOT RESOLVED BY IT.
+% scripts/rq2_audit_pool.py disagrees with the printed Unsafe-work columns on two
+% of the four rows.  Its regeneration AND its own hardcoded PUBLISHED constants
+% both give 12MP Multi-frame 4 (11.4%) / 31 (88.6%) and 24MP Single-frame
+% 3 (5.6%) / 51 (94.4%), where this table prints 2 (5.7%) / 33 (94.3%) and
+% 2 (3.7%) / 52 (96.3%).  The Feasible-work columns agree on all four rows, and
+% Figure~\ref{fig:rq3_unsafe_spike_anatomy} follows the TABLE, taking apart five
+% unsafe admits, not the script's eight.  The values printed here were left
+% untouched by the merge so that the figure and the table continue to agree; the
+% discrepancy is recorded rather than silently resolved, because deciding it
+% requires knowing which regeneration the published cells came from.  Resolve it
+% before submission, and update the figure with the table if the script wins.
+%
+% The label is deliberately a measurement.  RQ3 scores the model's judgement on
+% the decision it made, so the audit build forcing every optional node is part
+% of the condition being measured, not an error to net out.  Netting it out
+% would answer a different question -- was the whole decision set safe end to
+% end -- and would read as moving the metric in the model's favour.  That
+% question is answered per decision in
+% Figure~\ref{fig:rq3_unsafe_spike_anatomy}, which marks, for each unsafe-admitted
+% decision, which shipped safeguard would have prevented the overrun.
+%
+% For reference, on the earlier 0729-only pool, honouring the model's own skips
+% on both the cost and the budget moved the audit half to:
+%   12MP Multi   623 (96.4%) / 23 (3.6%)  +3.0%   3 (23.1%) / 10 (76.9%)  -1.4%
+%   12MP Single  630 (99.4%) / 23 (3.6%)  +4.0%   0 (0.0%)  /  6 (100.0%) -4.5%
+%   24MP Multi   729 (91.0%) / 72 (9.0%)  +3.7%   0 (0.0%)  / 26 (100.0%) -2.9%
+%   24MP Single  752 (92.4%) / 62 (7.6%)  +5.4%   0 (0.0%)  / 13 (100.0%) -1.5%
+% It lowers the unsafe-admit counts and raises the unnecessary-skip counts by
+% the same act, so it is recorded here rather than reported as the headline.
+% Those four lines have not been recomputed on the pooled set.  The third and
+% sixth numbers on each line are the retired Margin and Overrun columns.
+%
+% Regenerate with data/rq2_spike_anatomy.mjs in the ML implementation
+% repository.
+%
+% Every audit count is a count of its own factual class, so Admitted + Skipped
+% is that class's size.  Where the shares are printed -- the Overall row, since
+% the count/share split -- the two Feasible-work cells sum to 100% and the two
+% Unsafe-work cells sum to 100%.
+%
+% ---------------------------------------------------------------------------
+% WHAT THE RQ3 PROSE MUST CARRY
+% ---------------------------------------------------------------------------
+%   the two populations   The left half is the balanced Full arm, 70 runs /
+%                         2,100 captures at 12MP and 73 / 2,116 at 24MP.  The
+%                         right half is a DISJOINT Pacing-only pool, 882
+%                         decisions per group at 12MP and 996 Multi-frame / 986
+%                         Single-frame at 24MP.  Since the merge this is the
+%                         single most important sentence in the RQ3 prose.
+%   the audit's design    The right half scores the shadow-model admit/skip
+%                         decision, taken before session-sticky demotion,
+%                         against the factual outcome; its counts are shares of
+%                         their own factual class and sum to 100% within each.
+%   the selection caveat  The audit's 0803 part is a starting-overheat-level
+%                         subset and is NOT outcome-neutral; at 24MP the level
+%                         rule alone removes that source's entire
+%                         unsafe-admitted population.  The block comment above
+%                         owns the detail.
+%   severity              Shortfall is the median predicted deficit normalized
+%                         by the Capture Timeout deadline over model skips in
+%                         the deployed half.  The audit half no longer prints a
+%                         severity column; if the prose needs the realized
+%                         magnitudes, take them from the revision document and
+%                         say they are not in the table.
+%   the group definition  Each capture contributes at most one decision per
+%                         optional-work group: Multi-frame = Bokeh, Single-frame
+%                         = Filter.
+%
+% ---------------------------------------------------------------------------
+% Layout mechanics
+% ---------------------------------------------------------------------------
+% Nine columns inside \columnwidth, on the count/share split described in the
+% revision block above.  \fittabcolsep (macros.tex) solves for the \tabcolsep
+% that lands the outer rules on \columnwidth; its fourth argument is 2 x the
+% number of columns: 18.
+%
+% Measured at \scriptsize, binding content per column -- the largest of its data,
+% its Overall cell and its own header:
+%
+%   column          binding content              measured   p{}
+%   Group           "Single-frame"                 36.5      37
+%   Model admit     "94.7\%" (Overall)             18.1      19
+%   Unsafe          header (data is one digit)     20.6      21
+%   Model skip      "5.3\%"  (Overall)             14.6      15
+%   Shortfall       header                         26.4      27
+%   Feas. Admitted  header                         28.4      29
+%   Feas. Skipped   header                         24.5      25
+%   Uns. Admitted   header                         28.4      29
+%   Uns. Skipped    header                         24.5      25
+%
+% Sum 227pt plus 2.4pt of rules, so \tabcolsep solves near 1.26pt.  Five of the
+% nine columns are header-bound and therefore carry their own internal slack,
+% which is what keeps neighbouring right-aligned numbers apart at that spacing.
+% The one pair with no slack to spare is Model admit against Unsafe; their group
+% header "Model admit" needs 39.2pt against the 40pt the two columns provide, so
+% do not shave either.
+%
+% A header line wider than its p{} value inside a \makecell OVERFLOWS, and a
+% plain cell wider than it silently WRAPS with no warning.  Re-measure with
+% \settowidth before changing any label.
+%
+% THE POPULATION SUBTITLES ARE GONE FROM THE HEADER, ON ADVISOR INSTRUCTION.
+% They read "balanced full-controller arm, 8,430 decisions" and "disjoint
+% pacing-only pool, 3,746 decisions" and were the merge's in-exhibit guard
+% against reading a left cell against a right cell.  Both populations, and the
+% per-row denominators the count format no longer shows, now live in the note
+% below, which is therefore NOT optional -- it is the only thing standing
+% between this table and the misreading the two-block layout used to prevent.
+%
+% Column alignment follows the advisor's standing rule: every header cell is
+% centred horizontally and vertically, and every DATA cell is right-aligned.
+% Group stays left-aligned because it is a row label, not a measurement, which
+% is also what Table~\ref{tab:rq2_ablation} does with Configuration.
+
+\begin{table}[t]
+  \centering
+  \setlength{\abovecaptionskip}{2pt}%
+  \setlength{\belowcaptionskip}{3pt}%
+  % One line, as in Table~\ref{tab:rq4_pacing_summary}.  "TABLE N: " plus the
+  % caption text must clear \columnwidth = 252pt at \footnotesize.
+  \caption{RQ3: admission paths, safety, and model audit.}
+  \label{tab:rq3_admission_audit}
+
+  {\scriptsize
+  \renewcommand{\arraystretch}{1.12}%
+  \newsavebox{\rqtwobox}%
+  % The Unsafe cells no longer carry a bracketed cause, so the \rqtwoun spacer
+  % that used to equalise their widths is gone with it; the column is plain
+  % right-aligned digits.  If "[watchdog]" ever comes back, bring the spacer back
+  % with it -- without it the "]" of "1 [watchdog]" and a bare "0" land on the
+  % same right edge and leave the two DIGITS 34pt apart.
+
+  % Model admit + Model skip is a complete partition of the deployed population.
+  % On the data rows the two counts therefore add to the row's denominator, and on
+  % the Overall row the two shares sum to 100.0.  That is the only check a reader
+  % has on the left half, so keep it -- and keep the note's denominators, because
+  % without them the addition has nothing to land on.
+  %
+  % THE POLICY-SKIP COLUMN WAS REMOVED, AND THE ADMIT COLUMN CHANGED MEANING
+  % WITH IT.  An earlier revision printed a three-way partition -- Run, Policy
+  % skip, Model skip -- where Run was the subset of model admits the controller
+  % actually executed and Policy skip the subset a sticky session demotion
+  % suppressed.  Policy skip is not part of the admission JUDGEMENT this half
+  % scores: it is deployed-policy state inherited from an earlier rejection, and
+  % it answers a different question.
+  %   Dropping it forced the admit column to change.  Run alone would have left
+  % 59.9 + 6.4 = 66.3 per cent on the 12MP Multi-frame row, with a third of the
+  % population vanished and no trace of where.  The column therefore now prints
+  % the model's own decision, Run + Policy skip, which closes against Model skip.
+  % The headline moves with it: the 12MP Multi-frame figure is 93.6% of decisions
+  % admitted BY THE MODEL, where the previous 59.9% was the share the controller
+  % went on to execute.  Both are true and they are not interchangeable -- do not
+  % quote this cell as an execution rate, and check any other section that cites
+  % 59.9% before reusing the number.
+  %   THE "Safe" COLUMN WENT WITH IT, AND HAD TO.  A revision in between printed
+  % Model admit 1,966 beside Safe 1,257 and watchdog 1.  Those do not close --
+  % Safe and watchdog split the EXECUTED decisions, not the model admits -- so
+  % every reader subtracted, found 708 missing, and had to be told where it went.
+  % An exhibit that provokes a subtraction it cannot answer is worse than one
+  % that omits the term.  Nothing of substance is lost: Safe was
+  % 1,257 / 1,936 / 1,274 / 1,791 -- "all of them except the watchdog" -- and the
+  % watchdog count alone carries the safety result, 3 adverse events across 8,430
+  % deployed decisions.  A bare count of a rare adverse event needs no
+  % denominator to be read, and printing none asserts none.  Realized C > B is
+  % zero on every non-watchdog execution.
+  %
+  % Shortfall is median 100(U-B)/D over model upper-bound skips only, where U is
+  % the predicted suffix upper estimate, B the live remaining budget, and D the
+  % configured Capture Timeout deadline.  The only nonzero watchdog count is at
+  % 24MP Multi-frame; those two watchdog timeouts occurred with 9 ms and 53 ms of
+  % deadline margin.
+  %
+  % The Unsafe-work Admitted cells are bold: they are the audit's failure mode --
+  % work the model would have let through although it overran -- and they are the
+  % four cells Figure~\ref{fig:rq3_unsafe_spike_anatomy} then takes apart one
+  % decision at a time.  Nothing else in the table is bold, which is what makes
+  % it read as emphasis rather than as another header level.
+  %
+  \newcommand{\rqtwotabular}{%
+  \begin{tabular}{@{}%
+      >{\raggedright\arraybackslash}p{37pt}|%  optional-work group
+      >{\raggedleft\arraybackslash}p{19pt}%    model admit, n / Overall share
+      >{\raggedleft\arraybackslash}p{21pt}|%   unsafe admits, count only
+      >{\raggedleft\arraybackslash}p{15pt}%    model skip, n / Overall share
+      >{\raggedleft\arraybackslash}p{27pt}||%  model-skip shortfall P50, % of D
+      >{\raggedleft\arraybackslash}p{29pt}%    feasible work, model admits
+      >{\raggedleft\arraybackslash}p{25pt}|%   feasible work, model skips
+      >{\raggedleft\arraybackslash}p{29pt}%    unsafe work, model admits
+      >{\raggedleft\arraybackslash}p{25pt}%    unsafe work, model skips
+    @{}}
+    \toprule
+    % Two one-line header rows above the column names, so \multirow[c]{3} centres
+    % with only the small nudge below.  The population subtitles that used to sit
+    % under each top-level header were removed on advisor instruction and moved to
+    % the note; see the layout comment above for why the note is now mandatory.
+    \multirow[c]{3}{=}[-1.6pt]{\centering\textbf{Group}}
+      & \multicolumn{4}{c||}{\textbf{Controller-enforced runs}}
+      & \multicolumn{4}{c}{\textbf{Always-admit model audit}} \\
+    \cmidrule(lr){2-5}\cmidrule(l){6-9}
+      & \multicolumn{2}{c}{\textbf{Model admit}}
+      & \multicolumn{2}{c||}{\textbf{Model skip}}
+      & \multicolumn{2}{c}{\textbf{Feasible work}}
+      & \multicolumn{2}{c}{\textbf{Unsafe work}} \\
+    \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(l){8-9}
+      & \multicolumn{1}{c}{$n$}
+      & \multicolumn{1}{c|}{\textbf{Unsafe}}
+      & \multicolumn{1}{c}{$n$}
+      & \multicolumn{1}{c||}{\textbf{Shortfall}}
+      & \multicolumn{1}{c}{\textbf{Admitted}}
+      & \multicolumn{1}{c|}{\textbf{Skipped}}
+      & \multicolumn{1}{c}{\textbf{Admitted}}
+      & \multicolumn{1}{c}{\textbf{Skipped}} \\
+    \midrule
+
+    % ------------------------------------------------------------- 12MP normal
+    % Model admit + Model skip = N on every row of the LEFT half: 1,966 + 134 =
+    % 2,100, 2,091 + 9 = 2,100, 1,852 + 264 = 2,116, 2,071 + 43 = 2,114, and
+    % 7,980 + 450 = 8,430 overall.  On the RIGHT half the pair that closes is
+    % Admitted + Skipped WITHIN a factual class: 831 + 16 = 847 feasible and
+    % 2 + 33 = 35 unsafe on the first row, 847 + 35 = 882 decisions.  Every pair
+    % of printed percentages sums to 100.0 with no rounding residue.
+    %   SINCE THE COUNT/SHARE SPLIT, the data rows close by ADDITION and only the
+    % Overall row closes to 100.0.  That is the check to keep stating: a reader
+    % who wants a row's denominator adds its two counts, and the note prints the
+    % four deployed totals so the addition can be verified without doing it.
+    %
+    % SOURCE of the left half.  These cells are the A3 regeneration
+    % (data/ablation_sampling Full, the documented source), not an earlier
+    % revision's numbers, because the demoted and upper-bound counts exist only
+    % in that regeneration and the row has to sum.  Two cells moved as a result,
+    % and both were already recorded as failing to reproduce: 12MP Single-frame
+    % $n$ was printed as 2,099 where the regeneration gives 2,100 (and
+    % 1,936 + 155 + 9 = 2,100, so the old value cannot close), and 12MP
+    % Multi-frame's watchdog was printed as 1 where both A3 and A2 give 0.  The
+    % consequence for the prose: no arm has an unsafe admit at 12MP in the
+    % deployed half, and the only two watchdogs are at 24MP.
+    \multicolumn{9}{@{}l}{\textbf{12MP, normal}} \\
+    \addlinespace[1pt]
+    Multi-frame  & 1{,}966 & 1 & 134 & 2.8\%
+                 & 831 & 16 & \textbf{2} & 33 \\
+    Single-frame & 2{,}091 & 0 &   9 & 0.6\%
+                 & 842 &  5 & \textbf{0} & 35 \\
+    \midrule
+
+    % ---------------------------------------------------- 24MP memory pressure
+    \multicolumn{9}{@{}l}{\textbf{24MP, mem.\ pressure}} \\
+    \addlinespace[1pt]
+    Multi-frame  & 1{,}852 & 2 & 264 & 5.4\%
+                 & 892 & 50 & \textbf{1} & 53 \\
+    Single-frame & 2{,}071 & 0 &  43 & 2.5\%
+                 & 905 & 27 & \textbf{2} & 52 \\
+    \midrule
+    % Overall pools WITHIN each half, never across it.  Left: the four deployed
+    % rows, 7,980 + 450 = 8,430.  Right: the four audited rows, 3,470 + 98 =
+    % 3,568 feasible and 5 + 173 = 178 unsafe decisions, which is the sum of the
+    % printed counts and not a separate regeneration.
+    %   THIS ROW CHANGES UNIT, and the percent sign is what says so.  Every share
+    % is of its own half: the two deployed shares close to 100.0 against 8,430,
+    % and each audit pair closes to 100.0 within its own factual class.  Shortfall
+    % is already a percentage on every row -- it is a median severity, not a
+    % share -- and Unsafe stays a count here because it has no denominator to
+    % take a share of.
+    \textbf{Overall} & 94.7\% & 3 & 5.3\% & 4.0\%
+                 & 97.3\% & 2.7\% & \textbf{2.8\%} & 97.2\% \\
+    \bottomrule
+  \end{tabular}}%
+  \fittabcolsep{\rqtwobox}{\rqtwotabular}{\columnwidth}{18}%
+  \rqtwotabular
+  }
+\end{table}

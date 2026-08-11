@@ -23,13 +23,28 @@ This repository is a LaTeX paper project for SEIP 2027.
 - The work targets enabling a lightweight multi-frame Draft workload in Portrait mode, whose heavy final composition can then be deferred until the camera app enters the background.
 - The proposed system is the Budget-Aware Draft Controller, comprising remaining-sequence admission and capture-availability pacing. Use the descriptive name without a forced acronym and refer to it as ``the controller'' after first use.
 - The paper studies coordinated workload and arrival control for tail-latency-based Capture Timeout, not average-latency optimization for a single image-processing stage.
-- RQ3 evaluates whether the proposed controller computes an appropriately sized pacing delay for the Draft backlog and Capture Timeout budget. Do not frame RQ3 as a comparison against pacing methods transplanted from other domains unless the user explicitly requests that comparison.
 - Preserve the core research framing unless the user explicitly asks to change the problem statement, contribution, or terminology.
+
+## RQ Numbering (changed 2026-08-11)
+
+The manuscript has **four** research questions. The evidence layer under `docs/`, `data/` and `scripts/` still uses the old three-RQ numbering as internal compatibility names — the same treatment the CSV fields containing `required` already get. Translate, do not rename.
+
+| Manuscript | Question | Was | Exhibit | Evidence layer still calls it |
+|---|---|---|---|---|
+| RQ1 | End-to-end effectiveness | RQ1(a) | `tables/tab_rq1_end_to_end_summary.tex` | RQ1(a) |
+| RQ2 | Control-loop contribution | RQ1(b) | `tables/tab_rq2_ablation.tex` | RQ1(b), `scripts/rq1_ablation_metrics.py` |
+| RQ3 | Admission decision quality | RQ2 | `tables/tab_rq3_admission_summary.tex` | RQ2, `scripts/rq2_*.py` |
+| RQ4 | Pacing-delay sizing | RQ3 | `tables/tab_rq4_pacing_summary.tex` | RQ3, `docs/rq3-*.md`, `data/rq3/`, `scripts/rq3_*.py` |
+
+- **The section below titled "Current RQ3 Evidence Rules" governs what the manuscript now calls RQ4.** Every "RQ3" in it means pacing-delay sizing.
+- `docs/rq-restructure-2026-08-11.md` records every column removed in that revision, with its published values and a restore procedure. Consult it before reinstating a column or before quoting a statistic that RQ1 no longer prints.
+- RQ4 evaluates whether the proposed controller computes an appropriately sized pacing delay for the Draft backlog and Capture Timeout budget. Do not frame it as a comparison against pacing methods transplanted from other domains unless the user explicitly requests that comparison.
+- RQ1 prints $M$, $S$ and Activated as per-run counts, not percentages; RQ2 keeps percentages because its denominator is captures *requested*, not captures present. Do not "unify" the two without reading §2.5 of the restructure document.
 
 ## Current RQ3 Evidence Rules
 
 - Treat `docs/rq3-current.md` as the authoritative RQ3 handoff, `docs/rq3-file-manifest.md` as the transfer checklist, and `data/rq3/coordination/README.md` as the generated-artifact dictionary.
-- The current main-paper exhibit is `tables/tab_rq3_pacing_summary.tex` alone, and RQ3 ships no figure. The older RQ3 policy, selectivity, and calibration TeX pairs have been deleted; do not restore or reference them.
+- The current main-paper exhibit is `tables/tab_rq4_pacing_summary.tex` alone, and RQ3 ships no figure. The older RQ3 policy, selectivity, and calibration TeX pairs have been deleted; do not restore or reference them.
 - RQ3 evaluates trace-derived targeting, admission-aware envelope coverage, work conservation, and responsiveness cost. It does not establish global optimality or a universally minimum counterfactual delay.
 - Do not mechanically scale recorded delay by 0.5 or 0.75 on the factual trace. Pacing is closed-loop and changes subsequent backlog, admission, thermal state, throttling, and realized Draft duration; a scaling study requires new matched runs or a validated closed-loop replay/simulator.
 - The deployed $2C$ horizon covers the Draft that begins after the pacing decision and the next capture's Draft released by that delay. Pacing deliberately applies half of the positive projected deficit so it does not convert all residual pressure into user-visible delay, relying on node-time admission to skip optional work when its suffix bound exceeds the live budget. This is an intuitive coordination heuristic, not an exact fixed-point derivation or a literal half-deficit transfer to admission. `target-or-next` is an observed admission-action audit over this horizon, not causal attribution of the next decision to the current delay.

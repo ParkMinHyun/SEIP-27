@@ -1,5 +1,21 @@
 # RQ1--RQ3 Measurement and Excel Aggregation Guide
 
+> **This document uses the pre-2026-08-11 RQ numbering throughout.** The
+> manuscript now has four research questions. Translate as you read:
+> RQ1(a) → **RQ1**, RQ1(b) → **RQ2**, RQ2 → **RQ3**, RQ3 → **RQ4**. The names
+> here are kept as internal compatibility names so they continue to match the
+> script and CSV field names they document; see the numbering table in
+> `AGENTS.md`.
+>
+> Two metric definitions below are also superseded for the manuscript, though
+> they remain correct as definitions and the values are still recoverable:
+> RQ1(a) no longer prints Slack P5, the M+S pair, the cumulative-delay pair, or
+> the Kaplan–Meier median first-timeout index — its Timeout onset column is now
+> the earliest index alone — and it prints M, S and Activated as per-run counts
+> rather than percentages. Every removed value, and the reason the requested
+> arithmetic-mean onset could not be computed, is in
+> `docs/rq-restructure-2026-08-11.md`.
+
 ## 1. Purpose and scope
 
 This document defines what RQ1--RQ3 evaluate, what each reported metric
@@ -563,7 +579,7 @@ are not inferential estimates over independent runs.
 
 ### 5.4 RQ2 figure metrics: unsafe-admit spike anatomy
 
-`figures/fig_rq2_unsafe_spike_anatomy.tex` characterizes every decision in the
+`figures/fig_rq3_unsafe_spike_anatomy.tex` characterizes every decision in the
 unsafe-admit cell of the confusion matrix: factually unsafe, model-admitted,
 drawn from the included runs only. It answers two questions per decision — how
 far the measured cost exceeded the preceding capture and the model's own
@@ -829,7 +845,7 @@ state, throttling, and realized work. Such a study requires new matched runs or
 a validated closed-loop replay/simulator. Do not mechanically rescale the delay
 column. Do not make domain-mismatched policy comparison the default RQ3 baseline.
 
-The current artifact is `tables/tab_rq3_pacing_summary.tex` alone, with the
+The current artifact is `tables/tab_rq4_pacing_summary.tex` alone, with the
 generated CSVs documented in `data/rq3/coordination/README.md` and
 `data/rq3/estimator/README.md`; RQ3 ships no figure. The superseded policy,
 selectivity, and calibration TeX exhibits have been deleted. Historical
@@ -1233,19 +1249,19 @@ removed more work, and RQ3 would no longer isolate pacing ability.
 
 ### Paper tables
 
-- `tables/tab_rq1_ablation.tex`
+- `tables/tab_rq2_ablation.tex`
 - `tables/tab_rq1_end_to_end_summary.tex`
-- `tables/tab_rq2_admission_summary.tex`
-- `tables/tab_rq3_pacing_summary.tex`
+- `tables/tab_rq3_admission_summary.tex`
+- `tables/tab_rq4_pacing_summary.tex`
 
 ### RQ2 figure
 
-- `figures/fig_rq2_unsafe_spike_anatomy.tex` — self-contained; the per-decision
+- `figures/fig_rq3_unsafe_spike_anatomy.tex` — self-contained; the per-decision
   values and the decomposition inputs are recorded in its comment header, so no
   companion CSV is emitted. Regenerate it from section 5.4 whenever the RQ2
   workbook set changes.
 
-`tables/tab_rq2_admission_summary.tex`, come from `data/rq2_spike_anatomy.mjs`
+`tables/tab_rq3_admission_summary.tex`, come from `data/rq2_spike_anatomy.mjs`
 in the ML implementation repository, which is the single place the
 \(C_{\mathrm{model}}\) rule of section 5.3 is implemented:
 

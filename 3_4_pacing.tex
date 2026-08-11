@@ -55,5 +55,5 @@ When the Draft queue drains, both pacing state and sticky demotions are cleared.
 For an \textsc{Optional} head not already demoted, a suffix whose empirical upper estimate fits is admitted; otherwise the eligible group joins \(G\).
 The next modeled Draft-start refresh recomputes \(\hat C\) for the reduced workload shape, and any positive residual \(\hat B_i+2\hat C_i-\max(0,T_i)\) determines a future callback delay through Equation~\ref{eq:pacing}.
 All hatted terms in Equation~\ref{eq:pacing} are online quantities.
-RQ3 separately reconstructs a retrospective matched-policy target from realized traces; that target is not a runtime input, physical minimum, or causal counterfactual.
+RQ4 separately reconstructs a retrospective matched-policy target from realized traces; that target is not a runtime input, physical minimum, or causal counterfactual.
 Coefficient sensitivity likewise requires matched runs or a validated closed-loop replay because changing that constant alters subsequent system state.

@@ -1,7 +1,7 @@
-% RQ1(a): Baseline failure, full-controller Draft availability, and pacing
-% cost.
-% This is the first RQ1 table; the per-loop ablation follows as RQ1(b) in
-% tables/tab_rq1_ablation.tex.
+% RQ1: Baseline failure reference, full-controller Draft availability, and
+% pacing cost.
+% This is the RQ1 table; the per-loop ablation is now its own research
+% question, RQ2, in tables/tab_rq2_ablation.tex.
 %
 % Controller-off Timeout onset retains the previously reported baseline
 % reference.  Full-controller values are reconstructed from the balanced copy in
@@ -20,13 +20,49 @@
 % workbooks contribute 84 and 72 complete, timeout-free runs to the 12MP and
 % 24MP conditions.
 %
+% ---------------------------------------------------------------------------
+% 2026-08-11 REVISION.  Five columns were removed and three changed unit on
+% advisor feedback.  docs/rq-restructure-2026-08-11.md holds every removed value
+% and the exact restore procedure; read it before reinstating anything.  In
+% summary:
+%   - Timeout onset no longer splits Earliest / KM-median.  The single printed
+%     value is the EARLIEST first-timeout capture; the Kaplan-Meier median
+%     sub-column is gone.  Neither number was recomputed -- both are the
+%     previously published pair, and the revision only chose which one stays.
+%     An arithmetic mean was requested first and is NOT computable here: the
+%     per-trial first-timeout indices belong to the Section 2 motivation
+%     campaign (Table~\ref{tab:timeout_index}), whose raw export is in neither
+%     this repository nor the ML clone, and cells that never time out within 30
+%     captures are right-censored, which leaves a mean undefined.  The earliest
+%     index is exact under censoring, which the mean is not, so it needs no
+%     estimator caveat -- but it is a MINIMUM over ten trials and must never be
+%     described as typical.  The caption says "earliest" and must keep saying it.
+%   - Slack P5, the M+S pair and the Sigma-d pair are removed.
+%   - M, S and Activated print COUNTS instead of percentages.
+% ---------------------------------------------------------------------------
+%
+% COUNT CONVENTION.  M and S are the mean number of captures per run on which
+% the node executed, over the first 5 and the first 30 captures, so the printed
+% value is read directly against the @5 / @30 header: "13.4 of 30".  Activated
+% is the mean number of PACED TRANSITIONS per run, and its denominator is not
+% the capture count -- a k-capture prefix holds at most k-1 transitions, so the
+% eligible base is 4 at @5 and 29 at @30.  That is why its header names its own
+% unit; do not read it against 5 / 30.
+%   Every count is exact, not a rescaling of the previously printed percentage.
+% Recomputed from RQ3Pacing (bokehExecuted, filterExecuted, transitionDelayMs)
+% over the runs RQ1Runs marks includedForRq1, which is exactly ten per cell in
+% the balanced copy.  The recomputation reproduces all 14 rows of the previous
+% percentage-form table on every M, S, Activated and d cell, so the unit change
+% moved no underlying number.  Totals behind the per-run means, and the
+% percentages they replace, are tabulated in the revision document.
+%
 % Cells that did not change, because they already held ten runs: 12MP Lv0, Lv1
 % and 24MP Lv0, Lv2, Lv4, Lv5, Lv6.
 %
 % Aggregation conventions:
-%   - EVERY column, completion included, uses all ten retained runs.  The
+%   - EVERY column, retention included, uses all ten retained runs.  The
 %     denominator of an @H cell is therefore H x 10 captures, which is the same
-%     rule Table~\ref{tab:rq1_ablation} states as "over the 300 captures each
+%     rule Table~\ref{tab:rq2_ablation} states as "over the 300 captures each
 %     cell requested".  The two tables now agree by construction rather than by
 %     coincidence.
 %   - The denominators coincide because of what this arm contains, and that is
@@ -35,9 +71,9 @@
 %     isTimeout, and NO capture has a negative timeoutMarginMs.  "Captures
 %     present in the run", "captures that met the deadline" and "captures
 %     requested" are all 30 per run.  The distinction that forced the
-%     300-capture denominator in Table~\ref{tab:rq1_ablation} -- truncated runs
+%     300-capture denominator in Table~\ref{tab:rq2_ablation} -- truncated runs
 %     and deadline-missing captures -- simply does not arise in this table.
-%   - RETIRED: the rule that dropped a watchdog-bearing run from the completion
+%   - RETIRED: the rule that dropped a watchdog-bearing run from the retention
 %     average for the horizon the watchdog falls inside.  It was redundant and
 %     disproportionate.  Redundant because the watchdog capture already scores
 %     zero on its own: in both affected runs (24MP Lv2 run 37 and Lv4 run 24,
@@ -46,179 +82,169 @@
 %     identical cell values.  Disproportionate because it discarded 30 captures
 %     on account of one, and it also hid real behaviour -- optional work stays
 %     suppressed on shots 14 and 15 immediately after the watchdog.
-%     The change moves six numbers, in both directions, because the affected run
-%     is above the cell mean in one case and below it in the other (M of 63.3%
-%     at Lv4 against the cell's 39.3%, and 60.2% at Lv2 against 72.2%):
+%     The change moves the affected numbers in both directions, because the
+%     affected run is above the cell mean in one case and below it in the other
+%     (M of 63.3% at Lv4 against the cell's 39.3%, and 60.2% at Lv2 against
+%     72.2%).  Recorded in the percentage form the table used before
+%     2026-08-11, which is the form the surrounding argument was written in:
 %       24MP Lv2 @30  M+S/M/S  72.2/72.2/81.1 -> 71.0/71.0/79.0
 %       24MP Lv4 @30  M+S/M/S  39.3/39.3/82.2 -> 41.7/41.7/80.3
+%     The post-change M and S values are what the printed counts 21.3/23.7 and
+%     12.5/24.1 now carry.
 %     No @5 cell moves: both watchdogs fall at shot 13, outside that horizon,
-%     and the retired rule already left @5 eligible.  No pacing column, N or
-%     Slack P5 moves either; those already used all ten runs, so retiring the
-%     rule is what makes the table internally uniform instead of splitting the
-%     completion block off from every other column.
+%     and the retired rule already left @5 eligible.  No pacing column and no N
+%     moves either; those already used all ten runs, so retiring the rule is
+%     what makes the table internally uniform instead of splitting the retention
+%     block off from every other column.
 %   - retention is measured by EXECUTION (the node has a positive observed
 %     duration).  In this arm that agrees with the exporter's Completed flag;
 %     the two diverge only in the forced-execution arms of
-%     Table~\ref{tab:rq1_ablation}.
+%     Table~\ref{tab:rq2_ablation}.
 %
 % The 24MP/memory-pressure workbook is treated as one requested-mode scenario
 % rather than regrouped by exported Draft sizeBucket.  This preserves its mixed
 % MP24-to-MP12 execution and the MP12 fallback traces at Lv5--6.
 %
-% Slack P5 pools normalized per-capture margins.  Completion and activation
-% percentages are computed within each run and macro-averaged across all ten
-% runs; because every run here is a complete 30-capture session, that
-% macro-average equals the pooled H x 10 rate exactly.  Delay P50 pools positive
-% transition-delay events.  Sigma-delay P50 is the median across the within-run
-% summed delay already paid before shot 5 or shot 30; it is reported in seconds.
+% Retention and activation counts are computed within each run and macro-averaged
+% across all ten runs; because every run here is a complete 30-capture session,
+% that macro-average equals the pooled H x 10 count divided by ten exactly.
+% Delay P50 pools positive transition-delay events.
 
 \begin{table*}[t]
   \centering
   \setlength{\abovecaptionskip}{2pt}%
   \setlength{\belowcaptionskip}{3pt}%
-  \caption{RQ1(a) controller-off failure reference and retained
-  full-controller behavior.}
+  \caption{RQ1 controller-off failure reference and retained
+  full-controller behavior.  Timeout onset is the earliest first-timeout
+  capture across ten controller-off trials.  $M$, $S$ and Activated are
+  per-run means over the first 5 and first 30 captures; $M$ and $S$ count
+  captures, out of 5 and 30, and Activated counts paced transitions, out of 4
+  and 29.}
   \label{tab:rq1_preventive_alignment}
   \label{tab:rq1_controller_behavior}
 
   {\scriptsize
-  % Controller-off E and M hold two characters, but their merged header is far
-  % wider.  Sizing both cells to half the header width keeps the labels centred
-  % while the shot indices remain right aligned.
-  \newlength{\rqShotW}\settowidth{\rqShotW}{\textbf{Timeout onset}}%
-  \setlength{\rqShotW}{0.5\rqShotW}%
-  \newcommand{\rqShot}[1]{\makebox[\rqShotW][r]{#1}}%
-  \newcommand{\rqShotHd}[1]{\makebox[\rqShotW][c]{#1}}%
   \setlength{\arrayrulewidth}{0.35pt}%
   \setlength{\doublerulesep}{0.8pt}%
   \renewcommand{\arraystretch}{1.08}%
   % \fittabcolsep (macros.tex) solves for the \tabcolsep that makes the outer
-  % rules land exactly on \textwidth.
+  % rules land exactly on \textwidth.  Fourth argument is 2 x the column count,
+  % now 14 columns and so 28; it was 40 when the table held 20.
+  %
+  % Column alignment, per the advisor's standing rule: every header cell is
+  % centred both horizontally (\multicolumn{1}{c} plus \makecell[c]) and
+  % vertically (\multirow with the offsets below), and every DATA cell is
+  % right-aligned.  The three leading columns stay centred because they are row
+  % labels, not measurements.
+  %
+  % Header geometry is unchanged from the 20-column form -- still four rows,
+  % still the same line counts per row -- so the -1.8ex and -0.4ex \multirow
+  % nudges carry over.  Re-derive them if a header gains or loses a line.
+  %   "Timeout onset" is broken across two lines on purpose.  Set on one line it
+  % measures wider than any other header here, and with a two-character datum
+  % under it the right-aligned value would sit an implausible distance from its
+  % own label.  Two lines put the column near the width of its neighbours.
   \newsavebox{\rqtabbox}%
   \newcommand{\rqtabular}{%
-  \begin{tabular}{|c|c|c|r||cc||r|r||rr|rr|rr||rr|rr|rr|}
+  \begin{tabular}{|c|c|c|r||r||r||rr|rr||rr|rr|}
     \hline\hline
     \multirow{4}{*}[-1.8ex]{\textbf{Device}} &
     \multirow{4}{*}[-1.8ex]{\textbf{Condition}} &
     \multirow{4}{*}[-1.8ex]{\makecell[c]{\textbf{Starting}\\\textbf{overheat}\\\textbf{level}}} &
     \multirow{4}{*}[-1.8ex]{\textbf{N}} &
-    \multicolumn{2}{c||}{\multirow{2}{*}{\makecell[c]{%
+    \multicolumn{1}{c||}{\multirow{2}{*}{\makecell[c]{%
       \textbf{Controller-off}\\\textbf{reference}}}} &
-    \multicolumn{14}{c|}{\textbf{Full-controller behavior}} \\
-    \cline{7-20}
+    \multicolumn{9}{c|}{\textbf{Full-controller behavior}} \\
+    \cline{6-14}
     & & & &
-    \multicolumn{2}{c||}{} &
-    \multicolumn{2}{c||}{\textbf{Deadline safety}} &
-    \multicolumn{6}{c||}{\textbf{Draft work completion}} &
-    \multicolumn{6}{c|}{\textbf{Pacing cost}} \\
-    \cline{5-6}\cline{7-20}
+    \multicolumn{1}{c||}{} &
+    \multicolumn{1}{c||}{\textbf{Deadline safety}} &
+    \multicolumn{4}{c||}{\textbf{Draft work retained}} &
+    \multicolumn{4}{c|}{\textbf{Pacing cost}} \\
+    \cline{5-5}\cline{6-14}
     & & & &
-    \multicolumn{2}{c||}{\textbf{Timeout onset}} &
-    \multicolumn{1}{c|}{\multirow{2}{*}[-0.4ex]{%
-      \makecell[c]{\textbf{Survived}\\\textbf{runs}}}} &
     \multicolumn{1}{c||}{\multirow{2}{*}[-0.4ex]{%
-      \makecell[c]{\textbf{Slack P5}\\\textbf{(\%)}}}} &
-    \multicolumn{2}{c|}{\makecell[c]{\mbox{\boldmath$M{+}S$}\\\textbf{(\%)}}} &
-    \multicolumn{2}{c|}{\makecell[c]{\mbox{\boldmath$M$}\\\textbf{(\%)}}} &
-    \multicolumn{2}{c||}{\makecell[c]{\mbox{\boldmath$S$}\\\textbf{(\%)}}} &
-    \multicolumn{2}{c|}{\makecell[c]{\textbf{Activated}\\\textbf{(\%)}}} &
-    % $d$, not "Applied Delay".  RQ3 prints the applied pacing delay as $d$
-    % throughout Table~\ref{tab:rq3_pacing_summary}, and one quantity carries one
-    % printed name in this paper -- the same rule that keeps "Slack P5" identical
-    % here and there rather than renaming it "Deadline margin".  The symbol also
-    % matches the three columns to its left, which are already set as bold math
-    % ($M{+}S$, $M$, $S$), and it is introduced in the prose of
-    % Section~\ref{sec:guard-limit} beside $M$ and $S$.
-    \multicolumn{2}{c|}{\makecell[c]{\mbox{\boldmath$d$}\textbf{ P50}\\\textbf{(ms)}}} &
-    \multicolumn{2}{c|}{\makecell[c]{\mbox{\boldmath$\Sigma d$}\textbf{ P50}\\\textbf{(s)}}} \\
-    \cline{5-6}\cline{9-20}
-    & & & &
-    \multicolumn{1}{c}{\rqShotHd{\textbf{E}}} &
-    \multicolumn{1}{c||}{\rqShotHd{\textbf{M}}} &
-    & &
-    \multicolumn{1}{c}{\textbf{@5}} & \multicolumn{1}{c|}{@30} &
+      \makecell[c]{\textbf{Timeout}\\\textbf{onset}}}} &
+    \multicolumn{1}{c||}{\multirow{2}{*}[-0.4ex]{%
+      \makecell[c]{\textbf{Survived}\\\textbf{runs}}}} &
+    \multicolumn{2}{c|}{\makecell[c]{\mbox{\boldmath$M$}\\\textbf{(captures)}}} &
+    \multicolumn{2}{c||}{\makecell[c]{\mbox{\boldmath$S$}\\\textbf{(captures)}}} &
+    \multicolumn{2}{c|}{\makecell[c]{\textbf{Activated}\\\textbf{(transitions)}}} &
+    % $d$, not "Applied Delay".  RQ4 prints the applied pacing delay as $d$
+    % throughout Table~\ref{tab:rq4_pacing_summary}, and one quantity carries one
+    % printed name in this paper.  The symbol also matches the two columns to its
+    % left, which are already set as bold math ($M$, $S$), and it is introduced
+    % in the prose of Section~\ref{sec:guard-limit} beside $M$ and $S$.
+    \multicolumn{2}{c|}{\makecell[c]{\mbox{\boldmath$d$}\textbf{ P50}\\\textbf{(ms)}}} \\
+    \cline{7-14}
+    & & & & & &
     \multicolumn{1}{c}{\textbf{@5}} & \multicolumn{1}{c|}{@30} &
     \multicolumn{1}{c}{\textbf{@5}} & \multicolumn{1}{c||}{@30} &
-    \multicolumn{1}{c}{\textbf{@5}} & \multicolumn{1}{c|}{@30} &
     \multicolumn{1}{c}{\textbf{@5}} & \multicolumn{1}{c|}{@30} &
     \multicolumn{1}{c}{\textbf{@5}} & \multicolumn{1}{c|}{@30} \\
     \hline\hline
     \multirow{14}{*}{\makecell[c]{S26\\Ultra}}
       & \multirow{7}{*}{\makecell[c]{12MP\\normal}}
-      & Lv0 & 10 & \rqShot{--} & \rqShot{--} & 10/10 & 37.7
-        & \textbf{100} & 100 & \textbf{100} & 100
-        & \textbf{100} & 100 & \textbf{0} & 3.8
-        & \textbf{--} & 106 & \textbf{0} & 0 \\
-    \cline{3-20}
-      & & Lv1 & 10 & \rqShot{--} & \rqShot{--} & 10/10 & 19.3
-        & \textbf{100} & 96.0 & \textbf{100} & 96.0
-        & \textbf{100} & 100 & \textbf{0} & 0.3
-        & \textbf{--} & 74 & \textbf{0} & 0 \\
-    \cline{3-20}
-      & & Lv2 & 10 & \rqShot{24} & \rqShot{27} & 10/10 & 4.3
-        & \textbf{100} & 89.3 & \textbf{100} & 89.3
-        & \textbf{100} & 100 & \textbf{0} & 13.8
-        & \textbf{--} & 234 & \textbf{0} & 1.1 \\
-    \cline{3-20}
-      & & Lv3 & 10 & \rqShot{13} & \rqShot{18} & 10/10 & 4.0
-        & \textbf{100} & 44.3 & \textbf{100} & 44.7
-        & \textbf{100} & 87.7 & \textbf{0} & 27.9
-        & \textbf{--} & 385 & \textbf{0} & 3.1 \\
-    \cline{3-20}
-      & & Lv4 & 10 & \rqShot{8} & \rqShot{12} & 10/10 & 5.0
-        & \textbf{100} & 34.3 & \textbf{100} & 34.3
-        & \textbf{100} & 97.3 & \textbf{2.5} & 33.8
-        & \textbf{291} & 387 & \textbf{0} & 3.5 \\
-    \cline{3-20}
-      & & Lv5 & 10 & \rqShot{8} & \rqShot{10} & 10/10 & 3.4
-        & \textbf{100} & 27.3 & \textbf{100} & 27.3
-        & \textbf{100} & 72.7 & \textbf{0} & 29.3
-        & \textbf{--} & 467 & \textbf{0} & 3.9 \\
-    \cline{3-20}
-      & & Lv6 & 10 & \rqShot{7} & \rqShot{9} & 10/10 & 5.3
-        & \textbf{100} & 27.7 & \textbf{100} & 27.7
-        & \textbf{100} & 87.7 & \textbf{12.5} & 32.8
-        & \textbf{78} & 446 & \textbf{0} & 4.3 \\
+      & Lv0 & 10 & -- & 10/10
+        & \textbf{5.0} & 30.0 & \textbf{5.0} & 30.0
+        & \textbf{0.0} & 1.1 & \textbf{--} & 106 \\
+    \cline{3-14}
+      & & Lv1 & 10 & -- & 10/10
+        & \textbf{5.0} & 28.8 & \textbf{5.0} & 30.0
+        & \textbf{0.0} & 0.1 & \textbf{--} & 74 \\
+    \cline{3-14}
+      & & Lv2 & 10 & 24 & 10/10
+        & \textbf{5.0} & 26.8 & \textbf{5.0} & 30.0
+        & \textbf{0.0} & 4.0 & \textbf{--} & 234 \\
+    \cline{3-14}
+      & & Lv3 & 10 & 13 & 10/10
+        & \textbf{5.0} & 13.4 & \textbf{5.0} & 26.3
+        & \textbf{0.0} & 8.1 & \textbf{--} & 385 \\
+    \cline{3-14}
+      & & Lv4 & 10 & 8 & 10/10
+        & \textbf{5.0} & 10.3 & \textbf{5.0} & 29.2
+        & \textbf{0.1} & 9.8 & \textbf{291} & 387 \\
+    \cline{3-14}
+      & & Lv5 & 10 & 8 & 10/10
+        & \textbf{5.0} & 8.2 & \textbf{5.0} & 21.8
+        & \textbf{0.0} & 8.5 & \textbf{--} & 467 \\
+    \cline{3-14}
+      & & Lv6 & 10 & 7 & 10/10
+        & \textbf{5.0} & 8.3 & \textbf{5.0} & 26.3
+        & \textbf{0.5} & 9.5 & \textbf{78} & 446 \\
     % Emphasize the scenario boundary only after the final 12MP row.
-    \Xcline{2-20}{0.7pt}
+    \Xcline{2-14}{0.7pt}
       & \multirow{7}{*}{\makecell[c]{24MP\\memory\\pressure}}
-      & Lv0 & 10 & \rqShot{26} & \rqShot{30} & 10/10 & 14.3
-        & \textbf{100} & 99.3 & \textbf{100} & 99.3
-        & \textbf{100} & 100 & \textbf{0} & 9.0
-        & \textbf{--} & 200 & \textbf{0} & 0 \\
-    \cline{3-20}
-      & & Lv1 & 10 & \rqShot{19} & \rqShot{22} & 10/10 & 7.7
-        & \textbf{100} & 97.0 & \textbf{100} & 97.0
-        & \textbf{100} & 100 & \textbf{0} & 6.9
-        & \textbf{--} & 150 & \textbf{0} & 0.2 \\
-    \cline{3-20}
-      & & Lv2 & 10 & \rqShot{14} & \rqShot{21} & 10/10 & 5.9
-        & \textbf{100} & 71.0 & \textbf{100} & 71.0
-        & \textbf{100} & 79.0 & \textbf{2.5} & 12.8
-        & \textbf{83} & 257 & \textbf{0} & 1.1 \\
-    \cline{3-20}
-      & & Lv3 & 10 & \rqShot{5} & \rqShot{11} & 10/10 & 4.3
-        & \textbf{94.0} & 46.7 & \textbf{94.0} & 46.7
-        & \textbf{100} & 81.0 & \textbf{10.0} & 36.9
-        & \textbf{404.5} & 296 & \textbf{0} & 4.2 \\
-    \cline{3-20}
-      & & Lv4 & 10 & \rqShot{3} & \rqShot{9} & 10/10 & 4.7
-        & \textbf{94.0} & 41.7 & \textbf{94.0} & 41.7
-        & \textbf{100} & 80.3 & \textbf{10.0} & 13.4
-        & \textbf{852.5} & 313 & \textbf{0} & 1.4 \\
-    \cline{3-20}
-      & & Lv5 & 10 & \rqShot{4} & \rqShot{8} & 10/10 & 5.6
-        & \textbf{96.0} & 38.0 & \textbf{96.0} & 38.0
-        & \textbf{98.0} & 80.3 & \textbf{42.5} & 46.2
-        & \textbf{440} & 421 & \textbf{0.8} & 5.2 \\
-    \cline{3-20}
-      & & Lv6 & 10 & \rqShot{3} & \rqShot{7} & 10/10 & 7.8
-        & \textbf{80.0} & 17.7 & \textbf{80.0} & 23.7
-        & \textbf{94.0} & 68.7 & \textbf{30.0} & 43.4
-        & \textbf{872} & 269 & \textbf{0.5} & 5.1 \\
+      & Lv0 & 10 & 26 & 10/10
+        & \textbf{5.0} & 29.8 & \textbf{5.0} & 30.0
+        & \textbf{0.0} & 2.6 & \textbf{--} & 200 \\
+    \cline{3-14}
+      & & Lv1 & 10 & 19 & 10/10
+        & \textbf{5.0} & 29.1 & \textbf{5.0} & 30.0
+        & \textbf{0.0} & 2.0 & \textbf{--} & 150 \\
+    \cline{3-14}
+      & & Lv2 & 10 & 14 & 10/10
+        & \textbf{5.0} & 21.3 & \textbf{5.0} & 23.7
+        & \textbf{0.1} & 3.7 & \textbf{83} & 257 \\
+    \cline{3-14}
+      & & Lv3 & 10 & 5 & 10/10
+        & \textbf{4.7} & 14.0 & \textbf{5.0} & 24.3
+        & \textbf{0.4} & 10.7 & \textbf{404.5} & 296 \\
+    \cline{3-14}
+      & & Lv4 & 10 & 3 & 10/10
+        & \textbf{4.7} & 12.5 & \textbf{5.0} & 24.1
+        & \textbf{0.4} & 3.9 & \textbf{852.5} & 313 \\
+    \cline{3-14}
+      & & Lv5 & 10 & 4 & 10/10
+        & \textbf{4.8} & 11.4 & \textbf{4.9} & 24.1
+        & \textbf{1.7} & 13.4 & \textbf{440} & 421 \\
+    \cline{3-14}
+      & & Lv6 & 10 & 3 & 10/10
+        & \textbf{4.0} & 7.1 & \textbf{4.7} & 20.6
+        & \textbf{1.2} & 12.6 & \textbf{872} & 269 \\
     \hline\hline
   \end{tabular}}%
-  \fittabcolsep{\rqtabbox}{\rqtabular}{\textwidth}{40}%
+  \fittabcolsep{\rqtabbox}{\rqtabular}{\textwidth}{28}%
   \rqtabular
   }
 \end{table*}

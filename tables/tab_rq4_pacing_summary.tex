@@ -1,4 +1,4 @@
-% Coordination-aware RQ3 main-paper summary table, single column, two blocks.
+% Coordination-aware RQ4 main-paper summary table, single column, two blocks.
 % docs/rq3-current.md is the authoritative handoff for this exhibit and the
 % source of every claim limit recorded below.
 %
@@ -83,7 +83,7 @@
 % variables, which both reads wrong and measures 7pt wider than
 % "d^{*}_{\mathrm{man}}" -- enough to have cost (a) a full point of \tabcolsep.
 %
-% d* itself is NOT defined in this table any more.  The RQ3 PROSE carries the
+% d* itself is NOT defined in this table any more.  The RQ4 PROSE carries the
 % definition, d* = ceil([B + 2C - max(0,T)]+ / 2), and must introduce it before
 % this table is read; the note glosses only d*_man, the two hatted errors, d/B
 % and inside B.  If the prose ever drops the formula, put it back in the note
@@ -91,11 +91,17 @@
 %
 %   Unapplied, d* - d      was "Missing delay".  The formula sits under the word
 %                          so the column defines itself.
-%   Slack                  RQ1(a) already prints this quantity as "Slack P5
-%                          (%)" in Table~\ref{tab:rq1_end_to_end_summary}.  An
-%                          earlier revision of THIS table called it "Deadline
-%                          margin", which gave one quantity two printed names in
-%                          one paper.  Keep "Slack" and keep it normalized.
+%   Slack                  RQ1 printed this quantity as "Slack P5 (%)" until
+%                          2026-08-11, when that column was dropped on advisor
+%                          feedback; the archived values are in
+%                          docs/rq-restructure-2026-08-11.md.  THIS TABLE IS NOW
+%                          THE ONLY PLACE THE PAPER REPORTS DEADLINE SLACK, so
+%                          the naming rule that produced "Slack" no longer has a
+%                          second site to agree with -- but keep the name and
+%                          keep it normalized, both so the archived RQ1 column
+%                          can be restored without a rename and because an
+%                          earlier revision of this table called it "Deadline
+%                          margin", which gave one quantity two printed names.
 %   Decision-time error    was "Estimator error".  Both columns are what the
 %                          controller held AT THE DECISION minus what the
 %                          pipeline went on to do, so the label names the instant
@@ -221,14 +227,14 @@
 % risk, and the table itself shows why: the d < d*_man row has the LARGEST Slack
 % P5 of the three, 4.53 against 1.03 and 2.61.  The caption used to say so in
 % words; now that the rows are inequalities and the caption is one line, the
-% burden moves to the RQ3 prose.  Never write that a worse coverage class was
+% burden moves to the RQ4 prose.  Never write that a worse coverage class was
 % closer to timing out, and do not let the ordering of the rows imply it.
 %
 % ---------------------------------------------------------------------------
 % The realized slack tail, and why this table reports none of it
 % ---------------------------------------------------------------------------
 % This table prints Slack P5 per class and nothing else about the tail: no min
-% column, and no sentence in the note.  The RQ3 PROSE owns the minimum.  Both
+% column, and no sentence in the note.  The RQ4 PROSE owns the minimum.  Both
 % halves of that were argued over more than once, so both are recorded.
 %
 % No min COLUMN.  An earlier revision printed min and P5 side by side.  Per
@@ -277,7 +283,7 @@
 %
 % Do not claim from any of this that the realized slack was bounded or that the
 % controller guaranteed the deadline.  The counterfactual belongs to the
-% controller-off and pacing-only arms of Table~\ref{tab:rq1_ablation}.
+% controller-off and pacing-only arms of Table~\ref{tab:rq2_ablation}.
 %
 % ---------------------------------------------------------------------------
 % WHY THERE IS NO "OPTIONAL WORK SKIPPED" COLUMN
@@ -399,11 +405,11 @@
   \setlength{\belowcaptionskip}{3pt}%
   % One line.  The rows are now the conditions themselves, so the prose that used
   % to name and rank the coverage classes has no work left to do, and $d^{*}$ is
-  % defined in the RQ3 prose rather than here.  The table no longer carries the
+  % defined in the RQ4 prose rather than here.  The table no longer carries the
   % formula anywhere, so that prose has to introduce it before this table is
   % read; see the d* note at the top of this file.
-  \caption{RQ3: pacing-target coverage and delay sizing.}
-  \label{tab:rq3_pacing_summary}
+  \caption{RQ4: pacing-target coverage and delay sizing.}
+  \label{tab:rq4_pacing_summary}
 
   {\scriptsize
   \renewcommand{\arraystretch}{1.12}%
@@ -506,7 +512,7 @@
     % survives contact with a reader: 79 and 140 then appear NOWHERE in the
     % table, so the reader sums a column to learn what the percentages in the
     % paced column are shares of, and 1,920 needs that sum plus (b)'s 1,841.
-    % The share is also the first thing the RQ3 narrative says -- pacing
+    % The share is also the first thing the RQ4 narrative says -- pacing
     % addresses a tail, it is not a fixed per-capture delay -- and a reader who
     % meets the table before that sentence has no way to see it.
     %
@@ -573,8 +579,8 @@
   %
   % Do NOT upgrade that into a claim that the queue would have been unstable
   % without pacing.  This block is arithmetic on the realized trace.  The
-  % controller-off and pacing-only arms of Table~\ref{tab:rq1_ablation} are where
-  % that comparison lives, and the RQ3 prose should cross-refer to them rather
+  % controller-off and pacing-only arms of Table~\ref{tab:rq2_ablation} are where
+  % that comparison lives, and the RQ4 prose should cross-refer to them rather
   % than re-derive the claim here.
   %
   % An earlier revision printed Over-applied d - d* P50/P95 in two more columns.
@@ -670,8 +676,8 @@
   % \raggedright cancels the \centering the float sets, which would otherwise
   % centre every line of the note; \par inside the group makes it take effect.
   %
-  % MOVED TO THE RQ3 PROSE, NOT DROPPED.  These results have no other home in
-  % the manuscript and Section RQ3 must carry them:
+  % MOVED TO THE RQ4 PROSE, NOT DROPPED.  These results have no other home in
+  % the manuscript and Section RQ4 must carry them:
   %   population estimator errors  reserve  +24/+232/+808 and -129/+253/+1,025;
   %                                per-Draft price -135/+16/+450 and
   %                                -293/+19/+503, all P05/P50/P95 in ms.  Do not

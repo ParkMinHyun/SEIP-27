@@ -17,7 +17,7 @@ another session or paper branch. Paths are repository-relative.
 ### Paper integration and current exhibits
 
 - `2_4_static_safeguards.tex`
-- `tables/tab_rq3_pacing_summary.tex`
+- `tables/tab_rq4_pacing_summary.tex`
 
 RQ3 ships one single-column table and no figure. The table carries its
 definitions, provenance, and claim limits in its own header comment; copy the

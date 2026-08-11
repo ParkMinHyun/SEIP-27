@@ -5,13 +5,18 @@
 % run in its matched condition.
 %
 % Reference band.  The shaded capture window is where an uncontrolled run of
-% this setting first times out: captures 8--12, the controller-off Timeout
-% onset E/M of the 12MP normal Lv4 row of RQ1(a)
+% this setting first times out: captures 8--12, the controller-off Timeout onset
+% of the 12MP normal Lv4 row of RQ1
 % (tables/tab_rq1_end_to_end_summary.tex, \ref{tab:rq1_controller_behavior}).
+% ONLY THE LOWER EDGE IS STILL PRINTED THERE.  Since 2026-08-11 that column
+% reports the earliest first-timeout capture alone, which is the 8; the
+% Kaplan-Meier median 12 that closes the band was dropped with its sub-column
+% and is archived in docs/rq-restructure-2026-08-11.md.  If the band is ever
+% redrawn, take 12 from that record, not from the table.
 % Two other tables report a related quantity for this setting and do not agree
-% with it, so cite RQ1(a) and not them when the prose names the window: Table I
+% with it, so cite RQ1 and not them when the prose names the window: Table I
 % (\ref{tab:timeout_index}, normal capture, 12MP, M+S, starting level 4) reads
-% 10/17 from the Section 2 motivation campaign, and the RQ1(b) No-control row
+% 10/17 from the Section 2 motivation campaign, and the RQ2 No-control row
 % reads 8/8.5 from the 0803 baseline workbook.
 % It replaces the four dashed event markers an earlier revision drew at
 % captures 5, 9, 21 and 23.  Those markers annotated transitions the panels
@@ -159,7 +164,7 @@
       % 0 of the queue-depth panel above.  The 100 ms of headroom drops it about
       % 5pt and the two labels clear each other.
       % This case-study panel is intentionally scaled to its selected run; the
-      % all-run RQ3 summary reports delay distributions numerically instead.
+      % all-run RQ4 summary reports delay distributions numerically instead.
       \nextgroupplot[
         height=0.22\columnwidth,
         ylabel={Applied delay\\(ms)},
