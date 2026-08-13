@@ -1,0 +1,358 @@
+% RQ4: delay sizing is conservative yet work-conserving.
+%
+% Replaces tables/tab_rq4_pacing_summary.tex as the RQ4 exhibit (2026-08-13).
+% The superseded file is left on disk unreferenced; swap the \input in
+% _4_experiments.tex to restore it.  docs/rq3-current.md still documents the old
+% exhibit and must be updated before that file is treated as current.
+%
+% Sources, all committed:
+%   data/rq3/estimator/summary.csv        requiredDelayDecisions, requiredAndPaced
+%   data/rq3/coordination/summary.csv     realizedWorkEnvelopeCovered, belowMandatoryFloor
+%   data/rq3/policy/summary.csv           backlogDrainingDelaySharePercent, delayOverBacklogPercent,
+%                                         activationPercent and its bands, burstDelaySharePercent
+%   data/rq3/estimator/outcome_matrix.csv the below-floor class's skip rate and margin
+%   data/rq3/coordination/action_summary.csv  the flexible class's target-or-next audit
+% Regenerate with: rq3_pacing_summary_metrics.py sampling; rq3_coordination_metrics.py;
+% rq3_coordination_audit.py; rq3_estimator_metrics.py.
+% Every printed cell has a CSV row.  Keep it that way.
+%
+% ---------------------------------------------------------------------------
+% THE HEADLINE, AND WHY IT IS THIS ONE
+% ---------------------------------------------------------------------------
+% Delay sizing is conservative yet work-conserving.  The row reads left to right
+% as one argument: the need is sparse; where it exists pacing engages; the
+% mandatory reservation is covered almost always; the optional-inclusive target is
+% only partly covered, by design, because admission owns optional work; and
+% almost every applied millisecond drains real backlog rather than idling.
+%
+% The superseded exhibit measured d against d* directly and made the over-shoot
+% its headline.  That comparison is algebraically an estimator report, not a
+% sizing report: d* is the SAME delay rule with realized inputs, so
+%
+%     d - d* = (Chat - C) + (Bhat - B)/2                (closes to 0.50/0.76 ms)
+%
+% and every cell of that table was a decomposition of prediction error at a fixed
+% coefficient.  It could not answer the question RQ4 asks in _4_experiments.tex,
+% and its consequence -- d lands at 5.4x and 3.6x d* where it covers -- was a
+% self-criticism with no engineering consequence attached.
+%
+% MANDATORY-TARGET COVERAGE IS THE CELL TO PROTECT.  100.0 and 90.0 per cent.  It
+% is the metric that makes the coverage taxonomy readable as a result instead of
+% a shortfall: full coverage is 67.1 and 59.3, which looks weak until the reader
+% sees that the gap is optional work and that admission is the loop that owns it.
+% Printing mandatory beside full, under one group label, is what carries that.
+%
+% ---------------------------------------------------------------------------
+% WHAT EVERY CELL MUST NOT BE CALLED
+% ---------------------------------------------------------------------------
+% d*      the retrospective matched-policy target.  NOT the physically required,
+%         minimum, or optimal delay.  CSV fields and class keys containing
+%         `required` are internal compatibility names for it (AGENTS.md).
+% d*_man  a retrospective SUFFICIENT reservation condition evaluated on mandatory
+%         work only.  NOT the timeout boundary, NOT a safety guarantee.  The
+%         caption and note must never imply that covering it prevents a timeout;
+%         RQ1 owns the outcome and Table~\ref{tab:rq2_ablation} owns the
+%         controller-off comparison.
+% 90.0%   14 decisions fall below the floor at 24MP.  Their disposition is
+%         printed in the note and is strong: all 14 ran a demoted sequence
+%         (outcome_matrix.csv, below_floor, skipped_this_pct 100.0), their worst
+%         realized margin was 4.39 per cent of the budget
+%         (coordination/summary.csv, belowMandatoryMarginMsMin 307 ms), and none
+%         timed out.  AGENTS.md is explicit that admission demotion documents
+%         coordination but does NOT itself erase a mandatory-floor deficit, so do
+%         not write the 14 away as "handled by admission".
+%
+% ---------------------------------------------------------------------------
+% THE ONE EXPOSURE THIS TABLE CREATES, AND HOW THE NOTE ANSWERS IT
+% ---------------------------------------------------------------------------
+% Column two says a delay was retrospectively required on 4.1 and 7.5 per cent of
+% decisions.  Pacing actually engaged on 21.4 and 25.3 per cent
+% (policy/summary.csv, activationPercent).  A reader who holds both numbers asks
+% why the controller paced five times more often than hindsight required, and the
+% answer is the conservatism of Chat -- the same fact as the 5.4x/3.6x over-shoot.
+%
+% Do not leave that unanswered, and do not answer it by hiding the activation
+% rate.  The note answers it with selectivity, which is measured and strong:
+% engagement is 1.4 and 1.0 per cent on decisions carrying more than 40 per cent
+% of the budget in surplus, against 77.2 and 69.3 per cent on the required tail --
+% ratios of 55.9x and 71.4x.  Pacing is concentrated, not blanket.  The band
+% figures are activationPercent band spare_over_40 in policy/summary.csv.
+%
+% A selectivity LADDER over four pressure bands was drafted as a second block and
+% cut: it needs a second partition of the same decisions (rho bands rather than
+% d* > 0), and two partitions in one exhibit cost more in reader effort than the
+% extra rows return.  One sentence in the note carries the same claim.
+%
+% ---------------------------------------------------------------------------
+% DO NOT ADD AN "EITHER LOOP" COLUMN.  ONE WAS BUILT AND REMOVED 2026-08-13.
+% ---------------------------------------------------------------------------
+% It counted a decision when pacing engaged OR optional work was skipped on that
+% capture or the next, per pressure band, and read 21.9 / 51.8 / 74.5 / 92.4 at
+% 12MP and 31.6 / 54.1 / 68.3 / 92.2 at 24MP -- monotone in both conditions,
+% agreeing to 0.2 points on the row that mattered.  It is indefensible, for three
+% reasons that were measured, not argued:
+%
+% 1. STICKY DEMOTION MAKES THE SKIP TERM A STEP FUNCTION OF BURST POSITION.
+%    DraftSequenceAdmissionPolicy holds a demotion until the Draft queue drains,
+%    so once a burst demotes, every later capture in it is demoted: of the
+%    decisions at or after their run's first demotion, 100.0 per cent are demoted
+%    (809 of 809 at 12MP, 784 of 784 at 24MP).  The skip indicator is therefore
+%    close to "has this burst demoted yet", which is monotone in shot index --
+%    and so is retrospective pressure, because backlog accumulates.  The
+%    association is mechanical.
+% 2. A RULE THAT READS ONLY THE SHOT COUNTER BEATS IT.  Substituting
+%    "skip := shot >= 13" gives 45.7 / 83.3 / 92.0 / 98.7 and 42.2 / 76.2 / 91.0 /
+%    97.9: the same monotone rise, higher everywhere.  A permutation null that
+%    shuffles the skip label within (run x burst phase) reproduces the headline --
+%    null mean 92.09 and 92.14 against observed 92.4 and 92.2, P(null >= observed)
+%    = 0.62 and 0.59, 100 per cent of draws monotone.
+% 3. IT DESTROYS THE SELECTIVITY CLAIM.  The rho >= 0 over rho < -40 ratio is
+%    55.9x and 71.4x for pacing activation and 4.2x and 2.9x for Either loop,
+%    barely above the shot-counter rule's 2.2x and 2.3x.  And its low-pressure
+%    cells are not coordination: all 143 and 197 decisions they counted had
+%    optional work skipped on the target's own Draft at median pressure -62.3 and
+%    -51.5 per cent of budget -- half the budget spare -- with 134 of 143 and 191
+%    of 197 receiving no delay.  Those cells report user-visible quality loss with
+%    the budget unused, printed as a virtue.
+%
+% The legitimate use of "either control engaged" is per DECISION, not per band:
+% data/rq3/estimator/thin_margin_tail.csv carries an either_control_engaged
+% column, yes on all eleven sub-1-per-cent decisions, which is the fact AGENTS.md
+% requires the prose to carry beside the margin minimum.
+%
+% ---------------------------------------------------------------------------
+% POPULATIONS.  AGENTS.md: every statistic printed beside a population must be
+% computed on that population.  This table mixes three, so the note names each.
+% ---------------------------------------------------------------------------
+%   Delay required        all analyzed decisions      1,920 and 1,861
+%   Activated, Mandatory, Full   the required tail    79 and 140
+%   Backlog overlap, d/B  the paced decisions         411 and 471
+% The required tail uses the STRICT cut d* > 0, which is what every
+% required-delay population in the pipeline uses; see the OVERRUN_PCT comment of
+% scripts/rq3_pacing_summary_metrics.py for why pressure == 0 needs no delay.
+% At 24MP that is 140, not the 141 of the rho >= 0 pressure band.
+%
+% Two roundings to leave alone:
+%   d/B P50 at 12MP is 10.4474, so it prints 10.4.  policy/summary.csv stores the
+%   intermediate 10.45 and rounding that a second time gives 10.5, which is what
+%   an earlier revision printed.  24MP is 8.5732, so 8.6 is correct directly.
+%   Backlog overlap at 24MP is 98.72, so 98.7.
+%
+% ---------------------------------------------------------------------------
+% WHAT THE PROSE MUST STILL CARRY -- THIS TABLE DOES NOT PRINT IT
+% ---------------------------------------------------------------------------
+% 1. The minimum realized deadline margin: 0.11 per cent of the budget (8 ms) at
+%    12MP and 0.20 per cent (14 ms) at 24MP, with the saturation context
+%    AGENTS.md requires -- backlog already 42-79 per cent of the budget, queue
+%    wait 31-75 per cent, overheat 5-6 or late in a burst, and pacing or an
+%    optional-work skip engaged on all eleven sub-1-per-cent decisions.  Stated
+%    bare it reads as a lucky escape; with the saturation it reads as the
+%    mechanism working at its limit.  Never upgrade it to a bounded-margin or
+%    guaranteed-deadline claim.
+%    Source: data/rq3/estimator/thin_margin_tail.csv, one row per sub-1-per-cent
+%    decision, 6 at 12MP and 5 at 24MP; summary.csv's marginUnder1PctDecisions
+%    confirms the population is complete.  The 24MP minimum there is 14 ms (run
+%    1#6 shot 24), NOT 9 ms: a 9 ms observation exists in the raw 30-shot margin
+%    series but on a capture that is not an analyzed pacing decision, so it is a
+%    different population and must not be quoted beside these counts.
+% 2. That the delay lands at 5.4x and 3.6x d* where it covers the target
+%    (sizing_summary.csv, `covered`: 432/80 and 685/188), and that the cause is
+%    the reserve construction -- Chat is a burst MAXIMUM while Bhat is a CENTRAL
+%    estimate of a whole queue.  Concede it in one sentence and name Chat as the
+%    parameter a team porting the controller should tune.  A reviewer who divides
+%    the printed backlog-relative delay by a d* recovered from the prose will find
+%    it either way; better it is the paper's sentence than the reviewer's.
+%    QUOTE THE RESERVE ERROR OF THE POPULATION THE SENTENCE IS ABOUT: beside the
+%    5.4x/3.6x the correct figures are the `covered` rows' own
+%    reserve_error_p50_pct, +41.4 and +44.4 per cent.  The larger +87.0 and +90.8
+%    belong to `paced_none_required` (n = 350 and 374) and may only be quoted
+%    beside that population.  Both are conservative, so the argument does not need
+%    the larger pair; it needs the honest one.
+% 3. The 18 of 79 and 43 of 140 required-tail decisions that received no delay,
+%    with the mechanism, which is single and specific.  On those the reserve was
+%    right -- Chat - C median +74 ms and -9 ms -- and only the backlog clock was
+%    short: Bhat - B median -844 ms (12.1 per cent of budget) and -1,362 ms
+%    (19.5 per cent), worst -1,586 and -2,319 ms.
+%    data/rq3/policy/boundary_mechanism.csv scores backlog_under_estimated on 60
+%    of the 61.  The cause is the one Section~\ref{sec:pacing} states: E advances
+%    by the POINT sum per queued Draft, so the shortfall compounds with queue
+%    depth, and these decisions sat behind 8 and 6 queued Drafts at the median.
+%    Bounds on the reading: the deficit was small (median 2.2 and 3.8 per cent of
+%    budget, minimum 0.19 and 0.11), 24 of the 43 at 24MP were already running a
+%    demoted sequence, and none of the 61 timed out.
+%    This pairs with item 2 QUALITATIVELY and must be written that way: one
+%    asymmetry -- a maximum statistic for one Draft against a central statistic
+%    for a whole queue -- produces over-reservation where the reserve dominates
+%    and under-pricing where the queue does.  Do NOT put item 2's reserve
+%    percentages and this item's backlog percentages into one arithmetic
+%    comparison; they are measured on different populations.
+%    DO NOT write that pacing "trusted admission to skip" or "deferred to
+%    admission".  No such path exists: CaptureAvailablePacer passes no numeric
+%    deficit share to admission (its class comment at CaptureAvailablePacer.kt
+%    lines 39-46, and Section~\ref{sec:pacing}), and the measured cause is that
+%    Bhat was short, so the controller never saw a positive deficit.  It did not
+%    choose to abstain.  The note's admission figures are a CO-OCCURRENCE audit
+%    over the 2C horizon, which AGENTS.md fixes as an observed admission-action
+%    audit, not causal attribution.
+%
+% ---------------------------------------------------------------------------
+% VERIFIABILITY
+% ---------------------------------------------------------------------------
+% Every count behind the table can be recomputed from two CSV rows:
+%   79 = 53 covered + 26 flexible + 0 below floor   (coordination/summary.csv)
+%   140 = 83 + 43 + 14
+% so Mandatory covered is 79 - 0 and 140 - 14, and Full covered is 53 and 83.
+%
+% THE TABLE PRINTS ONLY PERCENTAGES, so the note carries every denominator: 79 of
+% 1,920 and 140 of 1,861 for the required tail, and 411 and 471 for the paced
+% decisions.  That is the only path from a printed percentage back to a count, so
+% do not trim those numbers out of the note to save a line.  The counts were moved
+% out of the body deliberately: "140 / 1{,}861 (7.5\%)" needs 56pt, which forced
+% the condition stub to wrap to two lines and broke its alignment against the
+% single-line numeric cells.
+
+\begin{table}[t]
+  \centering
+  \setlength{\abovecaptionskip}{2pt}%
+  \setlength{\belowcaptionskip}{3pt}%
+  \caption{RQ4: delay sizing is conservative yet work-conserving.}
+  \label{tab:rq4_pacing_selectivity}
+
+  {\scriptsize
+  \renewcommand{\arraystretch}{1.12}%
+  % Scoped to this group, as in tab_rq2_ablation.tex: a thin vertical rule with
+  % 1.5pt of lead-in, used to bound the header groups.
+  \newcolumntype{V}{!{\hspace{1.5pt}\vrule}}%
+  \newsavebox{\rqfourselbox}%
+  \newcommand{\rqfourseltabular}{%
+  % LAYOUT.  Two data rows, so every stub is ONE line: a two-line \makecell stub
+  % beside single-line numeric cells left the numbers hanging at the wrong
+  % baseline, which is why the condition column is 53pt and the labels are not
+  % stacked.  Every count moved to the note for the same reason -- printing
+  % "140 / 1{,}861 (7.5\%)" cost 56pt, which is what forced the stub to wrap.
+  %
+  % Widths are \settowidth measurements at \scriptsize against
+  % \columnwidth = 252pt, each column set 1-2pt above its widest cell:
+  %   55  "24MP mem.\ press." 53.90     25  "req.\ (\%)" 23.63
+  %   28  "Activated" 26.87             32  "Mandatory" 30.72
+  %   23  "covered" 21.94               25  "Backlog" 23.33
+  %   19  "$d/B$" 14.64
+  % Sum 207pt plus three rules (0.4pt for | and 1.9pt for each V) = 211.2pt, so
+  % \fittabcolsep lands tabcolsep near 3.4pt and the tabular keeps a few points of
+  % slack.  Keep that slack: \makecell builds an inner tabular, so the header cells
+  % do not measure exactly as bare text, and a budget fitted to the last point
+  % overflows by a point or two for reasons no cell explains.
+  %
+  % A GROUP LABEL CAN BE THE BINDING CONSTRAINT, NOT A DATA CELL.  A \multicolumn
+  % with c alignment is NOT clipped to the p{} widths it spans: if its natural
+  % width exceeds the span, TeX widens the spanned columns and the tabular grows
+  % past \columnwidth, which \fittabcolsep cannot recover because widening
+  % tabcolsep widens the span and the table together.  The two labels and the
+  % spans they need, at the fitted tabcolsep of 3.137pt:
+  %   "Where required (\%)"  62.80  vs  28+32+23 + 4 tabcolsep = 95.5   OK
+  %   "Applied delay"        42.13  vs  25+19    + 2 tabcolsep = 50.3   OK
+  % "Where a delay was required (\%)" needed ~100pt and was shortened; the per-cent
+  % sign was dropped from "Applied delay (\%)" (53.11pt) for the same reason, and
+  % the note states that both of its columns are shares.  Recheck both
+  % inequalities before relabelling either group or narrowing columns 6-7.
+  % Measure with \sbox{\bx}{\scriptsize\makecell[c]{...}} -- \makecell pads, so a
+  % bare \settowidth of the text understates these by several points.
+  %
+  % One rule per group boundary, three in total: the stub, the all-decisions
+  % share, the required-tail block, the applied-delay block.  "Full covered" is
+  % spelled out rather than abbreviated to "Full cov." so that it reads as the
+  % pair of "Mandatory covered"; the contrast between the two is the point.
+  \begin{tabular}{@{}%
+      % The two stub columns are CENTRED, horizontally by \centering here and
+      % vertically by the [c] of their \multirow below.  Centring the condition
+      % column also matches tab_rq1_end_to_end_summary.tex and tab_rq2_ablation.tex,
+      % which both set Condition with \centering.  \arraybackslash is required
+      % after \centering or \\ stops ending rows.
+      >{\centering\arraybackslash}p{55pt}|%    condition
+      >{\centering\arraybackslash}p{30pt}V%    delay required (%)
+      >{\raggedleft\arraybackslash}p{28pt}%    activated on the tail
+      >{\raggedleft\arraybackslash}p{32pt}%    mandatory covered
+      >{\raggedleft\arraybackslash}p{23pt}V%   full covered
+      >{\raggedleft\arraybackslash}p{25pt}%    backlog overlap
+      >{\raggedleft\arraybackslash}p{19pt}%    d/B P50
+    @{}}
+    \toprule
+    % \multirow{2}{*}, NOT {=}.  The two stub labels are centred across both header
+    % rows, which is what {*} buys.  The WIDTH ARGUMENT MATTERS: {=} sets the box
+    % to the column width and produced a permanent "Overfull \hbox 1.01884pt ...
+    % [] []" -- two boxes, no text -- reported at the line where the tabular is
+    % invoked, from inside \fittabcolsep's \sbox as well as from the real
+    % typesetting, and invariant to every p-width and to the fit target.  An
+    % explicit width 2pt under the column made it worse by exactly 2pt, i.e.
+    % \multirow does not compensate the difference.  {*} takes the natural width
+    % of the content and does not overflow.  Do not "tidy" these back to {=}.
+    %
+    % TWO lines in the stub, not three.  The header block is three lines tall (one
+    % group row plus a two-line sub-label), but \multirow{2} budgets its box at
+    % twice the NORMAL row height rather than the actual heights, so a three-line
+    % stub overflows it -- "Overfull \vbox 6.08011pt too high" at the tabular's
+    % line, constant against every other change.  "Delay required (\%)" is
+    % therefore set over two lines and its column widened to 40pt to hold
+    % "required (\%)"; it is spelled out, not abbreviated to "req.".
+    \multirow[c]{2}{*}{\textbf{Condition}}
+      & \multirow[2]{2}{*}{\makecell[c]{\textbf{Delay}\\\textbf{required}\\\textbf{(\%)}}}
+      & \multicolumn{3}{cV}{\makecell[c]{\textbf{Where required (\%)}}}
+      & \multicolumn{2}{c}{\makecell[c]{\textbf{Applied delay}}} \\
+    \cmidrule(lr){3-5}\cmidrule(l){6-7}
+    & & \multicolumn{1}{c}{\makecell[c]{\textbf{Activated}}}
+      & \multicolumn{1}{c}{\makecell[c]{\textbf{Mandatory}\\\textbf{covered}}}
+      & \multicolumn{1}{cV}{\makecell[c]{\textbf{Full}\\\textbf{covered}}}
+      & \multicolumn{1}{c}{\makecell[c]{\textbf{Backlog}\\\textbf{overlap}}}
+      & \multicolumn{1}{c}{\makecell[c]{\mbox{\boldmath$d/B$}\\\textbf{P50}}} \\
+    \midrule
+
+    % Mandatory covered, Backlog overlap and d/B carry the headline and are bold.
+    % Full covered is deliberately NOT bold: its gap to Mandatory is the
+    % coordination reading, and bolding both would flatten that contrast.
+    12MP normal  
+      & 4.1 & 77.2 & \textbf{100.0} & 67.1 & \textbf{100.0} & \textbf{10.4} \\
+    24MP mem.\ press.
+      & 7.5 & 69.3 & \textbf{90.0} & 59.3 & \textbf{98.7} & \textbf{8.6} \\
+    \bottomrule
+  \end{tabular}}%
+  % 14 = twice the seven columns, which is \fittabcolsep's contract (macros.tex).
+  % It fits this tabular to 251.99992pt against \columnwidth = 252pt, at
+  % tabcolsep 3.137pt.  For reference if the fit ever needs re-tuning, the width
+  % is PIECEWISE in \tabcolsep, measured over the real preamble --
+  %     tabcolsep  0       1       2       3       4    pt
+  %     width      213.72  225.72  237.72  250.22  263.22 pt
+  % slope 12.0 up to 2pt, then 12.5, then 13.0, as the two \multicolumn group
+  % labels stop and start binding their spans.  \fittabcolsep solves a linear
+  % model, so on a piecewise curve the remedy for a residual is the target, never
+  % the p-widths -- the solver just re-absorbs those into tabcolsep.
+  \fittabcolsep{\rqfourselbox}{\rqfourseltabular}{\columnwidth}{14}%
+  \rqfourseltabular%
+  \par\vspace{3pt}%
+  % The minipage is load-bearing.  The table environment sets \centering, which
+  % leaks into the last line of any paragraph typeset directly inside it.
+  % \parindent is zeroed so the sentences run on as one block.
+  \begin{minipage}{\columnwidth}%
+  \setlength{\parindent}{0pt}%
+  \textbf{Delay required} is the share of decisions with a positive retrospective
+  matched-policy target $d^{*}$: 79 of 1{,}920 and 140 of 1{,}861. Both $d^{*}$
+  and its mandatory-work variant $d^{*}_{\mathrm{man}}$ apply the delay rule to the
+  \emph{measured} backlog and \emph{realized} Draft duration, so both are
+  sufficient retrospective reservation conditions, not timeout boundaries.
+  Over those 79 and 140 decisions, \textbf{Activated} is $d>0$,
+  \textbf{Mandatory} is $d\ge d^{*}_{\mathrm{man}}$ and \textbf{Full covered} is
+  $d\ge d^{*}$; their gap is optional work, which node-time admission owns --- on
+  the 26 and 43 decisions in it, admission skipped optional work on that or the
+  next capture in 80.8\% and 72.1\%. All 14 below the mandatory floor ran a
+  demoted sequence, their worst realized deadline margin was 4.39\% of the Capture
+  Timeout budget, and none timed out. Over the 411 and 471 paced decisions,
+  \textbf{Backlog overlap} is the share of applied delay that ran while at least
+  that much Draft work was outstanding (0 and 8 waits outlast it), and
+  \textbf{$d/B$} the median delay as a share of that backlog.
+  \textbf{Selectivity:} pacing engaged on 1.4\% and 1.0\% of decisions carrying
+  over 40\% of the budget in surplus, against 77.2\% and 69.3\% where a delay was
+  required, and 21.4\% and 25.3\% overall.
+  \textbf{Cost:} per burst the applied delay is 18.1\% and 9.8\% of elapsed time
+  at P50, 24.5\% and 29.7\% at P95.
+  \end{minipage}%
+  \par}
+\end{table}
