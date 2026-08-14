@@ -1172,7 +1172,8 @@ requires the prose to carry beside the margin minimum.
 
 ---
 POPULATIONS.  AGENTS.md: every statistic printed beside a population must be
-computed on that population.  This table mixes three, so the note names each.
+computed on that population.  This table mixes three, so every count-based cell
+prints count/denominator with its percentage beneath, and the note names each.
 ---
   Delay required        all analyzed decisions      1,920 and 1,861
   Activated, Mandatory, Full   the required tail    79 and 140
@@ -1181,6 +1182,66 @@ The required tail uses the STRICT cut d* > 0, which is what every
 required-delay population in the pipeline uses; see the OVERRUN_PCT comment of
 scripts/rq3_pacing_summary_metrics.py for why pressure == 0 needs no delay.
 At 24MP that is 140, not the 141 of the rho >= 0 pressure band.
+
+The counts were added 2026-08-14 on author instruction, in the form
+n/denominator over (pct), so the denominator of every printed percentage is
+visible in the exhibit itself and not only in the note.  Every numerator has a
+CSV row; none is back-computed from a rounded percentage:
+  Delay required     projectedOverrunStrict            79/1,920, 140/1,861
+  Activated          79 - overrunButUnpaced 18 = 61,   140 - 43 = 97
+                     (policy/summary.csv; the same 61/79 the ratio uses)
+  Mandatory covered  79 - belowMandatoryFloor 0 = 79,  140 - 14 = 126
+  Full covered       realizedWorkEnvelopeCovered       53/79, 83/140
+The first four reproduce the printed percentages to the digit shown (77.215,
+69.286, 90.0, 67.089, 59.286, 4.115, 7.523).
+
+NEITHER CELL OF THE Applied delay BLOCK CARRIES COUNTS, AND NEITHER MAY BE
+GIVEN ANY.  Backlog overlap is backlogDrainingDelaySharePercent, a share of
+applied delay TIME, not of decisions -- its CSV row has an empty denominator
+field, and the count-shaped fact nearby (waitsOutlastingBacklog, 0 and 8) is a
+different statistic.  d/B P50 is a median.  That block therefore prints no
+population marker at all: an n column holding 411 and 471 was built and removed
+on author instruction the same day, because a bare count column beside two
+statistics that are not counts of it reads as their denominator and is not one.
+The note carries the population instead -- "over the 411 and 471 paced
+decisions" -- and it is the only place that population appears, so do not trim
+it out of the note.
+
+Layout.  Column labels are centred, horizontally and vertically
+(\makecell[cc] inside the \multicolumn wrapper, which is what puts the one-line
+Activated on the midline between Mandatory and covered).  Data cells are flush
+right.  The Condition column went from 55pt centred to 38pt ragged-left with an
+explicit break in each label (12MP / normal, 24MP / mem. press.); left alignment
+is what keeps the two labels readable once they wrap.  The tabular stays at 7
+columns and \fittabcolsep 14.
+
+THREE MECHANICAL TRAPS, ALL THREE HIT WHILE BUILDING THIS TABLE.
+  1. \newline inside a \raggedleft p-column CENTRES the line it ends, because
+     the \hfil it appends balances the column's \leftskip fil.  Measured: 61/79
+     sat 5.95pt from the left edge and 5.85pt from the right while (77.2) below
+     it was flush.  Use \linebreak, which appends nothing and lets the fil
+     absorb the slack.  \raggedright columns are unaffected -- both fils are on
+     the same side there -- but the Condition column uses \linebreak too, so the
+     file has one break command and not two.
+  2. Right-aligning a count over a parenthesised percentage aligns the ")"
+     with the last DIGIT above it, which is the misalignment a reader sees.
+     \cpct/\cpctb hang the count over that parenthesis with \phantom{)}; the
+     two lines then share a right edge on their digits (verified with
+     pdftotext -bbox: 385.92 for both lines of the 12MP cell).  The bold form
+     puts the phantom inside \textbf, since a bold ")" is wider.
+  3. A bare \makecell in one of these p-columns loses the row baseline and drops
+     the taller headers by a line; keep the \multicolumn wrapper, and remember
+     the V rules live in that wrapper's column spec once it is present.
+The Delay required header is \multirow[c], not the \multirow[2] it carried
+before 2026-08-14; "2" is not a valid vertical position for that argument.
+Correcting it does NOT silence the 6.08pt overfull \vbox the build reports
+against this table -- that box is the three-line header content against the two
+rows multirow sizes for it, it is the identical 6.08011pt the committed original
+produced, and it has no visible effect.  Removing it means dropping the multirow
+and setting Delay in the group row with required / (%) beneath, which loosens
+the three lines; that was judged not worth the change.  It is the table's only
+box warning: there is no overfull \hbox, so a NEW warning means something in
+these widths stopped fitting.
 
 Two roundings to leave alone:
   d/B P50 at 12MP is 10.4474, so it prints 10.4.  policy/summary.csv stores the

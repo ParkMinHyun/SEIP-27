@@ -3,8 +3,8 @@
 \subsection{Control Objective}
 \label{sec:objective}
 
-Lightweight multi-frame composition should stay available whenever a capture's remaining budget can absorb it, and cross-shot Capture Timeout is the safety constraint that bounds it: under deadline pressure the controller has only two ways to hold that bound, delaying the next capture or skipping an optional Draft stage.
-The delay is the more expensive by product policy, because it lengthens shot-to-shot latency that the user perceives directly and that no later stage recovers, whereas a skipped stage lowers the Draft image's fidelity to the final image until post-processing replaces it.
+The controller's goal is to keep lightweight multi-frame composition available without letting any capture cross its Capture Timeout deadline, and it can pay two costs to hold that constraint: a delayed next capture and a skipped optional Draft stage.
+The delay is the more expensive by product policy, because it lengthens shot-to-shot latency that the user perceives directly and that no later stage recovers, whereas a skipped stage lowers the Draft image's fidelity to the final image, a cost that ends when post-processing replaces it.
 
 Each capture starts a fresh Capture Timeout clock, but the single Draft worker serializes Draft Sequences, so a predecessor can occupy the worker past the next capture request and consume budget that would otherwise be available to that successor.
 Capture \(i\) must complete its Draft path within a budget measured from its request; let \(\mu_i\) be its realized margin at completion, \(\delta_i\) the interval between capture requests \(i-1\) and \(i\), and \(\pi_i\) the interval between their Draft-path completions.
@@ -15,7 +15,7 @@ For successive captures,
 \end{equation}
 Only two quantities move the margin, and each module acts on one: admission reduces \(\pi_i\) by suppressing optional work, pacing increases \(\delta_{i+1}\) by deferring the next capture opportunity.
 
-Neither module passes a residual budget to the other: admission independently tests the live budget for each optional stage, and pacing converts only a fixed fraction of its projected deficit into delay.
+Neither module passes a residual budget to the other: admission independently tests the live budget at each optional node, and pacing converts only a fixed fraction of its projected deficit into delay.
 The result is a safety-constrained, responsiveness-dominant trade-off, not the optimum of a cost model: the controller computes no quality utility and solves no global optimization.
 
 Equation~\ref{eq:margin-recursion} is an accounting identity, not tracked control state; each module instead compares a decision-time forecast against the deadline window still observable to it.

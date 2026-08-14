@@ -9,34 +9,44 @@
   {\scriptsize
   \renewcommand{\arraystretch}{1.12}%
   \newcolumntype{V}{!{\hspace{1.5pt}\vrule}}%
+  \newcommand{\cpct}[2]{#1\phantom{)}\linebreak(#2)}%
+  \newcommand{\cpctb}[2]{\textbf{#1\phantom{)}}\linebreak\textbf{(#2)}}%
   \newsavebox{\rqfourselbox}%
   \newcommand{\rqfourseltabular}{%
   \begin{tabular}{@{}%
-      >{\centering\arraybackslash}p{55pt}|%
-      >{\centering\arraybackslash}p{30pt}V%
-      >{\raggedleft\arraybackslash}p{28pt}%
+      >{\raggedright\arraybackslash}p{38pt}|%
+      >{\raggedleft\arraybackslash}p{31pt}V%
+      >{\raggedleft\arraybackslash}p{30pt}%
       >{\raggedleft\arraybackslash}p{32pt}%
-      >{\raggedleft\arraybackslash}p{23pt}V%
-      >{\raggedleft\arraybackslash}p{25pt}%
+      >{\raggedleft\arraybackslash}p{26pt}V%
+      >{\raggedleft\arraybackslash}p{26pt}%
       >{\raggedleft\arraybackslash}p{19pt}%
     @{}}
     \toprule
     \multirow[c]{2}{*}{\textbf{Condition}}
-      & \multirow[2]{2}{*}{\makecell[c]{\textbf{Delay}\\\textbf{required}\\\textbf{(\%)}}}
-      & \multicolumn{3}{cV}{\makecell[c]{\textbf{Where required (\%)}}}
-      & \multicolumn{2}{c}{\makecell[c]{\textbf{Applied delay}}} \\
+      & \multirow[c]{2}{*}{\makecell[cc]{\textbf{Delay}\\\textbf{required}\\\textbf{(\%)}}}
+      & \multicolumn{3}{cV}{\makecell[cc]{\textbf{Where required (\%)}}}
+      & \multicolumn{2}{c}{\makecell[cc]{\textbf{Applied delay}}} \\
     \cmidrule(lr){3-5}\cmidrule(l){6-7}
-    & & \multicolumn{1}{c}{\makecell[c]{\textbf{Activated}}}
-      & \multicolumn{1}{c}{\makecell[c]{\textbf{Mandatory}\\\textbf{covered}}}
-      & \multicolumn{1}{cV}{\makecell[c]{\textbf{Full}\\\textbf{covered}}}
-      & \multicolumn{1}{c}{\makecell[c]{\textbf{Backlog}\\\textbf{overlap}}}
-      & \multicolumn{1}{c}{\makecell[c]{\mbox{\boldmath$d/B$}\\\textbf{P50}}} \\
+    & & \multicolumn{1}{c}{\makecell[cc]{\textbf{Activated}}}
+      & \multicolumn{1}{c}{\makecell[cc]{\textbf{Mandatory}\\\textbf{covered}}}
+      & \multicolumn{1}{cV}{\makecell[cc]{\textbf{Full}\\\textbf{covered}}}
+      & \multicolumn{1}{c}{\makecell[cc]{\textbf{Backlog}\\\textbf{overlap}}}
+      & \multicolumn{1}{c}{\makecell[cc]{\mbox{\boldmath$d/B$}\\\textbf{P50}}} \\
     \midrule
 
-    12MP normal  
-      & 4.1 & 77.2 & \textbf{100.0} & 67.1 & \textbf{100.0} & \textbf{10.4} \\
-    24MP mem.\ press.
-      & 7.5 & 69.3 & \textbf{90.0} & 59.3 & \textbf{98.7} & \textbf{8.6} \\
+    12MP\linebreak normal
+      & \cpct{79/1{,}920}{4.1}
+      & \cpct{61/79}{77.2}
+      & \cpctb{79/79}{100.0}
+      & \cpct{53/79}{67.1}
+      & \textbf{100.0} & \textbf{10.4} \\
+    24MP\linebreak mem.\ press.
+      & \cpct{140/1{,}861}{7.5}
+      & \cpct{97/140}{69.3}
+      & \cpctb{126/140}{90.0}
+      & \cpct{83/140}{59.3}
+      & \textbf{98.7} & \textbf{8.6} \\
     \bottomrule
   \end{tabular}}%
   \fittabcolsep{\rqfourselbox}{\rqfourseltabular}{\columnwidth}{14}%
@@ -45,18 +55,18 @@
   \begin{minipage}{\columnwidth}%
   \setlength{\parindent}{0pt}%
   \textbf{Delay required} is the share of decisions with a positive retrospective
-  matched-policy target $d^{*}$: 79 of 1{,}920 and 140 of 1{,}861. Both $d^{*}$
+  matched-policy target $d^{*}$. Both $d^{*}$
   and its mandatory-work variant $d^{*}_{\mathrm{man}}$ apply the delay rule to the
   \emph{measured} backlog and \emph{realized} Draft duration, so both are
   sufficient retrospective reservation conditions, not timeout boundaries.
-  Over those 79 and 140 decisions, \textbf{Activated} is $d>0$,
+  Within that required tail, \textbf{Activated} is $d>0$,
   \textbf{Mandatory} is $d\ge d^{*}_{\mathrm{man}}$ and \textbf{Full covered} is
   $d\ge d^{*}$; their gap is optional work, which admission owns at each optional stage --- on
   the 26 and 43 decisions in it, admission skipped optional work on that or the
   next capture in 80.8\% and 72.1\%. All 14 below the mandatory floor ran a
   demoted sequence, their worst realized deadline margin was 4.39\% of the Capture
   Timeout budget, and none timed out. Over the 411 and 471 paced decisions,
-  \textbf{Backlog overlap} is the share of applied delay that ran while at least
+  \textbf{Backlog overlap} is the share of applied delay time that ran while at least
   that much Draft work was outstanding (0 and 8 waits outlast it), and
   \textbf{$d/B$} the median delay as a share of that backlog.
   \textbf{Selectivity:} pacing engaged on 1.4\% and 1.0\% of decisions carrying
