@@ -20,10 +20,10 @@ This repository is a LaTeX paper project for SEIP 2027.
 
 - Current manuscript topic: preventing Capture Timeout in the Android Camera Framework.
 - The Draft Sequence was introduced together with the post-processing pipeline; it publishes an early image and provides recovery while final processing continues.
-- The work targets enabling a lightweight multi-frame Draft workload in Portrait mode, whose heavy final composition can then be deferred until the camera app enters the background.
+- The work targets enabling lightweight multi-frame composition in the Draft Sequence for Portrait mode, whose heavy final composition can then be deferred until the camera app enters the background.
 - The proposed system is the Budget-Aware Draft Controller, comprising remaining-sequence admission and capture-availability pacing. Use the descriptive name without a forced acronym and refer to it as ``the controller'' after first use.
 - The paper studies coordinated workload and arrival control for tail-latency-based Capture Timeout, not average-latency optimization for a single image-processing stage.
-- Frame the work as feature enablement under a safety constraint, not as timeout mitigation. The hierarchy is: enable lightweight multi-frame Draft composition under parallel capture whenever safely possible → Capture Timeout is the deployment blocker → static thermal gating cannot tell safe captures from unsafe ones → coordinated runtime control of workload and capture arrival. Sections 2.4, 3.1 and 3.2 already open on this hierarchy; align the abstract, introduction, and conclusion with it when they are drafted.
+- Frame the work as feature enablement under a safety constraint, not as timeout mitigation. The hierarchy is: enable the Draft Sequence's lightweight multi-frame composition under parallel capture whenever safely possible → Capture Timeout is the deployment blocker → static thermal gating cannot tell safe captures from unsafe ones → coordinated runtime control of workload and capture arrival. Sections 2.4, 3.1 and 3.2 already open on this hierarchy; align the abstract, introduction, and conclusion with it when they are drafted.
 - Preserve the core research framing unless the user explicitly asks to change the problem statement, contribution, or terminology.
 
 ## RQ Numbering (changed 2026-08-11)
@@ -113,6 +113,8 @@ Do not copy text, claims, or citations from the reference papers unless the user
 
 ## Banned and Fixed Terminology
 
+- **The feature being enabled is `lightweight multi-frame composition`, a stage of the `Draft Sequence`.** `2_3_draft_sequence.tex` defines it in those words and `2_4_static_safeguards.tex` denotes it \(M\), naming it the `lightweight multi-frame Draft stage`. Do not weld the two into `lightweight multi-frame Draft composition`: that compound names nothing in the implementation and reads as though `Draft` modified `composition` rather than the pipeline, which also collides with the *final* composition that post-processing performs. Write `the Draft Sequence's lightweight multi-frame composition`, or `the lightweight multi-frame Draft stage` when the stage is meant as a unit.
+- **Do not describe a skipped optional stage as masked, hidden, or free.** Sections 2.3 and 2.4 motivate the feature as closing the draft--final visual gap, and post-processing for the target mode is deferred until the application backgrounds, so the Draft image is what the user sees for the whole foreground session; calling the skip invisible concedes that the static level-4 guard was sufficient and dissolves the paper's premise. The two costs are ranked by recoverability, not visibility: the delay lengthens shot-to-shot latency and is never recovered, whereas the skipped stage's fidelity cost ends when the final image replaces the Draft image. For the responsiveness cost use the manuscript's established `user-perceived` wording, not `visible`.
 - **Do not use the word "burst" in printed manuscript text**, including section prose, table cells, figure labels, and captions. Replace it with what is actually meant:
   - a temporal grouping of shots — `consecutive captures`;
   - state whose lifetime ends when the Draft task queue drains — `queue-local`, and `persistent across queue drains` for state that survives;

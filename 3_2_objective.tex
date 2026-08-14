@@ -3,9 +3,8 @@
 \subsection{Control Objective}
 \label{sec:objective}
 
-The controller's goal is to keep lightweight multi-frame Draft composition available whenever it is safe, and cross-shot Capture Timeout is the safety constraint that defines when it is not.
-Under deadline pressure, the controller can pay two costs to hold that constraint: a delayed next capture and a skipped optional Draft stage.
-The delay is the more expensive by product policy, because it is directly visible to the user, whereas a skipped stage affects only the early Draft image and is normally masked by post-processing.
+Lightweight multi-frame composition should stay available whenever a capture's remaining budget can absorb it, and cross-shot Capture Timeout is the safety constraint that bounds it: under deadline pressure the controller has only two ways to hold that bound, delaying the next capture or skipping an optional Draft stage.
+The delay is the more expensive by product policy, because it lengthens shot-to-shot latency that the user perceives directly and that no later stage recovers, whereas a skipped stage lowers the Draft image's fidelity to the final image until post-processing replaces it.
 
 Each capture starts a fresh Capture Timeout clock, but the single Draft worker serializes Draft Sequences, so a predecessor can occupy the worker past the next capture request and consume budget that would otherwise be available to that successor.
 Capture \(i\) must complete its Draft path within a budget measured from its request; let \(\mu_i\) be its realized margin at completion, \(\delta_i\) the interval between capture requests \(i-1\) and \(i\), and \(\pi_i\) the interval between their Draft-path completions.

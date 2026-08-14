@@ -27,7 +27,7 @@ For this manuscript, preserve the corresponding chain:
 
 ```text
 commercial capture workflow
--> lightweight multi-frame Draft composition as the feature to enable
+-> lightweight multi-frame composition in the Draft Sequence as the feature to enable
 -> Capture Timeout under parallel capture as the deployment blocker
 -> limitation of static thermal guards and admission-only control
 -> coordinated remaining-sequence admission and capture pacing
@@ -157,9 +157,17 @@ modules. 3.2 owns margin dynamics, the two costs, and their ranking. State each
 fact in exactly one of the two.
 
 Both open on the feature being enabled. 3.2's opening in particular must anchor
-to keeping lightweight multi-frame Draft composition available, which is where
-Section 2.4 hands over; Capture Timeout is the safety constraint on that goal,
-not the goal itself.
+to keeping the Draft Sequence's lightweight multi-frame composition available,
+which is where Section 2.4 hands over; Capture Timeout is the safety constraint
+on that goal, not the goal itself.
+
+3.2 must not describe a skipped optional stage as masked, hidden, or otherwise
+free. Sections 2.3 and 2.4 motivate the feature as closing the draft--final
+visual gap, and for the target mode post-processing is deferred until the
+application backgrounds, so the Draft image is what the user sees for the whole
+foreground session. The asymmetry that ranks the two costs is recoverability,
+not visibility: the delay is never recovered, whereas the skipped stage's
+fidelity cost ends when the final image replaces the Draft image.
 
 ### Section 3.2, claims that must not be made
 
