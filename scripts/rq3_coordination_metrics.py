@@ -15,7 +15,7 @@ Timeout-labelled records removed here are known invalid measurements, not
 actual timeout outcomes; no valid analyzed run timed out. The reconstructed
 envelopes are trace diagnostics, not 0.5x/0.75x counterfactual trajectories.
 Mechanically scaling recorded delay is invalid because pacing changes later
-backlog, admission, thermal state, and realized work. See docs/rq3-current.md.
+backlog, admission, thermal state, and realized work. See docs/rq-evidence.md (Part 1).
 """
 
 from __future__ import annotations

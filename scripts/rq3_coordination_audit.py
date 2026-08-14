@@ -9,7 +9,7 @@ The script also reconstructs backlog-estimation error, queue residence, and
 thermal-headroom change for the floor audit. Timeout-measurement-error records
 are invalid observations, and no valid analyzed run timed out. The mandatory
 floor is a sufficient retrospective reservation condition, not the timeout
-boundary. See docs/rq3-current.md.
+boundary. See docs/rq-evidence.md (Part 1).
 """
 
 from __future__ import annotations

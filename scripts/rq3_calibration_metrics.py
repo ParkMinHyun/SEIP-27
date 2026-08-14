@@ -82,7 +82,7 @@ def truthy(v):
 
 
 def pct_inc(values, q):
-    """Excel PERCENTILE.INC, as in docs/rq1-rq3-metrics-guide.md section 3.4."""
+    """Excel PERCENTILE.INC, as in docs/rq-evidence.md (Part 2) section 3.4."""
     v = sorted(float(x) for x in values if x is not None)
     if not v:
         return None

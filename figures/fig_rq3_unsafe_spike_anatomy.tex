@@ -1,64 +1,8 @@
-% RQ3: what changed at each of the five unsafe model admits, as ratios to
-% the capture immediately before it, and which shipped safeguard would have
-% prevented each overrun.
-%
-% The decisions are the unsafe-admit cell of the audit block in
-% Table~\ref{tab:rq3_admission_audit}; the measured values behind these ratios
-% are recorded in this header rather than in a companion table.
-%
-% Bars are anchored at 1.0, so a bar to the right is an increase over the
-% preceding capture and a bar to the left a decrease.  The x coordinates below
-% are therefore ratio - 1, and the tick labels restate them as ratios.
-%
-%   id  latency  CPU time  busy cores   prevented by
-%   M1     2.32      1.41        0.60   watchdog
-%   M2     1.95      1.15        0.59   watchdog
-%   M3     1.14      1.23        1.08   later single-frame skip
-%   S1     1.60      1.24        0.76   earlier multi-frame skip (+ watchdog)
-%   S2     1.42      1.37        0.96   earlier multi-frame skip
-%
-% The right-hand column is the interpretation layer, kept outside the plot box
-% so the measured ratios stay the measured ratios:
-%
-%   watchdog   the per-node watchdog, suppressed by the audit build so that admitted
-%      work could be measured to completion, would have cut the decision node at
-%      its own budget:
-%        M1 1460/1202 (+258)   M2 1648/889 (+759)
-%        S1  389/ 371 ( +18)
-%   model skips  the model's remaining skips in the same capture leave the
-%      decision inside its budget.  Work rejected AFTER the decision leaves the
-%      cost; a node rejected BEFORE it frees budget by shortening the path to
-%      it.  Both directions occur, so neither "prior" nor "later" alone would
-%      label these rows correctly -- and a Multi-frame decision is nodeOrder 1,
-%      so nothing can precede it at all:
-%        id  before(budget+)  after(cost-)   C_model/B_model
-%        M3        0               22          833 /  844
-%        S1      460               18          961 / 1435
-%        S2      330                0          713 /  983
-%
-% Every row carries at least one, so none of the five would have reached a
-% shipped build as a Capture Timeout.  M1-M2 are covered only by the watchdog:
-% they are over budget even on their own decision set, which is why they are the
-% two genuine model errors.
-%
-% The row pitch is set by the value labels, not the bars: three labels per row
-% need about 6.5pt of vertical separation at \tiny, so the bar shift, the bar
-% width that makes the group's bars touch, and the y unit all follow from that.
-% A transposed, vertical-bar version was tried and dropped: three labels per
-% group then sit side by side and need a full-width float to clear each other,
-% which costs more page area than this layout.
-%
-% The relation is multiplicative, latency = CPU time / busy cores, so the bars
-% must not be read as adding up on this linear scale.  Regenerate the values
-% with data/rq2_spike_anatomy.mjs in the ML repository.
-
+% Notes: docs/exhibits.md#fig_rq3_unsafe_spike_anatomy
 \begin{figure}[t]
   \centering
   \setlength{\abovecaptionskip}{3pt}%
   \setlength{\belowcaptionskip}{2pt}%
-  % Safeguard verdict, drawn outside the plot box so it never competes with a
-  % value label for x range. The tick reads as "this did not ship as a timeout"
-  % on its own; the letter says which safeguard prevented it.
   \newcommand{\rqtwosg}[2]{%
     \node[font=\tiny,inner sep=0pt,anchor=west] at (axis cs:1.66,#1)
       {\ding{51}\,\textsf{#2}};}%
@@ -69,10 +13,6 @@
         & \textsf{#3}
       \end{tabular}};}%
   \begin{tikzpicture}
-    % Value labels: one macro per side so the anchor and its matching nudge stay
-    % literal. A conditional inside a TikZ key value is not worth the fragility.
-    % #1 vertical offset matching the bar shift, #2 bar end in plot
-    % coordinates, #3 row, #4 printed ratio.
     \newcommand{\rqtwovalr}[4]{%
       \node[font=\tiny,inner sep=0pt,anchor=west,yshift=#1,xshift=2.5pt]
         at (axis cs:#2,#3) {$\times$#4};}
@@ -81,26 +21,13 @@
         at (axis cs:#2,#3) {$\times$#4};}
     \begin{axis}[
       xbar,
-      % Bar width equals the bar shift spacing below, so the three bars of a
-      % group touch. Both are 6.5pt because that is the least vertical room the
-      % three value labels need at \tiny; anything narrower would either
-      % reintroduce a gap or collide the labels.
       bar width=6.5pt,
-      % Fixing the y unit sets the row pitch directly. A group is 19.5pt tall,
-      % so 25pt leaves 5.5pt between groups - enough that touching bars read as
-      % one group rather than the rows running together.
       y=25pt,
-      % scale only axis makes width the plot box rather than the box plus its
-      % labels, so the bars get the column's full width instead of sharing it
-      % with the row names.
       scale only axis=true,
       width=0.720\columnwidth,
       ymin=0.4, ymax=5.6,
       ytick={1,2,3,4,5},
       yticklabels={S2,S1,M3,M2,M1},
-      % Plotted values are ratio - 1 so that the bars grow out of 1.0; the tick
-      % labels put them back into ratio units.  The limits leave room for a
-      % value label past either end of the longest bar and for the key.
       xmin=-0.65, xmax=1.60,
       xtick={-0.4,-0.2,0,0.2,0.4,0.6,0.8,1.0,1.2},
       xticklabels={0.6,0.8,1.0,1.2,1.4,1.6,1.8,2.0,2.2},
@@ -115,9 +42,6 @@
       tick label style={font=\tiny},
       label style={font=\tiny},
       xlabel style={yshift=2pt},
-      % The key sits inside the plot: the single-frame band is empty right of
-      % about 0.8, which is where its three rows fit without covering a bar or
-      % a value label.
       legend style={
         font=\tiny,
         draw=black!25,
@@ -131,22 +55,16 @@
         /tikz/every even column/.append style={column sep=3pt},
       },
       legend cell align=left,
-      % A bar plot's default legend image stacks two swatches; one is enough.
       legend image code/.code={%
         \draw[#1] (0cm,-0.075cm) rectangle (0.24cm,0.075cm);},
       clip=false,
     ]
 
-    % 1.0: no change from the preceding capture.  Bars leave this line, so it is
-    % drawn over the grid rather than as one more gridline.
     \draw[black!60,densely dashed,line width=0.5pt]
       (axis cs:0,0.4) -- (axis cs:0,5.6);
-    % Multi-frame / single-frame boundary.
     \draw[black!70,line width=0.6pt]
       (axis cs:-0.65,2.5) -- (axis cs:1.60,2.5);
 
-    % Explicit shifts: pgfplots would otherwise put the first plot at the bottom
-    % of each group, reversing the legend's reading order.
     \addplot[draw=black,fill=black,line width=0.3pt,bar shift=6.5pt]
       coordinates {(1.32,5) (0.95,4) (0.14,3)
                    (0.60,2) (0.42,1)};
@@ -162,8 +80,6 @@
                    (-0.24,2) (-0.04,1)};
     \addlegendentry{Busy cores}
 
-    % Value labels sit past the end of their bar, so they fall right of an
-    % increase and left of a decrease and never cover the bar.
     \rqtwovalr{6.5pt}{1.32}{5}{2.32}
     \rqtwovalr{6.5pt}{0.95}{4}{1.95}
     \rqtwovalr{6.5pt}{0.14}{3}{1.14}
@@ -182,9 +98,6 @@
     \rqtwovall{-6.5pt}{-0.24}{2}{0.76}
     \rqtwovall{-6.5pt}{-0.04}{1}{0.96}
 
-    % Safeguard column, outside the plot box. The header sits on the box edge so
-    % it reads as this column's heading rather than as a floating note, and it
-    % states the outcome so the panel carries the conclusion without the caption.
     \node[font=\tiny,inner sep=0pt,anchor=south west]
       at (axis cs:1.66,5.62) {\textsf{prevented by}};
     \rqtwosg{5}{watchdog}

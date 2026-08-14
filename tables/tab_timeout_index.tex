@@ -1,25 +1,14 @@
-% Earliest and median Capture Timeout indices within a 30-capture horizon.
-% The timeout-level column reports the range of overheat levels observed when
-% the first timeout occurred across the trials in each starting-level row.
-%
-% Protocol: ten 30-capture continuous-capture trials per combination of
-% starting level, resolution, memory condition, and M/M+S configuration;
-% M was enabled and the deployed guard was bypassed in a validation build.
-%
-% Severity shading follows the earliest first-timeout index: white = no timeout;
-% the single-hue ramp darkens as the first failure moves earlier.
-\providecolor{tmoS1}{RGB}{252,227,220} % first failure at capture >= 20
-\providecolor{tmoS2}{RGB}{239,160,140} % 10--19
-\providecolor{tmoS3}{RGB}{201,80,63}  % 6--9 (white text)
-\providecolor{tmoS4}{RGB}{143,36,32}  % <= 5 (white text)
+% Notes: docs/exhibits.md#tab_timeout_index
+\providecolor{tmoS1}{RGB}{252,227,220} %
+\providecolor{tmoS2}{RGB}{239,160,140} %
+\providecolor{tmoS3}{RGB}{201,80,63}  %
+\providecolor{tmoS4}{RGB}{143,36,32}  %
 
-% Give the two Overheat headers enough width while preserving the table width.
 \newcolumntype{H}{>{\centering\arraybackslash}p{1.02cm}}
 \newcolumntype{L}{>{\centering\arraybackslash}p{1.05cm}}
 \newcolumntype{P}{>{\centering\arraybackslash}p{0.635cm}}
 \providecommand{\estMed}[1]{#1}
 
-% Each colored cell reports earliest/median; shading follows the earliest index.
 \providecommand{\tmoPair}[3]{\cellcolor{#1}#2/#3}
 \providecommand{\tmoPairW}[3]{\cellcolor{#1}\textcolor{white}{\textbf{#2/#3}}}
 \providecommand{\tmoPairCens}[2]{\cellcolor{#1}#2/--}

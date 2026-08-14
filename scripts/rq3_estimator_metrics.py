@@ -55,7 +55,7 @@ The one repricing this script does emit -- floorMissRepricedAtOrAboveFloor -- is
 labelled and bounded in the same way: it substitutes the measured backlog into
 the deployed formula on the recorded row, which says what the controller would
 have priced with an exact clock at that instant, not what the run would have
-done.  See docs/rq3-current.md.
+done.  See docs/rq-evidence.md (Part 1).
 
 Run from the repository root:
 

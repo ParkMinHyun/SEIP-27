@@ -2,7 +2,7 @@
 delay sizing, and responsiveness cost.
 
 Emits the data/rq3/policy/ inputs consumed by the current RQ3 summary and prose.
-See docs/rq3-current.md for the current artifact map.
+See docs/rq-evidence.md (Part 1) for the current artifact map.
 
 Scope, and how it relates to the two sibling scripts
 ----------------------------------------------------
@@ -90,7 +90,7 @@ Data-quality and sampling limits inherited from the sibling exhibits apply.
 Timeout-labelled records removed from this collection are known invalid
 measurements, not actual Capture Timeout outcomes; no valid analyzed run timed
 out, so do not describe the population as survival-conditioned. The 12MP thermal
-rows still carry the RQ1(a) balancing-trim bias. See docs/rq3-current.md.
+rows still carry the RQ1(a) balancing-trim bias. See docs/rq-evidence.md (Part 1).
 
 Run:
     python scripts/rq3_pacing_summary_metrics.py sampling
@@ -517,7 +517,7 @@ def write_all(results, safe, overrun):
         # (c) plots the applied delay against the backlog it drains, both as a
         # share of the budget so that the panel shares the unit of (a) and (b).
         # Both axes have to carry the same unit or the d = B locus is not a line;
-        # see docs/rq3-current.md for the disclosure rule that motivates this.
+        # see docs/rq-evidence.md (Part 1) for the disclosure rule that motivates this.
         write(f'delay_vs_backlog_{slug}.csv', ['backlog_pct', 'delay_pct'],
               [[round(100 * t['B'] / t['budget'], 4),
                 round(100 * t['d'] / t['budget'], 4)]

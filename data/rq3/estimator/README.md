@@ -161,6 +161,6 @@ timeout boundary. Because it already excludes optional work, a demotion in a
 floor-miss case records admission action but does not remove the remaining
 deficit.
 
-See `docs/rq3-current.md` for the full paper-level interpretation and current
+See `docs/rq-evidence.md` (Part 1) for the full paper-level interpretation and current
 artifact inventory, and `data/rq3/coordination/README.md` for the admission
 action and margin decomposition.

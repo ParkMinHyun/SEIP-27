@@ -27,11 +27,18 @@ For this manuscript, preserve the corresponding chain:
 
 ```text
 commercial capture workflow
--> Capture Timeout and Draft workload
+-> lightweight multi-frame Draft composition as the feature to enable
+-> Capture Timeout under parallel capture as the deployment blocker
 -> limitation of static thermal guards and admission-only control
 -> coordinated remaining-sequence admission and capture pacing
 -> deadline safety, Draft feature availability, and pacing cost
 ```
+
+The chain starts at the feature, not at the failure. `AGENTS.md` states the
+same hierarchy as a project rule: the paper enables a feature under a safety
+constraint, and is not a timeout-mitigation paper. Text that opens from
+"Capture Timeout is the problem" reduces the contribution to mitigation and
+should be rewritten.
 
 ## Paragraph Construction
 
@@ -134,6 +141,55 @@ revisions should emphasize:
 - actionable lessons that can transfer beyond this one camera framework
   without overstating generality.
 
+## Section-Level Constraints
+
+Some sections carry constraints that are not style preferences but records of
+decisions already taken and mistakes already made. They used to live as comment
+headers inside the section files. `AGENTS.md` is the authority for all of them;
+this section records where each one applies so a reviewer can check a section
+without rereading every rule.
+
+### Section 3.1 and 3.2, scope split
+
+Overlap between the two subsections is split by rule. 3.1 owns module roles,
+inputs, integration boundaries, and the asymmetric interaction between the two
+modules. 3.2 owns margin dynamics, the two costs, and their ranking. State each
+fact in exactly one of the two.
+
+Both open on the feature being enabled. 3.2's opening in particular must anchor
+to keeping lightweight multi-frame Draft composition available, which is where
+Section 2.4 hands over; Capture Timeout is the safety constraint on that goal,
+not the goal itself.
+
+### Section 3.2, claims that must not be made
+
+Each of the following contradicts the implementation or a later subsection.
+
+- That margin "does not reset". Every capture starts a fresh Capture Timeout
+  clock; the cross-shot coupling comes from serialized Draft execution, where a
+  predecessor can hold the worker past the next capture request.
+- That pacing leaves a remainder for admission to consume. No numeric state
+  passes between the two modules: admission runs its own live-budget test for
+  each optional stage, and pacing converts a fixed fraction of its own
+  projected deficit into delay.
+- That either runtime test is an online form of the margin condition. The
+  realized margin exists only at completion, so both tests are decision-time
+  forecasts against the deadline window each module can still read.
+
+A scalar cost objective of the shape `min` over a delay cost plus a skipped-work
+penalty was drafted for this subsection and rejected; `AGENTS.md` records the
+three reasons, all of which still apply. Do not reintroduce anything of that
+shape.
+
+### Section 3.2, load-bearing phrasing
+
+- Keep `safety-constrained, responsiveness-dominant trade-off` verbatim.
+  Section 4 opens by citing it by name, so rewording it breaks the reference.
+- Do not restate the priority ranking as a strict lexicographic optimum
+  ("timeout first, delay second, optional work third"). That corner solution is
+  "delay only as a last resort", which the deployed policy does not implement:
+  pacing converts only part of the projected deficit into delay.
+
 ## Feedback Checklist
 
 When reviewing manuscript text, check the following in order:
@@ -142,7 +198,8 @@ When reviewing manuscript text, check the following in order:
 2. Is the actor, action, object, and causal relation unambiguous?
 3. Does the wording match the actual camera-framework behavior?
 4. Is every benefit tied to a mechanism or evidence?
-5. Does the paragraph connect to the paper's Capture Timeout framing?
+5. Does the paragraph connect to the paper's framing, in which multi-frame
+   Draft composition is the feature and Capture Timeout is the constraint?
 6. Are success, failure, and trade-off paths stated symmetrically where useful?
 7. Are terminology and capitalization consistent with nearby sections?
 8. Can any modifier or repeated phrase be removed without losing meaning?

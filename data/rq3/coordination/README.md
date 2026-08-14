@@ -87,5 +87,5 @@ does not close to 2 ms on every analyzed decision. This is exact arithmetic on
 the realized trace and is not a counterfactual: it explains the margin that was
 observed, not the margin a different delay would have produced.
 
-See `docs/rq3-current.md` for the full paper-level interpretation and current
+See `docs/rq-evidence.md` (Part 1) for the full paper-level interpretation and current
 artifact inventory.

@@ -1,7 +1,7 @@
 """RQ2 admission-decision quality: recompute tables/tab_rq2_admission_summary.tex
 from an arbitrary workbook set.
 
-Follows docs/rq1-rq3-metrics-guide.md sections 3.2 (run reconstruction),
+Follows docs/rq-evidence.md (Part 2) sections 3.2 (run reconstruction),
 3.5 (valid-run policy / dedup) and 5.2-5.3 (controller-enforced metrics and the
 always-admit audit).  Every source set below goes through identical logic, so a
 difference between two printed blocks is a data difference, not a method

@@ -1,115 +1,4 @@
-% RQ1: Baseline failure reference, full-controller Draft availability, and
-% pacing cost.
-% This is the RQ1 table; the per-loop ablation is now its own research
-% question, RQ2, in tables/tab_rq2_ablation.tex.
-%
-% Controller-off Timeout onset retains the previously reported baseline
-% reference.  Full-controller values are reconstructed from the balanced copy in
-% data/ablation_sampling/:
-%   - 48U_metrics_12MP_normal_0803_1.xlsx
-%   - 48U_metrics_12MP_normal_0803_2.xlsx
-%   - 48U_metrics_24MP_memory_0803_1.xlsx
-%   - 48U_metrics_24MP_memory_0803_2.xlsx
-% The workbooks were exported by CaptureMetricsExcelExporter.  The
-% implementation reference was inspected at commit:
-% 99aae0af8c3fa1ceb784083446e83c40d0fb917f
-%
-% Per the collection correction, sessions containing Capture Timeout are
-% excluded and incomplete non-timeout sessions remain outside the exporter's
-% RQ1 inclusion set.  On the unbalanced source in data/ablation_original/, the four
-% workbooks contribute 84 and 72 complete, timeout-free runs to the 12MP and
-% 24MP conditions.
-%
-% ---------------------------------------------------------------------------
-% 2026-08-11 REVISION.  Five columns were removed and three changed unit on
-% advisor feedback.  docs/rq-restructure-2026-08-11.md holds every removed value
-% and the exact restore procedure; read it before reinstating anything.  In
-% summary:
-%   - Timeout onset no longer splits Earliest / KM-median.  The single printed
-%     value is the EARLIEST first-timeout capture; the Kaplan-Meier median
-%     sub-column is gone.  Neither number was recomputed -- both are the
-%     previously published pair, and the revision only chose which one stays.
-%     An arithmetic mean was requested first and is NOT computable here: the
-%     per-trial first-timeout indices belong to the Section 2 motivation
-%     campaign (Table~\ref{tab:timeout_index}), whose raw export is in neither
-%     this repository nor the ML clone, and cells that never time out within 30
-%     captures are right-censored, which leaves a mean undefined.  The earliest
-%     index is exact under censoring, which the mean is not, so it needs no
-%     estimator caveat -- but it is a MINIMUM over ten trials and must never be
-%     described as typical.  The caption says "earliest" and must keep saying it.
-%   - Slack P5, the M+S pair and the Sigma-d pair are removed.
-%   - M, S and Activated print COUNTS instead of percentages.
-% ---------------------------------------------------------------------------
-%
-% COUNT CONVENTION.  M and S are the mean number of captures per run on which
-% the node executed, over the first 5 and the first 30 captures, so the printed
-% value is read directly against the @5 / @30 header: "13.4 of 30".  Activated
-% is the mean number of PACED TRANSITIONS per run, and its denominator is not
-% the capture count -- a k-capture prefix holds at most k-1 transitions, so the
-% eligible base is 4 at @5 and 29 at @30.  That is why its header names its own
-% unit; do not read it against 5 / 30.
-%   Every count is exact, not a rescaling of the previously printed percentage.
-% Recomputed from RQ3Pacing (bokehExecuted, filterExecuted, transitionDelayMs)
-% over the runs RQ1Runs marks includedForRq1, which is exactly ten per cell in
-% the balanced copy.  The recomputation reproduces all 14 rows of the previous
-% percentage-form table on every M, S, Activated and d cell, so the unit change
-% moved no underlying number.  Totals behind the per-run means, and the
-% percentages they replace, are tabulated in the revision document.
-%
-% Cells that did not change, because they already held ten runs: 12MP Lv0, Lv1
-% and 24MP Lv0, Lv2, Lv4, Lv5, Lv6.
-%
-% Aggregation conventions:
-%   - EVERY column, retention included, uses all ten retained runs.  The
-%     denominator of an @H cell is therefore H x 10 captures, which is the same
-%     rule Table~\ref{tab:rq2_ablation} states as "over the 300 captures each
-%     cell requested".  The two tables now agree by construction rather than by
-%     coincidence.
-%   - The denominators coincide because of what this arm contains, and that is
-%     worth checking again if the run set is ever re-exported: across all 140
-%     runs here, NO run ends before 30 captures, NO capture is flagged
-%     isTimeout, and NO capture has a negative timeoutMarginMs.  "Captures
-%     present in the run", "captures that met the deadline" and "captures
-%     requested" are all 30 per run.  The distinction that forced the
-%     300-capture denominator in Table~\ref{tab:rq2_ablation} -- truncated runs
-%     and deadline-missing captures -- simply does not arise in this table.
-%   - RETIRED: the rule that dropped a watchdog-bearing run from the retention
-%     average for the horizon the watchdog falls inside.  It was redundant and
-%     disproportionate.  Redundant because the watchdog capture already scores
-%     zero on its own: in both affected runs (24MP Lv2 run 37 and Lv4 run 24,
-%     watchdog at shot 13 with only 9 ms and 53 ms of margin left) neither Bokeh
-%     nor Filter executed, so excluding the capture and keeping it give
-%     identical cell values.  Disproportionate because it discarded 30 captures
-%     on account of one, and it also hid real behaviour -- optional work stays
-%     suppressed on shots 14 and 15 immediately after the watchdog.
-%     The change moves the affected numbers in both directions, because the
-%     affected run is above the cell mean in one case and below it in the other
-%     (M of 63.3% at Lv4 against the cell's 39.3%, and 60.2% at Lv2 against
-%     72.2%).  Recorded in the percentage form the table used before
-%     2026-08-11, which is the form the surrounding argument was written in:
-%       24MP Lv2 @30  M+S/M/S  72.2/72.2/81.1 -> 71.0/71.0/79.0
-%       24MP Lv4 @30  M+S/M/S  39.3/39.3/82.2 -> 41.7/41.7/80.3
-%     The post-change M and S values are what the printed counts 21.3/23.7 and
-%     12.5/24.1 now carry.
-%     No @5 cell moves: both watchdogs fall at shot 13, outside that horizon,
-%     and the retired rule already left @5 eligible.  No pacing column and no N
-%     moves either; those already used all ten runs, so retiring the rule is
-%     what makes the table internally uniform instead of splitting the retention
-%     block off from every other column.
-%   - retention is measured by EXECUTION (the node has a positive observed
-%     duration).  In this arm that agrees with the exporter's Completed flag;
-%     the two diverge only in the forced-execution arms of
-%     Table~\ref{tab:rq2_ablation}.
-%
-% The 24MP/memory-pressure workbook is treated as one requested-mode scenario
-% rather than regrouped by exported Draft sizeBucket.  This preserves its mixed
-% MP24-to-MP12 execution and the MP12 fallback traces at Lv5--6.
-%
-% Retention and activation counts are computed within each run and macro-averaged
-% across all ten runs; because every run here is a complete 30-capture session,
-% that macro-average equals the pooled H x 10 count divided by ten exactly.
-% Delay P50 pools positive transition-delay events.
-
+% Notes: docs/exhibits.md#tab_rq1_end_to_end_summary
 \begin{table*}[t]
   \centering
   \setlength{\abovecaptionskip}{2pt}%
@@ -122,23 +11,6 @@
   \setlength{\arrayrulewidth}{0.35pt}%
   \setlength{\doublerulesep}{0.8pt}%
   \renewcommand{\arraystretch}{1.08}%
-  % \fittabcolsep (macros.tex) solves for the \tabcolsep that makes the outer
-  % rules land exactly on \textwidth.  Fourth argument is 2 x the column count,
-  % now 14 columns and so 28; it was 40 when the table held 20.
-  %
-  % Column alignment, per the advisor's standing rule: every header cell is
-  % centred both horizontally (\multicolumn{1}{c} plus \makecell[c]) and
-  % vertically (\multirow with the offsets below), and every DATA cell is
-  % right-aligned.  The three leading columns stay centred because they are row
-  % labels, not measurements.
-  %
-  % Header geometry is unchanged from the 20-column form -- still four rows,
-  % still the same line counts per row -- so the -1.8ex and -0.4ex \multirow
-  % nudges carry over.  Re-derive them if a header gains or loses a line.
-  %   "Timeout onset" is broken across two lines on purpose.  Set on one line it
-  % measures wider than any other header here, and with a two-character datum
-  % under it the right-aligned value would sit an implausible distance from its
-  % own label.  Two lines put the column near the width of its neighbours.
   \newsavebox{\rqtabbox}%
   \newcommand{\rqtabular}{%
   \begin{tabular}{|c|c|c|r||r||r||rr|rr||rr|rr|}
@@ -164,11 +36,6 @@
     \multicolumn{2}{c|}{\makecell[c]{\mbox{\boldmath$M$}\\\textbf{(captures)}}} &
     \multicolumn{2}{c||}{\makecell[c]{\mbox{\boldmath$S$}\\\textbf{(captures)}}} &
     \multicolumn{2}{c|}{\makecell[c]{\textbf{Activated}\\\textbf{(transitions)}}} &
-    % $d$, not "Applied Delay".  RQ4 prints the applied pacing delay as $d$
-    % throughout Table~\ref{tab:rq4_pacing_summary}, and one quantity carries one
-    % printed name in this paper.  The symbol also matches the two columns to its
-    % left, which are already set as bold math ($M$, $S$), and it is introduced
-    % in the prose of Section~\ref{sec:guard-limit} beside $M$ and $S$.
     \multicolumn{2}{c|}{\makecell[c]{\mbox{\boldmath$d$}\textbf{ P50}\\\textbf{(ms)}}} \\
     \cline{7-14}
     & & & & & &
@@ -206,7 +73,6 @@
       & & Lv6 & 10 & 7 & 10/10
         & \textbf{5.0} & 8.3 & \textbf{5.0} & 26.3
         & \textbf{0.5} & 9.5 & \textbf{78} & 446 \\
-    % Emphasize the scenario boundary only after the final 12MP row.
     \Xcline{2-14}{0.7pt}
       & \multirow{7}{*}{\makecell[c]{24MP\\memory\\pressure}}
       & Lv0 & 10 & 26 & 10/10

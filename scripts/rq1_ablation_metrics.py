@@ -1,6 +1,6 @@
 """RQ1(b) expanded ablation: 2 conditions x starting Lv3/Lv4 x 4 arms.
 
-Follows docs/rq1-rq3-metrics-guide.md sections 3.2 (run reconstruction),
+Follows docs/rq-evidence.md (Part 2) sections 3.2 (run reconstruction),
 3.4 (inclusive percentiles), 3.5 (valid-run policy / dedup) and 4.3.
 """
 import openpyxl, warnings, os, statistics
