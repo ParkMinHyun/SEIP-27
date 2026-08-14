@@ -109,6 +109,18 @@ Do not copy text, claims, or citations from the reference papers unless the user
 - Do not invent experimental numbers, benchmark names, tool names, or citation keys.
 - When editing a section, maintain consistency with the included section files in `paper.tex`.
 
+## Banned and Fixed Terminology
+
+- **Do not use the word "burst" in printed manuscript text**, including section prose, table cells, figure labels, and captions. Replace it with what is actually meant:
+  - a temporal grouping of shots — `consecutive captures`;
+  - state whose lifetime ends when the Draft task queue drains — `queue-local`, and `persistent across queue drains` for state that survives;
+  - a scope bounded by the last drain — `since the queue last drained`;
+  - an experimental trial in the evaluation exhibits — `run`, which is what the exhibits already say.
+- Exported field names containing `burst` (`burstSpanMs`, `burstDelaySharePercent`, `burstsNeverPaced`) are internal compatibility names, the same treatment the fields containing `required` get. Do not rename them; translate them in prose.
+- Call the controller's policy a **safety-constrained, responsiveness-dominant trade-off**. `timeout > delay > admit` is acceptable when describing the product priority informally, but never translate it into a strict lexicographic optimum: that optimum is the corner solution "delay only as a last resort", which the deployed policy does not implement. Section~4 states the trade-off by name so the four RQs read as its verification.
+- Section 3.2 states ordered control priorities and margin dynamics only. It carries no scalar cost objective. A `min Σκ(d_i) + Σ(1-a_{i,j})v_{i,j}` formulation was drafted and rejected on review; see `docs/3_1-3_2-seip-review-2026-08-14.md` before reintroducing anything of that shape.
+- Overlap between 3.1 and 3.2 is split by rule: 3.1 owns module roles, inputs, integration boundaries, and the asymmetric interaction; 3.2 owns margin dynamics, the two costs, and their ranking. State each fact in exactly one of the two.
+
 ## Repository Layout
 
 - Main entry point: `paper.tex`

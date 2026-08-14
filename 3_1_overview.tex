@@ -9,7 +9,10 @@ Both modules consume shared runtime state and online duration estimates, operate
 
 \begin{figure*}[!t]
   \centering
-  \includegraphics[width=\textwidth]{figures/fig_controller_interaction.pdf}
+  % Source PDF is 864.0 x 297.36 pt; measured ink box is x 21.1--854.9, y 12.5--285.8.
+  % Trim removes the empty top/bottom bands and the 12 pt of excess left slack so the
+  % remaining side margins match at 9.1 pt.  Re-measure if the figure is re-exported.
+  \includegraphics[trim=12 10 0 11,clip,width=\textwidth]{figures/fig_controller_interaction.pdf}
   \caption{Overview of the Budget-Aware Draft Controller.}
   \label{fig:controller-overview}
 \end{figure*}
@@ -17,4 +20,3 @@ Both modules consume shared runtime state and online duration estimates, operate
 Figure~\ref{fig:controller-overview} shows the controller's two control surfaces and their shared state.
 Its two modules interact asymmetrically: admission can reduce the service demand projected by later pacing decisions, but it cannot recover budget already consumed by queueing or revise a callback delay already scheduled.
 Pacing can reduce the queue wait experienced by later Draft Sequences and preserve more Capture Timeout budget for admission, but it cannot alter work already in progress.
-These actions carry different costs: admission may reduce Draft image quality, whereas pacing may lengthen the shot-to-shot interval.

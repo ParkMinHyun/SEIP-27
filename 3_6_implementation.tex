@@ -8,7 +8,7 @@ On the normal parallel-capture path, the application-facing policy invokes the p
 Pacer operations are synchronized: callback decisions update one backlog clock serially, and each Draft start consumes the oldest pending decision before rebasing that clock.
 If Draft-task submission is rejected, the manager falls back to a shared executor; this exceptional path is outside the controller's single-worker queue model.
 
-The learned predictor persists across bursts, whereas the callback FIFO, backlog clock, size-scoped maxima, and group set \(G\) are cleared when the Draft queue drains.
+The learned predictor persists across queue drains, whereas the callback FIFO, backlog clock, size-scoped maxima, and group set \(G\) are cleared when the Draft queue drains.
 Decision-time records retain the planned suffix, point and upper estimates, live budget, model recommendation, controller action, watchdog state, pacing inputs, and node/Draft timeline.
 Device-state, GC, CPU, and legacy capture-availability measurements remain observability only.
 
@@ -19,4 +19,4 @@ Because scheduler acceptance is not persisted, \(d_i\) records the requested del
 The controller governs Draft workload admission and capture-availability pacing only.
 The existing platform retains responsibility for deferred final processing, recovery, and Draft/final publication arbitration; the controller neither triggers background final composition nor changes the HAL or sensor protocol.
 Because online estimates can err, callbacks can follow fail-open paths, and an application may issue a shutter request after callback release, the design provides neither a formal deadline guarantee nor a globally minimum delay.
-Its timeout-prevention claim is therefore empirical and limited to the evaluated configurations and bursts.
+Its timeout-prevention claim is therefore empirical and limited to the evaluated configurations and capture sequences.

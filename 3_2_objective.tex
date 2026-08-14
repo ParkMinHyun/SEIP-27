@@ -1,0 +1,34 @@
+% Ordered control priorities and the margin dynamics they act on.  Module roles,
+% inputs, and integration boundaries belong to the overview subsection and are
+% deliberately not restated here.
+%
+% Three claims this subsection must never make again; each contradicts the
+% implementation or a later subsection.  (1) That margin "does not reset": every
+% capture starts a fresh clock, and the coupling comes from serialized Draft
+% execution.  (2) That pacing leaves a remainder to admission: no numeric state
+% passes between the two modules.  (3) That either runtime test is an online form
+% of \(\mu_i>0\): \(\mu_i\) is realized only at completion.  A scalar cost
+% objective was also drafted and rejected; see the 2026-08-14 review under docs/.
+
+\subsection{Control Objective}
+\label{sec:objective}
+
+Capture Timeout prevention is the controller's hard goal, and it can pay two costs to meet it: a delayed next capture and a skipped optional Draft stage.
+The delay is the more expensive by product policy, because it is what the user perceives directly and foreground usability takes priority.
+
+Each capture starts a fresh Capture Timeout clock, but a single worker serializes the Drafts, so a capture's realized margin depends on when its predecessor's completed.
+Capture \(i\) must complete its Draft path within the budget \(\Delta\) of its capture request; let \(\mu_i\) be its realized margin at that completion, \(\delta_i\) the interval between the capture requests of \(i-1\) and \(i\), and \(\pi_i\) the interval between the corresponding Draft-path completions.
+These definitions give, for successive captures,
+\begin{equation}
+  \mu_i=\mu_{i-1}+\delta_i-\pi_i .
+  \label{eq:margin-recursion}
+\end{equation}
+Only two quantities move the margin: admission acts directly on \(\pi_i\), pacing directly on \(\delta_{i+1}\).
+
+A skipped stage suppresses a configured enhancement in the early Draft image, and final processing normally masks it.
+Pacing therefore converts only a fixed fraction of the deficit it projects into a capture-availability delay, and admission independently applies its own live-budget test at each optional node.
+The result is a safety-constrained, responsiveness-dominant trade-off, not the optimum of a cost model: the controller computes no quality utility and solves no global optimization.
+
+Equation~\ref{eq:margin-recursion} is an accounting identity, not a control law: neither module tracks it, and each compares a decision-time forecast against the deadline window it can still read.
+Neither \(\delta\) nor \(\pi\) is known when the decision that shapes it is taken, and every decision changes the backlog and thermal state that determine later ones.
+Keeping \(\mu_i>0\) is therefore a design goal, not an invariant the controller can guarantee.

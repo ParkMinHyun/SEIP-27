@@ -13,16 +13,16 @@
     \midrule
     \(\hat P(\mathcal{W})\) &
     Sum of per-key point estimates over the ordered sequence; underlying estimates updated at Draft completion &
-    Admission and pacing; persistent across bursts \\
+    Admission and pacing; persistent across queue drains \\
     \(U(\mathcal{W})\) &
     Point estimate adjusted with sequence-specific residual evidence and a pooled fallback; evidence updated at Draft completion &
-    Admission; persistent across bursts \\
+    Admission; persistent across queue drains \\
     \(\hat H\) &
     Recency-weighted mean of whole-Draft time outside modeled workload intervals; updated at Draft completion &
-    Pacing; persistent across bursts \\
+    Pacing; persistent across queue drains \\
     \(C^{\max}_s\) &
     Largest completed whole-Draft duration for size bucket \(s\); updated at completion and cleared at queue drain &
-    Pacing; current burst \\
+    Pacing; queue-local \\
     \bottomrule
   \end{tabular}}
 \end{table}

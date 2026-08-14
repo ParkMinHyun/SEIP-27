@@ -6,7 +6,7 @@
 % The figure intentionally abstracts away internal Draft workloads. Each
 % capture first collects frames and metadata. These collection periods can
 % overlap, whereas Draft Sequences run one at a time in capture order. The
-% resulting worker wait grows across the burst until capture i+2 misses
+% resulting worker wait grows across consecutive captures until capture i+2 misses
 % its deadline despite having the same Draft Sequence duration.
 \begin{tikzpicture}[font=\small,
   collectstage/.style={draw=black!55, fill=gray!14},

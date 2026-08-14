@@ -9,7 +9,8 @@
 %   data/rq3/estimator/summary.csv        requiredDelayDecisions, requiredAndPaced
 %   data/rq3/coordination/summary.csv     realizedWorkEnvelopeCovered, belowMandatoryFloor
 %   data/rq3/policy/summary.csv           backlogDrainingDelaySharePercent, delayOverBacklogPercent,
-%                                         activationPercent and its bands, burstDelaySharePercent
+%                                         activationPercent and its bands, burstDelaySharePercent,
+%                                         bursts, burstsNeverPaced
 %   data/rq3/estimator/outcome_matrix.csv the below-floor class's skip rate and margin
 %   data/rq3/coordination/action_summary.csv  the flexible class's target-or-next audit
 % Regenerate with: rq3_pacing_summary_metrics.py sampling; rq3_coordination_metrics.py;
@@ -75,8 +76,44 @@
 % rate.  The note answers it with selectivity, which is measured and strong:
 % engagement is 1.4 and 1.0 per cent on decisions carrying more than 40 per cent
 % of the budget in surplus, against 77.2 and 69.3 per cent on the required tail --
-% ratios of 55.9x and 71.4x.  Pacing is concentrated, not blanket.  The band
-% figures are activationPercent band spare_over_40 in policy/summary.csv.
+% ratios of 55.9x and 71.9x.  Pacing is concentrated, not blanket.  The band
+% figures are activationPercent band spare_over_40 in policy/summary.csv and the
+% required-tail figures are activationPercent overrunStrict.
+%
+% THE RATIO IS PRINTED, AND BOTH OF ITS SIDES MUST USE THE STRICT CUT.  It is
+% printed because it is the answer to the exposure above and a reader should not
+% have to divide two numbers to reach it.  This comment carried 71.4x through one
+% revision, which is 68.79/0.96 -- the BAND form of the required tail, denominator
+% 141.  The note prints the strict form, 69.3 per cent over 140, so the two must
+% not be mixed; the header of tab_rq4_pacing_summary.tex records the same
+% 141-against-140 defect in an earlier table.  On the counts the ratios are
+% (61/79)/(9/652) = 55.9 and (97/140)/(6/623) = 71.9.  Recompute from counts if
+% either side moves -- the rounded percentages lose a tenth on the 24MP ratio.
+%
+% ---------------------------------------------------------------------------
+% THE RUNS THAT NEVER PACED, AND WHY THEY SIT IN THE COST SENTENCE
+% ---------------------------------------------------------------------------
+% 19 of 70 and 13 of 69 runs applied no delay at all (burstsNeverPaced).  It is
+% the run-level form of the selectivity claim and the strongest single statement
+% of delay minimality this collection supports, so it has to be printed
+% somewhere.  It goes in Cost rather than Selectivity for two reasons.  Its
+% population is RUNS -- 70 and 69 -- which is Cost's population and nobody else's
+% in this note; Selectivity is entirely per-decision, and a run-level rate dropped
+% into it would put a fourth denominator in one sentence.  And it is the qualifier
+% the cost figures need: a P50 of 18.1 per cent reads as what a typical run pays,
+% and it is not, because 27 and 19 per cent of runs pay zero.
+%
+% Printing it also supplies the run denominator, which this note owed under its
+% own every-denominator rule (see VERIFIABILITY below) and did not carry.
+%
+% The sentence says RUN, not "burst", which is what it said through one revision.
+% docs/rq3-current.md maps burst -> run for printed text, RQ1 counts runs, and
+% this file's own comments already called it the per-run cost.  As of 2026-08-14
+% "burst" is banned from printed manuscript text everywhere, Section 3 included:
+% the approach text now says "consecutive captures" or "queue-local", and the
+% evaluation exhibits keep saying "run".  Exported field names such as
+% burstDelaySharePercent and burstsNeverPaced are internal compatibility names
+% and are not renamed.
 %
 % A selectivity LADDER over four pressure bands was drafted as a second block and
 % cut: it needs a second partition of the same decisions (rho bands rather than
@@ -350,9 +387,11 @@
   \textbf{$d/B$} the median delay as a share of that backlog.
   \textbf{Selectivity:} pacing engaged on 1.4\% and 1.0\% of decisions carrying
   over 40\% of the budget in surplus, against 77.2\% and 69.3\% where a delay was
-  required, and 21.4\% and 25.3\% overall.
-  \textbf{Cost:} per burst the applied delay is 18.1\% and 9.8\% of elapsed time
-  at P50, 24.5\% and 29.7\% at P95.
+  required --- ratios of 55.9$\times$ and 71.9$\times$ --- and 21.4\% and 25.3\%
+  overall.
+  \textbf{Cost:} over the 70 and 69 runs, the applied delay is 18.1\% and 9.8\%
+  of elapsed time at P50 and 24.5\% and 29.7\% at P95; 19 and 13 of those runs
+  never paced at all.
   \end{minipage}%
   \par}
 \end{table}

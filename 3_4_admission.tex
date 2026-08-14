@@ -6,7 +6,7 @@
   \includegraphics[width=\textwidth]{figures/fig_controller_runtime_sequence.pdf}
   \caption{Normal-path runtime sequence and state lifetime of the Budget-Aware Draft Controller.
   A callback event records a pacing decision and schedules \texttt{captureAvailable}; Draft start consumes the oldest pending decision and refreshes pacing state before admission runs at each optional node.
-  Completion updates learned and burst-local duration state, whereas queue drain clears only burst-local state.}
+  Completion updates learned and queue-local duration state, whereas queue drain clears only queue-local state.}
   \label{fig:controller-runtime}
 \end{figure*}
 
@@ -30,7 +30,7 @@ Once only \textsc{Required} or \textsc{Reserved} work remains, admission has no 
 
 \smallskip\noindent\textbf{Sticky product policy.}
 The product-policy layer maps this model recommendation to the action the controller takes.
-The first eligible rejection in a group adds that group to the burst-local set \(G\): \textsc{Portrait} contains \(M\), and \textsc{Decoration} contains decoding, Filter, and overlay watermark.
+The first eligible rejection in a group adds that group to the queue-local set \(G\): \textsc{Portrait} contains \(M\), and \textsc{Decoration} contains decoding, Filter, and overlay watermark.
 Each demotion remains in force until the Draft task queue drains, preventing optional-effect availability from alternating across captures.
 Consequently, the product policy can override a later model admit, an intentional quality-consistency cost that we distinguish from model selectivity in RQ3.
 Already executed nodes are not rolled back.

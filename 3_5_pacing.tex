@@ -5,7 +5,7 @@
 Pacing controls future arrivals using time rather than queue length.
 Because \(\hat P\) covers only modeled workloads, pacing adds once per Draft a learned overhead \(\hat H\), the recency-weighted mean of time from Draft profiling start through saved-Draft completion that falls outside those workloads.
 
-Let \(E\) be a burst-local clock for the predicted time at which admitted Draft work will leave the worker, and let \(t_i\) be callback-decision time.
+Let \(E\) be a queue-local clock for the predicted time at which admitted Draft work will leave the worker, and let \(t_i\) be callback-decision time.
 At decision \(i\), the online backlog is \(\hat B_i=\max(0,E-t_i)\).
 Writing the point sum and overhead retained in that decision's snapshot as \(\hat P_i\) and \(\hat H_i\), the pacer enqueues the decision in a FIFO and advances
 \begin{equation}
@@ -14,7 +14,7 @@ Writing the point sum and overhead retained in that decision's snapshot as \(\ha
 \end{equation}
 The maximum prevents the clock from preceding the delayed callback release that it just scheduled.
 At the corresponding Draft start, the pacer consumes the oldest queued decision and rebases \(E\) from the current and still-queued work.
-This rebase prevents prediction error from accumulating unchecked across a burst.
+This rebase prevents prediction error from accumulating unchecked across consecutive captures.
 
 For a Draft with a modeled workload sequence, the representative whole-Draft reserve is also refreshed at Draft start.
 Let \(\sigma_i^G\) be the configured sequence after applying the group set \(G\)
@@ -27,13 +27,13 @@ The pacer projects the configured sequence through the current sticky demotions 
   \right).
   \label{eq:reserve}
 \end{equation}
-Here, \(C^{\max}_s\) is the largest whole-Draft duration observed in the burst for size \(s\); an unseen size uses the largest observed bucket maximum, an empirical fallback rather than a future-duration bound.
+Here, \(C^{\max}_s\) is the largest whole-Draft duration observed for size \(s\) since the queue last drained; an unseen size uses the largest observed bucket maximum, an empirical fallback rather than a future-duration bound.
 \(\widehat W_{\mathrm{demoted},i}\) is the point cost removed by sticky demotion, and the second argument is the post-demotion whole-Draft floor, with both estimates sampled at that Draft-start refresh.
 Equation~\ref{eq:reserve} makes the coupling explicitly asymmetric.
 Admission changes later pacing through \(G\) and \(\widehat W_{\mathrm{demoted}}\), but cannot revise an issued delay.
 Pacing passes no numeric state to admission.
 Its immediate path to later admission is through changed arrival time, queue wait, and hence \(R_{i,j}\).
-Over subsequent captures, the altered drain and execution trajectory can also change burst and learned predictor state.
+Over subsequent captures, the altered drain and execution trajectory can also change queue-local and learned predictor state.
 
 \smallskip\noindent\textbf{Delay computation.}
 Let \(T_i\) be the remaining window on the newest capture deadline committed to the Draft pipeline.
@@ -52,7 +52,7 @@ The delay applied at callback decision \(i\) is
 Both occurrences of \(2\) come from a single deployment constant: as a multiplier it sets a two-Draft horizon, and as the divisor it applies a one-half gain to the positive projected deficit.
 The horizon and the gain are therefore tied, not tuned independently or by mode.
 This heuristic limits user-visible delay and leaves admission to skip optional work based on its live budget; it neither passes a numeric share of the deficit to admission nor constitutes a fixed-point derivation.
-Because \(T_i\geq0\), Equation~\ref{eq:pacing} gives the decision-local bound \(d_i\leq\lceil(\hat B_i+2\hat C_i)/2\rceil\); it is not a global latency cap because \(\hat B_i\) and \(\hat C_i\) depend on burst state.
+Because \(T_i\geq0\), Equation~\ref{eq:pacing} gives the decision-local bound \(d_i\leq\lceil(\hat B_i+2\hat C_i)/2\rceil\); it is not a global latency cap because \(\hat B_i\) and \(\hat C_i\) depend on queue-local state.
 Section~\ref{sec:evaluation} evaluates the resulting responsiveness cost.
 
 \smallskip\noindent\textbf{Boundary and coordinated paths.}
