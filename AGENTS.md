@@ -23,6 +23,7 @@ This repository is a LaTeX paper project for SEIP 2027.
 - The work targets enabling a lightweight multi-frame Draft workload in Portrait mode, whose heavy final composition can then be deferred until the camera app enters the background.
 - The proposed system is the Budget-Aware Draft Controller, comprising remaining-sequence admission and capture-availability pacing. Use the descriptive name without a forced acronym and refer to it as ``the controller'' after first use.
 - The paper studies coordinated workload and arrival control for tail-latency-based Capture Timeout, not average-latency optimization for a single image-processing stage.
+- Frame the work as feature enablement under a safety constraint, not as timeout mitigation. The hierarchy is: enable lightweight multi-frame Draft composition under parallel capture whenever safely possible → Capture Timeout is the deployment blocker → static thermal gating cannot tell safe captures from unsafe ones → coordinated runtime control of workload and capture arrival. Sections 2.4, 3.1 and 3.2 already open on this hierarchy; align the abstract, introduction, and conclusion with it when they are drafted.
 - Preserve the core research framing unless the user explicitly asks to change the problem statement, contribution, or terminology.
 
 ## RQ Numbering (changed 2026-08-11)
