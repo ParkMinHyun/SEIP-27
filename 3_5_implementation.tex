@@ -16,7 +16,7 @@ Cold state is fail-open: a fully unpriced suffix is admitted, callbacks before t
 Immediate paths and scheduler rejection can also bypass waiting; on rejection, the callback proceeds while the computed decision remains in the FIFO.
 Because scheduler acceptance is not persisted, \(d_i\) records the requested delay rather than realized waiting.
 
-The controller governs Draft work admission and capture-availability pacing only.
+The controller governs Draft stage admission and capture-availability pacing only.
 The existing platform retains responsibility for deferred post-processing, recovery, and Draft/final publication arbitration; the controller neither triggers background post-processing nor changes the HAL or sensor protocol.
 Because online estimates can err, callbacks can follow fail-open paths, and an application may issue a shutter request after callback release, the design provides neither a formal deadline guarantee nor a globally minimum delay.
 Its timeout-prevention claim is therefore empirical and limited to the evaluated configurations and capture sequences.

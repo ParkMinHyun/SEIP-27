@@ -308,6 +308,16 @@ printed name in this paper.  The symbol also matches the two columns to its
 left, which are already set as bold math ($M$, $S$), and it is introduced
 in the prose of Section~\ref{sec:guard-limit} beside $M$ and $S$.
 
+"Draft stages retained", not "Draft work retained" (2026-08-15).  The four
+columns under this group header are the per-run capture counts on which the
+stages $M$ and $S$ executed, so it names stages under the sharpened AGENTS.md
+rule that reserves "Draft work" for amounts.  Width is not a concern here as
+it is in Table~\ref{tab:rq2_ablation}: this is a \textwidth table* with no
+explicit p-widths, the header spans four columns, and it grows only 61.8pt to
+64.2pt at \scriptsize.  Table~\ref{tab:rq2_ablation}'s counterpart header
+moved in the same commit; keep the two phrased alike, since they are the same
+quantity under two denominators.
+
 Emphasize the scenario boundary only after the final 12MP row.
 
 ## tab_rq2_ablation
@@ -526,7 +536,7 @@ Explicit column widths rather than one uniform \tabcolsep.  Measured at
 \scriptsize with \settowidth, the binding content per column is: Condition
 30.0pt (its own header), Configuration 45.2pt ("Admission only", which must
 not wrap), Survived 26.6pt, Captures 27.5pt (both their own headers), M and
-S 15.8pt of data each ("100.0") but 34.4pt jointly for the "Draft work"
+S 15.8pt of data each ("100.0") but 36.8pt jointly for the "Draft stages"
 group header, Activated 28.6pt (its own header), $d$ 18.7pt ("$d$ P50").
 The eight widths below sum to 229pt.
 
@@ -581,15 +591,23 @@ is what stops the two headers reading as one phrase even at 4.3pt apart.
 Keep the qualifier ON the first line: moving "P50" down to join "(ms)" would
 leave a bare 4.9pt "$d$" up against "Activated" and put the widest header
 line back on row two.
-  "Draft work executed", not "delivered" and not "completion".  The column is
+  "Draft stages executed", not "delivered" and not "completion".  The column is
 defined on EXECUTION -- the node has a positive observed duration, see the
 "Recommendation vs execution" note above -- so the header now names what is
 actually counted, and it matches "M executed (\%)" in
 Table~\ref{tab:casestudy_selection}, which is the same quantity on one run.
 "Completion" remains forbidden here: it is RQ1's word for a different
 denominator.  The group header must still break across two lines; on one line
-it measures about 60pt against the 42pt its two columns provide, and the
+it measures about 63pt against the 42pt its two columns provide, and the
 -8.4pt \multirow nudge below assumes a two-line row one.
+  2026-08-15: "work" -> "stages" in this header, under the sharpened
+AGENTS.md rule that a Draft stage is what admission admits or skips and
+"Draft work" names an amount only.  The two columns under it are the
+per-capture execution rates of the stages $M$ and $S$, so the group header
+had to name stages.  It costs 2.4pt on row one (34.4 -> 36.8pt), which comes
+out of the group's centring slack, not out of \tabcolsep: no p-width moves,
+so the \fittabcolsep solution and the 14 gap widths below are unchanged, and
+the header still clears its 42pt span by 5.2pt.
   \fittabcolsep (macros.tex) spreads what the p-widths and the three ruled
 gaps leave -- 252 - 229 - 5.7 = 17.3pt -- over the 14
 inter-column gaps (14 = 2 x 8 columns, less the two suppressed by the @{}
@@ -604,7 +622,7 @@ overheat level do in Table~\ref{tab:rq1_controller_behavior} and
 Table~\ref{tab:timeout_index}.  Leaving them in the second row alone would
 sit them below the header's optical centre with an empty cell above.
   The -8.4pt nudge assumes both header rows hold at most two lines, which is
-still true: row one's tallest cell is "Draft work / executed" and row two's
+still true: row one's tallest cell is "Draft stages / executed" and row two's
 are the two-line \makecells.  Re-derive it if \arraystretch, the font size,
 or either row's line count changes.
   Other header cells are wrapped in \multicolumn{1}{c} so that a group

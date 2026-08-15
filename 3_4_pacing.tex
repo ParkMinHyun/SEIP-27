@@ -51,7 +51,7 @@ The delay applied at callback decision \(i\) is
 \end{equation}
 Both occurrences of \(2\) come from a single deployment constant: as a multiplier it sets a two-Draft horizon, and as the divisor it applies a one-half gain to the positive projected deficit.
 The horizon and the gain are therefore tied, not tuned independently or by mode.
-This heuristic limits user-visible delay and leaves admission to skip optional work based on its live budget; it neither passes a numeric share of the deficit to admission nor constitutes a fixed-point derivation.
+This heuristic limits user-visible delay and leaves admission to skip optional stages based on its live budget; it neither passes a numeric share of the deficit to admission nor constitutes a fixed-point derivation.
 Because \(T_i\geq0\), Equation~\ref{eq:pacing} gives the decision-local bound \(d_i\leq\lceil(\hat B_i+2\hat C_i)/2\rceil\); it is not a global latency cap because \(\hat B_i\) and \(\hat C_i\) depend on queue-local state.
 Section~\ref{sec:evaluation} evaluates the resulting responsiveness cost.
 
