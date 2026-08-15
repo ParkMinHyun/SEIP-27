@@ -12,29 +12,28 @@
 \end{figure*}
 
 \smallskip\noindent\textbf{Controller architecture.}
-We introduce the \emph{Budget-Aware Draft Controller} to make the Draft Sequence's lightweight multi-frame composition deployable under parallel capture: rather than suppressing optional Draft work uniformly, it executes such work when a capture's remaining budget allows and prevents cross-shot Capture Timeout when it does not.
+We introduce the \emph{Budget-Aware Draft Controller} to make the Draft Sequence's lightweight multi-frame composition deployable under parallel capture: rather than suppressing optional Draft work uniformly, it decides per capture against the live budget.
 The controller coordinates two framework-local modules.
 \emph{Remaining-Sequence Admission} controls the active Draft Sequence's service demand: using an estimate of its remaining work and live budget, it admits or skips each optional stage.
 \emph{Capture-Availability Pacing} controls when the application can request the next capture: using estimated worker occupancy and the remaining deadline window, it schedules the \texttt{captureAvailable} callback for immediate or delayed delivery.
 Both modules consume shared runtime state and online duration estimates, operate within the single-worker execution model, and require no HAL or application-interface changes.
+Figure~\ref{fig:controller-overview} shows how both decisions coordinate through this shared state.
 
 \smallskip\noindent\textbf{Deadline constraint and responsiveness.}
 The controller treats avoiding Capture Timeout within the Draft pipeline as a hard product constraint while preserving lightweight multi-frame composition.
 Subject to this constraint, it trades off two product costs: delaying the next capture opportunity and skipping optional Draft work.
 It favors responsiveness because capture delay irreversibly lengthens shot-to-shot latency, whereas skipping optional work reduces Draft fidelity until post-processing replaces the Draft image.
-The policy is a safety-constrained, responsiveness-dominant trade-off rather than the optimum of a cost model: the controller solves no global optimization.
+The controller therefore uses a deadline-constrained, responsiveness-dominant policy rather than solving a global cost optimization.
 
 \smallskip\noindent\textbf{Cross-shot margin dynamics.}
-Each capture starts a fresh Capture Timeout clock, while the single Draft worker serializes Draft Sequences.
-Capture \(i\) must complete its Draft Sequence within the timeout window measured from its own capture request.
-Let \(\mu_i\) be its realized margin at Draft completion, \(\delta_i\) the interval between the capture requests of \(i-1\) and \(i\), and \(\pi_i\) the interval between their Draft completions.
-Because that window is the same for every capture,
+Each capture has its own Capture Timeout window, while Draft Sequences execute sequentially on a single worker.
+Let \(\mu_i\) be capture \(i\)'s realized margin at Draft completion, \(\delta_i\) the interval between capture requests \(i-1\) and \(i\), and \(\pi_i\) the interval between their Draft completions.
+With a fixed timeout window,
 \begin{equation}
   \mu_i=\mu_{i-1}+\delta_i-\pi_i .
   \label{eq:margin-recursion}
 \end{equation}
-Equation~\ref{eq:margin-recursion} exposes the controller's two levers: admission can reduce \(\pi_i\) by removing optional work from the active Draft Sequence, while pacing can increase \(\delta_{i+1}\) by deferring the next capture opportunity.
-Their interaction is asymmetric, as Figure~\ref{fig:controller-overview} shows.
-Admission can reduce the service demand seen by later pacing decisions, but it cannot recover budget already consumed by queueing or revise a callback delay already scheduled.
-Pacing can reduce the queue wait experienced by later Draft Sequences, thereby changing the live deadline budget observed by admission, but it cannot alter work already in progress.
-Equation~\ref{eq:margin-recursion} is an accounting identity, not a control law: neither module tracks \(\mu_i\), and each instead compares decision-time forecasts with the deadline window it can still observe.
+The inherited \(\mu_{i-1}\) makes the dependency cross-shot: depleted margin can recover only when \(\delta_i>\pi_i\).
+The equation also exposes two control levers: admission can reduce \(\pi_i\) by removing optional work, while pacing can increase \(\delta_{i+1}\) by deferring the next capture opportunity.
+Admission can reduce service demand seen by later pacing decisions but cannot recover consumed budget or revise an already scheduled delay; pacing can reduce queueing for later Draft Sequences but cannot alter work in progress.
+Equation~\ref{eq:margin-recursion} is an accounting identity, not a control law: neither module tracks \(\mu_i\), instead acting on decision-time forecasts against the remaining window.
