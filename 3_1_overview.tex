@@ -36,4 +36,4 @@ With a fixed timeout window,
 The inherited \(\mu_{i-1}\) makes the dependency cross-shot: depleted margin can recover only when \(\delta_i>\pi_i\).
 The equation also exposes two control levers: admission can reduce \(\pi_i\) by removing optional work, while pacing can increase \(\delta_{i+1}\) by deferring the next capture opportunity.
 Admission can reduce service demand seen by later pacing decisions but cannot recover consumed budget or revise an already scheduled delay; pacing can reduce queueing for later Draft Sequences but cannot alter work in progress.
-Equation~\ref{eq:margin-recursion} is an accounting identity, not a control law: neither module tracks \(\mu_i\), instead acting on decision-time forecasts against the remaining window.
+Equation~\ref{eq:margin-recursion} is an accounting identity, not a control law: neither module tracks \(\mu_i\), instead comparing forecasts against the remaining window.
