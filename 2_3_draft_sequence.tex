@@ -7,13 +7,13 @@ The Draft Sequence supports both user-perceived responsiveness and capture relia
 Figure~\ref{fig:draft-pipeline} illustrates this workflow.
 
 \smallskip\noindent\textbf{Single-worker Draft execution.}
-Like post-processing, the Draft path uses single worker to preserve capture-order publication and limit active processing to one sequence.
+Like post-processing, the Draft pipeline uses a single worker to preserve capture-order publication and limit active processing to one sequence.
 Concurrent Draft execution would require buffering out-of-order results to preserve order and would overlap workloads across captures, raising peak compute and memory demand and degrading performance as active sequences increase.
 
 \smallskip\noindent\textbf{Increasing Draft processing workload.}
 Initially, the Draft Sequence selected a representative frame and proceeded directly through the required encoding and saving stages.
 It was later extended to include a lightweight single-frame optional stages, such as Filter and Watermark, to reduce visible differences between Draft and final images.
-As post-processing became more sophisticated and resource-intensive, the framework preserved foreground responsiveness by deferring the start of the pipeline for selected shot modes until the application entered the background.
+As post-processing became more sophisticated and resource-intensive, the framework preserved foreground responsiveness by deferring the start of post-processing for selected shot modes until the application entered the background.
 Because this gap is particularly pronounced in Portrait mode, we implemented Draft Sequence that performs lightweight multi-frame composition before the existing single-frame stages on supported models.
 Under parallel capture, however, this stage can grow the Draft-worker backlog and increase Capture Timeout risk.
 

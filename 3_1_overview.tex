@@ -1,11 +1,11 @@
 \subsection{Controller Overview and Execution Contract}
 \label{sec:overview}
 
-We introduce the \emph{Budget-Aware Draft Controller} to make the Draft Sequence's lightweight multi-frame composition deployable under parallel capture: rather than suppressing optional Draft image processing uniformly, it executes such processing when a capture's remaining budget allows and prevents cross-shot Capture Timeout when it does not.
+We introduce the \emph{Budget-Aware Draft Controller} to make the Draft Sequence's lightweight multi-frame composition deployable under parallel capture: rather than suppressing optional Draft work uniformly, it executes such work when a capture's remaining budget allows and prevents cross-shot Capture Timeout when it does not.
 The controller coordinates two framework-local modules.
-\emph{Remaining-Sequence Admission} controls the active Draft Sequence's service demand: using an estimate of its remaining work and live budget, it admits or skips optional image processing.
+\emph{Remaining-Sequence Admission} controls the active Draft Sequence's service demand: using an estimate of its remaining work and live budget, it admits or skips each optional stage.
 \emph{Capture-Availability Pacing} controls the application's earliest opportunity to initiate the next capture: using estimated worker occupancy and the remaining deadline window, it schedules the \texttt{captureAvailable} callback for immediate or delayed delivery.
-Both modules consume shared runtime state and online duration estimates, operate within the existing single-worker execution model, and require no changes to the HAL or application interface.
+Both modules consume shared runtime state and online duration estimates, operate within the existing single-worker model, and require no HAL or application-interface changes.
 
 \begin{figure*}[!t]
   \centering
