@@ -1,11 +1,5 @@
-\subsection{Controller Overview and Control Objective}
+\subsection{Overview and Control Objective}
 \label{sec:objective}
-
-We introduce the \emph{Budget-Aware Draft Controller} to make the Draft Sequence's lightweight multi-frame composition deployable under parallel capture: rather than suppressing optional Draft work uniformly, it executes such work when a capture's remaining budget allows and prevents cross-shot Capture Timeout when it does not.
-The controller coordinates two framework-local modules.
-\emph{Remaining-Sequence Admission} controls the active Draft Sequence's service demand: using an estimate of its remaining work and live budget, it admits or skips each optional stage.
-\emph{Capture-Availability Pacing} controls the application's earliest opportunity to initiate the next capture: using estimated worker occupancy and the remaining deadline window, it schedules the \texttt{captureAvailable} callback for immediate or delayed delivery.
-Both modules consume shared runtime state and online duration estimates, operate within the existing single-worker execution model, and require no HAL or application-interface changes.
 
 \begin{figure*}[!t]
   \centering
@@ -17,13 +11,20 @@ Both modules consume shared runtime state and online duration estimates, operate
   \label{fig:controller-overview}
 \end{figure*}
 
-\smallskip\noindent\textbf{Control objective.}
+\smallskip\noindent\textbf{Controller architecture.}
+We introduce the \emph{Budget-Aware Draft Controller} to make the Draft Sequence's lightweight multi-frame composition deployable under parallel capture: rather than suppressing optional Draft work uniformly, it executes such work when a capture's remaining budget allows and prevents cross-shot Capture Timeout when it does not.
+The controller coordinates two framework-local modules.
+\emph{Remaining-Sequence Admission} controls the active Draft Sequence's service demand: using an estimate of its remaining work and live budget, it admits or skips each optional stage.
+\emph{Capture-Availability Pacing} controls the application's earliest opportunity to initiate the next capture: using estimated worker occupancy and the remaining deadline window, it schedules the \texttt{captureAvailable} callback for immediate or delayed delivery.
+Both modules consume shared runtime state and online duration estimates, operate within the existing single-worker execution model, and require no HAL or application-interface changes.
+
+\smallskip\noindent\textbf{Safety and responsiveness.}
 The controller treats avoiding Capture Timeout within the Draft pipeline as a hard constraint while preserving lightweight multi-frame composition.
 Subject to this constraint, it trades off two product costs: delaying the next capture opportunity and skipping optional Draft work.
-It favors responsiveness because capture delay irreversibly lengthens shot-to-shot latency, whereas skipping optional work only temporarily reduces Draft fidelity until post-processing replaces the Draft image.
+It favors responsiveness because capture delay irreversibly lengthens shot-to-shot latency, whereas skipping optional work reduces Draft fidelity until post-processing replaces the Draft image.
 The resulting policy is a safety-constrained, responsiveness-dominant trade-off rather than the optimum of a cost model: the controller solves no global optimization.
 
-\smallskip\noindent\textbf{Margin accounting and module interaction.}
+\smallskip\noindent\textbf{Cross-shot margin dynamics.}
 Each capture starts a fresh Capture Timeout clock, while the single Draft worker serializes Draft Sequences.
 Capture \(i\) must complete its Draft Sequence within the timeout window measured from its own capture request.
 Let \(\mu_i\) be its realized margin at Draft completion, \(\delta_i\) the interval between the capture requests of \(i-1\) and \(i\), and \(\pi_i\) the interval between their Draft completions.

@@ -156,12 +156,19 @@ model became 3.2. The two used to be split, with a rule policing which
 subsection owned which fact, and both opened on the same premise. The merged
 subsection is ordered by run-in headings:
 
-- an unheaded opening for the controller, its two modules, and the integration
-  boundaries;
-- `Control objective.` for the hard constraint, the two costs, and their
-  ranking;
-- `Margin accounting and module interaction.` for the recursion, the two levers
-  it exposes, and the asymmetric interaction between them.
+- `Controller architecture.` for the controller, its two modules, and the
+  integration boundaries;
+- `Safety and responsiveness.` for the hard constraint, the two costs, and which
+  of them the policy prefers;
+- `Cross-shot margin dynamics.` for the recursion, the two levers it exposes,
+  and the asymmetric interaction between them.
+
+Keep the headings short enough to match the ones in 2.3 and 2.4, and do not name
+this subsection for the two modules -- `Remaining-Sequence Admission` and
+`Admission-Aware Capture-Availability Pacing` are the titles of 3.3 and 3.4, and
+a title like `Coordinated Admission and Pacing` here promises their detail two
+subsections early. `Cross-shot` is the manuscript's fixed term; do not write
+`cross-capture`.
 
 State each fact under exactly one heading, and keep the asymmetry beside the
 levers rather than in the opening, so the block reads as identity, then levers,
@@ -175,8 +182,16 @@ the safety constraint on that goal, not the goal itself.
 references it, and a `\label` placed after a run-in heading is not attached to a
 numbered unit -- it silently anchors to the preceding float.
 
-The `Control objective.` block must not describe a skipped optional stage as
-masked, hidden, or otherwise free. Sections 2.3 and 2.4 motivate the feature as closing the draft--final
+The controller overview `figure*` is declared immediately after that `\label`,
+before the opening paragraph, and should stay there. A double-column float
+cannot be placed on the page LaTeX is already building, so its declaration point
+is a floor on where it can land. Declared after the opening paragraph instead,
+it dropped to page 4 while the sentence citing it stayed on page 3; moved to the
+top of the subsection it lands on page 3 with that sentence, at the same total
+page count.
+
+The `Safety and responsiveness.` block must not describe a skipped optional
+stage as masked, hidden, or otherwise free. Sections 2.3 and 2.4 motivate the feature as closing the draft--final
 visual gap, and for the target mode post-processing is deferred until the
 application backgrounds, so the Draft image is what the user sees for the whole
 foreground session. The asymmetry that ranks the two costs is recoverability,
