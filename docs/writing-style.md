@@ -149,27 +149,41 @@ headers inside the section files. `AGENTS.md` is the authority for all of them;
 this section records where each one applies so a reviewer can check a section
 without rereading every rule.
 
-### Section 3.1 and 3.2, scope split
+### Section 3.1, internal ordering
 
-Overlap between the two subsections is split by rule. 3.1 owns module roles,
-inputs, integration boundaries, and the asymmetric interaction between the two
-modules. 3.2 owns margin dynamics, the two costs, and their ranking. State each
-fact in exactly one of the two.
+3.1 and 3.2 were merged into `3_1_overview.tex` on 2026-08-15 and the workload
+model became 3.2. The two used to be split, with a rule policing which
+subsection owned which fact, and both opened on the same premise. The merged
+subsection is ordered by run-in headings:
 
-Both open on the feature being enabled. 3.2's opening in particular must anchor
-to keeping the Draft Sequence's lightweight multi-frame composition available,
-which is where Section 2.4 hands over; Capture Timeout is the safety constraint
-on that goal, not the goal itself.
+- an unheaded opening for the controller, its two modules, and the integration
+  boundaries;
+- `Control objective.` for the hard constraint, the two costs, and their
+  ranking;
+- `Margin accounting and module interaction.` for the recursion, the two levers
+  it exposes, and the asymmetric interaction between them.
 
-3.2 must not describe a skipped optional stage as masked, hidden, or otherwise
-free. Sections 2.3 and 2.4 motivate the feature as closing the draft--final
+State each fact under exactly one heading, and keep the asymmetry beside the
+levers rather than in the opening, so the block reads as identity, then levers,
+then what the levers cannot do.
+
+The opening must anchor to keeping the Draft Sequence's lightweight multi-frame
+composition available, which is where Section 2.4 hands over; Capture Timeout is
+the safety constraint on that goal, not the goal itself.
+
+`\label{sec:objective}` belongs on the `\subsection` line. `_4_experiments.tex`
+references it, and a `\label` placed after a run-in heading is not attached to a
+numbered unit -- it silently anchors to the preceding float.
+
+The `Control objective.` block must not describe a skipped optional stage as
+masked, hidden, or otherwise free. Sections 2.3 and 2.4 motivate the feature as closing the draft--final
 visual gap, and for the target mode post-processing is deferred until the
 application backgrounds, so the Draft image is what the user sees for the whole
 foreground session. The asymmetry that ranks the two costs is recoverability,
 not visibility: the delay is never recovered, whereas the skipped stage's
 fidelity cost ends when the final image replaces the Draft image.
 
-### Section 3.2, claims that must not be made
+### Section 3.1, claims that must not be made
 
 Each of the following contradicts the implementation or a later subsection.
 
@@ -189,7 +203,7 @@ penalty was drafted for this subsection and rejected; `AGENTS.md` records the
 three reasons, all of which still apply. Do not reintroduce anything of that
 shape.
 
-### Section 3.2, load-bearing phrasing
+### Section 3.1, load-bearing phrasing
 
 - Keep `safety-constrained, responsiveness-dominant trade-off` verbatim.
   Section 4 opens by citing it by name, so rewording it breaks the reference.

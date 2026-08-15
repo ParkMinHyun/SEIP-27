@@ -1,21 +1,39 @@
-\subsection{Controller Overview and Execution Contract}
-\label{sec:overview}
+\subsection{Controller Overview and Control Objective}
+\label{sec:objective}
 
 We introduce the \emph{Budget-Aware Draft Controller} to make the Draft Sequence's lightweight multi-frame composition deployable under parallel capture: rather than suppressing optional Draft work uniformly, it executes such work when a capture's remaining budget allows and prevents cross-shot Capture Timeout when it does not.
 The controller coordinates two framework-local modules.
 \emph{Remaining-Sequence Admission} controls the active Draft Sequence's service demand: using an estimate of its remaining work and live budget, it admits or skips each optional stage.
 \emph{Capture-Availability Pacing} controls the application's earliest opportunity to initiate the next capture: using estimated worker occupancy and the remaining deadline window, it schedules the \texttt{captureAvailable} callback for immediate or delayed delivery.
-Both modules consume shared runtime state and online duration estimates, operate within the existing single-worker model, and require no HAL or application-interface changes.
+Both modules consume shared runtime state and online duration estimates, operate within the existing single-worker execution model, and require no HAL or application-interface changes.
 
 \begin{figure*}[!t]
   \centering
   % Source PDF is 864.0 x 297.36 pt; measured ink box is x 21.1--854.9, y 12.5--285.8.
   % Trim removes the empty top/bottom bands and the 12 pt of excess left slack so the
-  % remaining side margins match at 9.1 pt.  Re-measure if the figure is re-exported.
+  % remaining side margins match at 9.1 pt. Re-measure if the figure is re-exported.
   \includegraphics[trim=12 10 0 11,clip,width=\textwidth]{figures/fig_controller_interaction.pdf}
   \caption{Overview of the Budget-Aware Draft Controller.}
   \label{fig:controller-overview}
 \end{figure*}
 
-The controller's two modules interact asymmetrically, as Figure~\ref{fig:controller-overview} shows: admission can reduce the service demand projected by later pacing decisions, but it cannot recover budget already consumed by queueing or revise a callback delay already scheduled.
-Pacing can reduce the queue wait experienced by later Draft Sequences and preserve more Capture Timeout budget for admission, but it cannot alter work already in progress.
+\smallskip\noindent\textbf{Control objective.}
+The controller treats avoiding Capture Timeout within the Draft pipeline as a hard constraint while preserving lightweight multi-frame composition.
+Subject to this constraint, it trades off two product costs: delaying the next capture opportunity and skipping optional Draft work.
+It favors responsiveness because capture delay irreversibly lengthens shot-to-shot latency, whereas skipping optional work only temporarily reduces Draft fidelity until post-processing replaces the Draft image.
+The resulting policy is a safety-constrained, responsiveness-dominant trade-off rather than the optimum of a cost model: the controller solves no global optimization.
+
+\smallskip\noindent\textbf{Margin accounting and module interaction.}
+Each capture starts a fresh Capture Timeout clock, while the single Draft worker serializes Draft Sequences.
+Capture \(i\) must complete its Draft Sequence within the timeout window measured from its own capture request.
+Let \(\mu_i\) be its realized margin at Draft completion, \(\delta_i\) the interval between the capture requests of \(i-1\) and \(i\), and \(\pi_i\) the interval between their Draft completions.
+Because that window is the same for every capture,
+\begin{equation}
+  \mu_i=\mu_{i-1}+\delta_i-\pi_i .
+  \label{eq:margin-recursion}
+\end{equation}
+Equation~\ref{eq:margin-recursion} exposes the controller's two levers: admission can reduce \(\pi_i\) by removing optional work from the active Draft Sequence, while pacing can increase \(\delta_{i+1}\) by deferring the next capture opportunity.
+Their interaction is asymmetric, as Figure~\ref{fig:controller-overview} shows.
+Admission can reduce the service demand seen by later pacing decisions, but it cannot recover budget already consumed by queueing or revise a callback delay already scheduled.
+Pacing can reduce the queue wait experienced by later Draft Sequences, thereby changing the live deadline budget observed by admission, but it cannot alter work already in progress.
+Equation~\ref{eq:margin-recursion} is an accounting identity, not a control law: neither module tracks \(\mu_i\), and each instead compares decision-time forecasts with the deadline window it can still observe.
