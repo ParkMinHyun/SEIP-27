@@ -17,13 +17,13 @@ At the corresponding Draft start, the pacer consumes the oldest queued decision 
 This rebase prevents prediction error from accumulating unchecked across consecutive captures.
 
 For a Draft with a modeled workload sequence, the representative whole-Draft reserve is also refreshed at Draft start.
-Let \(\sigma_i^G\) be the configured sequence after applying the group set \(G\)
+Let \(\mathcal{K}_i^G\) be the configured sequence after applying the group set \(G\)
 recorded by snapshot decision \(i\), and \(s\) its size bucket.
 The pacer projects the configured sequence through the current sticky demotions and computes
 \begin{equation}
   \hat C_i = \max\!\left(
     C^{\max}_s-\widehat W_{\mathrm{demoted},i},\;
-    \hat P(\sigma_i^G)+\hat H
+    \hat P(\mathcal{K}_i^G)+\hat H
   \right).
   \label{eq:reserve}
 \end{equation}

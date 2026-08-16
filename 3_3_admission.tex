@@ -14,12 +14,12 @@ Figure~\ref{fig:controller-runtime} separates event ordering from decision arith
 
 \smallskip\noindent\textbf{Model decision.}
 Admission protects the capture that currently owns the Draft worker.
-Directly before node \(j\), the profiler constructs \(\sigma_{i,j}\) from the configured node chain and rereads \(R_{i,j}\) from the Capture Timeout clock.
+Directly before node \(j\), the profiler constructs \(\mathcal{K}_{i,j}\) from the configured node chain and rereads \(R_{i,j}\) from the Capture Timeout clock.
 For an \textsc{Optional} head, the model recommends admission when
 \begin{equation}
-  \hat P(\sigma_{i,j}) \le 0
+  \hat P(\mathcal{K}_{i,j}) \le 0
   \quad\text{or}\quad
-  U(\sigma_{i,j}) \le R_{i,j}.
+  U(\mathcal{K}_{i,j}) \le R_{i,j}.
   \label{eq:admission}
 \end{equation}
 Testing the suffix rather than the head alone accounts for the estimated cost of every modeled node that follows.

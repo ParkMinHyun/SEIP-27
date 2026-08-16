@@ -1,47 +1,22 @@
 \subsection{Workload Model and Online Duration Estimation}
 \label{sec:model}
 
-The controller represents Draft processing as an ordered sequence \(\mathcal{W}=(k_1,\ldots,k_n)\) of modeled workloads.
-Each workload key \(k_r\) identifies a processing stage together with its output-size bucket and applicable configuration variant.
-For capture \(i\), \(\sigma_{i,j}\) denotes the remaining modeled workload sequence at admission point \(j\), ordered from the current workload through Draft encoding and saving.
-All duration estimates and measurements are expressed in milliseconds.
+\smallskip\noindent\textbf{Modeled workload sequence.}
+The controller models the Draft Sequence for capture \(i\) as ordered workloads \((k_1,\ldots,k_m)\), where each workload key \(k\) identifies a processing stage by output-size bucket and configuration.
+The remaining sequence from position \(j\) is \(\mathcal{K}_{i,j}=(k_j,\ldots,k_m)\), including the mandatory encoding and saving stages.
 
-Let \(\hat p(k)\) be the online point estimate for workload key \(k\).
-For any modeled sequence,
+\smallskip\noindent\textbf{Online point estimation.}
+The controller estimates the duration of a modeled workload sequence \(\mathcal{K}=(k_1,\ldots,k_n)\) as
 \begin{equation}
-  \hat P(\mathcal{W})=\sum_{r=1}^{n}\hat p(k_r).
+  \hat P(\mathcal{K})=\sum_{r=1}^{n}\hat p(k_r),
+  \qquad
+  \hat p(k)=\hat b(k)\,\gamma .
   \label{eq:point-estimate}
 \end{equation}
-The estimator learns a baseline duration for each workload key from completed executions.
-It scales these baselines by a shared adjustment factor to obtain \(\hat p(k)\).
-The factor is the recency-weighted median of observed-to-baseline duration ratios, and existing sample weights are multiplied by \(0.90\) after each completed Draft to favor recent observations.
-Per-key baselines capture systematic cost differences among processing stages, output sizes, and configurations, whereas the shared factor adapts all learned keys to recent changes in modeled-workload speed.
-
-Point estimates can still underpredict the remaining work. 
-The controller therefore learns an error multiplier by comparing completed executions with the estimates stored at each decision.
-For each workload, it uses the larger of the measured and estimated duration, so one faster-than-predicted workload cannot hide another workload's overrun.
-It normalizes the total by the stored point estimate and learns the multiplier for each remaining sequence, using pooled observations when that sequence has no history. Recency weighting lets this evidence adapt to changing execution conditions without a fixed margin for each thermal level.
-
-The controller derives the empirical high-side estimate \(U(\sigma)\) from this residual evidence.
-Each eligible residual enters both the history for its exact remaining sequence and a pooled fallback history; when updating these histories, the controller multiplies existing weights by \(0.90\) and adds the new residual with unit weight.
-For the selected nonempty history with weights \(w_l\), the controller uses
-\begin{equation}
-  \tau=\frac{n_{\mathrm{eff}}}{n_{\mathrm{eff}}+1},
-  \qquad
-  n_{\mathrm{eff}}=\frac{\left(\sum_l w_l\right)^2}{\sum_l w_l^2}.
-  \label{eq:expected-maximum-quantile}
-\end{equation}
-The selected residual is the first whose cumulative weight reaches the \(\tau\) fraction of total weight.
-
-Let \(q(\sigma_r)\) denote this quantile multiplier for remaining sequence \(\sigma_r=(k_r,\ldots,k_m)\), with \(q(\sigma_r)=1\) when both the exact and pooled histories are empty and \(\sigma_{m+1}=\emptyset\).
-Starting from \(U(\emptyset)=0\), the controller computes the final estimate backward from the end:
-\begin{equation}
-  U(\sigma_r)=\max\!\left\{
-    \hat P(\sigma_r)q(\sigma_r),\;
-    \hat p(k_r)+U(\sigma_{r+1})
-  \right\}.
-  \label{eq:upper-estimate}
-\end{equation}
-The second term prevents a longer remaining sequence from receiving less protection than its first workload plus the corrected estimate for the work that follows.
-At Draft completion, the controller scores retained decisions against their decision-time snapshots before updating either the point estimator or the residual histories, so a Draft cannot revise estimates used by its own decisions.
-Thus, \(U\) is an empirical high-side predictor, not a formal timing bound or deadline guarantee.
+The per-key base duration \(\hat b(k)\) is the cumulative mean of completed durations for key \(k\), each normalized by the condition factor \(\gamma\) in effect when measured, giving a transient spike no greater weight than any other observation.
+The model represents short-term execution changes with a shared multiplicative factor \(\gamma\), while relative per-key costs stay stable in \(\hat b(k)\).
+To estimate this shared factor, the controller takes the recency-weighted median of measured-to-base duration ratios across keys.
+Using ratios prevents long-running workloads from dominating the estimate, while the median avoids cancellation between workloads that change in opposite directions.
+The controller uses one decay factor for its recency-weighted histories: after each completed Draft Sequence, existing weights are multiplied by \(0.90\).
+For an unseen output-size bucket, the estimator scales the slowest observed bucket of the same stage by pixel-count ratio; if that stage has no size history, zero denotes an unavailable estimate.
+Together, these rules provide a common point estimate \(\hat P\) for admission and pacing.
