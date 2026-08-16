@@ -2,8 +2,8 @@
 \label{sec:model}
 
 \smallskip\noindent\textbf{Modeled workload sequence.}
-The controller models the Draft Sequence for capture \(i\) as ordered workloads \((k_1,\ldots,k_m)\), where each workload key \(k\) identifies a processing stage by output-size bucket and configuration.
-The remaining sequence from position \(j\) is \(\mathcal{K}_{i,j}=(k_j,\ldots,k_m)\), including the mandatory encoding and saving stages.
+The controller models the Draft Sequence for capture \(i\) as an ordered workload sequence \(\mathcal{K}_i=(k_1,\ldots,k_m)\), where each workload key \(k\) identifies a processing stage by output-size bucket and configuration.
+From position \(j\), \(\mathcal{K}_{i,j}=(k_j,\ldots,k_m)\) denotes the remaining sequence to be estimated, including the mandatory encoding and saving stages.
 
 \smallskip\noindent\textbf{Online point estimation.}
 The controller estimates the duration of a modeled workload sequence \(\mathcal{K}=(k_1,\ldots,k_n)\) as
@@ -13,10 +13,10 @@ The controller estimates the duration of a modeled workload sequence \(\mathcal{
   \hat p(k)=\hat b(k)\,\gamma .
   \label{eq:point-estimate}
 \end{equation}
-The per-key base duration \(\hat b(k)\) is the cumulative mean of completed durations for key \(k\), each normalized by the condition factor \(\gamma\) in effect when measured, giving a transient spike no greater weight than any other observation.
-The model represents short-term execution changes with a shared multiplicative factor \(\gamma\), while relative per-key costs stay stable in \(\hat b(k)\).
-To estimate this shared factor, the controller takes the recency-weighted median of measured-to-base duration ratios across keys.
+The per-key base duration \(\hat b(k)\) is the cumulative mean of completed durations for key \(k\), each normalized by the condition factor \(\gamma\) in effect when measured.
+This cumulative base limits the influence of transient spikes by giving them no recency advantage, while the shared \(\gamma\) tracks recent execution trends across keys.
+To estimate \(\gamma\), the controller takes the recency-weighted median of measured-to-base duration ratios across keys.
 Using ratios prevents long-running workloads from dominating the estimate, while the median avoids cancellation between workloads that change in opposite directions.
 The controller uses one decay factor for its recency-weighted histories: after each completed Draft Sequence, existing weights are multiplied by \(0.90\).
-For an unseen output-size bucket, the estimator scales the slowest observed bucket of the same stage by pixel-count ratio; if that stage has no size history, zero denotes an unavailable estimate.
+For an unseen output-size bucket, the estimator scales the slowest observed bucket of the same stage by pixel-count ratio; if that stage has no size history, zero denotes a cold-start case.
 Together, these rules provide a common point estimate \(\hat P\) for admission and pacing.
