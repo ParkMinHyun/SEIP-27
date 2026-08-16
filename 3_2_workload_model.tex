@@ -19,4 +19,4 @@ To estimate \(\gamma\), the controller takes the recency-weighted median of meas
 Using ratios prevents long-running workloads from dominating the estimate, while the median avoids cancellation between workloads that change in opposite directions.
 The controller uses one decay factor for its recency-weighted histories: after each completed Draft Sequence, existing weights are multiplied by \(0.90\).
 For an unseen output-size bucket, the estimator scales the slowest observed bucket of the same stage by pixel-count ratio; if that stage has no size history, zero denotes a cold-start case.
-Together, these rules provide a common point estimate \(\hat P\) for admission and pacing.
+The resulting point estimate \(\hat P\) serves as a common input to admission and pacing.

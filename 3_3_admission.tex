@@ -1,52 +1,60 @@
 \subsection{Remaining-Sequence Admission}
 \label{sec:admission}
 
-\begin{figure*}[!t]
-  \centering
-  \includegraphics[width=\textwidth]{figures/fig_controller_runtime_sequence.pdf}
-  \caption{Normal-path runtime sequence and state lifetime of the Budget-Aware Draft Controller.
-  A callback event records a pacing decision and schedules \texttt{captureAvailable}; Draft start consumes the oldest pending decision and refreshes pacing state before admission runs at each optional node.
-  Completion updates learned and queue-local duration state, whereas queue drain clears only queue-local state.}
-  \label{fig:controller-runtime}
-\end{figure*}
-
-Figure~\ref{fig:controller-runtime} separates event ordering from decision arithmetic: this subsection specifies the optional-node event, Section~\ref{sec:pacing} defines the callback and Draft-start computations, and Section~\ref{sec:implementation} covers completion, drain, and fail-open paths.
-
-\smallskip\noindent\textbf{Model decision.}
-Admission protects the capture that currently owns the Draft worker.
-Directly before node \(j\), the profiler constructs \(\mathcal{K}_{i,j}\) from the configured node chain and rereads \(R_{i,j}\) from the Capture Timeout clock.
-For an \textsc{Optional} head, the model recommends admission when
+\smallskip\noindent\textbf{Residual-calibrated upper estimate.}
+Admission tests a high-side estimate \(U\) of the remaining sequence rather than the point estimate \(\hat P\), because an admitted stage that overruns consumes deadline budget the capture cannot recover, whereas a skipped stage reduces Draft fidelity only until post-processing replaces the image.
+A configured allowance would only move the problem of Section~\ref{sec:guard-limit} to a new threshold: a fixed additive margin means something different at every execution-time scale, and \(\hat P\)'s underprediction varies with device, resolution, memory condition, throttling regime, and stage sequence.
+The controller therefore learns the residual left after the point model: for a decision whose remaining sequence \(\mathcal{K}\) ran to completion, with \(a(k)\) the measured duration of key \(k\), that residual is
 \begin{equation}
-  \hat P(\mathcal{K}_{i,j}) \le 0
+  c(\mathcal{K})=
+  \max\!\left(
+    0,\;
+    \ln\frac{\sum_{k\in\mathcal{K}}\max\{\hat p(k),a(k)\}}{\hat P(\mathcal{K})}
+  \right).
+  \label{eq:residual-score}
+\end{equation}
+The per-key maximum keeps one overrun from being cancelled by a stage that ran fast, and dividing by the estimate the decision itself used leaves a scale-free residual, so one calibration rule serves every execution-time scale with no per-device or per-stage margin to hand-tune.
+Each residual is scored against the estimates its own decision used, and kept per sequence with a pooled fallback.
+
+One choice remains: how far up that evidence to read.
+From the applicable history the controller takes the weighted \(\tau\)-quantile \(c_{\tau}(\mathcal{K})\), zero when it is empty, at \(\tau=n_{\mathrm{eff}}/(n_{\mathrm{eff}}+1)\) for the Kish effective sample count \(n_{\mathrm{eff}}=(\sum_l w_l)^2/\sum_l w_l^2\) over its weights \(w_l\)~\cite{kish-survey-sampling}.
+The position \(n/(n+1)\) is where the maximum of \(n\) observations is expected to fall~\cite{david-order-statistics}, so substituting \(n_{\mathrm{eff}}\) for the nominal count reads a thin history near its centre and a longer one further out, and no history extrapolates a tail it has never seen.
+The target quantile therefore follows the effective weight of recent evidence rather than a percentile tuned per device.
+Applying the correction over suffixes \(\mathcal{K}_r=(k_r,\ldots,k_m)\), the controller computes backward from \(U(\emptyset)=0\):
+\begin{equation}
+  U(\mathcal{K}_r)=
+  \max\!\left\{
+    \hat P(\mathcal{K}_r)e^{c_{\tau}(\mathcal{K}_r)},\;
+    \hat p(k_r)+U(\mathcal{K}_{r+1})
+  \right\}.
+  \label{eq:upper-estimate}
+\end{equation}
+The second term keeps a longer suffix from being estimated below its head stage plus the corrected tail; \(U\) is an empirical high-side estimate, not a formal timing bound.
+
+\smallskip\noindent\textbf{Admission at each optional stage.}
+Directly before an optional stage, the controller builds \(\mathcal{K}_{i,j}\) with that stage at its head, rereads the time \(R_{i,j}\) left in capture \(i\)'s Capture Timeout window, and admits the stage when
+\begin{equation}
+  \hat P(\mathcal{K}_{i,j})\leq0
   \quad\text{or}\quad
-  U(\mathcal{K}_{i,j}) \le R_{i,j}.
+  U(\mathcal{K}_{i,j})\leq R_{i,j},
   \label{eq:admission}
 \end{equation}
-Testing the suffix rather than the head alone accounts for the estimated cost of every modeled node that follows.
-\textsc{Required} and \textsc{Reserved} heads bypass this gate and always run.
-The zero-prediction branch applies only when the point sum of the entire remaining suffix is zero.
-It admits that fully unpriced suffix; if any component already has a point estimate, the upper-estimate test applies to the sequence as a whole.
-Once only \textsc{Required} or \textsc{Reserved} work remains, admission has no further corrective action for capture \(i\); pacing can affect only future capture arrivals.
+skipping it otherwise; mandatory stages bypass this gate, giving the Draft Sequence the mandatory--optional structure of imprecise computation~\cite{liu-imprecise-computation}.
+The test prices the whole remaining sequence, because a stage that fits by itself can still leave the mandatory encoding behind it without budget, which no later decision can correct.
+The first branch is a cold-state fail-open, reached only when nothing in the sequence has been priced.
+Because the model learns a stage only after it runs, rejecting a cold optional stage would withhold the observation that prices it; the fail-open bootstraps unseen work instead of reading missing history as evidence of risk.
+Admission repeats at every later optional stage, on a shorter suffix and a smaller budget; once no optional stage remains, only pacing can act on later arrivals.
 
-\smallskip\noindent\textbf{Sticky product policy.}
-The product-policy layer maps this model recommendation to the action the controller takes.
-The first eligible rejection in a group adds that group to the queue-local set \(G\): \textsc{Portrait} contains \(M\), and \textsc{Decoration} contains decoding, Filter, and overlay watermark.
-Each demotion remains in force until the Draft task queue drains, preventing optional-effect availability from alternating across captures.
-Consequently, the product policy can override a later model admit, an intentional quality-consistency cost that we distinguish from model selectivity in RQ3.
-Already executed nodes are not rolled back.
-Frame watermark and the decoding that it requires remain exceptions because they are required for the configured output.
+\smallskip\noindent\textbf{Queue-local group demotion.}
+A skip demotes the whole effect group the stage belongs to: the group joins a queue-local set \(G\), whose stages the controller then skips without consulting Equation~\ref{eq:admission}, both later in the same Draft Sequence and on later captures.
+The groups holding \(M\) and \(S\) are demoted independently.
+Demotion is sticky for consistency rather than for safety, since an effect that appears and disappears across consecutive captures reads as a defect.
+\(G\) can therefore suppress a stage Equation~\ref{eq:admission} would have admitted, an override Section~\ref{sec:evaluation} scores separately from admission's own decisions.
+\(G\) clears when the Draft task queue drains, and is the state from which pacing reprices the Draft Sequence.
 
 \smallskip\noindent\textbf{Watchdog containment.}
-An optional node that passes both the model test and session policy is still exposed to slowdown after execution begins.
-Each admitted optional node therefore runs under a watchdog budget: whatever remains of \(R_{i,j}\) once the upper estimate of the \textsc{Reserved} Encoding interval is set aside, floored at zero and rounded to the nearest millisecond.
-That interval closes when the saved-Draft task completes.
-\textsc{Required} work remains priced in upstream suffixes but receives no watchdog capacity; this asymmetry does not exempt it from the capture deadline.
-On expiration, the controller records the failure, releases any \texttt{DirectBuffer} result that arrives late, and defers node-chain teardown until the detached worker finishes.
-Because expiration detaches rather than preempts execution, that worker may consume CPU concurrently with a later Draft; the drain path therefore suppresses richer processing in queued tasks.
-The watchdog is containment, not reliable native preemption, a substitute for admission, or a deadline guarantee.
-
-\smallskip\noindent\textbf{What RQ3 scores.}
-RQ3 labels each decision retrospectively from realized traces, so we fix the two labels here rather than at first use.
-A decision is \emph{feasible} when the measured duration from node \(j\) through Draft completion fits the \(R_{i,j}\) that the decision read, and \emph{unsafe} when it exceeds that budget or the watchdog intervenes.
-The pair is the realized counterpart of Equation~\ref{eq:admission}, which the runtime tests against \(U\) precisely because the realized duration is not yet available.
-Under the always-admit audit these labels record model misjudgement rather than outcomes an enforced build would produce, because that audit applies neither session policy nor the watchdog.
+Admission filters the optional stages whose residual-calibrated estimate does not fit, but decides before execution and cannot see a slowdown that begins afterwards.
+Each admitted optional stage therefore runs under a watchdog budget \(W_{i,j}=\max(0,R_{i,j}-U(\mathcal{E}_i))\): the live budget less a reservation for the mandatory encoding interval \(\mathcal{E}_i\), measured through saved-Draft completion, that publishes the Draft image.
+Equation~\ref{eq:admission} already priced every mandatory stage of the suffix it tested, so the watchdog is not a second admission test: it reserves only that terminal interval and limits how long the controller waits for an admitted optional stage before the interval is at risk.
+Expiration detaches the stage rather than preempting it, so a detached worker can still hold CPU alongside the next Draft Sequence.
+The watchdog is containment, not preemption, not a substitute for admission, and not a deadline guarantee.
