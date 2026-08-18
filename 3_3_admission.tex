@@ -1,60 +1,55 @@
 \subsection{Remaining-Sequence Admission}
 \label{sec:admission}
 
-\smallskip\noindent\textbf{Residual-calibrated upper estimate.}
-Admission tests a high-side estimate \(U\) of the remaining sequence rather than the point estimate \(\hat P\), because an admitted stage that overruns consumes deadline budget the capture cannot recover, whereas a skipped stage reduces Draft fidelity only until post-processing replaces the image.
-A configured allowance would only move the problem of Section~\ref{sec:guard-limit} to a new threshold: a fixed additive margin means something different at every execution-time scale, and \(\hat P\)'s underprediction varies with device, resolution, memory condition, throttling regime, and stage sequence.
-The controller therefore learns the residual left after the point model: for a decision whose remaining sequence \(\mathcal{K}\) ran to completion, with \(a(k)\) the measured duration of key \(k\), that residual is
-\begin{equation}
-  c(\mathcal{K})=
-  \max\!\left(
-    0,\;
-    \ln\frac{\sum_{k\in\mathcal{K}}\max\{\hat p(k),a(k)\}}{\hat P(\mathcal{K})}
-  \right).
-  \label{eq:residual-score}
-\end{equation}
-The per-key maximum keeps one overrun from being cancelled by a stage that ran fast, and dividing by the estimate the decision itself used leaves a scale-free residual, so one calibration rule serves every execution-time scale with no per-device or per-stage margin to hand-tune.
-Each residual is scored against the estimates its own decision used, and kept per sequence with a pooled fallback.
+Admission runs immediately before each optional stage.
+It derives a high-side estimate \(U\) of the remaining sequence from \(\hat P\) and learned residual evidence, then compares \(U\) with the capture's live timeout budget to admit or skip the stage.
 
-One choice remains: how far up that evidence to read.
-From the applicable history the controller takes the weighted \(\tau\)-quantile \(c_{\tau}(\mathcal{K})\), zero when it is empty, at \(\tau=n_{\mathrm{eff}}/(n_{\mathrm{eff}}+1)\) for the Kish effective sample count \(n_{\mathrm{eff}}=(\sum_l w_l)^2/\sum_l w_l^2\) over its weights \(w_l\)~\cite{kish-survey-sampling}.
-The position \(n/(n+1)\) is where the maximum of \(n\) observations is expected to fall~\cite{david-order-statistics}, so substituting \(n_{\mathrm{eff}}\) for the nominal count reads a thin history near its centre and a longer one further out, and no history extrapolates a tail it has never seen.
-The target quantile therefore follows the effective weight of recent evidence rather than a percentile tuned per device.
-Applying the correction over suffixes \(\mathcal{K}_r=(k_r,\ldots,k_m)\), the controller computes backward from \(U(\emptyset)=0\):
+\smallskip\noindent\textbf{Residual-calibrated upper estimate.}
+The point estimate \(\hat P\) cannot fully capture upper-tail overruns driven by variation in on-device runtime conditions and image content.
+The controller therefore learns a high-side correction from observed residuals rather than modeling these effects separately or hand-tuning additive margins for individual devices and stages.
+The residual factor for a completed \(\mathcal{K}\) with \(\hat P(\mathcal{K})>0\) compares realized per-key durations \(p(k)\) against their decision-time predictions:
 \begin{equation}
-  U(\mathcal{K}_r)=
-  \max\!\left\{
-    \hat P(\mathcal{K}_r)e^{c_{\tau}(\mathcal{K}_r)},\;
-    \hat p(k_r)+U(\mathcal{K}_{r+1})
-  \right\}.
+  \phi(\mathcal{K})
+  =\frac{\sum_{k\in\mathcal{K}}\max\{\hat p(k),p(k)\}}
+         {\hat P(\mathcal{K})}.
+  \label{eq:residual-factor}
+\end{equation}
+The per-key maximum prevents a faster-than-estimated stage from cancelling another stage's overrun and ensures \(\phi(\mathcal K)\geq1\), while normalization by \(\hat P(\mathcal K)\) makes the factor comparable across duration scales.
+
+The controller uses the exact-sequence factor history when available, falling back to a pooled history across sequences.
+Each factor enters both histories with unit weight and follows the shared recency decay; let \(w_l\) denote the resulting weight of factor \(l\).
+Given at least one factor in the selected history, the controller sets \(\tau\) from the Kish effective sample size \(n_{\mathrm{eff}}\)~\cite{kish-survey-sampling}:
+\[
+  n_{\mathrm{eff}}
+  =\frac{(\sum_l w_l)^2}{\sum_l w_l^2},
+  \qquad
+  \tau=\frac{n_{\mathrm{eff}}}{n_{\mathrm{eff}}+1}.
+\]
+The controller sorts the factors in ascending order and sets \(\phi_{\tau}(\mathcal{K})\) to the first whose cumulative weight meets or exceeds \(\tau\sum_l w_l\); with no observed factor, it uses \(\phi_{\tau}(\mathcal{K})=1\).
+The choice of \(\tau\) substitutes \(n_{\mathrm{eff}}\) for \(n\) in the order-statistic result that the maximum of \(n\) independent observations from a common continuous distribution has expected quantile position \(n/(n+1)\)~\cite{david-order-statistics}.
+This substitution is an engineering heuristic for recency-weighted evidence: with equal weights, the selector returns the observed maximum, whereas recency decay allows sufficiently old extremes to lose influence.
+This evidence-adaptive rule selects only observed factors and requires no separately tuned target percentile.
+Applying the selected factor to \(\hat P\) yields \(U\), an empirical high-side estimate, not a formal timing bound:
+\begin{equation}
+  U(\mathcal{K})
+  =\hat P(\mathcal{K})\,\phi_{\tau}(\mathcal{K}).
   \label{eq:upper-estimate}
 \end{equation}
-The second term keeps a longer suffix from being estimated below its head stage plus the corrected tail; \(U\) is an empirical high-side estimate, not a formal timing bound.
 
-\smallskip\noindent\textbf{Admission at each optional stage.}
-Directly before an optional stage, the controller builds \(\mathcal{K}_{i,j}\) with that stage at its head, rereads the time \(R_{i,j}\) left in capture \(i\)'s Capture Timeout window, and admits the stage when
+\smallskip\noindent\textbf{Live-budget admission.}
+At admission point \(j\) of capture \(i\), the controller admits the optional stage when \(U\) fits the live budget \(R_{i,j}\), or when its remaining sequence is still unpriced, a fail-open that collects the missing observations:
 \begin{equation}
-  \hat P(\mathcal{K}_{i,j})\leq0
+  U(\mathcal{K}_{i,j})\leq R_{i,j}
   \quad\text{or}\quad
-  U(\mathcal{K}_{i,j})\leq R_{i,j},
+  \hat P(\mathcal{K}_{i,j})\leq0.
   \label{eq:admission}
 \end{equation}
-skipping it otherwise; mandatory stages bypass this gate, giving the Draft Sequence the mandatory--optional structure of imprecise computation~\cite{liu-imprecise-computation}.
-The test prices the whole remaining sequence, because a stage that fits by itself can still leave the mandatory encoding behind it without budget, which no later decision can correct.
-The first branch is a cold-state fail-open, reached only when nothing in the sequence has been priced.
-Because the model learns a stage only after it runs, rejecting a cold optional stage would withhold the observation that prices it; the fail-open bootstraps unseen work instead of reading missing history as evidence of risk.
-Admission repeats at every later optional stage, on a shorter suffix and a smaller budget; once no optional stage remains, only pacing can act on later arrivals.
 
-\smallskip\noindent\textbf{Queue-local group demotion.}
-A skip demotes the whole effect group the stage belongs to: the group joins a queue-local set \(G\), whose stages the controller then skips without consulting Equation~\ref{eq:admission}, both later in the same Draft Sequence and on later captures.
-The groups holding \(M\) and \(S\) are demoted independently.
-Demotion is sticky for consistency rather than for safety, since an effect that appears and disappears across consecutive captures reads as a defect.
-\(G\) can therefore suppress a stage Equation~\ref{eq:admission} would have admitted, an override Section~\ref{sec:evaluation} scores separately from admission's own decisions.
-\(G\) clears when the Draft task queue drains, and is the state from which pacing reprices the Draft Sequence.
+When the gate skips a stage, the controller adds its effect group to a queue-local set \(G\), tracking the groups containing \(M\) and \(S\) independently.
+Until the Draft task queue drains and clears \(G\), later stages in that group are skipped in the current and subsequent Draft Sequences without reevaluating Equation~\ref{eq:admission}.
+This sticky demotion prevents effect alternation across consecutive captures and preserves timeout headroom.
 
-\smallskip\noindent\textbf{Watchdog containment.}
-Admission filters the optional stages whose residual-calibrated estimate does not fit, but decides before execution and cannot see a slowdown that begins afterwards.
-Each admitted optional stage therefore runs under a watchdog budget \(W_{i,j}=\max(0,R_{i,j}-U(\mathcal{E}_i))\): the live budget less a reservation for the mandatory encoding interval \(\mathcal{E}_i\), measured through saved-Draft completion, that publishes the Draft image.
-Equation~\ref{eq:admission} already priced every mandatory stage of the suffix it tested, so the watchdog is not a second admission test: it reserves only that terminal interval and limits how long the controller waits for an admitted optional stage before the interval is at risk.
-Expiration detaches the stage rather than preempting it, so a detached worker can still hold CPU alongside the next Draft Sequence.
-The watchdog is containment, not preemption, not a substitute for admission, and not a deadline guarantee.
+\smallskip\noindent\textbf{Watchdog fallback.}
+Admission cannot fully anticipate sudden slowdowns after an optional stage begins, such as those caused by CPU scheduling contention, memory reclamation, or abrupt changes in image-processing performance.
+The watchdog therefore assigns each admitted optional stage a budget \(W_{i,j}=\max\{0,R_{i,j}-U(\mathcal{E}_i)\}\), reserving \(U(\mathcal{E}_i)\) for the mandatory encoding-and-saving interval \(\mathcal{E}_i\).
+On expiration, the Draft pipeline falls back to the original input for saving; the stage worker continue in parallel, but its output is discarded.

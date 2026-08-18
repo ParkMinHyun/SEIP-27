@@ -6,17 +6,19 @@ The controller models the Draft Sequence for capture \(i\) as an ordered workloa
 From position \(j\), \(\mathcal{K}_{i,j}=(k_j,\ldots,k_m)\) denotes the remaining sequence to be estimated, including the mandatory encoding and saving stages.
 
 \smallskip\noindent\textbf{Online point estimation.}
-The controller estimates the duration of a modeled workload sequence \(\mathcal{K}=(k_1,\ldots,k_n)\) as
+The controller estimates the duration of
+\(\mathcal{K}=\mathcal{K}_{i,j}=(k_j,\ldots,k_m)\) as
 \begin{equation}
-  \hat P(\mathcal{K})=\sum_{r=1}^{n}\hat p(k_r),
+  \hat P(\mathcal{K})
+  =\sum_{r=j}^{m}\hat p(k_r),
   \qquad
   \hat p(k)=\hat b(k)\,\gamma .
   \label{eq:point-estimate}
 \end{equation}
-The per-key base duration \(\hat b(k)\) is the cumulative mean of completed durations for key \(k\), each normalized by the condition factor \(\gamma\) in effect when measured.
+The per-key base duration \(\hat b(k)\) is the cumulative mean of the duration samples observed for key \(k\), each divided by the condition factor \(\gamma\) in effect when that sample was recorded.
 This cumulative base limits the influence of transient spikes by giving them no recency advantage, while the shared \(\gamma\) tracks recent execution trends across keys.
 To estimate \(\gamma\), the controller takes the recency-weighted median of measured-to-base duration ratios across keys.
 Using ratios prevents long-running workloads from dominating the estimate, while the median avoids cancellation between workloads that change in opposite directions.
-The controller uses one decay factor for its recency-weighted histories: after each completed Draft Sequence, existing weights are multiplied by \(0.90\).
+On each update to a recency-weighted model, existing weights are multiplied by \(0.90\) before new observations are added.
 For an unseen output-size bucket, the estimator scales the slowest observed bucket of the same stage by pixel-count ratio; if that stage has no size history, zero denotes a cold-start case.
 The resulting point estimate \(\hat P\) serves as a common input to admission and pacing.
