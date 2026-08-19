@@ -1,7 +1,7 @@
 \subsection{Remaining-Sequence Admission}
 \label{sec:admission}
 
-Admission runs immediately before each optional stage.
+Admission runs immediately before each optional stage, inline on the Draft critical path; end to end, one decision measures under a millisecond on device.
 It calibrates \(\hat P\) with residual evidence to form \(U\), then compares \(U\) with the capture's live budget to admit or skip the stage.
 
 \smallskip\noindent\textbf{Residual-calibrated upper estimate.}
@@ -46,13 +46,13 @@ The model admits the optional stage exactly when
   \hat P(\mathcal{K}_{i,j})\leq0.
   \label{eq:admission}
 \end{equation}
-The cold-start case falls on the leading capture, whose Draft Sequence starts against an empty queue with no queue wait charged against its budget.
-The fail-open is therefore deliberate: it exposes a cold-start overrun where the budget is most slack, and an optional stage that cannot meet the deadline even there must be fixed or disabled, not absorbed by runtime control.
-A completed sequence seeds later decisions.
+The cold-start case falls on each application session's leading capture, whose Draft Sequence starts against an empty queue with no queue wait charged against its budget.
+This fail-open is deliberate: that Draft Sequence either completes and seeds later decisions, or exposes a cold-start overrun where the budget is most slack; an optional stage that cannot meet the deadline even there must be fixed or disabled, not absorbed at runtime.
 
 A model rejection of an \(M\) or \(S\) stage adds its effect group to a queue-local set \(G\).
 Until the queue drains and clears \(G\), the set overrides model admissions for that group in the current and subsequent Draft Sequences.
 The two groups are tracked independently, preventing effect alternation across consecutive captures while preserving timeout headroom.
+Consistent suppression is the stance the production guard already took (Section~\ref{sec:guard-limit}); the controller replaces its thermal trigger with a live-budget test, not its uniformity.
 
 \smallskip\noindent\textbf{Watchdog fallback.}
 Admission cannot fully anticipate sudden slowdowns after an optional stage begins; possible causes include CPU scheduling contention, memory reclamation, and image-processing variability.
