@@ -1,22 +1,25 @@
 \subsection{Admission-Aware Capture-Availability Pacing}
 \label{sec:pacing}
 
+Pacing runs when the framework is ready to deliver \texttt{captureAvailable}, controlling future arrivals using predicted time rather than queue length.
+It charges the predicted Draft-worker backlog and an admission-aware reserve against the newest committed capture's remaining deadline window, then delays the callback in proportion to any positive deficit.
+
 \smallskip\noindent\textbf{Backlog and reserve construction.}
-Pacing controls future arrivals using time rather than queue length.
 Let \(E\) be a queue-local clock for the predicted time at which admitted Draft work will leave the worker, and let \(t_i\) be callback-decision time.
-At decision \(i\), the online backlog is \(\hat B_i=\max(0,E-t_i)\).
-Writing the point estimate retained in that decision's snapshot as \(\hat P_i\), the pacer enqueues the decision in a FIFO and advances
+At decision \(i\), the pacer first reads the online backlog from \(E\).
+Writing the point estimate retained for that decision as \(\hat P_i\), it then enqueues the decision in a FIFO and advances the clock:
 \begin{equation}
-  E \gets \max(E,t_i+d_i)+\lceil\hat P_i\rceil .
+  \hat B_i=\max(0,E-t_i),\quad
+  E\gets\max(E,t_i+d_i)+\lceil\hat P_i\rceil .
   \label{eq:backlog-clock-update}
 \end{equation}
-The maximum prevents the clock from preceding the delayed callback release that it just scheduled.
+The second maximum prevents the clock from preceding the delayed callback release that it just scheduled.
 At the corresponding Draft start, the pacer consumes the oldest queued decision and rebases \(E\) from the current and still-queued work.
 This rebase prevents prediction error from accumulating unchecked across consecutive captures.
 
 For a Draft Sequence with a modeled workload sequence, the pacer also refreshes the representative reserve \(\hat C\) at Draft start.
 Let \(\mathcal{K}_i^G\) be the configured sequence after applying the group set \(G\)
-recorded by snapshot decision \(i\), and \(s\) its size bucket.
+in effect at the Draft-start refresh used by decision \(i\), and \(s\) its size bucket.
 The pacer projects the configured sequence through the current sticky demotions and computes
 \begin{equation}
   \hat C_i = \max\!\left(
@@ -27,10 +30,6 @@ The pacer projects the configured sequence through the current sticky demotions 
 \end{equation}
 Here, \(C^{\max}_s\) is the largest Draft Sequence duration observed for size \(s\) since the queue last drained; an unseen size uses the largest observed bucket maximum, an empirical fallback rather than a future-duration bound.
 \(\widehat W_{\mathrm{demoted},i}\) is the point estimate of the demoted stages, and the second argument is the post-demotion modeled floor, with both estimates sampled at that Draft-start refresh.
-Admission changes later pacing through \(G\) and \(\widehat W_{\mathrm{demoted}}\), but cannot revise an issued delay.
-Pacing passes no numeric state to admission.
-Its immediate path to later admission is through changed arrival time, queue wait, and hence \(R_{i,j}\).
-Over subsequent captures, the altered drain and execution trajectory can also change queue-local and learned predictor state.
 
 \smallskip\noindent\textbf{Delay computation.}
 Let \(T_i\) be the time remaining until the Capture Timeout deadline of the newest capture committed to the Draft pipeline.
@@ -46,17 +45,18 @@ The delay applied at callback decision \(i\) is
   \right).
   \label{eq:pacing}
 \end{equation}
-Both occurrences of \(2\) come from a single deployment constant: as a multiplier it sets a horizon of two Draft Sequences, and as the divisor it applies a one-half gain to the positive projected deficit.
+The horizon spans the Draft Sequence that begins after this decision and the next capture's, which the delay releases.
+Both occurrences of \(2\) come from a single deployment constant: as a multiplier it sets that horizon, and as the divisor it applies a one-half gain to the positive projected deficit.
 The horizon and the gain are therefore tied, not tuned independently or by mode.
-The half gain limits user-perceived delay and leaves admission to skip optional stages based on its live budget; it is a coordination heuristic, not a fixed-point derivation.
+This partial response limits user-perceived delay; together with admission's independent live-budget test at each optional stage, it is a coordination heuristic, not a fixed-point derivation.
 Because \(T_i\geq0\), Equation~\ref{eq:pacing} gives the decision-local bound \(d_i\leq\lceil(\hat B_i+2\hat C_i)/2\rceil\); it is not a global latency cap because \(\hat B_i\) and \(\hat C_i\) depend on queue-local state.
-Section~\ref{sec:evaluation} evaluates the resulting responsiveness cost.
 
 \smallskip\noindent\textbf{Boundary and coordinated paths.}
-Callbacks before the first Draft-start snapshot proceed without a pacing decision; a nonpositive deficit produces a recorded zero delay.
-A Draft Sequence with no modeled workload sequence still consumes the oldest pending decision and rebases the clock, but retains the prior reserve snapshot.
+Callbacks before the first Draft-start refresh have no reserve to project and proceed without a pacing decision; a nonpositive deficit produces a recorded zero delay.
+A Draft Sequence with no modeled workload sequence still consumes the oldest pending decision and rebases the clock, but retains the prior reserve.
 When the queue drains, both pacing state and sticky demotions are cleared.
-When admission adds a group to \(G\) (Section~\ref{sec:admission}), the next refresh at a modeled Draft start recomputes \(\hat C\) for the reduced workload shape, and any positive residual \(\hat B_i+2\hat C_i-\max(0,T_i)\) determines a future callback delay through Equation~\ref{eq:pacing}.
+Admission changes later pacing through \(G\) and \(\widehat W_{\mathrm{demoted}}\): after a rejection adds a group to \(G\) (Section~\ref{sec:admission}), the next modeled Draft start recomputes \(\hat C\) for the reduced workload shape, lowering any future delay through Equation~\ref{eq:pacing}; an issued delay cannot be revised.
+Pacing passes no numeric state to admission.
+Its immediate effect on later admission is through changed arrival time, queue wait, and hence \(R_{i,j}\); over subsequent captures, the altered drain and execution trajectory can also change queue-local and learned predictor state.
 All hatted terms in Equation~\ref{eq:pacing} are online quantities.
-RQ4 separately reconstructs a retrospective matched-policy target from realized traces; that target is not a runtime input, physical minimum, or causal counterfactual.
 Coefficient sensitivity likewise requires matched runs or a validated closed-loop replay because changing that constant alters subsequent system state.
