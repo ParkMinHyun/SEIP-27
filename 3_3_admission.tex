@@ -43,7 +43,7 @@ The model admits the optional stage exactly when
 \begin{equation}
   U(\mathcal{K}_{i,j})\leq R_{i,j}
   \quad\text{or}\quad
-  \hat P(\mathcal{K}_{i,j})\leq0.
+  \hat P(\mathcal{K}_{i,j})=0.
   \label{eq:admission}
 \end{equation}
 The cold-start case falls on each application session's leading capture, whose Draft Sequence starts against an empty queue with no queue wait charged against its budget.
@@ -51,7 +51,7 @@ This fail-open is deliberate: that Draft Sequence either completes and seeds lat
 
 A model rejection of an \(M\) or \(S\) stage adds its effect group to a queue-local set \(G\).
 Until the queue drains and clears \(G\), the set overrides model admissions for that group in the current and subsequent Draft Sequences.
-The two groups are tracked independently, preventing effect alternation across consecutive captures while preserving timeout headroom.
+The two groups are tracked independently; this sticky demotion prevents effect alternation while preserving timeout headroom.
 Consistent suppression is the stance the production guard already took (Section~\ref{sec:guard-limit}); the controller replaces its thermal trigger with a live-budget test, not its uniformity.
 
 \smallskip\noindent\textbf{Watchdog fallback.}

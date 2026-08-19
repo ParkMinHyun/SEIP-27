@@ -168,6 +168,29 @@ and changing tabcolsep means recomputing both.
 longest entry does not use, the rationale column had a one-word overhang.
 The sum is unchanged, so block (b) still matches without recomputation.
 
+## tab_controller_state
+
+`tables/tab_controller_state.tex` &middot; Not input by any section
+
+Online duration quantities consumed by admission and pacing: one row per
+quantity, with how it is constructed and updated and where its lifetime ends.
+
+**Row removed 2026-08-19: the learned Draft overhead.** Section 3.4 dropped the
+term, so the table no longer prints it. The published row was:
+
+```
+    \(\hat H\) &
+    Recency-weighted mean of whole-Draft time outside modeled workload intervals; updated at Draft completion &
+    Pacing; persistent across queue drains \\
+```
+
+Restore it by pasting those three lines back between the `\(U(\mathcal{K})\)`
+and `\(C^{\max}_s\)` rows; the column widths were sized with the row present,
+so no width recomputation is needed. Reinstating it in the manuscript also means
+restoring the definition sentence in `3_4_pacing.tex` and the `+\hat H` terms in
+`eq:backlog-clock-update` and `eq:reserve` (whose second argument reverts from
+the post-demotion modeled floor to the post-demotion whole-Draft floor).
+
 ## tab_rq1_end_to_end_summary
 
 `tables/tab_rq1_end_to_end_summary.tex` &middot; Live -- `_4_experiments.tex`, RQ1
