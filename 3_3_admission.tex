@@ -2,12 +2,12 @@
 \label{sec:admission}
 
 Admission runs immediately before each optional stage.
-It derives a high-side estimate \(U\) of the remaining sequence from \(\hat P\) and learned residual evidence, then compares \(U\) with the capture's live timeout budget to admit or skip the stage.
+It calibrates \(\hat P\) with residual evidence to form \(U\), then compares \(U\) with the capture's live budget to admit or skip the stage.
 
 \smallskip\noindent\textbf{Residual-calibrated upper estimate.}
 The point estimate \(\hat P\) cannot fully capture upper-tail overruns driven by variation in on-device runtime conditions and image content.
 The controller therefore learns a high-side correction from observed residuals rather than modeling these effects separately or hand-tuning additive margins for individual devices and stages.
-The residual factor for a completed \(\mathcal{K}\) with \(\hat P(\mathcal{K})>0\) compares realized per-key durations \(p(k)\) against their decision-time predictions:
+Using stored decision-time predictions, only a fully observed remaining sequence \(\mathcal{K}\) with \(\hat P(\mathcal{K})>0\) contributes a residual factor from realized per-key durations \(p(k)\):
 \begin{equation}
   \phi(\mathcal{K})
   =\frac{\sum_{k\in\mathcal{K}}\max\{\hat p(k),p(k)\}}
@@ -15,9 +15,10 @@ The residual factor for a completed \(\mathcal{K}\) with \(\hat P(\mathcal{K})>0
   \label{eq:residual-factor}
 \end{equation}
 The per-key maximum prevents a faster-than-estimated stage from cancelling another stage's overrun and ensures \(\phi(\mathcal K)\geq1\), while normalization by \(\hat P(\mathcal K)\) makes the factor comparable across duration scales.
+Skipped or otherwise incomplete sequences are not imputed.
 
-The controller uses the exact-sequence factor history when available, falling back to a pooled history across sequences.
-Each factor enters both histories with unit weight and follows the shared recency decay; let \(w_l\) denote the resulting weight of factor \(l\).
+Factor selection uses the exact-sequence history when available and the cross-sequence pool otherwise.
+Each factor enters its exact history and the pool with unit weight and follows the shared decay; let \(w_l\) denote the resulting weight of factor \(l\).
 Given at least one factor in the selected history, the controller sets \(\tau\) from the Kish effective sample size \(n_{\mathrm{eff}}\)~\cite{kish-survey-sampling}:
 \[
   n_{\mathrm{eff}}
@@ -26,10 +27,10 @@ Given at least one factor in the selected history, the controller sets \(\tau\) 
   \tau=\frac{n_{\mathrm{eff}}}{n_{\mathrm{eff}}+1}.
 \]
 The controller sorts the factors in ascending order and sets \(\phi_{\tau}(\mathcal{K})\) to the first whose cumulative weight meets or exceeds \(\tau\sum_l w_l\); with no observed factor, it uses \(\phi_{\tau}(\mathcal{K})=1\).
-The choice of \(\tau\) substitutes \(n_{\mathrm{eff}}\) for \(n\) in the order-statistic result that the maximum of \(n\) independent observations from a common continuous distribution has expected quantile position \(n/(n+1)\)~\cite{david-order-statistics}.
-This substitution is an engineering heuristic for recency-weighted evidence: with equal weights, the selector returns the observed maximum, whereas recency decay allows sufficiently old extremes to lose influence.
-This evidence-adaptive rule selects only observed factors and requires no separately tuned target percentile.
-Applying the selected factor to \(\hat P\) yields \(U\), an empirical high-side estimate, not a formal timing bound:
+Factor observations need not be independent; substituting \(n_{\mathrm{eff}}\) for \(n\) is an engineering heuristic motivated by the expected \(n/(n+1)\) quantile position of the maximum of \(n\) independent draws from a common continuous distribution~\cite{david-order-statistics}.
+The shared \(0.90\) decay controls both recency and, through \(n_{\mathrm{eff}}\), how far the selector reaches into the observed tail; equal weights select the observed maximum.
+The resulting evidence-adaptive rule stays within observed factors and requires no separate target percentile.
+Applying the selected factor to \(\hat P\) yields \(U\), an empirical high-side estimate of modeled stage time rather than a formal bound on total remaining time:
 \begin{equation}
   U(\mathcal{K})
   =\hat P(\mathcal{K})\,\phi_{\tau}(\mathcal{K}).
@@ -37,19 +38,29 @@ Applying the selected factor to \(\hat P\) yields \(U\), an empirical high-side 
 \end{equation}
 
 \smallskip\noindent\textbf{Live-budget admission.}
-At admission point \(j\) of capture \(i\), the controller admits the optional stage when \(U\) fits the live budget \(R_{i,j}\), or when its remaining sequence is still unpriced, a fail-open that collects the missing observations:
+At admission point \(j\), \(R_{i,j}\) denotes the time remaining until the Capture Timeout deadline for capture \(i\).
+The model admits the optional stage exactly when
 \begin{equation}
   U(\mathcal{K}_{i,j})\leq R_{i,j}
   \quad\text{or}\quad
   \hat P(\mathcal{K}_{i,j})\leq0.
   \label{eq:admission}
 \end{equation}
+The cold-start case falls on the leading capture, whose Draft Sequence starts against an empty queue with no queue wait charged against its budget.
+The fail-open is therefore deliberate: it exposes a cold-start overrun where the budget is most slack, and an optional stage that cannot meet the deadline even there must be fixed or disabled, not absorbed by runtime control.
+A completed sequence seeds later decisions.
 
-When the gate skips a stage, the controller adds its effect group to a queue-local set \(G\), tracking the groups containing \(M\) and \(S\) independently.
-Until the Draft task queue drains and clears \(G\), later stages in that group are skipped in the current and subsequent Draft Sequences without reevaluating Equation~\ref{eq:admission}.
-This sticky demotion prevents effect alternation across consecutive captures and preserves timeout headroom.
+A model rejection of an \(M\) or \(S\) stage adds its effect group to a queue-local set \(G\).
+Until the queue drains and clears \(G\), the set overrides model admissions for that group in the current and subsequent Draft Sequences.
+The two groups are tracked independently, preventing effect alternation across consecutive captures while preserving timeout headroom.
 
 \smallskip\noindent\textbf{Watchdog fallback.}
-Admission cannot fully anticipate sudden slowdowns after an optional stage begins, such as those caused by CPU scheduling contention, memory reclamation, or abrupt changes in image-processing performance.
-The watchdog therefore assigns each admitted optional stage a budget \(W_{i,j}=\max\{0,R_{i,j}-U(\mathcal{E}_i)\}\), reserving \(U(\mathcal{E}_i)\) for the mandatory encoding-and-saving interval \(\mathcal{E}_i\).
-On expiration, the Draft pipeline falls back to the original input for saving; the stage worker continue in parallel, but its output is discarded.
+Admission cannot fully anticipate sudden slowdowns after an optional stage begins; possible causes include CPU scheduling contention, memory reclamation, and image-processing variability.
+The watchdog therefore limits waiting for each admitted optional stage to
+\begin{equation}
+  W_{i,j}=\max\{0,R_{i,j}-U(\mathcal{E}_i)\},
+  \label{eq:watchdog}
+\end{equation}
+where \(\mathcal{E}_i\) is the sequence containing only the mandatory terminal key.
+On expiration, the current Draft Sequence falls back to the original input for saving; the stage worker may continue alongside later Draft execution, but its result is no longer used.
+After that Draft Sequence finishes, the original-input fallback persists until the queue drains.
