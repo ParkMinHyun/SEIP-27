@@ -309,6 +309,16 @@ Removed then, and not to be restored:
   one. It was the third statement of that limit, after 3.1's definition of
   pacing and the instrumentation sentence; it now rides along in the
   instrumentation sentence as the second reason \(d_i\) is not realized waiting.
+- The per-sequence hook that bound the configured workload sequence to
+  admission, watchdog handling, and model updates. Removed on 2026-08-21: it
+  was not one of the two attachments the cost sentence counts but a wiring
+  detail inside the first, and it stood between them. Each of the three things
+  it named is owned elsewhere -- admission at each optional stage by 3.3's
+  opening sentence, the watchdog by 3.3's `Watchdog fallback.` block, model
+  updates by 3.2 -- so the only new fact was that one site binds all three,
+  which carries no cost, safety, or evaluation consequence and is referenced
+  nowhere else. With the class name barred, `a hook binds` also left the reader
+  nothing checkable.
 
 The block reads as attach, then cost, then replace, and the connectives that
 carry that order are load-bearing. `Together, the two attachments` ties the cost
@@ -370,10 +380,15 @@ Kept deliberately, against the same feedback:
 
 Both of 3.5's remaining section cross-references were removed on 2026-08-20: the
 opening sentence no longer points at 2.1 for the framework, and the
-instrumentation sentence no longer points at the evaluation section. Only the
-pointer to 2.4's static guard stays, because that sentence's claim is precisely
-that the evaluated build replaced a safeguard the reader met there.
-`2_1_release_process.tex` keeps its `\label{sec:release-process}`; an
+instrumentation sentence no longer points at the evaluation section. The last
+one, to 2.4's static guard, went on 2026-08-21: the sentence now calls it `the
+existing static level-4 thermal guard`, which carries the same claim --
+that the evaluated build replaced a safeguard already in production -- without
+sending the reader back a section for it. 3.5 now makes no section reference at
+all.
+
+Both `2_1_release_process.tex` and `2_4_static_safeguards.tex` keep their
+labels (`\label{sec:release-process}`, `\label{sec:guard-limit}`); an
 unreferenced label is silent, and a later section may need it.
 
 ### Section 3.5, naming the integration points

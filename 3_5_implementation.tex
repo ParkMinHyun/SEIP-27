@@ -1,15 +1,15 @@
 \subsection{Framework Integration and Instrumentation}
 \label{sec:implementation}
+
 The controller integrates at existing framework decision points, preserving the framework's ownership and execution structure without introducing new cross-layer interfaces.
 
 \smallskip\noindent\textbf{Framework integration.}
 The framework component that already owns the single Draft worker also hosts both modules and the estimator they share, so Draft Sequences continue to execute in capture order on that worker.
-For each Draft Sequence, a hook binds the configured workload sequence to admission at each optional stage, to watchdog handling, and to model updates.
 On the application-facing \texttt{captureAvailable} path, the framework consults pacing and defers callback release by the computed \(d_i\) rather than altering Draft execution.
 Together, the two attachments add one scheduling thread for that deferred release, no additional Draft worker, and no controller state persisting beyond the camera application session.
-Nor does either module consume a device-state signal for control.
+Neither module consumes a device-state signal for control.
 Beyond the shared decay factor and the two-sequence reserve horizon, it introduces no per-device constant or model-specific branch.
-The evaluated build also removes the static level-4 thermal guard (Section~\ref{sec:guard-limit}), so at that level an optional stage runs exactly when admission permits it.
+The evaluated build also removes the existing static level-4 thermal guard, so at that level an optional stage runs exactly when admission permits it.
 The integration has not yet shipped in a commercial release.
 
 \smallskip\noindent\textbf{Fail-open paths.}
