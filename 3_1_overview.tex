@@ -10,9 +10,9 @@
   \caption{Overview of the Budget-Aware Draft Controller.}
   \label{fig:controller-overview}
 \end{figure*}
+We introduce the \emph{Budget-Aware Draft Controller} to make the Draft Sequence's lightweight multi-frame composition deployable under parallel capture by adapting stage admission and capture pacing to the live budget.
 
 \smallskip\noindent\textbf{Controller architecture.}
-We introduce the \emph{Budget-Aware Draft Controller} to make the Draft Sequence's lightweight multi-frame composition deployable under parallel capture: rather than suppressing optional stages uniformly, it adapts stage admission and capture pacing to the live budget.
 The controller coordinates two framework-local modules.
 \emph{Remaining-Sequence Admission} controls the active Draft Sequence's service demand: using an estimate of its remaining work and live budget, it admits or skips each optional stage.
 \emph{Capture-Availability Pacing} controls when the application can request the next capture: using estimated worker occupancy and the remaining deadline window, it schedules the \texttt{captureAvailable} callback for immediate or delayed delivery.

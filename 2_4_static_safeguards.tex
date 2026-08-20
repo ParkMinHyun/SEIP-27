@@ -1,5 +1,6 @@
 \subsection{Limitations of Static Thermal Gating}
 \label{sec:guard-limit}
+To reduce the draft--final visual gap, the Draft Sequence's optional stages should run on all supported models whenever safely possible, rather than be suppressed uniformly under thermal stress as production does.
 
 \smallskip\noindent\textbf{Production thermal guard.}
 Samsung's overheat level is an ordinal thermal indicator on a 0--6 scale, where larger values denote stronger throttling.
@@ -12,7 +13,6 @@ Nor does the level reveal how much of a capture's deadline has already been cons
 \smallskip\noindent\textbf{Target workload and configuration.}
 We denote the candidate lightweight multi-frame Draft stage by \emph{M} and all deployed optional single-frame stages in the target Portrait configuration by \emph{S}.
 We compare M with M+S; both are followed by the same mandatory encoding and saving.
-To reduce the draft--final visual gap in Section~\ref{sec:draft-background}, we aim to make M available across all supported models and levels and execute it whenever safely possible, rather than disabling it uniformly at level 4.
 We first evaluated M on the Galaxy S26 Ultra, the highest-performing model, to determine whether the problem persists even on the most capable device.
 With M enabled and the guard bypassed, we ran ten 30-capture trials per combination of starting level (0--6), resolution, memory condition, and Draft Sequence configuration.
 The motivating level-4 failure occurred near capture 20 with 12 Draft Sequences pending, so each trial continued to 30 captures to exercise the Draft pipeline beyond the observed failure point.

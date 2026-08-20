@@ -175,8 +175,11 @@ The sum is unchanged, so block (b) still matches without recomputation.
 Online duration quantities consumed by admission and pacing: one row per
 quantity, with how it is constructed and updated and where its lifetime ends.
 
-**Row removed 2026-08-19: the learned Draft overhead.** Section 3.4 dropped the
-term, so the table no longer prints it. The published row was:
+**Abstraction revised 2026-08-19.** Section 3.4 replaced the explicitly named
+learned Draft overhead with \(\hat Q(\mathcal K)\), a whole-Draft occupancy
+estimate. This keeps the pacing equations faithful to whole-Draft timing without
+exposing the estimator's implementation-specific decomposition. The earlier row
+was:
 
 ```
     \(\hat H\) &
@@ -184,12 +187,10 @@ term, so the table no longer prints it. The published row was:
     Pacing; persistent across queue drains \\
 ```
 
-Restore it by pasting those three lines back between the `\(U(\mathcal{K})\)`
-and `\(C^{\max}_s\)` rows; the column widths were sized with the row present,
-so no width recomputation is needed. Reinstating it in the manuscript also means
-restoring the definition sentence in `3_4_pacing.tex` and the `+\hat H` terms in
-`eq:backlog-clock-update` and `eq:reserve` (whose second argument reverts from
-the post-demotion modeled floor to the post-demotion whole-Draft floor).
+Do not append this term to the current equations: \(\hat Q\) already includes
+the same timing component abstractly, so doing so would double count it. If the
+implementation-specific decomposition is ever restored, replace the \(\hat Q\)
+definition and both uses consistently rather than adding \(\hat H\) to \(\hat Q\).
 
 ## tab_rq1_end_to_end_summary
 
@@ -456,7 +457,8 @@ Column definitions (docs/rq-evidence.md (Part 2), sections 3.2--3.5, 4.3):
              Table~\ref{tab:rq4_pacing_summary} uses throughout and the same
              column Table~\ref{tab:rq1_controller_behavior} prints beside its
              Sigma-d; it is introduced in the prose of
-             Section~\ref{sec:guard-limit} beside M and S.
+             Section~\ref{sec:pacing} and defined by
+             Equation~\ref{eq:pacing}.
 
 Sources per cell -- all four arms now live in this repository, so the table no
 longer depends on a path in the private implementation clone.  Values are read

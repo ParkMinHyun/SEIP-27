@@ -48,6 +48,31 @@ should be rewritten.
 - Keep one argumentative job per paragraph. Do not combine background,
   mechanism, and evaluation conclusions in the same paragraph unless it is a
   short overview.
+- Open a subsection with a short overview before the first run-in heading,
+  stating the premise or the module's role. Sections 3.3 and 3.4 set the
+  pattern with two sentences each; 2.4, 3.1, and 3.2 were brought into it on
+  2026-08-20 at the same total page count, and 2.4 and 3.1 settled at one
+  sentence. One sentence that carries a proposition beats two where the second
+  only announces what follows.
+- The overview compresses; it does not relocate. Where this guide assigns a
+  fact to a named heading block, that block keeps the full statement and the
+  overview refers to it at a higher altitude.
+- Do not pay for an overview by cutting a conclusion that has to follow its
+  evidence. 2.4 briefly lost `a fixed thermal threshold cannot reliably
+  identify which captures have sufficient budget`; previewed before the trials
+  and absent after them, it left the reader to infer the subsection's own claim
+  at the point where the paper should state it.
+- Do not preview the run-in headings, as a list or as a plan. Where a
+  subsection is short enough to show all of its headings at once, neither
+  `we first ... then ... finally` nor `we describe X and measure Y` adds
+  anything over the headings themselves: the first announces an order, the
+  second announces work, and neither states a fact. Both were drafted here on
+  2026-08-20, in 3.1 and 2.4, and both were cut within the day. What the
+  overview owes the reader is the subject, not the table of contents.
+- An overview sentence must not restate setup that a later paragraph gives
+  precisely. 2.4's cut sentence named the measurement axes four lines before
+  `Target workload and configuration.` gave the trial count, levels,
+  resolutions, and memory conditions in full.
 - Prefer explicit transitions that expose the logical relation, including
   `However`, `Specifically`, `For example`, `In contrast`, `As a result`, and
   `To address this`.
@@ -156,8 +181,9 @@ model became 3.2. The two used to be split, with a rule policing which
 subsection owned which fact, and both opened on the same premise. The merged
 subsection is ordered by run-in headings:
 
-- `Controller architecture.` for the controller, its two modules, and the
-  integration boundaries;
+- the opening paragraph for what the controller is;
+- `Controller architecture.` for the two modules and the integration
+  boundaries;
 - `Safety and responsiveness.` for the hard constraint, the two costs, and which
   of them the policy prefers;
 - `Cross-shot margin dynamics.` for the recursion, the two levers it exposes,

@@ -1,13 +1,13 @@
 \subsection{Workload Model and Online Duration Estimation}
 \label{sec:model}
+Because both modules test predicted time against a live deadline window, the controller estimates a Draft Sequence's remaining modeled stage time from durations observed on device and rescales it as conditions change.
 
 \smallskip\noindent\textbf{Modeled workload sequence.}
 The controller models the Draft Sequence for capture \(i\) as an ordered workload sequence \(\mathcal{K}_i=(k_1,\ldots,k_m)\), where each workload key \(k\) identifies a processing stage by output-size bucket and configuration.
 From position \(j\), \(\mathcal{K}_{i,j}=(k_j,\ldots,k_m)\) denotes the remaining sequence, ending in a mandatory terminal key measured from encoding start until the Draft image is saved.
 
 \smallskip\noindent\textbf{Online point estimation.}
-The controller estimates the duration of
-\(\mathcal{K}=\mathcal{K}_{i,j}=(k_j,\ldots,k_m)\) as
+For any remaining sequence \(\mathcal{K}=\mathcal{K}_{i,j}\), the controller sums the predicted per-key durations:
 \begin{equation}
   \hat P(\mathcal{K})
   =\sum_{r=j}^{m}\hat p(k_r),
@@ -21,5 +21,4 @@ To estimate \(\gamma\), the controller takes the recency-weighted median of meas
 Using ratios prevents long-running workloads from dominating the estimate, while the median avoids cancellation between workloads that change in opposite directions.
 Each recency-weighted update multiplies existing weights by \(0.90\) before adding new observations.
 For an unseen output-size bucket, the estimator scales the slowest observed bucket of the same stage family by pixel-count ratio; if that family has no history, zero denotes a cold-start case.
-The resulting \(\hat P\) estimates modeled stage time for admission and pacing.
 Histories are retained only while the camera application remains open.

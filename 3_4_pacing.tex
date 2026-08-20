@@ -4,59 +4,49 @@
 Pacing runs when the framework is ready to deliver \texttt{captureAvailable}, controlling future arrivals using predicted time rather than queue length.
 It charges the predicted Draft-worker backlog and an admission-aware reserve against the newest committed capture's remaining deadline window, then delays the callback in proportion to any positive deficit.
 
-\smallskip\noindent\textbf{Backlog and reserve construction.}
-Let \(E\) be a queue-local clock for the predicted time at which admitted Draft work will leave the worker, and let \(t_i\) be callback-decision time.
-At decision \(i\), the pacer first reads the online backlog from \(E\).
-Writing the point estimate retained for that decision as \(\hat P_i\), it then enqueues the decision in a FIFO and advances the clock:
+\smallskip\noindent\textbf{Backlog tracking.}
+Let \(t^{\mathrm{end}}\) be the queue-local predicted completion time maintained by pacing.
+At callback decision \(i\), let \(t_i\) be the decision time, \(\hat Q_i\) the current complete-Draft-Sequence estimate and \(d_i\) the delay computed below.
+Pacing reads the backlog, records the decision in a FIFO, and advances the clock as
 \begin{equation}
-  \hat B_i=\max(0,E-t_i),\quad
-  E\gets\max(E,t_i+d_i)+\lceil\hat P_i\rceil .
+  \hat B_i=\max(0,t^{\mathrm{end}}-t_i),\quad
+  t^{\mathrm{end}}\gets
+  \max(t^{\mathrm{end}},t_i+d_i)+\lceil\hat Q_i\rceil .
   \label{eq:backlog-clock-update}
 \end{equation}
-The second maximum prevents the clock from preceding the delayed callback release that it just scheduled.
-At the corresponding Draft start, the pacer consumes the oldest queued decision and rebases \(E\) from the current and still-queued work.
-This rebase prevents prediction error from accumulating unchecked across consecutive captures.
+The maxima clamp elapsed backlog to zero and keep the updated clock no earlier than the callback release.
+At each modeled Draft start, pacing refreshes \(\hat C\), consumes the oldest FIFO decision if present, and rebases \(t^{\mathrm{end}}\) from the starting and queued Draft Sequences, limiting accumulated prediction error.
 
-For a Draft Sequence with a modeled workload sequence, the pacer also refreshes the representative reserve \(\hat C\) at Draft start.
-Let \(\mathcal{K}_i^G\) be the configured sequence after applying the group set \(G\)
-in effect at the Draft-start refresh used by decision \(i\), and \(s\) its size bucket.
-The pacer projects the configured sequence through the current sticky demotions and computes
+\smallskip\noindent\textbf{Admission-aware reserve.}
+The refresh applies the queue-local group set \(G\) from Section~\ref{sec:admission} to obtain workload sequence \(\mathcal{K}_i^G\), whose output-size bucket is \(s\), and computes
 \begin{equation}
   \hat C_i = \max\!\left(
     C^{\max}_s-\widehat W_{\mathrm{demoted},i},\;
-    \hat P(\mathcal{K}_i^G)
+    \hat Q(\mathcal{K}_i^G)
   \right).
   \label{eq:reserve}
 \end{equation}
-Here, \(C^{\max}_s\) is the largest Draft Sequence duration observed for size \(s\) since the queue last drained; an unseen size uses the largest observed bucket maximum, an empirical fallback rather than a future-duration bound.
-\(\widehat W_{\mathrm{demoted},i}\) is the point estimate of the demoted stages, and the second argument is the post-demotion modeled floor, with both estimates sampled at that Draft-start refresh.
+Here, \(C^{\max}_s\) is the largest completed Draft Sequence duration observed for \(s\) since the queue last drained, and \(\widehat W_{\mathrm{demoted},i}\) estimates the duration of the stages excluded by \(G\).
+An unseen \(s\) uses the largest observed bucket maximum, or zero before any completion.
+Equation~\ref{eq:reserve} adjusts the observed maximum for excluded stages without falling below the current complete-sequence prediction; \(\hat C_i\) is therefore an empirical reserve rather than a bound.
 
 \smallskip\noindent\textbf{Delay computation.}
-Let \(T_i\) be the time remaining until the Capture Timeout deadline of the newest capture committed to the Draft pipeline.
-The runtime accessor confines it to the Capture Timeout window and defaults to a full window before a deadline is available.
-We retain \(\max(0,T_i)\) in the equation to make the expired-window boundary explicit.
-The delay applied at callback decision \(i\) is
+Let \(T_i\) be the newest committed capture's remaining deadline window, confined to the Capture Timeout window and set to a full window before a deadline is available.
+Pacing computes
 \begin{equation}
-  d_i = \max\!\left(
-    0,
-    \left\lceil
-      \frac{\hat B_i+2\hat C_i-\max(0,T_i)}{2}
-    \right\rceil
-  \right).
+  d_i=
+  \left\lceil
+    \frac{\max(0,\hat B_i+2\hat C_i-T_i)}{2}
+  \right\rceil .
   \label{eq:pacing}
 \end{equation}
-The horizon spans the Draft Sequence that begins after this decision and the next capture's, which the delay releases.
-Both occurrences of \(2\) come from a single deployment constant: as a multiplier it sets that horizon, and as the divisor it applies a one-half gain to the positive projected deficit.
-The horizon and the gain are therefore tied, not tuned independently or by mode.
-This partial response limits user-perceived delay; together with admission's independent live-budget test at each optional stage, it is a coordination heuristic, not a fixed-point derivation.
-Because \(T_i\geq0\), Equation~\ref{eq:pacing} gives the decision-local bound \(d_i\leq\lceil(\hat B_i+2\hat C_i)/2\rceil\); it is not a global latency cap because \(\hat B_i\) and \(\hat C_i\) depend on queue-local state.
+A nonpositive projected deficit records a zero-delay decision.
+The factor \(2\) covers the Draft Sequence that begins after the decision and the future Draft Sequence enabled by the callback; as the divisor, it applies only half of any positive deficit to limit user-perceived delay.
+Together with admission's independent live-budget test, this is a coordination heuristic rather than a fixed-point derivation or an optimality claim.
+Because changing the factor also changes later arrivals and controller state, another setting requires matched runs or a validated closed-loop replay, not rescaling recorded delays.
 
-\smallskip\noindent\textbf{Boundary and coordinated paths.}
-Callbacks before the first Draft-start refresh have no reserve to project and proceed without a pacing decision; a nonpositive deficit produces a recorded zero delay.
-A Draft Sequence with no modeled workload sequence still consumes the oldest pending decision and rebases the clock, but retains the prior reserve.
-When the queue drains, both pacing state and sticky demotions are cleared.
-Admission changes later pacing through \(G\) and \(\widehat W_{\mathrm{demoted}}\): after a rejection adds a group to \(G\) (Section~\ref{sec:admission}), the next modeled Draft start recomputes \(\hat C\) for the reduced workload shape, lowering any future delay through Equation~\ref{eq:pacing}; an issued delay cannot be revised.
-Pacing passes no numeric state to admission.
-Its immediate effect on later admission is through changed arrival time, queue wait, and hence \(R_{i,j}\); over subsequent captures, the altered drain and execution trajectory can also change queue-local and learned predictor state.
-All hatted terms in Equation~\ref{eq:pacing} are online quantities.
-Coefficient sensitivity likewise requires matched runs or a validated closed-loop replay because changing that constant alters subsequent system state.
+\smallskip\noindent\textbf{Boundary and coordination.}
+Before the first modeled Draft start establishes \(\hat C\), the callback is delivered immediately without a pacing decision.
+An unmodeled Draft start still consumes its FIFO entry and rebases \(t^{\mathrm{end}}\) without refreshing \(\hat C\); a queue drain clears both pacing state and \(G\).
+Admission affects later pacing through \(G\): the next modeled Draft start can lower \(\hat C\) and subsequent delays.
+Pacing passes no numerical deficit to admission; it instead shifts the next capture opportunity, changing queue wait and hence \(R_{i,j}\).

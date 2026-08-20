@@ -5,7 +5,7 @@ Admission runs immediately before each optional stage, inline on the Draft criti
 It calibrates \(\hat P\) with residual evidence to form \(U\), then compares \(U\) with the capture's live budget to admit or skip the stage.
 
 \smallskip\noindent\textbf{Residual-calibrated upper estimate.}
-The point estimate \(\hat P\) cannot fully capture upper-tail overruns driven by variation in on-device runtime conditions and image content.
+The point estimate \(\hat P\) does not account for the upper-tail overruns driven by variation in on-device runtime conditions and image content.
 The controller therefore learns a high-side correction from observed residuals rather than modeling these effects separately or hand-tuning additive margins for individual devices and stages.
 Using stored decision-time predictions, only a fully observed remaining sequence \(\mathcal{K}\) with \(\hat P(\mathcal{K})>0\) contributes a residual factor from realized per-key durations \(p(k)\):
 \begin{equation}
