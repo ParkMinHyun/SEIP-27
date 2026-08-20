@@ -4,10 +4,11 @@ The controller integrates at existing framework decision points, preserving the 
 
 \smallskip\noindent\textbf{Framework integration.}
 The framework component that already owns the single Draft worker also hosts both modules and the estimator they share, and continues to execute Draft Sequences in capture order on that worker; a per-sequence hook binds the configured workload sequence to admission at each optional stage, to watchdog handling, and to model updates.
-On the application-facing capture-availability path, the framework consults pacing, which serializes concurrent callbacks, and defers callback release by the computed \(d_i\).
-Integration adds one scheduling thread, no additional Draft worker, and no persistent controller state, and consumes no device-state signal: overheat level, memory, and CPU are recorded for analysis only.
+On the application-facing capture-availability path, the framework consults pacing and defers callback release by the computed \(d_i\).
+Together, the two attachments add one scheduling thread for that deferred release, no additional Draft worker, and no persistent controller state; neither module consumes a device-state signal for control.
 Beyond the shared decay factor and the two-sequence reserve horizon, it introduces no per-device constant or model-specific branch.
-The evaluated build removes the static level-4 thermal guard (Section~\ref{sec:guard-limit}), so an optional stage runs at that level exactly when admission permits it; the integration has not yet shipped in a commercial release.
+The evaluated build also removes the static level-4 thermal guard (Section~\ref{sec:guard-limit}), so at that level an optional stage runs exactly when admission permits it.
+The integration has not yet shipped in a commercial release.
 
 \smallskip\noindent\textbf{Fail-open paths.}
 Every path the controller cannot serve degrades to the behavior that preceded it, and neither its Draft Sequence submission nor its delay request can be rejected under queue pressure: both are refused only after the owning component has shut down at the end of the capture session.

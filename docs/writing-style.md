@@ -310,6 +310,16 @@ Removed then, and not to be restored:
   pacing and the instrumentation sentence; it now rides along in the
   instrumentation sentence as the second reason \(d_i\) is not realized waiting.
 
+The block reads as attach, then cost, then replace, and the connectives that
+carry that order are load-bearing. `Together, the two attachments` ties the cost
+sentence to the two host sentences before it; `one scheduling thread for that
+deferred release` names what the thread is for, which is the first thing a reader
+asks and answers it by pointing back at the pacing sentence; `also removes` marks
+the guard replacement as a further property of the evaluated build. Do not strip
+them as filler. The shipping status is its own sentence: spliced onto the
+thermal-guard sentence with a semicolon, it read as part of that sentence's claim
+when it is an unrelated status statement.
+
 Two wordings the trim broke and a follow-up pass repaired, both worth keeping as
 they now stand:
 
@@ -331,17 +341,23 @@ they now stand:
 
 Kept deliberately, against the same feedback:
 
-- `which serializes concurrent callbacks`. Parallel capture is the paper's own
-  premise, so concurrent callbacks are the expected case, and without
-  serialization two of them could read one backlog and both under-price it. This
-  is a correctness property of the mechanism, not bookkeeping.
+- ~~`which serializes concurrent callbacks`~~. Argued for and then removed the
+  same day: callback arrival is sequential even under parallel capture, so the
+  two-callbacks-under-price story was wrong. The pacer's lock is real and every
+  entry point carries it, but what it serializes is the callback decision against
+  the Draft-start rebase, the completion update, and the deadline update, which
+  arrive on other threads. That is implementation hygiene, not a fact a reviewer
+  needs. Do not restore either version.
 - `no additional Draft worker`. The Draft executor already exists; the claim is
   that integration adds none. `no Draft worker` would deny the single-thread
   executor that 3.2's workload model assumes.
-- The enumeration `overheat level, memory, and CPU are recorded for analysis
-  only`. 2.4's safeguard is a thermal-level gate, so naming overheat level as a
-  logged-only signal is what separates the controller from it; the enumeration
-  also licenses the evaluation's use of those variables.
+- ~~The enumeration `overheat level, memory, and CPU are recorded for analysis
+  only`~~. Also removed the same day. The load-bearing half is that no
+  device-state signal reaches control, and the sentence about removing the static
+  level-4 thermal guard two lines below already supplies the contrast with 2.4;
+  the list of logged signals belongs to the evaluation, which can license its own
+  analysis variables. `neither module consumes a device-state signal for control`
+  is the surviving claim.
 - The full instrumentation enumeration, including `watchdog state`. The next
   sentence claims the evaluation can separate model decision quality from sticky
   demotion and watchdog enforcement, which only the enumeration supports.
