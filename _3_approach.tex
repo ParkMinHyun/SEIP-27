@@ -2,13 +2,17 @@
 %
 % Implementation evidence: private ML repository
 % (https://github.com/ParkMinhyun/ML), commit
-% 63f9bb7d1f16471a56268e2bf1b53ddf1bc750a7. Key sources:
+% cdd524f. Key sources:
 % DraftSequenceExecutionPredictor.kt (model, admission, watchdog),
 % DraftSequenceAdmissionPolicy.kt (sticky product rules),
 % CaptureAvailablePacer.kt / CaptureAvailablePacingSession.kt (pacing),
-% DraftSequenceExecutionProfiler.kt (node classification and integration),
-% WorkloadKey.kt / WorkloadSequenceKey.kt (taxonomy), and
-% CaptureMetrics.kt (observability).
+% DraftSequenceExecutionProfiler.kt (stage classification and integration),
+% WorkloadKey.kt / WorkloadSequenceKey.kt (taxonomy),
+% CaptureMetrics.kt (observability), and, for Section 3.5,
+% external/draftSaving/SavingDraftImageTaskManager.java (ownership, executor,
+% queue-drain boundary), external/apm/policy/CaptureAvailableApmPolicy.java and
+% external/apm/util/SingleThreadDelayedScheduler.java (callback release), and
+% external/PhotoMakerBase.java (fail-open and immediate callback paths).
 
 \section{The Budget-Aware Draft Controller}\label{sec:approach}
 
@@ -16,4 +20,4 @@
 \input{3_2_workload_model.tex}
 \input{3_3_admission.tex}
 \input{3_4_pacing.tex}
-% \input{3_5_implementation.tex}
+\input{3_5_implementation.tex}
