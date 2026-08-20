@@ -1,19 +1,4 @@
-% Chapter 3: the Budget-Aware Draft Controller.
-%
-% Implementation evidence: private ML repository
-% (https://github.com/ParkMinhyun/ML), commit
-% cdd524f. Key sources:
-% DraftSequenceExecutionPredictor.kt (model, admission, watchdog),
-% DraftSequenceAdmissionPolicy.kt (sticky product rules),
-% CaptureAvailablePacer.kt / CaptureAvailablePacingSession.kt (pacing),
-% DraftSequenceExecutionProfiler.kt (stage classification and integration),
-% WorkloadKey.kt / WorkloadSequenceKey.kt (taxonomy),
-% CaptureMetrics.kt (observability), and, for Section 3.5,
-% external/draftSaving/SavingDraftImageTaskManager.java (ownership, executor,
-% queue-drain boundary), external/apm/policy/CaptureAvailableApmPolicy.java and
-% external/apm/util/SingleThreadDelayedScheduler.java (callback release), and
-% external/PhotoMakerBase.java (fail-open and immediate callback paths).
-
+% Notes: docs/implementation-map.md
 \section{The Budget-Aware Draft Controller}\label{sec:approach}
 
 \input{3_1_overview.tex}

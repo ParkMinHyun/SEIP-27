@@ -1,26 +1,19 @@
 \subsection{Framework Integration and Instrumentation}
 \label{sec:implementation}
-
-The controller attaches to the camera framework of Section~\ref{sec:release-process} at existing extension points, not new interfaces.
+The controller integrates at existing framework decision points, preserving the framework's ownership and execution structure without introducing new cross-layer interfaces.
 
 \smallskip\noindent\textbf{Framework integration.}
-Two existing ownership points host the controller.
-The Draft-saving manager owns the predictor, the admission policy, and the pacer, and still executes Draft Sequences on its single-thread executor; a per-Draft-task profiler binds the configured stage sequence to admission at each optional stage, watchdog handling, and model updates.
-The application-facing capture-availability policy invokes the pacing decider, which serializes concurrent callbacks, and requests callback release from a delayed scheduler after the computed \(d_i\).
-Integration adds one scheduler thread, no additional Draft worker, and no persistent storage, and consumes no device-state signal: overheat level, memory, and CPU are recorded for analysis only.
-Beyond the shared decay factor and the two-Draft horizon, it introduces no per-device constant or model-specific branch.
-The evaluated build removes the static level-4 thermal guard (Section~\ref{sec:guard-limit}), so an optional stage runs there exactly when admission permits it; the integration has not yet shipped in a commercial release.
+The framework component that already owns the single Draft worker also hosts both modules and the estimator they share, and continues to execute Draft Sequences in capture order on that worker; a per-sequence hook binds the configured workload sequence to admission at each optional stage, to watchdog handling, and to model updates.
+On the application-facing capture-availability path, the framework consults pacing, which serializes concurrent callbacks, and defers callback release by the computed \(d_i\).
+Integration adds one scheduling thread, no additional Draft worker, and no persistent controller state, and consumes no device-state signal: overheat level, memory, and CPU are recorded for analysis only.
+Beyond the shared decay factor and the two-sequence reserve horizon, it introduces no per-device constant or model-specific branch.
+The evaluated build removes the static level-4 thermal guard (Section~\ref{sec:guard-limit}), so an optional stage runs at that level exactly when admission permits it; the integration has not yet shipped in a commercial release.
 
 \smallskip\noindent\textbf{Fail-open paths.}
-Every path the controller cannot serve degrades to the behavior that preceded it, and both of its submissions can be rejected only once the corresponding component has been shut down at pipeline close, not under queue pressure.
-A rejected Draft-task submission runs that Draft Sequence on a shared executor: it is still profiled, admitted, and learned from, but it executes off the single worker.
-A rejected delay releases the callback immediately, as do the immediate capture-availability paths that never consult the policy and commit no decision.
-Pacing commits its clock update when it decides rather than when the callback is released, so an unhonored delay can leave \(t^{\mathrm{end}}\) based on a release up to \(d_i\) later than realized; the next Draft Sequence start the controller can price rebases it from the actual start.
-Pacing likewise governs when a capture opportunity is offered, not when the user takes it: the application can issue a shutter request at any time after release.
+Every path the controller cannot serve degrades to the behavior that preceded it, and neither its Draft Sequence submission nor its delay request can be rejected under queue pressure: both are refused only after the owning component has shut down at the end of the capture session.
+A rejected delay releases the callback immediately; the immediate capture-availability paths likewise bypass pacing and commit no pacing decision.
 
 \smallskip\noindent\textbf{Instrumentation.}
 Each decision records its planned remaining sequence, point and upper estimates, live budget, watchdog state, and pacing inputs, together with the resulting stage and Draft timeline.
-The model's recommendation is recorded separately from the enforced action, allowing Section~\ref{sec:evaluation} to isolate model decision quality from sticky demotion and watchdog enforcement.
-Scheduler acceptance is not persisted, so \(d_i\) is the delay pacing requested; we report it as a policy output and do not equate it with realized user-perceived waiting.
-
-Because online estimates can err and callbacks can follow the paths above, the design provides no formal deadline guarantee: its timeout-prevention claim is empirical and limited to the evaluated configurations and capture sequences.
+The model's recommendation is recorded separately from the enforced action, so the evaluation can separate model decision quality from sticky demotion and watchdog enforcement.
+Whether a requested delay was honored is not persisted, and pacing governs when a capture opportunity is offered rather than when the user takes it; we therefore report \(d_i\) as the delay pacing requested rather than as realized user-perceived waiting.

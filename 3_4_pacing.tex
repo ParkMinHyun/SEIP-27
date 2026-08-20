@@ -18,12 +18,12 @@ Because the Draft Sequence of the capture enabled by the callback is not yet kno
   \label{eq:clock-update}
 \end{equation}
 Here \(t_i+d_i\) is the callback release time, where \(d_i\) is computed by Equation~\ref{eq:pacing} after \(\hat B_i\) is read.
-If that release falls after the predicted queue-drain time, the maximum anchors the added estimate there, since the capture cannot be requested before the callback is released.
+If that release falls after \(t^{\mathrm{end}}\), the maximum anchors the added estimate there, since the capture cannot be requested before the callback is released.
 At each Draft Sequence start whose workload sequence the controller can price, pacing rebases \(t^{\mathrm{end}}\) from the actual start using the predicted durations of that sequence and those still queued.
 This rebase discards timing error from completed sequences rather than carrying it across captures.
 
 \smallskip\noindent\textbf{Delay sizing.}
-Pacing charges the predicted backlog \(\hat B_i\) and a per-Draft-Sequence reserve \(\hat C\) against \(T_i\), the newest committed capture's remaining Capture Timeout window, and computes
+Pacing charges the predicted backlog \(\hat B_i\) and a per-Draft-Sequence reserve \(\hat C\) against the newest committed capture's remaining Capture Timeout window \(T_i\), and computes
 \begin{equation}
   d_i=
   \left\lceil

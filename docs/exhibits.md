@@ -31,8 +31,6 @@ with `AGENTS.md`, `AGENTS.md` wins and this file should be corrected.
 | [`tab_timeout_index`](#tab_timeout_index) | `tables/` | Live -- `2_4_static_safeguards.tex` |
 | [`fig_capture_pipeline`](#fig_capture_pipeline) | `figures/` | Live -- `2_3_draft_sequence.tex` |
 | [`fig_casestudy_12mp`](#fig_casestudy_12mp) | `figures/` | Live -- `_4_experiments.tex`, case study |
-| [`fig_controller_overview`](#fig_controller_overview) | `figures/` | Not input by any section; Section 3.1 ships `figures/fig_controller_interaction.pdf` |
-| [`fig_controller_timeline`](#fig_controller_timeline) | `figures/` | Not input by any section; Section 3.1 ships `figures/fig_controller_interaction.pdf` |
 | [`fig_parallel_capture_overlap`](#fig_parallel_capture_overlap) | `figures/` | Live -- `2_2_parallel_capture.tex` |
 | [`fig_rq3_unsafe_spike_anatomy`](#fig_rq3_unsafe_spike_anatomy) | `figures/` | Live -- `_4_experiments.tex`, RQ3 |
 
@@ -2313,124 +2311,6 @@ bottoms differently: the label's south anchor lands on a line with no
 descenders, the matrix's on a row that has them, so equal yshifts left
 the legend sitting visibly higher.
 
-## fig_controller_overview
-
-`figures/fig_controller_overview.tex` &middot; Not input by any section; Section 3.1 ships `figures/fig_controller_interaction.pdf`
-
-Overview of the Budget-Aware Draft Controller.
-
-STYLE: modelled on the overview figure of the reference papers
-(references/ICSE26_..., Figure 2).  Their grammar, which this follows:
-  - one thick rounded container whose name BREAKS the top border;
-  - the container holds the named stages; each stage is a real enclosing box
-    with a title strip, a rule, and its sub-boxes INSIDE it.  Drawing the
-    sub-boxes as free-floating nodes under a title-only node, as an earlier
-    revision did, loses the containment the whole figure is built on;
-  - the stage and sub-box names are this section's own subsection headings,
-    so the figure and the section outline agree;
-  - everything the controller does not own is drawn OUTSIDE the container;
-  - arrow labels name the thing that flows, in two or three words.  Never
-    explanations: a revision that put a Reads/Decides/Costs body in each box
-    read as the prose repeated inside a frame.
-
-NO NOTATION.  This figure precedes Section III-B (the model) and Section
-III-D (the pacing quantities), so a symbol here would forward-reference a
-definition the reader has not met.
-
-What the shape has to say:
-  - parallel capture puts several requests in flight (the stack), and they
-    serialize on one Draft thread -- the contention of Sections II-B, II-C;
-  - the controller sits between those two and holds both actuators;
-  - the pacer acts BACKWARDS, on arrivals, which is why it is the one arrow
-    returning leftward; admission acts on the sequence already running;
-  - completed Drafts feed the model that both actuators read.
-
-DRAWN AT FINAL SIZE.  Do not wrap in \resizebox.  Natural width ~17.4cm
-against \textwidth ~18.1cm in IEEEtran conference mode; the right-hand
-"Draft image" text is what sets that width, so shorten it before widening
-anything else.
-
-LAYOUT DISCIPLINE: boxes in a row carry `minimum width` and their centres are
-spaced by that width plus a gap, so a longer label cannot push into its
-neighbour.  Multi-line boxes break with an explicit \\ and set no
-`text width`; automatic wrapping is font-metric dependent and silently adds a
-line that then falls out of its band.  Any label that lands on a box edge
-carries `onwhite` so it masks the rule instead of printing through it.
-
-% ============================================ the controller's container
-
-% ------------------------------------------------------------ the pacer
-
-% -------------------------------------------------------- the admission
-
-The one-way coupling.  Two lines, stacked inside the 0.9cm gap between the
-stage boxes: on one line the label is twice the gap, and set above the
-boxes it collides with the container name breaking the top border.
-
-% ---------------------------------------------------- the shared model
-
-% ========================================= outside: the arriving captures
-
-Pacing acts backwards, on arrivals: the only arrow that returns leftward.
-
-% ========================================= outside: the Draft Sequence
-
-## fig_controller_timeline
-
-`figures/fig_controller_timeline.tex` &middot; Not input by any section; Section 3.1 ships `figures/fig_controller_interaction.pdf`
-
-Interaction overview for the Budget-Aware Draft Controller.
-
-This figure deliberately uses the compact overview grammar of the two
-reference papers: one dominant execution path, one clearly named system
-boundary, and only the feedback needed to explain the interaction.  It is
-not a duration-proportional timeline and introduces no notation before the
-model and pacing subsections define it.
-
-The top row is framework execution owned outside the controller.  Parallel
-captures create Draft tasks, but those tasks serialize in capture order on
-one Draft worker.  The lower shell contains only controller-owned state and
-decisions.  Pacing points upstream to the next application-facing release;
-admission points locally to optional nodes in the active Draft Sequence.
-
-Drawn at final size (natural width about 17.2 cm).  Keep explicit line breaks
-and coordinates: the paper preamble intentionally loads only the basic TikZ
-libraries used elsewhere in the manuscript.
-
-==================================================== framework execution
-Three offset request cards show concurrency without pretending that their
-horizontal lengths are measured durations.
-
-The pacing arrow terminates at the start of the newest capture card.  The
-small gate marks release of the callback, not Draft-task admission.
-
-Capture requests yield Draft tasks, which merge into one ordered queue.
-
-A visible FIFO makes the cross-shot bottleneck explicit.
-
-Only the active Draft is expanded.  Optional work is visually distinct
-from the mandatory tail but is not pre-labelled as admitted or skipped.
-
-Draft publication remains outside the controller boundary.
-
-=============================================== controller-owned boundary
-
-Pacing controls a future arrival.
-
-Admission controls optional work in the Draft that owns the worker.
-
-Both actuators read the same learned and queue-local state.
-
-Admission changes the workload shape seen by later pacing decisions.  The
-reverse direction is deliberately absent: pacing affects later admission
-only through the real arrival/queue/budget path drawn above.
-
-Pacing's sole backward arrow targets the next callback release.
-
-Admission branches only to optional nodes of the active sequence.
-
-Learning occurs only when the Draft has completed.
-
 ## fig_parallel_capture_overlap
 
 `figures/fig_parallel_capture_overlap.tex` &middot; Live -- `2_2_parallel_capture.tex`
@@ -2569,3 +2449,30 @@ increase and left of a decrease and never cover the bar.
 Safeguard column, outside the plot box. The header sits on the box edge so
 it reads as this column's heading rather than as a floating note, and it
 states the outcome so the panel carries the conclusion without the caption.
+
+## Deleted exhibits
+
+Removed from the repository, with the reason. Do not recreate them; if the need
+returns, recover the file from git history rather than redrawing it.
+
+### fig_controller_overview, fig_controller_timeline (deleted 2026-08-20)
+
+`figures/fig_controller_overview.tex` (67 lines) and
+`figures/fig_controller_timeline.tex` (121 lines) were two TikZ attempts at the
+Section 3.1 controller figure. Both were superseded by the PowerPoint-built
+`figures/fig_controller_interaction.pdf`, which 3.1 has shipped since; neither
+was `\input` by any section, and neither defined a `\label`, so removing them
+changed no cross-reference. A third copy, `fig_controller_timeline.tex` at the
+repository root, was an earlier revision of the same drawing that still carried
+its rationale as an inline comment block and still said `optional nodes`; the
+`node` ban and the notes-live-in-`docs/` rule both post-date it.
+
+They also would not have been safe to reuse as drawn. The timeline figure
+labelled the queue `Draft tasks`, which is the unit `Draft Sequence` names, and
+the root copy's comment repeated it three more times.
+
+The live Figure 2 pipeline is untouched and is not related to these files:
+`scripts/build_controller_figure_pptx.js` draws
+`figures/fig_controller_interaction.pptx`, `scripts/build_controller_figure.ps1`
+exports the PDF from it, and both consume `figures/controller_icons/`, trimmed
+by `scripts/trim_icons.ps1`.

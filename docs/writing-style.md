@@ -253,6 +253,187 @@ shape.
   "delay only as a last resort", which the deployed policy does not implement:
   pacing converts only part of the projected deficit into delay.
 
+### Section 3.5, scope of the integration report
+
+3.5 exists to answer four reviewer questions and nothing else: where the
+controller attaches, what deploying it costs, how it relates to the static
+safeguard the evaluated build replaces, and what a recorded decision means. On
+2026-08-20 the subsection was trimmed to those four, after review feedback that
+its edge-case detail diluted the facts a reviewer has to carry into Section 4.
+
+The overview is two sentences, matching 3.3 and 3.4.
+
+The first states three things and each one is load-bearing. `the framework's
+existing decision points` asserts that the framework already decided at both
+sites, which is what makes 2.4 hand over to 3.5: the static level-4 guard was a
+decision at the same place admission now decides, and the APM policy hook was
+already the mechanism for deciding when to release the callback. Both sites are
+pre-existing framework code (`ApmPolicy`, `ApmPolicyManager`, and the untouched
+Draft node-chain accessor in `ML@cdd524f`). `preserving its ownership and
+execution structure` is the claim that survived deleting the old topic sentence
+`Two existing ownership points host the controller` -- keep the claim, not the
+announcement. `without introducing new cross-layer interfaces` is sharper than the
+earlier `not new interfaces` because 2.1 established the cross-layer workflow as
+the expensive surface, and it confirms at implementation level what 3.1 promised
+about HAL and application interfaces. If the implicit claim in `decision points`
+ever has to go, `extension points` is the neutral fallback.
+
+The second gives the engineering reason the change is scoped narrowly: the
+revalidation cost 2.1 establishes. Do not restore the form `Because it must be
+deployable in a commercial product` -- restructuring the framework would also be
+deployable, so deployability does not entail a minimally scoped change and the
+sentence read as a non sequitur. Revalidation cost does entail it.
+
+Neither sentence was lifted from the block below, so nothing there became
+redundant -- `one scheduler thread, no additional Draft worker, no persistent
+controller state` and the per-device-constant sentence remain the precise
+statements the overview refers to. If the overview ever has to carry a body fact,
+the one candidate is the `has not yet shipped in a commercial release` clause,
+which currently rides on the thermal-guard sentence and is not part of that
+sentence's claim; moving it up would also foreground the paper's weakest fact,
+which is a rhetorical choice rather than a fix.
+
+Removed then, and not to be restored:
+
+- The destination of a rejected Draft Sequence submission (a shared executor, still
+  profiled and admitted). Rejection happens only at pipeline close, so the
+  detail describes teardown, and naming a second executor invites the reader to
+  doubt the single-worker model that 3.2 and 3.4 are built on. The load-bearing
+  clause is `cannot be rejected under queue pressure`; keep that.
+- That pacing commits its clock update at decision time, so an unhonored delay
+  can leave the backlog clock late. 3.4 already states that each Draft Sequence
+  start the controller can price rebases the clock from the actual start and
+  discards the accumulated error, which is the same fact at the altitude 3.4
+  owns.
+- A standalone sentence separating an offered capture opportunity from a taken
+  one. It was the third statement of that limit, after 3.1's definition of
+  pacing and the instrumentation sentence; it now rides along in the
+  instrumentation sentence as the second reason \(d_i\) is not realized waiting.
+
+Two wordings the trim broke and a follow-up pass repaired, both worth keeping as
+they now stand:
+
+- Name the two submissions. Once the Draft Sequence fallback sentence went, `both
+  of its submissions` had no antecedent within the block: only the delay was named
+  afterwards. The block now says `neither its Draft Sequence submission nor its
+  delay request`, so it is self-contained; do not collapse it back to `both`
+  or to a bare `controller submissions`, which drops the fail-open claim's scope.
+- The immediate paths `commit no pacing decision`, not `no decision`. Those
+  captures still produce admission decisions in the trace; only the pacing
+  record is absent, which is what a reviewer checking a paced-fraction
+  denominator needs to know. Verified against `ML@cdd524f`:
+  `sendCaptureAvailableImmediately` and `sendCaptureAvailable(CaptureMetadata)`
+  never reach the policy, while the two policy call sites run the callback
+  inline when `policy.execute` returns false, so `releases the callback
+  immediately` is literal.
+- `runs at that level` rather than `runs there`. The nearest antecedent for
+  `there` was the guard, not level 4.
+
+Kept deliberately, against the same feedback:
+
+- `which serializes concurrent callbacks`. Parallel capture is the paper's own
+  premise, so concurrent callbacks are the expected case, and without
+  serialization two of them could read one backlog and both under-price it. This
+  is a correctness property of the mechanism, not bookkeeping.
+- `no additional Draft worker`. The Draft executor already exists; the claim is
+  that integration adds none. `no Draft worker` would deny the single-thread
+  executor that 3.2's workload model assumes.
+- The enumeration `overheat level, memory, and CPU are recorded for analysis
+  only`. 2.4's safeguard is a thermal-level gate, so naming overheat level as a
+  logged-only signal is what separates the controller from it; the enumeration
+  also licenses the evaluation's use of those variables.
+- The full instrumentation enumeration, including `watchdog state`. The next
+  sentence claims the evaluation can separate model decision quality from sticky
+  demotion and watchdog enforcement, which only the enumeration supports.
+- That next sentence's purpose clause, though its cross-reference to the
+  evaluation section was dropped on 2026-08-20. Without the clause, `recorded
+  separately from the enforced action` is inert bookkeeping inside 3.5; cutting
+  the whole sentence instead would strand RQ3's always-admit audit sentence,
+  which presupposes that the trace distinguishes recommendation from enforced
+  outcome and is licensed nowhere else.
+
+Both of 3.5's remaining section cross-references were removed on 2026-08-20: the
+opening sentence no longer points at 2.1 for the framework, and the
+instrumentation sentence no longer points at the evaluation section. Only the
+pointer to 2.4's static guard stays, because that sentence's claim is precisely
+that the evaluated build replaced a safeguard the reader met there.
+`2_1_release_process.tex` keeps its `\label{sec:release-process}`; an
+unreferenced label is silent, and a later section may need it.
+
+### Section 3.5, naming the integration points
+
+3.5 must not name the implementation's components. A first draft described the
+integration as `the Draft-saving manager owns the predictor, the admission
+policy, and the pacer, and still executes Draft Sequences on its single-thread
+executor`, with `a per-Draft-task profiler`, `the application-facing
+capture-availability policy`, `the pacing decider`, and `a delayed scheduler`
+after it. Every one of those is a class or field name in `ML@cdd524f`
+(`SavingDraftImageTaskManager`, `draftSequenceExecutionPredictor`,
+`admissionPolicy`, `captureAvailablePacer`, `savingDraftImageThreadPool`,
+`DraftSequenceExecutionProfiler`, `CaptureAvailableApmPolicy`,
+`CaptureAvailablePacingDecider`, `SingleThreadDelayedScheduler`), and the
+sentence reproduced the manager's field-declaration order. They were removed on
+2026-08-20.
+
+The problem is not only disclosure. Those nouns appeared in no other manuscript
+file: 3.1 names the two modules *Remaining-Sequence Admission* and
+*Capture-Availability Pacing*, 3.2 says `the controller` and `the estimator`,
+and 2.2--3.4 say `single worker`, never `executor`. A reader met `manager`,
+`predictor`, `pacer`, `decider`, and `profiler` for the first and only time in
+the last subsection of Section 3, where they read as a fourth vocabulary for
+things already named twice.
+
+Name integration points by the role Section 3 already gave them:
+
+- the host component by what it owns -- `the framework component that already
+  owns the single Draft worker` -- not by a component name;
+- the two modules as `both modules`, or as `admission` and `pacing`, the words
+  3.3 and 3.4 use as agents;
+- the estimator as `the estimator they share`, which is 3.1's `share runtime
+  state and online estimates` at noun altitude;
+- the callback site as `the application-facing capture-availability path`;
+- the deferral as `defers callback release by the computed \(d_i\)`, stating the
+  effect rather than the mechanism that produces it.
+
+Two terminology consequences of the same pass. The queue unit is `Draft
+Sequence`, so `Draft-task submission` became `Draft Sequence submission`; `Draft
+task` was a fourth name for the unit the three-level rule already fixes.
+`the two-Draft horizon` became `the two-sequence reserve horizon`, matching
+3.4's `per-Draft-Sequence reserve` and `two future Draft Sequences` -- `Draft`
+is not a count noun anywhere else in the manuscript.
+
+Generic engineering vocabulary is still fine, and the overview figure uses it:
+`one scheduling thread` states a deployment cost and names nothing. What is
+banned is a noun a reader could only have gotten from the source tree.
+`Whether a requested delay was honored is not persisted` replaced `Scheduler
+acceptance is not persisted` for that reason and because, once the scheduler
+went, `Scheduler` had no antecedent.
+
+The integration cost claim is `no persistent controller state`, not `no
+persistent storage`. The evaluated build does persist: the metrics store is a
+Room database with an export worker, added to extract the study's traces and to
+be removed before deployment. Read against the instrumentation paragraph three
+lines below, the unscoped `storage` wording reads as a contradiction; the scoping
+word is what closes it.
+
+Do not close it a second time by stating in 3.5 that the recording path is
+study-only. A sentence to that effect was added on 2026-08-20 and cut the same
+day: once the cost claim names controller state, the sentence buys only the
+deployment-cost point, and that belongs with the other measurement caveats in
+Section 4's threats to validity, which is also where the no-formal-guarantee
+paragraph moved. The supporting implementation fact, if that paragraph ever needs
+it: `DraftSequenceExecutionProfiler` groups its state by destination, where
+`modelUpdate` holds what the predictor learns from and `metricsRecorder` is the
+sole writer of the metrics store, and the two are written at disjoint call sites
+(`ML@cdd524f`). The per-Draft device-state read belongs to the recording path for
+the same reason, so the enumerated signals cost nothing in a deployed build.
+
+The `Instrumentation.` block itself stays. Section 4 already depends on it: RQ2
+reads the recommendation-versus-enforced split, RQ3 labels each decision
+retrospectively from the realized trace, and RQ4's delay numbers rest on the
+requested-versus-realized semantics sentence. Deleting the block would leave
+Section 4 asserting a data source the paper never defines.
+
 ## Feedback Checklist
 
 When reviewing manuscript text, check the following in order:
