@@ -1,25 +1,25 @@
 \subsection{Admission-Aware Capture-Availability Pacing}
 \label{sec:pacing}
 
-Pacing runs when the framework is ready to deliver \texttt{captureAvailable}, controlling future arrivals using predicted time rather than queue depth.
+Pacing runs when the framework becomes ready to deliver \texttt{captureAvailable}, controlling future arrivals using predicted time rather than queue depth.
 It charges the predicted Draft-worker backlog and an admission-aware reserve against the newest committed capture's remaining deadline window, then delays the callback in proportion to any positive deficit.
 
 \smallskip\noindent\textbf{Backlog tracking.}
-Under parallel capture the callback can arrive before the preceding capture's Draft Sequence starts, so pacing predicts the backlog.
+Under parallel capture a callback can be released before the preceding capture's Draft Sequence starts, so pacing predicts the backlog.
 Draft Sequences differ in which stages they run and in what those stages cost, so the backlog accumulates one estimate per pending Draft Sequence.
-Pacing therefore maintains \(t^{\mathrm{end}}\), the predicted time at which the queue drains; the backlog \(\hat B_i\) is the time from decision \(i\) until then:
+Pacing therefore maintains \(t^{\mathrm{end}}\), the predicted time at which the queue drains; for a decision \(i\) taken at \(t_i\), the backlog is the time remaining until then:
 \begin{equation}
   \hat B_i=\max(0,t^{\mathrm{end}}-t_i).
   \label{eq:backlog}
 \end{equation}
-Because the next Draft Sequence is unknown, pacing advances \(t^{\mathrm{end}}\) using \(\hat P_i\) from the most recently started sequence:
+Because the Draft Sequence of the capture enabled by the callback is not yet known, pacing then advances \(t^{\mathrm{end}}\) using \(\hat P^{\mathrm{last}}\) from the most recently started Draft Sequence:
 \begin{equation}
-  t^{\mathrm{end}}\gets\max(t^{\mathrm{end}},t_i+d_i)+\lceil\hat P_i\rceil .
+  t^{\mathrm{end}}\gets\max(t^{\mathrm{end}},t_i+d_i)+\lceil\hat P^{\mathrm{last}}\rceil .
   \label{eq:clock-update}
 \end{equation}
-Here \(t_i+d_i\), with \(d_i\) from Equation~\ref{eq:pacing}, is the callback release time.
-If the predicted queue drains earlier, the maximum anchors the next predicted Draft start at that release because the capture cannot precede the callback.
-At each modeled Draft start, pacing rebases \(t^{\mathrm{end}}\) from the actual start using the predicted durations of the starting and queued Draft Sequences, preventing error from accumulating across captures.
+Here \(t_i+d_i\) is the callback release time, where \(d_i\) is computed by Equation~\ref{eq:pacing} after \(\hat B_i\) is read.
+If that release falls after the predicted queue-drain time, the maximum anchors the added estimate there, since the capture cannot precede the callback.
+At each modeled Draft start, pacing rebases \(t^{\mathrm{end}}\) from the actual start using the predicted durations of the starting and queued Draft Sequences, discarding timing error from completed Draft Sequences rather than carrying it across captures.
 
 \smallskip\noindent\textbf{Admission-aware reserve.}
 The same Draft start refreshes the reserve \(\hat C\) that the delay is priced against.
@@ -46,7 +46,7 @@ Pacing computes
   \label{eq:pacing}
 \end{equation}
 A nonpositive projected deficit records a zero-delay decision.
-The factor \(2\) covers the Draft Sequence that begins after the decision and the future Draft Sequence enabled by the callback; as the divisor, it applies only half of any positive deficit to limit user-perceived delay.
+The factor \(2\) covers the two Draft Sequences beyond the predicted drain, those of the capture enabled by this callback and of the following capture; as the divisor, it applies only half of any positive deficit to limit user-perceived delay.
 Together with admission's independent live-budget test, this is a coordination heuristic rather than a fixed-point derivation or an optimality claim.
 Because changing the factor also changes later arrivals and controller state, another setting requires matched runs or a validated closed-loop replay, not rescaling recorded delays.
 
