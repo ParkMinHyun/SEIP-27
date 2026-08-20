@@ -7,10 +7,10 @@ The controller models the Draft Sequence for capture \(i\) as an ordered workloa
 From position \(j\), \(\mathcal{K}_{i,j}=(k_j,\ldots,k_m)\) denotes the remaining sequence, ending in a mandatory terminal key measured from encoding start until the Draft image is saved.
 
 \smallskip\noindent\textbf{Online point estimation.}
-For any remaining sequence \(\mathcal{K}=\mathcal{K}_{i,j}\), the controller sums the predicted per-key durations:
+For an ordered workload sequence \(\mathcal{K}\), the controller sums the predicted per-key durations:
 \begin{equation}
   \hat P(\mathcal{K})
-  =\sum_{r=j}^{m}\hat p(k_r),
+  =\sum_{k\in\mathcal{K}}\hat p(k),
   \qquad
   \hat p(k)=\hat b(k)\,\gamma .
   \label{eq:point-estimate}

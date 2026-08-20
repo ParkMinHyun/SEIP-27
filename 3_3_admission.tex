@@ -15,7 +15,6 @@ Using stored decision-time predictions, only a fully observed remaining sequence
   \label{eq:residual-factor}
 \end{equation}
 The per-key maximum prevents a faster-than-estimated stage from cancelling another stage's overrun and ensures \(\phi(\mathcal K)\geq1\), while normalization by \(\hat P(\mathcal K)\) makes the factor comparable across duration scales.
-Skipped or otherwise incomplete sequences are not imputed.
 
 Factor selection uses the exact-sequence history when available and the cross-sequence pool otherwise.
 Each factor enters its exact history and the pool with unit weight and follows the shared decay; let \(w_l\) denote the resulting weight of factor \(l\).
