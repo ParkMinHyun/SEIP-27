@@ -1,7 +1,9 @@
 \subsection{RQ2: Control-Loop Contribution}
 \label{sec:rq2}
 
-RQ2 holds each condition at starting level 4, where the deployed guard sits at
-its decision boundary and the baseline already fails, and varies the
-configuration over ten runs each.
+RQ2 holds each capture condition at starting level 4, where the deployed guard sits at its decision boundary and the uncontrolled baseline already fails, and compares four configurations over ten runs per condition and configuration.
+\emph{No control} is the stress baseline: it executes every optional stage and releases \texttt{captureAvailable} as soon as the framework is ready.
+\emph{Admission only} enforces Equation~\ref{eq:admission} but never delays the callback.
+\emph{Pacing only} applies Equation~\ref{eq:pacing} while executing every optional stage.
+\emph{Full} enables both modules and is the controller described in Sections~\ref{sec:admission} and~\ref{sec:pacing}.
 \input{tables/tab_rq2_ablation.tex}

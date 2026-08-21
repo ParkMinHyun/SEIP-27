@@ -2,5 +2,7 @@
 \label{sec:rq1}
 
 RQ1 reports the balanced full-controller set: ten runs in each of the 14
-(condition, starting level) cells, every one a complete 30-capture session.
+(capture condition, starting level) cells, every one a complete 30-capture session.
+It evaluates the end-to-end trade-off through Capture Timeout, optional-stage retention, capture delay, and deadline margin.
+A capture counts toward \(M\) or \(S\) only when the corresponding stage has a positive observed duration, and deadline margins are normalized by the Capture Timeout budget.
 \input{tables/tab_rq1_end_to_end_summary.tex}

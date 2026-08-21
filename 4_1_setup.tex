@@ -1,32 +1,13 @@
 \subsection{Experimental Setup}
 \label{sec:setup}
 
-Table~\ref{tab:setup} summarizes the platform, workloads, and run protocol.
-We evaluate on the Galaxy S26 Ultra because the lightweight multi-frame composition remains a PoC that requires coordinated HAL and image-solution support; at the time of the study, an end-to-end binary containing both patches was available only for this model.
-The device also provides the cleanest setting for isolating runtime control: unlike other flagship variants, it does not add queue-depth- or feature-specific restrictions on parallel capture beyond the static thermal guard characterized in Section~\ref{sec:guard-limit}.
-Across controller arms, the same production-based camera framework, HAL, native image-processing stages, and storage path are exercised, with only the controller configuration and study recording path changed.
-The controller itself contains no device-specific performance threshold or calibrated execution-time profile; it learns execution costs from measured runtimes, so no controller parameter is retuned across the evaluated capture conditions or starting overheat levels.
-Our experiments therefore evaluate replacement of the static thermal guard on the available PoC platform; removing the additional guards used by other variants is a deployment implication rather than a cross-device claim established here.
+Table~\ref{tab:setup} summarizes the experimental platform and common run conditions.
+The evaluated lightweight multi-frame composition targets Portrait mode and requires coordinated HAL and image-solution support; during the study, an end-to-end PoC binary was available only for the Galaxy S26 Ultra.
+This model also lacks the additional queue-depth- and feature-specific parallel-capture guards used by other flagship variants, allowing admission and pacing to be evaluated without interference from those guards.
+Across configurations, the same production-based camera stack and study instrumentation are used; only the controller policy differs.
 
-We evaluate the two endpoint conditions identified by the baseline campaign: 12MP normal capture, the production-default configuration, and 24MP capture under memory pressure, where the uncontrolled pipeline reaches the timeout boundary earliest.
-The 24MP label denotes the requested mode because only the first one or two captures of a run are produced at that resolution before the production pipeline falls back to 12MP.
+We evaluate two endpoint conditions established by the baseline campaign: 12MP normal capture, the production-default configuration, and 24MP capture under memory pressure, where the uncontrolled pipeline fails earliest.
+In 24MP mode, the production pipeline falls back to 12MP at Overheat Level~5 and above.
+Runs are grouped by the overheat level observed at the first capture, and each run starts from a fresh camera application session.
+The ADB loop issues the next capture immediately when capture becomes available, creating a worst-case continuous-capture workload more aggressive than typical manual operation.
 \input{tables/tab_setup.tex}
-
-\smallskip\noindent\textbf{Controller configurations.}
-The production static thermal guard is bypassed in each controlled arm so that differences isolate runtime admission and pacing.
-\emph{No control} is the stress baseline: it executes every optional stage and releases \texttt{captureAvailable} as soon as the framework is ready.
-\emph{Admission only} enforces Equation~\ref{eq:admission} but never delays the callback.
-\emph{Pacing only} applies Equation~\ref{eq:pacing} while executing every optional stage; admission decisions are recorded in shadow mode for the RQ3 audit.
-\emph{Full} enables both modules and is the controller described in Sections~\ref{sec:admission} and~\ref{sec:pacing}.
-
-\smallskip\noindent\textbf{Protocol and measurement.}
-Each capture condition is paired with starting overheat levels 0--6.
-RQ1 evaluates the full controller across all 14 condition--level cells, with ten 30-capture runs per cell; RQ2 fixes the starting level at 4 and compares the four controller configurations; RQ3 and RQ4 aggregate the full-controller runs across starting levels.
-A run starts when the platform reports a transition to its target overheat level, using the same ordinal signal that drives the deployed guard.
-Every run then begins a fresh camera application session, so estimator histories, the queue-local set \(G\), and the pacing backlog clock start empty and no controller state carries across runs.
-The ADB driver inserts no external delay between capture attempts, so the workload adds no pacing beyond the application's own capture-availability path.
-
-A recording path added for the study exports one row per capture and one per admission and pacing decision.
-For each decision, it retains the decision-time estimates \(U\), \(\hat B_i\), and \(\hat C\), the requested delay \(d_i\), and the realized stage and Draft Sequence durations used for retrospective analysis.
-Deadline margins are normalized by the Capture Timeout budget, and a capture counts toward \(M\) or \(S\) only when the corresponding stage has a positive observed duration.
-A 30-capture run yields 29 capture-availability transitions; pacing activation rates and \(d\) percentiles therefore exclude the delay associated with the final capture, which gates no subsequent capture.
