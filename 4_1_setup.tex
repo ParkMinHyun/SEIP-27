@@ -1,22 +1,32 @@
 \subsection{Experimental Setup}
 \label{sec:setup}
 
-Table~\ref{tab:setup} summarizes the setup shared by every arm, which follows the baseline campaign of Section~\ref{sec:guard-limit}.
-The evaluation reports the least and the most demanding of the conditions that campaign measured: 12MP normal capture, the production-default resolution, and 24MP capture under memory pressure, where the uncontrolled configuration times out earliest.
-The 24MP label names the requested mode, since only the first one or two captures of a run are produced at that resolution and the remainder fall back to 12MP.
+Table~\ref{tab:setup} summarizes the platform, workloads, and run protocol.
+We evaluate on the Galaxy S26 Ultra because the lightweight multi-frame composition remains a PoC that requires coordinated HAL and image-solution support; at the time of the study, an end-to-end binary containing both patches was available only for this model.
+The device also provides the cleanest setting for isolating runtime control: unlike other flagship variants, it does not add queue-depth- or feature-specific restrictions on parallel capture beyond the static thermal guard characterized in Section~\ref{sec:guard-limit}.
+Across controller arms, the same production-based camera framework, HAL, native image-processing stages, and storage path are exercised, with only the controller configuration and study recording path changed.
+The controller itself contains no device-specific performance threshold or calibrated execution-time profile; it learns execution costs from measured runtimes, so no controller parameter is retuned across the evaluated capture conditions or starting overheat levels.
+Our experiments therefore evaluate replacement of the static thermal guard on the available PoC platform; removing the additional guards used by other variants is a deployment implication rather than a cross-device claim established here.
+
+We evaluate the two endpoint conditions identified by the baseline campaign: 12MP normal capture, the production-default configuration, and 24MP capture under memory pressure, where the uncontrolled pipeline reaches the timeout boundary earliest.
+The 24MP label denotes the requested mode because only the first one or two captures of a run are produced at that resolution before the production pipeline falls back to 12MP.
 \input{tables/tab_setup.tex}
 
 \smallskip\noindent\textbf{Controller configurations.}
-The production static thermal guard is bypassed in every arm, so the comparison isolates runtime control rather than the level-4 threshold, and enabling the two modules independently yields four configurations.
-\emph{No control} executes every optional stage and releases \texttt{captureAvailable} as soon as the framework is ready; this is what enabling the Draft Sequence's lightweight multi-frame composition would require, and it is the configuration Table~\ref{tab:timeout_index} measures.
-\emph{Admission only} enforces Equation~\ref{eq:admission} at each admission point but never delays the callback.
-\emph{Pacing only} delays the callback by Equation~\ref{eq:pacing} while executing every optional stage, and records the admission decisions it does not enforce, which is the audit RQ3 reads.
-\emph{Full} enables both modules and is the controller of Sections~\ref{sec:admission} and~\ref{sec:pacing}.
+The production static thermal guard is bypassed in each controlled arm so that differences isolate runtime admission and pacing.
+\emph{No control} is the stress baseline: it executes every optional stage and releases \texttt{captureAvailable} as soon as the framework is ready.
+\emph{Admission only} enforces Equation~\ref{eq:admission} but never delays the callback.
+\emph{Pacing only} applies Equation~\ref{eq:pacing} while executing every optional stage; admission decisions are recorded in shadow mode for the RQ3 audit.
+\emph{Full} enables both modules and is the controller described in Sections~\ref{sec:admission} and~\ref{sec:pacing}.
 
 \smallskip\noindent\textbf{Protocol and measurement.}
-A run starts once the platform reports a transition to that run's target overheat level, so the starting thermal state is read from the same ordinal signal the deployed guard acts on rather than set by an external proxy.
-Every run then begins a fresh camera application session, so the estimator histories of Section~\ref{sec:model}, the queue-local set \(G\), and the backlog clock all start empty and no controller state carries from one run to the next.
-A recording path added for the study exports one row per capture and one per admission and pacing decision, retaining the decision-time estimates \(U\), \(\hat B_i\), and \(\hat C\), the delay \(d_i\) the decision requested, and the realized stage and Draft Sequence durations those estimates are compared against.
-Deadline margins are reported as a percentage of the Capture Timeout budget rather than in absolute time, and a capture counts toward \(M\) or \(S\) only when the corresponding stage has a positive observed duration.
-A 30-capture run yields 29 capture-availability transitions; pacing activation rates and \(d\) percentiles are taken over those transitions, excluding the delay associated with the final capture, which gates no further capture.
-Sessions carrying a Capture Timeout label are excluded from the full-controller collection as known invalid measurements produced by a recording fault rather than observed deadline misses; runs that ended before 30 captures are otherwise retained, and each research question states the population it uses.
+Each capture condition is paired with starting overheat levels 0--6.
+RQ1 evaluates the full controller across all 14 condition--level cells, with ten 30-capture runs per cell; RQ2 fixes the starting level at 4 and compares the four controller configurations; RQ3 and RQ4 aggregate the full-controller runs across starting levels.
+A run starts when the platform reports a transition to its target overheat level, using the same ordinal signal that drives the deployed guard.
+Every run then begins a fresh camera application session, so estimator histories, the queue-local set \(G\), and the pacing backlog clock start empty and no controller state carries across runs.
+The ADB driver inserts no external delay between capture attempts, so the workload adds no pacing beyond the application's own capture-availability path.
+
+A recording path added for the study exports one row per capture and one per admission and pacing decision.
+For each decision, it retains the decision-time estimates \(U\), \(\hat B_i\), and \(\hat C\), the requested delay \(d_i\), and the realized stage and Draft Sequence durations used for retrospective analysis.
+Deadline margins are normalized by the Capture Timeout budget, and a capture counts toward \(M\) or \(S\) only when the corresponding stage has a positive observed duration.
+A 30-capture run yields 29 capture-availability transitions; pacing activation rates and \(d\) percentiles therefore exclude the delay associated with the final capture, which gates no subsequent capture.
