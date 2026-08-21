@@ -4,13 +4,16 @@
 The controller integrates at existing framework decision points, preserving the framework's ownership and execution structure without introducing new cross-layer interfaces.
 This narrow integration limits cross-component coordination and broad revalidation required for changes to the capture workflow.
 
-\smallskip\noindent\textbf{Framework integration.}
-The framework component that already owns the single Draft worker also hosts both modules and the estimator they share, so Draft Sequences continue to execute in capture order on that worker.
-Admission replaces the static level-4 thermal guard at the existing admission point and determines whether an optional stage runs at that level.
-The integration adds a callback-delivery thread and a watchdog-fallback thread.
-On the application-facing \texttt{captureAvailable} path, pacing posts the callback to the callback-delivery thread for release after \(d_i\).
+\smallskip\noindent\textbf{Ownership and attachment.}
+The framework component that already owns the single Draft worker hosts the shared estimator as well; admission therefore runs within the same lifecycle and queries remaining-sequence estimates directly.
+The previous level-4 thermal guard excluded optional stages when constructing the Draft Sequence; admission instead retains them in the sequence and decides at each admission point whether they execute.
+Pacing attaches differently because the application-facing \texttt{captureAvailable} path has a separate lifecycle and cannot retain direct access to the estimator.
+The framework therefore exposes a single-method delay interface through the existing event-mediated channel, which the application-facing path invokes to obtain \(d_i\).
+The estimator and its execution history never cross that boundary; only the computed delay \(d_i\) does.
 
-Image processing for an admitted optional stage runs in native code and cannot be cancelled once started.
+The integration adds two dedicated threads: a callback-delivery thread and a watchdog-fallback thread.
+Pacing posts the \texttt{captureAvailable} callback to the callback-delivery thread for release after \(d_i\).
+The watchdog-fallback thread provides the fallback path required because an admitted optional stage cannot be cancelled once it enters native image processing.
 When the watchdog expires, the watchdog-fallback thread processes a copy of the original input while the in-flight optional-stage processing may continue in parallel.
 Resources held by the in-flight processing are released only after it completes, even when the fallback completes earlier.
 
