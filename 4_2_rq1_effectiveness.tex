@@ -5,4 +5,9 @@ RQ1 reports the balanced full-controller set: ten runs in each of the 14
 (capture condition, starting level) cells, every one a complete 30-capture session.
 It evaluates the end-to-end trade-off through Capture Timeout, optional-stage retention, capture delay, and deadline margin.
 A capture counts toward \(M\) or \(S\) only when the corresponding stage has a positive observed duration, and deadline margins are normalized by the Capture Timeout budget.
+
+The deployed static guard is the reference these cells should be read against, and its behavior on them follows from its definition rather than from a separate arm.
+On the six cells that start at level 4 or above it suppresses optional stages when each Draft Sequence is constructed, so \(M\) and \(S\) stay at zero there for as long as the level holds.
+On the remaining cells it permits every optional stage, which is the configuration the Baseline column measures, and that column reaches Capture Timeout at levels 2 and 3 at 12MP and from level 0 onward at 24MP under memory pressure.
+The deployed policy therefore withholds the feature where captures are safe and does not prevent the failure where they are not.
 \input{tables/tab_rq1_end_to_end_summary.tex}

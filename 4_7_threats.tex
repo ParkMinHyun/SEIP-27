@@ -1,0 +1,14 @@
+\subsection{Threats to Validity}
+\label{sec:threats}
+
+End-to-end evaluation is limited to one device because the lightweight multi-frame composition is still a production candidate whose HAL and image-solution patches were available only for the Galaxy S26 Ultra.
+The controller carries no per-model performance profile and no calibrated threshold, so nothing in its design encodes this device; we nonetheless do not claim cross-device effectiveness, which further end-to-end binaries would be needed to establish.
+The same limit bounds the broader claim of Section~\ref{sec:release-process}.
+Because its decisions read observed execution time against the remaining deadline window rather than a fixed proxy, the controller is designed to subsume restrictions keyed to captures in flight or to which stages a mode enables, but this paper demonstrates that replacement only for the thermal guard.
+
+Neither module offers a formal deadline guarantee.
+Admission compares a residual-calibrated high-side estimate against the live budget, pacing charges an empirical reserve, and both are evidence-adaptive rather than bounding, which is why the watchdog of Section~\ref{sec:admission} exists at all.
+The results therefore support a claim about observed deadline behavior on the evaluated population rather than about worst-case behavior.
+
+The study recording path is present in every configuration alike, so comparisons between them are unaffected by it, but it is not part of a deployed build and we do not separately quantify its cost; absolute deadline margins are conservative with respect to a build without it.
+The ADB driver requests each capture as soon as the framework reports capture availability, which characterizes the saturated regime the single Draft worker faces; a slower cadence would leave less backlog for either module to act on.
