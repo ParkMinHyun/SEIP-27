@@ -184,10 +184,26 @@ subsection is ordered by run-in headings:
 - the opening paragraph for what the controller is;
 - `Controller architecture.` for the two modules and the integration
   boundaries;
-- `Safety and responsiveness.` for the hard constraint, the two costs, and which
-  of them the policy prefers;
-- `Cross-shot margin dynamics.` for the recursion, the two levers it exposes,
-  and the asymmetric interaction between them.
+- `Control objective.` for the hard constraint, the recursion, the two levers it
+  exposes, the asymmetric interaction between them, and which of the two costs
+  the policy prefers.
+
+The two headings map onto the two halves of the subsection title. There were
+three until 2026-08-21, when `Safety and responsiveness.` and `Cross-shot margin
+dynamics.` were merged. The pair delay/skip crossed that heading boundary twice
+-- once named as the two product costs, once as the two levers on the terms of
+the recursion -- so the second block re-introduced what the first had just
+introduced.
+
+Inside the merged block the order is load-bearing: the constraint, then the
+recursion, then the levers with the asymmetry, then the identity-not-a-control-law
+caveat, and the cost ranking last. The caveat has to separate the equation from
+the ranking. The responsiveness-dominant preference is a product priority, and
+placed directly after the equation it reads as a consequence of it -- which is
+the misreading the old heading boundary used to prevent, and is the same
+lexicographic-optimum reading `AGENTS.md` bans elsewhere. Ending on the ranking
+also leaves the block on the named trade-off, which is the sentence
+`_4_experiments.tex` cites.
 
 Keep the headings short enough to match the ones in 2.3 and 2.4, and do not name
 this subsection for the two modules -- `Remaining-Sequence Admission` and
@@ -196,13 +212,59 @@ a title like `Coordinated Admission and Pacing` here promises their detail two
 subsections early. `Cross-shot` is the manuscript's fixed term; do not write
 `cross-capture`.
 
-State each fact under exactly one heading, and keep the asymmetry beside the
-levers rather than in the opening, so the block reads as identity, then levers,
-then what the levers cannot do.
+The adjective `cross-shot` attaches to the contention, not to the constraint.
+Section 2.2 is titled for cross-shot deadline *contention*, and 3.1 does not use
+the adjective at all: its recap sentence reads `This constraint spans captures:`.
+That subject is consistent because the sentence before it states the constraint
+at stream level -- `avoiding Capture Timeout`, not a per-capture deadline -- so
+the clause after the colon, `each capture has its own Capture Timeout window`,
+enumerates the constraint's instances rather than contradicting its scope. The
+coupling itself comes from the clause after that, the single worker.
+
+Two forms were tried on 2026-08-21 and rejected. `The constraint is cross-shot:`
+puts the adjective on the wrong noun. `Enforcing this constraint is cross-shot:`
+puts it on the right one but reads awkwardly, since `cross-shot` modifies nouns
+like contention or window comfortably and a gerund badly. The cost of the
+surviving form is that `cross-shot` now appears only in Section 2.2, which is
+acceptable: 2.2 introduces and explains the concept, and 3.1 only recaps it
+before the recursion formalizes it. `cross-capture` remains banned outright.
+
+State each fact exactly once, and keep the asymmetry beside the levers rather
+than in the opening, so that stretch reads as identity, then levers, then what
+the levers cannot do.
+
+Each lever gets exactly one limit there, and it is that lever's own past:
+admission cannot restore consumed budget, pacing cannot alter work already in
+progress. Those two are what justify `act prospectively`, and keeping them
+parallel is the point. Until 2026-08-21 admission also carried `or revise a
+scheduled delay`, which reads as a limit on the wrong module -- revising a
+delay is pacing's business, and `3_4_pacing.tex` owns that fact, where a
+committed delay going unrevised is the reason pacing needs the high-side
+reserve. It also arrived before its motivation: the irreversibility of delay is
+what ranks the two costs, and the cost sentence two lines later already carries
+it with `irreversibly`. Do not restore it, and do not add its mirror image to
+pacing either; a lever's inability to undo the *other* lever's committed
+decision is not a fact 3.1 needs.
 
 The opening must anchor to keeping the Draft Sequence's lightweight multi-frame
 composition available, which is where Section 2.4 hands over; Capture Timeout is
 the safety constraint on that goal, not the goal itself.
+
+The opening and the `Control objective.` block name different scopes, and the
+difference is load-bearing. The opening names the feature being enabled, the
+lightweight multi-frame composition -- \(M\) alone. The constraint sentence
+names what the controller executes at runtime, which is all **optional
+stages**, \(M\) and \(S\) together: admission replaces the level-4 thermal
+guard, and that guard suppressed both (Section 2.4), so both are what admission
+now decides per capture -- `3_3_admission.tex` rejects "an \(M\) or \(S\)
+stage", and `3_5_implementation.tex` states the replacement in those terms.
+Narrowing the constraint sentence to the multi-frame stage was tried on
+2026-08-21 and is wrong twice over: it understates admission's scope, and
+`lightweight` does not even single \(M\) out, since the single-frame stages of
+\(S\) are lightweight too. Write it as Section 2.4's handover sentence does --
+`optional stages ... whenever safely possible` -- which is also the bare form
+`AGENTS.md` mandates for every verb that acts on the decision unit, and the
+phrase the rest of Section 3 already uses throughout.
 
 `\label{sec:objective}` belongs on the `\subsection` line. `_4_experiments.tex`
 references it, and a `\label` placed after a run-in heading is not attached to a
@@ -216,7 +278,7 @@ it dropped to page 4 while the sentence citing it stayed on page 3; moved to the
 top of the subsection it lands on page 3 with that sentence, at the same total
 page count.
 
-The `Safety and responsiveness.` block must not describe a skipped optional
+The `Control objective.` block must not describe a skipped optional
 stage as masked, hidden, or otherwise free. Sections 2.3 and 2.4 motivate the feature as closing the draft--final
 visual gap, and for the target mode post-processing is deferred until the
 application backgrounds, so the Draft image is what the user sees for the whole
@@ -246,8 +308,15 @@ shape.
 
 ### Section 3.1, load-bearing phrasing
 
-- Keep `safety-constrained, responsiveness-dominant trade-off` verbatim.
+- Keep `deadline-constrained, responsiveness-dominant trade-off` verbatim.
   Section 4 opens by citing it by name, so rewording it breaks the reference.
+  This line read `safety-constrained` until 2026-08-21, disagreeing with
+  `AGENTS.md` and with both places the manuscript prints the term; the
+  qualifier is `deadline-constrained` because the compressed label is reused
+  pages later in Section 4 with no context, and the paper has a second safety
+  notion in scope -- the static thermal guard of Section 2.4 -- that
+  `safety-constrained` would not distinguish it from. Changing it is a
+  three-file edit: `3_1_overview.tex`, `_4_experiments.tex`, and `AGENTS.md`.
 - Do not restate the priority ranking as a strict lexicographic optimum
   ("timeout first, delay second, optional work third"). That corner solution is
   "delay only as a last resort", which the deployed policy does not implement:
