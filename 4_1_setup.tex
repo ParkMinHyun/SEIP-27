@@ -1,0 +1,31 @@
+\subsection{Experimental Setup}
+\label{sec:setup}
+
+\smallskip\noindent\textbf{Device and configurations.}
+All measurements come from the Galaxy S26 Ultra of Section~\ref{sec:guard-limit}, with the production static thermal guard bypassed in every arm so that the comparison isolates runtime control rather than the level-4 threshold.
+Enabling the two modules independently yields four configurations.
+\emph{No control} executes every optional stage and releases \texttt{captureAvailable} as soon as the framework is ready; this is what enabling the Draft Sequence's lightweight multi-frame composition would require, and it is the configuration Table~\ref{tab:timeout_index} measures.
+\emph{Admission only} enforces Equation~\ref{eq:admission} at each admission point but never delays the callback.
+\emph{Pacing only} delays the callback by Equation~\ref{eq:pacing} but executes every optional stage; the admission model still evaluates each optional stage and records the decision it would have made, applying neither the queue-local demotion nor the watchdog of Section~\ref{sec:admission}, and those recorded decisions are the always-admit audit RQ3 reads.
+\emph{Full} enables both modules and is the controller of Sections~\ref{sec:admission} and~\ref{sec:pacing}.
+
+\smallskip\noindent\textbf{Capture conditions and runs.}
+The evaluation retains the two conditions of the Section~\ref{sec:guard-limit} campaign that bracket the deployed range: 12MP normal capture, the production-default resolution, and 24MP capture under memory pressure, the condition whose baseline fails earliest.
+The 24MP label names the requested mode; only the first one or two captures of a run are produced at 24MP, and the remainder fall back to 12MP.
+As in that campaign, each cell pairs a capture condition with a starting overheat level from 0 to 6 and holds ten 30-capture runs.
+RQ1 reports all 14 cells; RQ2 contrasts the four configurations at starting level 4 alone, where the deployed guard sits at its decision boundary and the baseline already fails; RQ3 and RQ4 pool the full-controller runs across all seven starting levels.
+Each run begins a fresh camera application session, so the estimator histories of Section~\ref{sec:model}, the queue-local set \(G\), and the backlog clock all start empty and no controller state carries from one run to the next.
+
+\smallskip\noindent\textbf{Measurements.}
+A recording path added for the study exports one row per capture and one per admission and pacing decision, retaining the decision-time estimates \(U\), \(\hat B_i\), and \(\hat C\), the delay \(d_i\) the decision requested, and the realized stage and Draft Sequence durations those estimates are compared against.
+Deadline margins are reported as a percentage of the Capture Timeout budget rather than in absolute time.
+A 30-capture run yields 29 capture-availability transitions; pacing activation rates and \(d\) percentiles are taken over those transitions, excluding the delay associated with the final capture, which gates no further capture.
+A capture counts toward \(M\) or \(S\) only when the corresponding stage has a positive observed duration.
+
+\smallskip\noindent\textbf{Populations and excluded measurements.}
+RQ1 uses ten runs in each of the 14 cells; cells in which more than ten runs had been collected were trimmed to ten by dropping the runs furthest from the cell's own centre across retention, cumulative delay, deadline margin, and run span, which removed 16 of 156 runs.
+RQ2 uses ten runs per configuration in each of its two cells and takes every rate over the 300 captures a cell requested rather than over the captures its runs reached, so that a capture a run never reached contributes zero instead of leaving the denominator.
+RQ3 reads 8{,}430 enforced admission decisions from the full-controller runs, 2{,}100 captures over 70 runs at 12MP normal and 2{,}116 over 73 runs at 24MP, and audits a disjoint pool of 3{,}746 recorded decisions from the always-admit arm.
+RQ4 analyzes 1{,}920 and 1{,}861 pacing decisions over 70 and 69 full-controller runs.
+Sessions of the full-controller collection that carry a Capture Timeout label are excluded as known invalid measurements produced by a recording fault rather than observed deadline misses, and incomplete sessions are excluded as well, so every analyzed full-controller run is a complete 30-capture session.
+% TODO: name the recording fault and give the exclusion-manifest counts once that record is accessible.

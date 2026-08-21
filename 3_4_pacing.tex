@@ -34,10 +34,11 @@ Pacing charges the predicted backlog \(\hat B_i\) and a per-Draft-Sequence reser
 By the time a decision runs, the capture the previous callback enabled is committed; because Draft Sequences execute in arrival order, the newest committed capture is therefore the last one accounted for by \(t^{\mathrm{end}}\), which predicts when its Draft Sequence completes.
 Thus, \(T_i-\hat B_i\) is the slack predicted to remain on that capture's deadline when the queue drains.
 
-The backlog clock can use point predictions because it is rebased at each such Draft Sequence start, whereas a committed delay is not revised.
-Pacing therefore uses \(\hat C\) as a high-side reserve for a Draft Sequence that starts only after the backlog drains, when on-device runtime conditions may have degraded further.
-Unlike \(U\), which calibrates the remaining suffix of an in-progress Draft Sequence, \(\hat C\) draws on completed whole-sequence durations.
-At each such Draft Sequence start, pacing applies admission's queue-local group set \(G\) to the starting workload sequence \(\mathcal{K}\), yielding \(\mathcal{K}^G\), and refreshes
+The backlog clock can use point predictions because it is rebased at each Draft Sequence start, whereas a committed delay is not revised.
+Pacing uses \(\hat C\) as a high-side reserve for a Draft Sequence starting after the backlog drains, when on-device runtime conditions may have changed further.
+Unlike \(U\), which calibrates the remaining suffix of an in-progress Draft Sequence, \(\hat C\) draws on completed Draft Sequence durations.
+Until the first Draft Sequence start establishes \(\hat C\), pacing delivers the callback immediately.
+At each start, pacing applies admission's queue-local group set \(G\) to workload sequence \(\mathcal{K}\), yielding \(\mathcal{K}^G\), and refreshes
 \begin{equation}
   \hat C = \max\!\left(
     C^{\max}_s-\bigl[\hat P(\mathcal{K})-\hat P(\mathcal{K}^G)\bigr],\;
@@ -46,8 +47,9 @@ At each such Draft Sequence start, pacing applies admission's queue-local group 
   \label{eq:reserve}
 \end{equation}
 Here \(C^{\max}_s\) is the largest completed Draft Sequence duration observed since the queue last drained for the output-size bucket \(s\) of \(\mathcal{K}^G\); an unseen bucket uses the largest observed bucket maximum.
-The subtraction removes the predicted cost of stages excluded by \(G\), while the outer maximum keeps \(\hat C\) no smaller than \(\hat P(\mathcal{K}^G)\).
-If no completed duration is yet available, this prediction alone determines \(\hat C\); before the first refresh, pacing delivers the callback without delay.
+The subtraction removes the predicted cost of stages excluded by \(G\), making the observation comparable to \(\mathcal{K}^G\).
+The outer maximum falls back to the current prediction when this correction would under-price \(\mathcal{K}^G\), such as after a recent slowdown or when \(C^{\max}_s\) already reflects the same demotion.
+If no Draft Sequence has completed since the drain, the prediction alone determines \(\hat C\).
 Thus, \(\hat C\) is an empirical reserve rather than a bound.
 
 Beyond the predicted drain, the factor \(2\) requires \(T_i-\hat B_i\) to cover two future Draft Sequences: one for the capture enabled by the delayed callback and one for the following capture.

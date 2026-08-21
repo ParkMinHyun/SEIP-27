@@ -26,7 +26,8 @@ with `AGENTS.md`, `AGENTS.md` wins and this file should be corrected.
 | [`tab_rq1_end_to_end_summary`](#tab_rq1_end_to_end_summary) | `tables/` | Live -- `_4_experiments.tex`, RQ1 |
 | [`tab_rq2_ablation`](#tab_rq2_ablation) | `tables/` | Live -- `_4_experiments.tex`, RQ2 |
 | [`tab_rq3_admission_summary`](#tab_rq3_admission_summary) | `tables/` | Live -- `_4_experiments.tex`, RQ3 |
-| [`tab_rq4_pacing_selectivity`](#tab_rq4_pacing_selectivity) | `tables/` | Live -- `_4_experiments.tex`, RQ4 |
+| [`tab_rq4_pacing_sizing`](#tab_rq4_pacing_sizing) | `tables/` | Live -- `_4_experiments.tex`, RQ4 |
+| [`tab_rq4_pacing_selectivity`](#tab_rq4_pacing_selectivity) | `tables/` | Superseded 2026-08-21 by `tab_rq4_pacing_sizing`; kept on disk |
 | [`tab_rq4_pacing_summary`](#tab_rq4_pacing_summary) | `tables/` | Superseded 2026-08-13 by `tab_rq4_pacing_selectivity`; kept on disk |
 | [`tab_timeout_index`](#tab_timeout_index) | `tables/` | Live -- `2_4_static_safeguards.tex` |
 | [`fig_capture_pipeline`](#fig_capture_pipeline) | `figures/` | Live -- `2_3_draft_sequence.tex` |
@@ -1041,9 +1042,60 @@ Recorded from the column-spec labels that used to sit in the tabular preamble.
 | `>{\raggedleft\arraybackslash}p{29pt}` | unsafe work, model admits |
 | `>{\raggedleft\arraybackslash}p{25pt}` | unsafe work, model skips |
 
+## tab_rq4_pacing_sizing
+
+`tables/tab_rq4_pacing_sizing.tex` &middot; Live -- `_4_experiments.tex`, RQ4
+
+RQ4: the delay engages selectively as retrospective pressure tightens, and
+stays a small share of the backlog it drains.
+
+Adopted as the RQ4 exhibit of record on 2026-08-21, succeeding
+`tab_rq4_pacing_selectivity`, whose entry keeps the reasoning for the earlier
+swap away from `tab_rq4_pacing_summary`.  That reasoning still applies: the
+summary table measured d against d*, which is a decomposition of prediction
+error at a fixed coefficient rather than a sizing report.
+
+CAPTION AND LABEL ARE STILL THE PREDECESSOR'S.  The caption title reads "RQ4
+pacing selectivity" and the label is tab:rq4_pacing_selectivity_half.  Nothing
+references that label yet, so both can be renamed when the RQ4 prose is
+written; until then do not assume the printed title matches the
+research-question name.
+
+Sources, all committed, one CSV row per printed cell.  From
+data/rq3/policy/summary.csv:
+  activationPercent band spare_over_40 / spare_20_40 / spare_0_20 /
+    projected_overrun     the four Paced-by-pressure-band cells; the CSV
+                          carries the percentage in value and the band size in
+                          denominator, and the table prints both
+  delayOverBacklogPercent P50   the d/B column; its denominator is
+                          pacedTransitions, which the cell prints as "N paced"
+  backlogDrainingDelaySharePercent   the Overlap backlog column
+Regenerate with scripts/rq3_pacing_summary_metrics.py sampling.
+
+Population.  The balanced Full arm: 1,920 analyzed transitions over 70 runs at
+12MP normal and 1,861 over 69 runs at 24MP memory pressure, of which 411 and
+471 were paced.  Two sums must hold after any regeneration and are the fastest
+check on a mis-transcribed cell: the four band denominators partition the
+analyzed transitions, and the four paced counts sum to pacedTransitions.
+
+THE BANDS ARE MEASURED, NOT MODELLED.  They bin retrospective pressure in
+budget points, half-open [lo, hi), with the last band open at its lower edge
+and equal to the set carrying a positive retrospective matched-policy target.
+Activation against the controller's OWN online score is true by construction --
+it holds on 100% of analyzed transitions in both conditions -- so it is not
+evidence of anything and must never be reported as a result.  This is stated at
+the head of scripts/rq3_selectivity_metrics.py; read it before adding a column.
+
+2026-08-21 CORRECTION.  The 24MP deficit cell printed 69.3% (97/140).  Its CSV
+row is 68.79 over 141, and 141 is what makes the band denominators sum to the
+1,861 analyzed transitions, so the printed denominator was one short and the
+percentage followed it.  The cell now prints 68.8% (97/141).  No other cell
+moved; every one of the remaining eleven was checked against its CSV row in
+the same pass.
+
 ## tab_rq4_pacing_selectivity
 
-`tables/tab_rq4_pacing_selectivity.tex` &middot; Live -- `_4_experiments.tex`, RQ4
+`tables/tab_rq4_pacing_selectivity.tex` &middot; Superseded 2026-08-21 by `tab_rq4_pacing_sizing`; kept on disk
 
 RQ4: delay sizing is conservative yet work-conserving.
 
