@@ -2,7 +2,7 @@
 \label{sec:guard-limit}
 To reduce the draft--final visual gap, the Draft Sequence's optional stages should run on all supported models whenever safely possible, rather than be suppressed uniformly under thermal stress as production does.
 
-\smallskip\noindent\textbf{Production thermal guard.}
+\smallskip\noindent\textbf{Production static thermal guard.}
 Samsung's overheat level is an ordinal thermal indicator on a 0--6 scale, where larger values denote stronger throttling.
 During pre-release validation, level-4 throttling delayed a single-frame Draft stage and caused a Capture Timeout.
 After the failure recurred despite optimization, we adopted a uniform safeguard that skips optional stages at level 4 or higher.
@@ -10,7 +10,7 @@ Because the Draft Sequence is implemented in framework code shared across models
 However, level 4 is not confined to stress testing; it can also arise under high ambient temperatures, charging, or preceding device workloads.
 Nor does the level reveal how much of a capture's deadline has already been consumed by queueing or how much Draft work remains.
 
-\smallskip\noindent\textbf{Target workload and configuration.}
+\smallskip\noindent\textbf{Required runtime control.}
 We denote the candidate lightweight multi-frame Draft stage by \emph{M} and all deployed optional single-frame stages in the target Portrait configuration by \emph{S}.
 We compare M with M+S; both are followed by the same mandatory encoding and saving.
 We first evaluated M on the Galaxy S26 Ultra, the highest-performing model, to determine whether the problem persists even on the most capable device.
@@ -21,7 +21,6 @@ Table~\ref{tab:timeout_index} reports the earliest and median first-timeout indi
 
 \input{tables/tab_timeout_index.tex}
 
-\smallskip\noindent\textbf{Required runtime control.}
 Some trials starting at overheat levels 0--3 timed out even though the production guard permits optional stages to run at those levels.
 Conversely, at starting levels 4--6, several captures completed optional stages before the earliest timeout, even though the guard would suppress them from the first capture.
 Together, these results show that a fixed thermal threshold cannot reliably identify which captures have sufficient budget to execute \(M\).

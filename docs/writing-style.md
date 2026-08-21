@@ -174,6 +174,63 @@ headers inside the section files. `AGENTS.md` is the authority for all of them;
 this section records where each one applies so a reviewer can check a section
 without rereading every rule.
 
+### Section 2.4, internal ordering
+
+2.4 carries two run-in headings. `Production static thermal guard.` covers the
+level-4 safeguard, why it applies uniformly, and the two things the level cannot
+reveal. `Required runtime control.` covers everything after it: the \(M\)/\(S\)
+notation, the trial configuration, `tab_timeout_index`, the evidence on both
+sides of the threshold, why neither naive alternative suffices, and the closing
+requirement.
+
+It carried three until 2026-08-21, when `Target workload and configuration.`
+was merged into what followed it. The old boundary fell between an experiment
+and its own findings: the first three sentences under `Required runtime
+control.` report what the trials showed, not what is required, so neither
+heading covered them. Merged, the block runs setup, table, evidence, goal, and
+2.4 lands Section 2 on the requirement Section 3 answers.
+
+The two headings are meant to be read as an opposition, which is why the first
+one carries `static` even though the subsection title already says it. They line
+up on three axes -- what ships against what is needed, static against runtime,
+a guard that blocks against control that modulates -- and static-against-runtime
+is the axis the framing hierarchy in `AGENTS.md` itself turns on. A reader who
+skims only the run-in headings gets 2.4's argument in two lines. That is worth
+more than avoiding the two-word echo of the title, and the echo also fixes the
+gating of the title to the guard of the block as the same thing.
+
+Shortening the first heading cost one underfull hbox, and `paper.tex` now
+carries `\hyphenation{light-weight}` because of it. The merged block's first
+line reads `Required runtime control. We denote the candidate` at 218.9pt
+against a 252.0pt column, and the next word, `lightweight`, has no hyphenation
+point in TeX's English patterns, so adding it overshoots to 268.0pt. The line
+was all-or-nothing on an eleven-character block and TeX stretched it, badness
+2875. The longer heading had hidden this by pushing `candidate` off the first
+line entirely. Neither `\hyphenpenalty` nor `\emergencystretch` was involved --
+both were checked -- and the exception is the fix rather than a reworded
+sentence or a heading chosen for its length. It applies to all four places the
+manuscript writes `lightweight`.
+
+Do not unify `static`, `fixed`, and `uniform` in this subsection: they name
+three different properties. `uniform` is applied identically across device
+models, `fixed` is the threshold value not moving off level 4, and `static` is
+not adapting to runtime state. Only the third is what the controller replaces.
+
+Three things not to do to the merged block.
+
+- Do not rename it `Target workload and control objective.`. Section 3.1's own
+  run-in heading is `Control objective.`, and duplicating the phrase makes 2.4
+  look like it states the objective 3.1 owns.
+- Do not soften the closing sentence. `coordinated runtime control that scales
+  each capture's Draft work to its remaining budget and derives
+  capture-availability pacing from the admitted backlog and the live deadline
+  window` is the last step of the framing hierarchy `AGENTS.md` pins; it reads
+  as specific because the handover to Section 3 is what it is for.
+- Do not trim the setup sentences as redundant with the evaluation.
+  `_4_experiments.tex` carries no setup description at all -- it goes from the
+  RQ list straight to RQ1 -- so this block is the manuscript's only account of
+  the device, the trial protocol, and the \(M\) versus \(M+S\) comparison.
+
 ### Section 3.1, internal ordering
 
 3.1 and 3.2 were merged into `3_1_overview.tex` on 2026-08-15 and the workload
