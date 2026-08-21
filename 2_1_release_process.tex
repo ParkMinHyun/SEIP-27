@@ -10,6 +10,3 @@ Periodically, the camera-validation team and development engineers stress-test t
 To maintain reliable capture across diverse devices and runtime conditions, the product treats compliance with its fixed internal Capture Timeout deadline as a high-priority camera reliability KPI and a hard release gate.
 For each capture, the timeout clock starts when the framework accepts the application's request and stops once the required frames and metadata are collected and the \emph{Draft Sequence} produces an early user-visible \emph{Draft image}.
 Each violation triggers a fail-fast application crash to expose the failure and blocks release until developers correct its cause or restrict the affected feature under those conditions.
-Because a targeted restriction ships faster than a cross-component fix, such restrictions accumulate across models and features.
-The deployed camera software therefore carries several at once, each disabling a capture-side capability on a different runtime proxy: the thermal level, the number of captures already in flight, or whether a mode enables a particular processing stage.
-Every one of these proxies stands in for the same question, whether a capture can still meet its deadline, and none of them measures it.
