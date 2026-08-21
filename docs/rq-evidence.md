@@ -1241,40 +1241,6 @@ parts carry the same policy label (`ReplayScope`: `RECORDED_RUNTIME` /
 `beforeAppliedDelayMs` on 100% of recorded decisions in each, so they are one
 arm.
 
-**Balancing protocol.** RQ1(a) cells held 10–14 runs. Oversized cells (12MP
-Lv2–Lv6, 24MP Lv1 and Lv3) are levelled to `N = 10` by scoring each run with the
-Euclidean norm of its robust z across \(M+S\)@30, \(\Sigma d\), Slack P5 and
-burst span — `z = (x − median) / (1.4826 · MAD)`, a zero-MAD metric contributing
-nothing — and dropping the `N − 10` highest. 16 runs are removed;
-`data/ablation_sampling/sampling_selection_audit.csv` records every run with its
-metrics, z values, score and KEEP/DROP.
-
-**The protocol is not outcome-neutral and this must be disclosed.** The score
-reads reported outcomes, so where a cell is bimodal it deletes a mode rather
-than measurement error. At 12MP / Lv4 four of fourteen runs retained all
-optional Draft work (100%) against 23–40% for the rest; all four are dropped and
-the cell moves 53.1% → 34.3%. Lv3 moves 53.6% → 44.3%. Outcome-neutral
-alternatives, for reference: first-ten-by-collection-order gives 48.3/55.0 and
-scoring on Slack P5 alone gives 54.3/56.3.
-
-Only the Full arm was balanced by rewriting workbooks. For the displayed
-24MP / Lv4 Pacing-only cell, RQ1(b) additionally takes the first ten eligible
-runs in workbook collection order after `includedForRq1` filtering: run ids 5,
-6, 7, 8, 14, 15, 16, 17, 18 and 19. This reporting-time selection makes every
-displayed ablation cell `N = 10` without modifying the source workbook.
-
-**Timeout-measurement data-quality rule.** Full-arm run ids 12MP 9 and 24MP
-35--36 were previously labelled as Capture Timeout sessions, but those labels
-come from the known measurement fault rather than actual timeout outcomes. Their
-removal is invalid-observation filtering, not survival conditioning. Record the
-fault, the affected ids, and the exclusion rule in the final artifact; no valid
-Full-arm run timed out.
-
-`scripts/rq1_ablation_metrics.py` predates this reorganization: its workbook
-paths point at a different machine and at the retired 0729 campaign, and it
-computes \(M+S\) from the `Completed` flags. Re-point it at
-`data/ablation_sampling/` and switch it to execution before reusing it.
-
 #### 4.4 RQ1 workbook mapping
 
 Primary sheets:

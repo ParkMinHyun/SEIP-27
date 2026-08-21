@@ -1,48 +1,30 @@
 \section{Evaluation}\label{sec:evaluation}
 
-We evaluate whether the controller realizes the deadline-constrained,
-responsiveness-dominant trade-off of Section~\ref{sec:objective} through
-research questions that separate its safety constraint from the two costs it
-ranks:
+We evaluate whether the Budget-Aware Draft Controller prevents Capture Timeout while preserving optional Draft processing and capture responsiveness, the deadline-constrained, responsiveness-dominant trade-off of Section~\ref{sec:objective}.
+We address four research questions:
 
 \begin{enumerate}[label=\textbf{RQ\arabic*:}, leftmargin=4.8em]
-  \item \textbf{End-to-end effectiveness.} Does joint control prevent Capture
-  Timeout while retaining optional stages at an acceptable pacing cost?
+  \item \textbf{End-to-end effectiveness.}
+  Does joint control prevent Capture Timeout while retaining optional stages
+  with limited capture delay?
 
-  \item \textbf{Control-loop contribution.} Does each control loop contribute
-  to that outcome, and does coordinating the two dominate either loop alone?
+  \item \textbf{Control-loop contribution.}
+  How does each control loop contribute to the end-to-end outcome?
 
-  \item \textbf{Admission decision quality.} Does admission execute an optional
-  stage when it can finish within the remaining budget and reject it when
-  execution would exceed that budget?
+  \item \textbf{Admission decision quality.}
+  Does admission execute an optional stage when the remaining Draft Sequence
+  fits within the remaining budget and reject it otherwise?
 
-  \item \textbf{Pacing-delay sizing.} Does the Budget-Aware Draft Controller
-  compute an appropriately sized capture-availability delay for the Draft
-  backlog and the remaining Capture Timeout budget?
+  \item \textbf{Pacing-delay sizing.}
+  Does pacing apply sufficient delay when backlog threatens the timeout budget
+  without delaying capture more than necessary?
 \end{enumerate}
 
-Section~\ref{sec:setup} states the setup the four share; each research question
-then adds only the population and the labelling rule it needs.
+Section~\ref{sec:setup} describes the common experimental setup.
 
 \input{4_1_setup.tex}
-
-\subsection{RQ1: End-to-End Effectiveness}
-\input{tables/tab_rq1_end_to_end_summary.tex}
-
-\subsection{RQ2: Control-Loop Contribution}
-\input{tables/tab_rq2_ablation.tex}
-
-\subsection{RQ3: Admission Decision Quality}
-RQ3 labels each decision retrospectively from the realized trace.
-A decision is \emph{feasible} when the measured duration from that stage through Draft completion fits the \(R_{i,j}\) the decision read, and \emph{unsafe} when it exceeds that budget or the watchdog intervenes.
-The pair is the realized counterpart of Equation~\ref{eq:admission}, which the runtime tests against \(U\) precisely because the realized duration is not yet available.
-Because the always-admit arm enforces no skip, its labels record model misjudgement rather than outcomes an enforced build would produce.
-\input{tables/tab_rq3_admission_summary.tex}
-\input{figures/fig_rq3_unsafe_spike_anatomy.tex}
-
-\subsection{RQ4: Pacing-Delay Sizing}
-\input{tables/tab_rq4_pacing_sizing.tex}
-
-\subsection{Case Study}
-\input{tables/tab_casestudy_selection.tex}
-\input{figures/fig_casestudy_12mp.tex}
+\input{4_2_rq1_effectiveness.tex}
+\input{4_3_rq2_ablation.tex}
+\input{4_4_rq3_admission.tex}
+\input{4_5_rq4_pacing.tex}
+\input{4_6_case_study.tex}

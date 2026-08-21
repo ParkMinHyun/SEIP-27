@@ -29,6 +29,7 @@ with `AGENTS.md`, `AGENTS.md` wins and this file should be corrected.
 | [`tab_rq4_pacing_sizing`](#tab_rq4_pacing_sizing) | `tables/` | Live -- `_4_experiments.tex`, RQ4 |
 | [`tab_rq4_pacing_selectivity`](#tab_rq4_pacing_selectivity) | `tables/` | Superseded 2026-08-21 by `tab_rq4_pacing_sizing`; kept on disk |
 | [`tab_rq4_pacing_summary`](#tab_rq4_pacing_summary) | `tables/` | Superseded 2026-08-13 by `tab_rq4_pacing_selectivity`; kept on disk |
+| [`tab_setup`](#tab_setup) | `tables/` | Live -- `4_1_setup.tex`, evaluation setup |
 | [`tab_timeout_index`](#tab_timeout_index) | `tables/` | Live -- `2_4_static_safeguards.tex` |
 | [`fig_capture_pipeline`](#fig_capture_pipeline) | `figures/` | Live -- `2_3_draft_sequence.tex` |
 | [`fig_casestudy_12mp`](#fig_casestudy_12mp) | `figures/` | Live -- `_4_experiments.tex`, case study |
@@ -2169,6 +2170,76 @@ Recorded from the column-spec labels that used to sit in the tabular preamble.
 | `>{\raggedleft\arraybackslash}p{21pt}\|` | Bhat - B, per cent of B |
 | `>{\raggedleft\arraybackslash}p{19pt}` | d / B |
 | `>{\raggedleft\arraybackslash}p{27pt}` | inside B |
+
+## tab_setup
+
+`tables/tab_setup.tex` &middot; Live -- `4_1_setup.tex`, evaluation setup
+
+The platform, capture conditions and run protocol of the evaluation, in one
+half-column table.
+
+Added 2026-08-21 when Section 4.1 was compressed.  Before it, the same material
+ran as two bold run-in blocks of prose, `Experimental platform.` and `Capture
+environment and workloads.`, and 4.1 carried five consecutive run-in headings.
+Recent SEIP practice does not split setup that finely -- Hawkeye (ICSE-SEIP'24)
+gives its platform two sentences under one `Experiment Platform.` heading, and
+XTrace (ICSE-SEIP'26) has no setup subsection at all -- so the table absorbs the
+enumerable settings and 4.1 keeps two headings, `Controller configurations.` and
+`Protocol and measurement.`
+
+WHAT BELONGS HERE AND WHAT DOES NOT.  A row is a setting with a value.  Anything
+that is a procedure stays in the `Protocol and measurement.` prose: how the
+device reaches a starting overheat level, how memory pressure is induced, what
+resets between runs, and what the recording path exports.  Do not migrate those
+into cells; they do not fit, and the prose is where a reviewer looks for them.
+
+NO OPEN PLACEHOLDERS REMAIN.  The OS and camera-software rows were filled on
+2026-08-21 as Android 17 (API level 37) and camera software 17.0.00.55 of July
+2026.  The overheat-level preparation, the last outstanding
+authored fact, was answered on 2026-08-21 and is 4.1 prose rather than a row: a
+run starts when the platform reports a transition to the target level, which is
+the same ordinal signal the deployed guard reads.  An ambient temperature was
+never recorded and the author confirmed on 2026-08-21 that the environment was
+an ordinary office, so the row stays qualitative; do not invent a figure for it
+and do not re-raise it.
+  Also settled that day: runs reach their target level while the device is
+heating in most cases, and while it is cooling in the rest, when a run at a
+higher level was followed by one taken as the level came down.  No manuscript
+text is needed for this.  It would matter only if the heating/cooling mix
+differed systematically between arms, and every arm comes from the same 0803
+campaign collected the same way; the table also claims only a STARTING level,
+which is what was observed.
+
+THE ROW LABEL IS `Camera software`, NOT `Camera application`.  The version is
+the camera application's, but the controller integrates in the framework
+component that owns the Draft worker, so a row labelled by the application would
+imply the version pins the framework and vendor layers too.  If a separate
+platform or framework build identifier can be printed, it earns its own row
+rather than being folded into this one.
+
+WHAT THE AUTHOR TRIMMED ON 2026-08-21, AND WHY IT STAYS TRIMMED.  Three
+conditions were shortened out of the table: that no device cooling was applied,
+that the phone stayed tethered to a host machine over USB for the whole run, and
+that the ADB loop requests captures faster than a person can press the shutter.
+Each was raised the same day and settled by the author.  The USB tether does not
+warrant a row or a threats line.  The capture-cadence comparison is redundant
+beside `with no inserted delay`, which already says the loop adds no pacing of
+its own; the comparison was rhetoric, not a second fact.  Do not re-propose
+either.  If a reviewer ever asks for the arrival cadence as a number, the
+measured shot-to-shot interval is recoverable from the exported traces and needs
+no new setting row.
+
+THE 24MP REQUESTED-MODE CAVEAT MOVED TO THE 4.1 PROSE.  It was a caption
+sentence until the caption was trimmed to `Experimental setup.` on 2026-08-21,
+which left the fact stated nowhere; it is now the third sentence of 4.1.  It has
+to survive somewhere, because a reader who takes the 24MP label at face value
+misreads the condition: only the first one or two captures of a run are produced
+at that resolution.
+
+Why only two of the four resolution-by-memory combinations are reported is also
+4.1 prose, not a table row, because it is an argument rather than a setting.
+The reported pair is the least and the most demanding of the four; the other two
+were collected and lie between them.
 
 ## tab_timeout_index
 
