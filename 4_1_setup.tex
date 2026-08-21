@@ -2,12 +2,12 @@
 \label{sec:setup}
 
 Table~\ref{tab:setup} summarizes the experimental platform and common run conditions.
-The evaluated lightweight multi-frame composition targets Portrait mode and requires coordinated HAL and image-solution support; during the study, an end-to-end PoC binary was available only for the Galaxy S26 Ultra.
-This model also lacks the additional queue-depth- and feature-specific parallel-capture guards used by other flagship variants, allowing admission and pacing to be evaluated without interference from those guards.
-Across configurations, the same production-based camera stack and study instrumentation are used; only the controller policy differs.
+The lightweight multi-frame composition targets Portrait mode and requires coordinated HAL and image-solution support; at the time of evaluation, an end-to-end PoC binary was available only for the Galaxy S26 Ultra.
+Unlike other flagship variants, this model has no queue-depth- or feature-specific restrictions on parallel capture beyond the static thermal guard, allowing us to isolate the effects of admission and pacing.
+Across configurations, we keep the production-based camera stack and study instrumentation fixed and vary only the controller policy.
 
 We evaluate two endpoint conditions established by the baseline campaign: 12MP normal capture, the production-default configuration, and 24MP capture under memory pressure, where the uncontrolled pipeline fails earliest.
-In 24MP mode, the production pipeline falls back to 12MP at Overheat Level~5 and above.
-Runs are grouped by the overheat level observed at the first capture, and each run starts from a fresh camera application session.
-The ADB loop issues the next capture immediately when capture becomes available, creating a worst-case continuous-capture workload more aggressive than typical manual operation.
+In 24MP mode, the production capture pipeline falls back to 12MP at Overheat Level~5 and above.
+Runs are grouped by the overheat level observed at the first capture, and each run uses a fresh camera application session.
+The ADB loop issues the next capture as soon as capture becomes available, exercising the maximum request rate permitted by the capture-availability path.
 \input{tables/tab_setup.tex}
