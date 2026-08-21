@@ -27,7 +27,7 @@ Given at least one factor in the selected history, the controller sets \(\tau\) 
 \]
 The controller sorts the factors in ascending order and sets \(\phi_{\tau}(\mathcal{K})\) to the first whose cumulative weight meets or exceeds \(\tau\sum_l w_l\); with no observed factor, it uses \(\phi_{\tau}(\mathcal{K})=1\).
 Factor observations need not be independent; substituting \(n_{\mathrm{eff}}\) for \(n\) is an engineering heuristic motivated by the expected \(n/(n+1)\) quantile position of the maximum of \(n\) independent draws from a common continuous distribution~\cite{david-order-statistics}.
-The shared \(0.90\) decay controls both recency and, through \(n_{\mathrm{eff}}\), how far the selector reaches into the observed tail; equal weights select the observed maximum.
+The shared \(0.90\) decay controls both recency and, through \(n_{\mathrm{eff}}\), how far the selector reaches into the observed tail.
 The resulting evidence-adaptive rule stays within observed factors and requires no separate target percentile.
 Applying the selected factor to \(\hat P\) yields \(U\), an empirical high-side estimate of modeled stage time rather than a formal bound on total remaining time:
 \begin{equation}
@@ -60,5 +60,5 @@ The watchdog therefore limits waiting for each admitted optional stage to
   \label{eq:watchdog}
 \end{equation}
 where \(\mathcal{E}_i\) is the sequence containing only the mandatory terminal key.
-On expiration, the current Draft Sequence falls back to the original input for saving; the stage worker may continue alongside later Draft execution, but its result is no longer used.
-After that Draft Sequence finishes, the original-input fallback persists until the queue drains.
+On expiration, the current Draft Sequence falls back to saving from a copy of the original input; the expired stage's result is no longer used.
+Subsequent Draft Sequences retain the original-input fallback until the queue drains.

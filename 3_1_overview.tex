@@ -18,7 +18,7 @@ Figure~\ref{fig:controller-overview} summarizes their coordination.
 Under parallel capture, Draft Sequences queue for the single worker, and the two modules act at opposite ends of that queue.
 \emph{Remaining-Sequence Admission} controls the active Draft Sequence's service demand: using an estimate of its remaining work and live budget, it admits or skips each optional stage.
 \emph{Capture-Availability Pacing} controls when the application can request the next capture: using estimated worker occupancy and the remaining deadline window, it schedules the \texttt{captureAvailable} callback for immediate or delayed delivery.
-Both modules share runtime state and online estimates that each Draft Sequence updates on completion with the durations observed for its stages and for the sequence as a whole.
+Both modules share runtime state and online estimates learned incrementally from the observed per-stage and sequence-level durations of completed Draft Sequences.
 They operate within the single-worker model and require no HAL or application-interface changes.
 
 \smallskip\noindent\textbf{Control objective.}
@@ -32,5 +32,5 @@ With a fixed timeout window,
 \end{equation}
 The controller's two levers act prospectively on the interval terms of the recursion, which affect the margin in opposite directions: admission can reduce \(\pi_i\) by skipping optional stages but cannot restore consumed budget; pacing can increase \(\delta_{i+1}\) by deferring the next capture opportunity but cannot alter work already in progress.
 Equation~\ref{eq:margin-recursion} is an accounting identity, not a control law: neither module tracks \(\mu_i\); each compares its forecast with the live remaining window.
-Within this safety constraint, each lever carries a different product cost, and the controller favors responsiveness: capture delay irreversibly lengthens the shot-to-shot interval, whereas skipping an optional stage reduces Draft fidelity until the final image replaces the Draft image.
+Within this safety constraint, each lever carries a different product cost, and the controller favors user-perceived responsiveness: capture delay irreversibly lengthens the shot-to-shot interval, whereas skipping an optional stage reduces Draft fidelity until the final image replaces the Draft image.
 The controller therefore implements a deadline-constrained, responsiveness-dominant trade-off rather than a global cost optimization.

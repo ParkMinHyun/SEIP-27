@@ -21,4 +21,4 @@ To estimate \(\gamma\), the controller takes the recency-weighted median of meas
 Using ratios prevents long-running workloads from dominating the estimate, while the median avoids cancellation between workloads that change in opposite directions.
 Each recency-weighted update multiplies existing weights by \(0.90\) before adding new observations.
 For an unseen output-size bucket, the estimator scales the slowest observed bucket of the same stage family by pixel-count ratio; if that family has no history, zero denotes a cold-start case.
-Histories are retained only while the camera application remains open.
+Histories are cleared only after both the camera application has closed and all queued Draft Sequences have completed.
