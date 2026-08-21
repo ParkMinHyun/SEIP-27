@@ -12,7 +12,7 @@ sibling `../ML/`, then a path in `LOCAL_CONTEXT.md`).
 
 | Subsection | Sources | What they establish |
 |---|---|---|
-| 3.1 overview (`sec:objective`) | `DraftSequenceExecutionPredictor.kt`, `CaptureAvailablePacer.kt` | The two modules, and that neither passes numeric state to the other |
+| 3.1 overview (`sec:objective`) | `DraftSequenceExecutionPredictor.kt`, `CaptureAvailablePacer.kt`, `DraftSequenceExecutionProfiler.kt` (`completeDraftSequenceExecution`) | The two modules, that neither passes numeric state to the other, and that both models are updated from measured durations at Draft Sequence completion |
 | 3.2 workload model (`sec:model`) | `DraftSequenceExecutionPredictor.kt`, `WorkloadKey.kt`, `WorkloadSequenceKey.kt`, `RecencyWeightedDistribution.kt` | Key taxonomy, cumulative base duration, the shared condition factor and its `0.90` decay, cold-start handling |
 | 3.3 admission (`sec:admission`) | `DraftSequenceExecutionPredictor.kt` (residual factor, Kish selector, watchdog), `DraftSequenceAdmissionPolicy.kt` (sticky group demotion), `DraftSequenceExecutionProfiler.kt` (where a decision is taken) | Equations for the residual factor, upper estimate, admission test, and watchdog window |
 | 3.4 pacing (`sec:pacing`) | `CaptureAvailablePacer.kt`, `CaptureAvailablePacingSession.kt` | Backlog clock and its rebase, the reserve refresh, the delay formula and its `2C` horizon |
@@ -41,7 +41,21 @@ the interface it paces rather than an internal component:
   without naming it.
 - Nothing else. In particular the overview figure
   (`figures/fig_controller_interaction.pdf`) still carries `decideDelay` and
-  `decideAdmission` as region labels; those are real method names
-  (`CaptureAvailablePacer.kt:16`, `DraftSequenceExecutionPredictor.kt:28`) and
-  should be replaced with action wording when the deck is next rebuilt with
-  `scripts/build_controller_figure.ps1`.
+  `decideAdmission` as the labels above the two module boxes; those are real
+  method names (`CaptureAvailablePacer.kt:16`,
+  `DraftSequenceExecutionPredictor.kt:28`). Neither string appears in any `.tex`
+  file, so a reader meets them in the figure with nothing in the prose to
+  attach them to -- which is the whole reason for this rule.
+
+  Replace them with `delay sizing` and `live-budget admission`. Both are
+  verbatim run-in headings from 3.4 and 3.3, so the figure names each operation
+  with the title of the subsection that explains it. Use `stage admission` for
+  the right-hand one if the longer label has to wrap. Do not reuse the outcome
+  wording already on the arrows: the labels above the modules name the
+  operation, while `delay` on the capture timeline and `admit / skip` at the
+  optional stages name what arrives. The deck is maintained as
+  `figures/fig_controller_interaction.pptx` and exported to
+  `fig_controller_interaction.pdf`, which is what `3_1_overview.tex` includes;
+  editing the labels therefore needs the export redone, not just a text change.
+  (`scripts/build_controller_figure.ps1`, named here until 2026-08-21, does not
+  exist.)

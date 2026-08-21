@@ -13,10 +13,13 @@
 We introduce the \emph{Budget-Aware Draft Controller} to make the Draft Sequence's lightweight multi-frame composition deployable under parallel capture by adapting stage admission and capture pacing to the live budget.
 
 \smallskip\noindent\textbf{Controller architecture.}
-The controller coordinates two framework-local modules.
+The controller consists of two framework-local modules.
+Figure~\ref{fig:controller-overview} summarizes their coordination.
+Under parallel capture, Draft Sequences queue for the single worker, and the two modules act at opposite ends of that queue.
 \emph{Remaining-Sequence Admission} controls the active Draft Sequence's service demand: using an estimate of its remaining work and live budget, it admits or skips each optional stage.
 \emph{Capture-Availability Pacing} controls when the application can request the next capture: using estimated worker occupancy and the remaining deadline window, it schedules the \texttt{captureAvailable} callback for immediate or delayed delivery.
-Both modules share runtime state and online estimates, operate within the single-worker model, and require no HAL or application-interface changes; Figure~\ref{fig:controller-overview} summarizes their coordination.
+Both modules share runtime state and online estimates that each Draft Sequence updates on completion with the durations observed for its stages and for the sequence as a whole.
+They operate within the single-worker model and require no HAL or application-interface changes.
 
 \smallskip\noindent\textbf{Control objective.}
 The controller treats avoiding Capture Timeout within the Draft pipeline as a hard product constraint while executing optional stages whenever safely possible.

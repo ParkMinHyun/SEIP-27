@@ -307,6 +307,21 @@ The opening must anchor to keeping the Draft Sequence's lightweight multi-frame
 composition available, which is where Section 2.4 hands over; Capture Timeout is
 the safety constraint on that goal, not the goal itself.
 
+`Controller architecture.` must say that the shared estimates are *learned* from
+observed durations, and that the update lands at Draft Sequence completion. The
+block said only `share runtime state and online estimates` until 2026-08-21, and
+`online` alone reads as "computed at runtime", which a per-model timing table
+would also satisfy -- so the sentence asserted the sharing while leaving out the
+mechanism that produces it. In the implementation each stage's duration is
+buffered as it finishes and the models are updated in one place,
+`completeDraftSequenceExecution`, which feeds the admission-side predictor and
+the pacing-side context from the same measurements; that single hook is why the
+two modules can be said to share estimates at all. Name both granularities,
+per-stage and whole-sequence: 3.2's per-key point estimate and 3.4's reserve
+draw on the two separately, so the overview is where the distinction is planted.
+Do not trim the clause as redundant with 3.2's opening -- 3.2 says where the
+estimates come from, 3.1 says that the two modules share one source.
+
 The opening and the `Control objective.` block name different scopes, and the
 difference is load-bearing. The opening names the feature being enabled, the
 lightweight multi-frame composition -- \(M\) alone. The constraint sentence
