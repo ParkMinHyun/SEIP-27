@@ -1,25 +1,23 @@
-\subsection{Framework Integration and Instrumentation}
+\subsection{Framework Integration}
 \label{sec:implementation}
 
 The controller integrates at existing framework decision points, preserving the framework's ownership and execution structure without introducing new cross-layer interfaces.
+This narrow integration limits cross-component coordination and broad revalidation required for changes to the capture workflow.
 
 \smallskip\noindent\textbf{Framework integration.}
 The framework component that already owns the single Draft worker also hosts both modules and the estimator they share, so Draft Sequences continue to execute in capture order on that worker.
-On the application-facing \texttt{captureAvailable} path, the framework consults pacing and defers callback release by the computed \(d_i\) rather than altering Draft execution.
-Together, the two attachments add one scheduling thread for that deferred release, no additional Draft worker, and no controller state persisting beyond the camera application session.
-Neither module consumes a device-state signal for control.
-Beyond the shared decay factor and the two-sequence reserve horizon, it introduces no per-device constant or model-specific branch.
-The evaluated build also removes the existing static level-4 thermal guard, so at that level an optional stage runs exactly when admission permits it.
-The integration has not yet shipped in a commercial release.
+Admission replaces the static level-4 thermal guard at the existing admission point and determines whether an optional stage runs at that level.
+The integration adds a callback-delivery thread and a watchdog-fallback thread.
+On the application-facing \texttt{captureAvailable} path, pacing posts the callback to the callback-delivery thread for release after \(d_i\).
 
-\smallskip\noindent\textbf{Fail-open paths.}
-Every path the controller cannot serve degrades to the behavior that preceded it.
-Neither its Draft Sequence submission nor its delay request can be rejected under queue pressure: both are refused only after the owning component has shut down at the end of the capture session.
-A rejected delay releases the callback immediately; the immediate paths likewise bypass pacing and commit no pacing decision.
-Controller unavailability therefore removes adaptation without blocking the Draft pipeline or capture availability.
+Image processing for an admitted optional stage runs in native code and cannot be cancelled once started.
+When the watchdog expires, the watchdog-fallback thread processes a copy of the original input while the in-flight optional-stage processing may continue in parallel.
+Resources held by the in-flight processing are released only after it completes, even when the fallback completes earlier.
 
-\smallskip\noindent\textbf{Instrumentation.}
-Each decision records its planned remaining sequence, point and upper estimates, live budget, watchdog state, and pacing inputs, together with the resulting stage and Draft timeline.
-The model's recommendation is recorded separately from the enforced action, so the evaluation can separate model decision quality from sticky demotion and watchdog enforcement.
-Whether a requested delay was honored is not persisted, and pacing governs when a capture opportunity is offered rather than when the user takes it.
-We therefore report \(d_i\) as the delay pacing requested rather than as realized user-perceived waiting.
+\smallskip\noindent\textbf{Deployment scope.}
+Adaptation uses the configured stage sequence, observed on-device execution times, queue state, and the live Capture Timeout budget.
+Shared runtime history derived from observed executions allows both modules to account for device-dependent performance without consuming device-state signals or relying on per-model timing tables or model-specific branches.
+Accordingly, the shared decay factor and the two-sequence reserve horizon are the only fixed deployment parameters, while all learned histories and controller state remain scoped to the current camera application session.
+The controller is currently being prepared for commercial deployment in a forthcoming Galaxy flagship smartphone line.
+For backward compatibility during that rollout, a feature flag allows the controller to be disabled.
+When disabled, its estimator is not instantiated, so the framework retains its pre-existing behavior without blocking the Draft pipeline or the next capture opportunity.
