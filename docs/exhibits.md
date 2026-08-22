@@ -31,6 +31,7 @@ with `AGENTS.md`, `AGENTS.md` wins and this file should be corrected.
 | [`tab_rq4_pacing_summary`](#tab_rq4_pacing_summary) | `tables/` | Superseded 2026-08-13 by `tab_rq4_pacing_selectivity`; kept on disk |
 | [`tab_setup`](#tab_setup) | `tables/` | Live -- `4_1_setup.tex`, evaluation setup |
 | [`tab_timeout_index`](#tab_timeout_index) | `tables/` | Live -- `2_4_static_safeguards.tex` |
+| [`alg_admission`](#alg_admission) | `figures/` | Live -- `3_3_admission.tex` |
 | [`fig_capture_pipeline`](#fig_capture_pipeline) | `figures/` | Live -- `2_3_draft_sequence.tex` |
 | [`fig_casestudy_12mp`](#fig_casestudy_12mp) | `figures/` | Live -- `_4_experiments.tex`, case study |
 | [`fig_parallel_capture_overlap`](#fig_parallel_capture_overlap) | `figures/` | Live -- `2_2_parallel_capture.tex` |
@@ -2270,6 +2271,107 @@ Recorded from the column-spec labels that used to sit in the tabular preamble.
 | `\providecolor{tmoS2}{RGB}{239,160,140}` | 10--19 |
 | `\providecolor{tmoS3}{RGB}{201,80,63}` | 6--9 (white text) |
 | `\providecolor{tmoS4}{RGB}{143,36,32}` | <= 5 (white text) |
+
+## alg_admission
+
+`figures/alg_admission.tex` &middot; Live -- `3_3_admission.tex`
+
+Section 3.3 as pseudocode, added 2026-08-22 on the advisor's request. Input
+from the top of `3_3_admission.tex`, which cites it as
+`Algorithm~\ref{alg:admission}`; it floats to the top of the column where 3.3
+starts. Requires `algorithm` and `algpseudocode`, added to `paper.tex` for
+this exhibit and used by nothing else.
+
+Three procedures, in the order 3.3 states the facts they carry: `Admit` is
+the live-budget test and the sticky effect-group demotion, `SelectFactor`
+is the Kish selector over the residual history, and `Calibrate` is the
+capture-end residual update that fills the history `SelectFactor` reads.
+The selector went through two other names on 2026-08-22, and both failures
+are worth keeping. `Factor` collided with 3.2: \(\gamma\) is the `condition
+factor` there and its weights decay by the same \(0.90\), so both the call
+and `decay all factor weights` read as \(\gamma\)'s estimator. `Residual
+Factor` fixed the collision and created a worse one, since the procedure
+selects \(\phi_{\tau}\) from stored factors and does not compute the
+\(\phi\) of Eq. 3 -- which `Calibrate` does, nine lines below. `Select`
+names the operation, and the decay line stays qualified as
+`residual-factor weights`. Every quantity is the
+one 3.2 and 3.3 already define -- \(\hat P(\cdot)\) in particular stays the
+function Eq. 2 defines and is never rebound to a scalar -- and the comments
+point at the equations rather than restating them, so the float must be
+re-read whenever an equation in 3.2 or 3.3 is renumbered or its content
+changes.
+
+The float's scope is the admission decision, and the watchdog appears only as
+the window \(W_{i,j}\) that decision sizes. What happens when that window
+expires -- the original-input save, which thread performs it, how long the
+fallback persists -- is 3.3 prose and 3.5, not this float. Two `Watchdog
+expiry` / `Queue drain` event lines carried it for part of 2026-08-22, as
+full procedures first and then as unnumbered prose; both readings restated
+implementation semantics the manuscript already gives, and both sat visibly
+outside the decision flow. The one fact that had to survive their removal is
+that \(G\) is queue-local, which is now the comment on the \(G\) update
+itself. Do not reinstate the handlers; if a reviewer misses the fallback's
+lifetime, extend 3.3's prose.
+
+Two of its details answer a review of the first draft (2026-08-22) and must
+not be undone as verbosity.
+
+- `Admit` computes two upper estimates under two names, \(U\) for
+  \(\mathcal{K}_{i,j}\) and \(U_{\mathcal{E}}\) for \(\mathcal{E}_i\). The
+  draft assigned the scalar \(U\) and then wrote \(U(\mathcal{E}_i)\) three
+  lines later, reusing a bound value as though it were the function Eq. 4
+  defines. Do not fold the two back into one symbol.
+- `Calibrate` binds \(\hat p^{d}\) and \(\hat P^{d}\) from the decision record
+  before it forms \(\phi\), so the float cannot be read as recomputing
+  \(\hat p(k)\) at completion. This is 3.3's `using stored decision-time
+  predictions`, and it is what makes the residual reproducible; the
+  superscript exists only in the float. `Admit` carries the matching `record`
+  line, without which the float reads from a store nothing writes. It sits
+  before the skip test on purpose: a skipped stage's prediction is still
+  recorded, and its sequence is then excluded at completion by the
+  fully-observed test rather than by never having been written.
+
+Verified against the implementation at `ML@63f9bb7`
+(`DraftSequenceExecutionPredictor.kt` for the estimate, the selector and the
+watchdog window, `DraftSequenceAdmissionPolicy.kt` for the demotion set,
+`DraftSequenceExecutionProfiler.kt` for where a decision is taken and when
+calibration runs).
+
+Four deliberate omissions, all implementation detail that 3.3 does not carry.
+The workload-policy classification (the code's `OPTIONAL`, `REQUIRED`,
+`RESERVED`) is out: the manuscript says `optional stage` and `mandatory
+terminal key`, and the author asked on 2026-08-22 to keep the taxonomy out of
+the float. The Frame Watermark exception -- a Frame Watermark and the
+decoding it forces are never demoted -- is out for the same reason. `Admit`
+tests `G` before it estimates, whereas the code estimates first and lets the
+policy layer override, because the code's extra estimate feeds the metrics
+store only; the decision is identical. And the code records the watchdog
+reservation's own estimate as a decision too, so the terminal-only sequence
+accumulates its own residual history; the float records only the admission
+decision, because 3.3 describes the reservation as a window computation and
+not as a second decision.
+
+`\Require`/`\Ensure` lines were drafted and cut the same day: they restated
+the procedure signature, which is the one place a reader already looks.
+
+\(W_{i,j}\) is computed on its own line rather than inside the `return`, so
+that every equation of 3.2 and 3.3 the float uses is anchored by a comment
+(Eqs. 2 and 4 on \(U\), 5 on the test, 6 on \(W_{i,j}\), 3 in `Calibrate`).
+Folded into the `return`, the line is too long for `\Comment` to fit beside
+it: the marker stays and `Eq. 6` alone wraps to the next line, which is the
+float's only wrapped line. The split costs one numbered line and buys a
+reference the reader would otherwise have to find in the prose.
+
+`SelectFactor` ends on two lines that spell out the weighted-quantile walk instead
+of calling a `WeightedQuantile` helper, and its sums are indexed
+\(l \in H\) so the selected history, not the pool, is visibly the population.
+The float exists to show how \(U\) is built from online evidence and then
+spent against the budget; a helper name would hide the one line where
+\(\tau\) picks an actual observation. Length is not the thing to optimize
+there. The ascending sort is its own line for the same reason: it was folded
+into the return as `smallest factor whose cumulative weight reaches ...` for
+part of 2026-08-22, which left the float with a cumulative weight and no
+stated order to accumulate in. 3.3's own sentence sorts first too.
 
 ## fig_capture_pipeline
 

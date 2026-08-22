@@ -1,8 +1,10 @@
 \subsection{Remaining-Sequence Admission}
 \label{sec:admission}
 
+\input{figures/alg_admission}
 Admission runs immediately before each optional stage, inline on the Draft critical path; end to end, one decision measures under a millisecond on device.
 It calibrates \(\hat P\) with residual evidence to form \(U\), then compares \(U\) with the capture's live budget to admit or skip the stage.
+Algorithm~\ref{alg:admission} states the module.
 
 \smallskip\noindent\textbf{Residual-calibrated upper estimate.}
 The point estimate \(\hat P\) does not account for the upper-tail overruns driven by variation in on-device runtime conditions and image content.
