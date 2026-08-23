@@ -30,10 +30,6 @@ ranks:
 \input{tables/tab_rq2_ablation.tex}
 
 \subsection{RQ3: Admission Decision Quality}
-RQ3 labels each decision retrospectively from the realized trace.
-A decision is \emph{feasible} when the measured duration from that stage through Draft completion fits the \(R_{i,j}\) the decision read, and \emph{unsafe} when it exceeds that budget or the watchdog intervenes.
-The pair is the realized counterpart of Equation~\ref{eq:admission}, which the runtime tests against \(U\) precisely because the realized duration is not yet available.
-The always-admit audit applies neither queue-local demotion nor the watchdog, so under it these labels record model misjudgement rather than outcomes an enforced build would produce.
 \input{tables/tab_rq3_admission_summary.tex}
 \input{figures/fig_rq3_unsafe_spike_anatomy.tex}
 
