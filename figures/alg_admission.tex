@@ -1,42 +1,37 @@
 % Notes: docs/exhibits.md#alg_admission
 \begin{algorithm}[t]
-\caption{Remaining-Sequence Admission}
-\label{alg:admission}
+\caption{Remaining-Sequence Admission Flow}
+\label{alg:admission_flow}
 \small
 \begin{algorithmic}[1]
-\Procedure{Admit}{$\mathcal{K}_{i,j}$, $R_{i,j}$} \Comment{at each optional stage}
-  \State $g \gets$ effect group of the stage
-  \If{$g \in G$} \Comment{$G$ overrides model admissions}
+\Require remaining sequence $\mathcal{K}_{i,j}$, already without the optional stages of groups in $G$, and live budget $R_{i,j}$
+\Ensure \textsc{skip}, or \textsc{admit} with watchdog $W_{i,j}$
+
+\Procedure{Admit}{$\mathcal{K}_{i,j}$, $R_{i,j}$}
+  \State $g \gets M$ or $S$, the group of the optional stage
+  \If{$g \in G$}
     \State \Return \textsc{skip}
   \EndIf
-  \State $U \gets \hat P(\mathcal{K}_{i,j}) \cdot \Call{SelectFactor}{\mathcal{K}_{i,j}}$ \Comment{Eqs.~\ref{eq:point-estimate},~\ref{eq:upper-estimate}}
-  \State record $\mathcal{K}_{i,j}$, $\{\hat p(k)\}_{k \in \mathcal{K}_{i,j}}$, and $\hat P(\mathcal{K}_{i,j})$ for calibration
-  \If{$U > R_{i,j}$ \textbf{and} $\hat P(\mathcal{K}_{i,j}) \neq 0$} \Comment{Eq.~\ref{eq:admission}}
-    \State $G \gets G \cup \{g\}$ \Comment{until the queue drains}
+
+  \State $U \gets \Call{EstimateUpper}{\mathcal{K}_{i,j}}$
+  \State \Call{RecordPrediction}{$\mathcal{K}_{i,j}$}
+
+  \If{$U > R_{i,j}$ \textbf{and} $\hat P(\mathcal{K}_{i,j}) \neq 0$}
+    \State $G \gets G \cup \{g\}$
     \State \Return \textsc{skip}
   \EndIf
-  \State $U_{\mathcal{E}} \gets \hat P(\mathcal{E}_i) \cdot \Call{SelectFactor}{\mathcal{E}_i}$
-  \State $W_{i,j} \gets \max\{0, R_{i,j} - U_{\mathcal{E}}\}$ \Comment{Eq.~\ref{eq:watchdog}}
+
+  \State $W_{i,j} \gets
+    \max\{0,R_{i,j}-\Call{EstimateUpper}{\mathcal{E}_i}\}$
   \State \Return \textsc{admit} with watchdog $W_{i,j}$
 \EndProcedure
+
 \Statex
-\Procedure{SelectFactor}{$\mathcal{K}$} \Comment{select $\phi_{\tau}(\mathcal{K})$}
-  \State $H \gets$ history of $\mathcal{K}$ if nonempty, otherwise the pool
-  \If{$H = \emptyset$}
-    \State \Return $1$ \Comment{no observed factor}
-  \EndIf
-  \State $n_{\mathrm{eff}} \gets (\sum_{l \in H} w_l)^2 / \sum_{l \in H} w_l^2$, \enspace $\tau \gets n_{\mathrm{eff}} / (n_{\mathrm{eff}} + 1)$
-  \State sort $H$ by factor value in ascending order
-  \State \Return first factor with cumulative weight $\geq \tau \sum_{l \in H} w_l$
-\EndProcedure
-\Statex
-\Procedure{Calibrate}{$i$} \Comment{at Draft Sequence completion}
-  \State decay all residual-factor weights by $0.90$
-  \ForAll{decisions $(\mathcal{K}, \hat p^{d}, \hat P^{d})$ recorded during capture $i$}
-    \If{$\mathcal{K}$ was fully observed \textbf{and} $\hat P^{d} > 0$}
-      \State $\phi(\mathcal{K}) \gets \sum_{k \in \mathcal{K}} \max\{\hat p^{d}(k), p(k)\} / \hat P^{d}$ \Comment{Eq.~\ref{eq:residual-factor}}
-      \State add $\phi(\mathcal{K})$ with unit weight to its history and the pool
-    \EndIf
+\Procedure{UpdateEvidence}{$i$} \Comment{at Draft Sequence completion}
+  \State $w_l \gets 0.90\,w_l \quad \forall$ stored factors $l$
+  \ForAll{measured parts $\mathcal{K}'$ of the recorded sequences}
+    \State $\phi \gets \Call{ResidualFactor}{\mathcal{K}'}$
+    \State \Call{UpdateFactorHistory}{$\mathcal{K}', \phi$}
   \EndFor
 \EndProcedure
 \end{algorithmic}
