@@ -5,7 +5,7 @@ Table~\ref{tab:setup} summarizes the experimental platform and common run condit
 The lightweight multi-frame composition targets Portrait mode and requires coordinated HAL and image-solution support; at the time of evaluation, an end-to-end binary carrying both was available only for the Galaxy S26 Ultra.
 Unlike other flagship variants, this model has no queue-depth- or feature-specific restrictions on parallel capture beyond the static thermal guard, allowing us to isolate the effects of admission and pacing.
 Across configurations, we keep the production-based camera stack and the study recording path fixed and vary only the controller policy.
-The static thermal guard is bypassed throughout, and the four configurations enable the two modules independently: \emph{No control} executes every optional stage and releases \texttt{captureAvailable} as soon as the framework is ready, \emph{Admission only} and \emph{Pacing only} enable one module each, and \emph{Full} enables both.
+The static thermal guard is bypassed throughout, so admission is the only mechanism that skips an optional stage.
 
 From the baseline sweep over resolution, memory condition, and starting overheat level, we evaluate its two endpoints: 12MP normal capture, the production-default configuration, and 24MP capture under memory pressure, where the uncontrolled configuration fails earliest.
 The 24MP condition names the requested mode; capture falls back to 12MP at overheat level~5 and above.

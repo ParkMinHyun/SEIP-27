@@ -20,5 +20,6 @@ This cumulative base limits the influence of transient spikes by giving them no 
 To estimate \(\gamma\), the controller takes the recency-weighted median of measured-to-base duration ratios across workload keys.
 Using ratios prevents long-running workloads from dominating the estimate, while the median avoids cancellation between workloads that change in opposite directions.
 Each recency-weighted update multiplies existing weights by \(0.90\) before adding new observations.
-For an unseen output-size bucket, the estimator scales the slowest observed bucket of the same stage family by pixel-count ratio; if that family has no history, zero denotes a cold-start case.
+For an unseen output-size bucket, the estimator uses the previously observed bucket with the largest base duration in the same stage family as a reference and scales that duration by the ratio of the target to reference pixel counts. 
+If the stage family has no history, the estimate is zero, indicating a cold-start case.
 Histories are cleared only after both the camera application has closed and all queued Draft Sequences have completed.
