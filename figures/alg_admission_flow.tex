@@ -1,0 +1,38 @@
+% Notes: docs/exhibits.md#alg_admission
+\begin{algorithm}[t]
+\caption{Remaining-Sequence Admission Flow}
+\label{alg:admission_flow}
+\small
+\begin{algorithmic}[1]
+\Require remaining sequence $\mathcal{K}_{i,j}$ and live budget $R_{i,j}$
+\Ensure \textsc{skip}, or \textsc{admit} with watchdog $W_{i,j}$
+
+\Procedure{Admit}{$\mathcal{K}_{i,j}$, $R_{i,j}$}
+  \State $g \gets$ effect group of the optional stage
+  \If{$g \in G$}
+    \State \Return \textsc{skip}
+  \EndIf
+
+  \State $U \gets \Call{EstimateUpper}{\mathcal{K}_{i,j}}$
+  \State \Call{RecordPrediction}{$\mathcal{K}_{i,j}$}
+
+  \If{$U > R_{i,j}$ \textbf{and} $\hat P(\mathcal{K}_{i,j}) \neq 0$}
+    \State $G \gets G \cup \{g\}$
+    \State \Return \textsc{skip}
+  \EndIf
+
+  \State $W_{i,j} \gets
+    \max\{0,R_{i,j}-\Call{EstimateUpper}{\mathcal{E}_i}\}$
+  \State \Return \textsc{admit} with watchdog $W_{i,j}$
+\EndProcedure
+
+\Statex
+\Procedure{UpdateEvidence}{$i$} \Comment{at Draft Sequence completion}
+  \State $w_l \gets 0.90\,w_l \quad \forall$ stored factors $l$
+  \ForAll{fully observed $\mathcal{K}_{i,j}$ recorded at admission}
+    \State $\phi \gets \Call{ResidualFactor}{\mathcal{K}_{i,j}}$
+    \State \Call{UpdateFactorHistory}{$\mathcal{K}_{i,j}, \phi$}
+  \EndFor
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
