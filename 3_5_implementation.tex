@@ -1,15 +1,14 @@
 \subsection{Framework Integration}
 \label{sec:implementation}
 
-The controller integrates at existing framework decision points, preserving the framework's ownership and execution structure without introducing new cross-layer interfaces.
+The controller integrates at existing framework decision points, preserving the framework's ownership and execution structure without changing HAL or application interfaces.
 This narrow integration limits cross-component coordination and broad revalidation required for changes to the capture workflow.
 
 \smallskip\noindent\textbf{Ownership and attachment.}
 The framework component that already owns the single Draft worker hosts the shared estimator as well; admission therefore runs within the same lifecycle and queries remaining-sequence estimates directly.
-The previous level-4 thermal guard excluded optional stages when constructing the Draft Sequence; admission instead retains them in the sequence and decides at each admission point whether they execute.
-Pacing attaches differently because the application-facing \texttt{captureAvailable} path has a separate lifecycle and cannot retain direct access to the estimator.
-The framework therefore exposes a single-method delay interface through the existing event-mediated channel, which the application-facing path invokes to obtain \(d_i\).
-The estimator and its execution history never cross that boundary; only the computed delay \(d_i\) does.
+Pacing attaches differently because the framework path that delivers \texttt{captureAvailable} to the application has a separate lifecycle and cannot retain direct access to the estimator.
+The framework therefore exposes a framework-internal, single-method delay interface through the existing event-mediated channel, which the callback-delivery path invokes to obtain \(d_i\).
+The estimator and its execution history remain within the Draft worker's lifecycle, while the callback-delivery path receives only the computed delay \(d_i\).
 
 The integration adds two dedicated threads: a callback-delivery thread and a watchdog-fallback thread.
 Pacing posts the \texttt{captureAvailable} callback to the callback-delivery thread for release after \(d_i\).
@@ -18,8 +17,8 @@ On expiration, the thread processes a copy of the original input while the in-fl
 
 \smallskip\noindent\textbf{Deployment scope.}
 Adaptation uses the configured stage sequence, observed on-device execution times, queue state, and the live Capture Timeout budget.
-Shared runtime history derived from observed executions allows both modules to account for device-dependent performance without consuming device-state signals or relying on per-model timing tables or model-specific branches.
+Shared runtime history learned from observed execution times allows both modules to adapt to runtime performance on the current device without using device-state signals, per-model timing tables, or model-specific branches.
 Accordingly, the shared decay factor and the two-sequence reserve horizon are the only fixed deployment parameters, while all learned histories and controller state remain scoped to the current camera application session.
-The controller is currently being prepared for commercial deployment in a forthcoming Galaxy flagship smartphone line.
+The controller has been integrated into the product branch and is undergoing release validation for a forthcoming Galaxy flagship smartphone line.
 For backward compatibility during that rollout, a feature flag allows the controller to be disabled.
 When disabled, its estimator is not instantiated, so the framework retains its pre-existing behavior without blocking the Draft pipeline or the next capture opportunity.

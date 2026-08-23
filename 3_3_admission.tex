@@ -7,7 +7,7 @@ It calibrates \(\hat P\) with residual evidence to form \(U\), then compares \(U
 \smallskip\noindent\textbf{Residual-calibrated upper estimate.}
 The point estimate \(\hat P\) does not account for the upper-tail overruns driven by variation in on-device runtime conditions and image content.
 The controller therefore learns a high-side correction from observed residuals rather than hand-tuning additive margins for individual devices and stages.
-At Draft Sequence completion, each remaining sequence \(\mathcal{K}\) priced during it contributes a residual factor comparing the per-key predictions \(\hat p(k)\) stored at the decision with realized durations \(p(k)\).
+At Draft Sequence completion, each remaining sequence \(\mathcal{K}\) estimated at an admission decision during that sequence contributes a residual factor comparing the stored per-key predictions \(\hat p(k)\) with realized durations \(p(k)\).
 Only workloads with \(p(k)>0\) enter the comparison, since a skipped stage produces no duration to compare:
 \begin{equation}
   \phi(\mathcal{K})
@@ -15,22 +15,16 @@ Only workloads with \(p(k)>0\) enter the comparison, since a skipped stage produ
          {\sum_{k\in\mathcal{K}:p(k)>0}\hat p(k)}.
   \label{eq:residual-factor}
 \end{equation}
-The per-key maximum prevents a faster-than-estimated stage from cancelling another stage's overrun and ensures \(\phi(\mathcal K)\geq1\).
-Normalizing by the predicted sum over the same stages makes the factor comparable across duration scales; if that sum is zero, no factor is recorded.
-
-At each completion the controller decays every stored factor weight by \(0.90\) and inserts each new factor at unit weight into two histories: one keyed by the measured subsequence and one cross-sequence pool.
-The controller uses the sequence's own history if nonempty and the cross-sequence pool otherwise.
-It sets \(\tau\) from the Kish effective sample size \(n_{\mathrm{eff}}\) over the selected history's current decayed weights \(w_l\)~\cite{kish-survey-sampling}:
-\begin{equation}
+The per-key maximum prevents a faster-than-estimated stage from cancelling another stage's overrun and so ensures \(\phi(\mathcal K)\geq1\), while normalizing by the predicted sum over the same stages makes the factor comparable across duration scales.
+Each new factor enters two histories, one keyed by the sequence that ran and one cross-sequence pool, and every stored factor weight follows the same shared decay.
+The controller selects the weighted \(\tau\)-quantile of the factors in the sequence's own history when that history is nonempty and in the pool otherwise, taking \(\tau\) from the Kish effective sample size \(n_{\mathrm{eff}}\) over the selected history's current weights \(w_l\)~\cite{kish-survey-sampling}:
+\[
   n_{\mathrm{eff}}
   =\frac{(\sum_l w_l)^2}{\sum_l w_l^2},
   \qquad
   \tau=\frac{n_{\mathrm{eff}}}{n_{\mathrm{eff}}+1}.
-  \label{eq:ess-quantile}
-\end{equation}
-If the selected history is empty, the controller uses \(\phi_{\tau}(\mathcal{K})=1\); otherwise, it sorts the factors in ascending order and sets \(\phi_{\tau}(\mathcal{K})\) to the first whose cumulative weight meets or exceeds \(\tau\sum_l w_l\).
-With one effective sample the selection starts at the weighted median and moves into the observed tail as \(n_{\mathrm{eff}}\) grows, so the shared decay controls both recency and conservatism without a separately tuned target percentile.
-Factor observations need not be independent; substituting \(n_{\mathrm{eff}}\) for \(n\) is an engineering heuristic motivated by the expected \(n/(n+1)\) quantile position of the maximum of \(n\) independent draws from a common continuous distribution~\cite{david-order-statistics}.
+\]
+\(\tau\) reflects the expected quantile position of a sample maximum~\cite{david-order-statistics}, selecting increasingly high weighted quantiles (e.g., \(\tau=0.91\) for \(n_{\mathrm{eff}}=10\)); downweighting older residuals lets conservatism adapt without a separately tuned target percentile.
 Applying the selected factor \(\phi_\tau(\mathcal K)\) to \(\hat P(\mathcal K)\) yields \(U(\mathcal K)\), an empirical high-side estimate of modeled stage time in \(\mathcal{K}\):
 \begin{equation}
   U(\mathcal{K})
@@ -47,10 +41,9 @@ The model admits the optional stage exactly when
   \hat P(\mathcal{K}_{i,j})=0.
   \label{eq:admission}
 \end{equation}
-The cold-start case occurs on each application session's leading capture, whose Draft Sequence starts against an empty queue with no queue wait charged against its budget.
-This fail-open is deliberate: that Draft Sequence either completes and seeds later decisions, or exposes a cold-start overrun where the budget is most slack; an optional stage that cannot meet the deadline even there must be fixed or disabled, not absorbed at runtime.
+The cold-start case occurs only on each application session's leading capture, whose Draft Sequence starts against an empty queue with no queue wait charged against its budget; admitting there seeds the histories used by later decisions.
 
-A model rejection of an \(M\) or \(S\) stage removes that group's optional stages from subsequent remaining sequences until the queue drains.
+Once admission rejects an \(M\) or \(S\) stage, that group's optional stages are removed from subsequent remaining sequences until the queue drains.
 The two groups are tracked independently, so a rejection in one does not disable the other; this sticky demotion prevents effect alternation across consecutive captures while preserving timeout headroom.
 
 \smallskip\noindent\textbf{Watchdog fallback.}
@@ -61,4 +54,5 @@ The watchdog therefore waits at most \(W_{i,j}\) for each admitted optional stag
   \label{eq:watchdog}
 \end{equation}
 where \(\mathcal{E}_i\) contains only the mandatory terminal work from encoding through Draft image saving, reserving that time before the deadline.
-On expiration, the current Draft Sequence falls back to encoding and saving from a preserved copy of the original input; because the expired stage may still be running, already queued Draft Sequences also use their original inputs until the queue drains.
+On expiration, the current Draft Sequence falls back to encoding and saving from a preserved copy of the original input.
+Already queued Draft Sequences also use their original inputs until the queue drains.

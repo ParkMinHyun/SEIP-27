@@ -394,6 +394,86 @@ shape.
   "delay only as a last resort", which the deployed policy does not implement:
   pacing converts only part of the projected deficit into delay.
 
+### Section 3.4, backlog-tracking order
+
+`Backlog tracking.` is ordered representation, clock and Equation 7, the
+per-capture extension and Equation 8, the gloss on \(\hat P^{\mathrm{last}}\)
+and on the maximum, repeated extension, rebase.
+Restructured 2026-08-23 over two passes. Before that, Equation 8 came
+immediately after Equation 7, so the provisional estimate was the first thing
+said about how \(t^{\mathrm{end}}\) advances and the general construction was
+never stated.
+
+Three facts about \(t^{\mathrm{end}}\) are easy to state wrongly, and each was
+stated wrongly in some draft of this block:
+
+- \(t^{\mathrm{end}}\) is a timestamp, not \(\sum\hat P\). It is an
+  execution-time anchor plus accumulated predicted work, so write that the clock
+  *carries* one predicted Draft processing time per unfinished capture,
+  *accumulated along the Draft-worker timeline* -- never that it is the sum of
+  the point predictions. Each rebase resets the anchor and thereby drops timing
+  error from completed sequences; prediction error in the provisional point
+  estimates still stored for later captures can accumulate with queue depth.
+- The representation sentence names an amount, not a position. `predicted Draft
+  processing time` is what the backlog is; `predicted time on the Draft-worker
+  timeline` was tried on 2026-08-23 and reverted, because a time *on* a timeline
+  reads as a point, which describes \(t^{\mathrm{end}}\) rather than
+  \(\hat B_i\), and the duration/timestamp split is the one distinction the rest
+  of the block depends on. The timeline belongs in the next sentence, where the
+  clock's contents are given. Contrast with `Draft Sequence queue depth`, not
+  bare `queue depth`: that is the y-label of `figures/fig_casestudy_12mp.tex`.
+- Not every capture on the clock is priced by its own estimate, and there is no
+  operation that prices one that way on its own. Between rebases every queued
+  capture carries \(\hat P^{\mathrm{last}}\); a resolved estimate enters only
+  when a Draft Sequence starts and the rebase runs. So the two-tier fact belongs
+  in the rebase sentence, as `resolved point estimate` against `provisional
+  estimates already stored`, and not as a standing rule before Equation 8. A
+  draft sentence reading `A Draft Sequence that has started contributes its own
+  point estimate` was cut on 2026-08-23 for asserting an operation the
+  implementation does not have. Verified against `ML@898ae37`:
+  `queuePacingDecision` advances the clock by the snapshot current at the
+  decision, which is the last started sequence's, and `rebaseBacklogClock`
+  prices the starting sequence from its own resolved key while summing each
+  queued decision's stored snapshot.
+
+Two sentences carry facts a reviewer would otherwise have to reconstruct, and
+neither is filler:
+
+- `since the capture cannot be requested before its callback is released` is the
+  reason for the maximum. A version that read `the maximum anchors the extension
+  at the later of the current drain time and the callback release` was reverted
+  the same day: it verbalizes \(\max(a,b)\) and drops the justification, leaving
+  a sentence that could be deleted without loss.
+- `Several decisions may extend the timeline before the next Draft Sequence
+  starts` is why more than one provisional estimate can be stored at once, and
+  it carries the parallel-capture premise that the block's opening sentence used
+  to state directly. It replaced `Under parallel capture a callback can be
+  released before the preceding capture's Draft Sequence starts, so pacing
+  predicts the backlog`, which said the same thing before the reader had the
+  clock to attach it to.
+
+`At each Draft Sequence start` is deliberately unqualified. It read `At each
+Draft Sequence start whose workload sequence the controller can price` until
+2026-08-23, which understates when the rebase happens: a start with no
+predictable workloads still rebases, contributing zero point work, so the
+qualifier scoped the whole sentence to protect one clause. That case is a JPEG
+passthrough the manuscript's workload model does not admit, and it is not worth
+a sentence.
+
+The subsection overview says `using predicted time` and stops there. It carried
+`rather than queue depth` until 2026-08-23, which placed the block's own
+contrast five lines above the sentence that defines it; the overview refers, the
+block states.
+
+Known gap between Equation 8 and the implementation, as of `ML@898ae37`:
+`queuePacingDecision` advances the clock by the point work *plus* a learned
+between-stage overhead (`draftSequenceOverheadDurationMs`) that 3.2's
+\(\hat P\) does not model, so Equation 8 understates the real advance by that
+term. Adding it needs a new symbol in 3.2, which is a modeling decision rather
+than a wording one. An uncommitted working-tree edit removing that term from
+`rebaseBacklogClock` was present on 2026-08-23; if the term is dropped from both
+clock operations, delete this paragraph rather than editing Equation 8.
+
 ### Section 3.5, scope of the integration report
 
 3.5 exists to answer four reviewer questions and nothing else: where the
