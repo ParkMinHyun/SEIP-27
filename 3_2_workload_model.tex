@@ -15,9 +15,9 @@ For an ordered workload sequence \(\mathcal{K}\), the controller sums the predic
   \hat p(k)=\hat b(k)\,\gamma .
   \label{eq:point-estimate}
 \end{equation}
-The per-key base duration \(\hat b(k)\) is the cumulative mean of the durations observed for key \(k\), each divided by the condition factor \(\gamma\) in effect when it was recorded.
-This cumulative base limits the influence of transient spikes by giving them no recency advantage, while the shared \(\gamma\) tracks recent execution trends across keys.
-To estimate \(\gamma\), the controller takes the recency-weighted median of measured-to-base duration ratios across keys.
+The per-key base duration \(\hat b(k)\) is a condition-normalized cumulative mean of the durations observed for key \(k\), and \(\hat p(k)\) scales this base by the current condition factor \(\gamma\).
+This cumulative base limits the influence of transient spikes by giving them no recency advantage, while the shared \(\gamma\) tracks recent execution trends across workload keys.
+To estimate \(\gamma\), the controller takes the recency-weighted median of measured-to-base duration ratios across workload keys.
 Using ratios prevents long-running workloads from dominating the estimate, while the median avoids cancellation between workloads that change in opposite directions.
 Each recency-weighted update multiplies existing weights by \(0.90\) before adding new observations.
 For an unseen output-size bucket, the estimator scales the slowest observed bucket of the same stage family by pixel-count ratio; if that family has no history, zero denotes a cold-start case.
