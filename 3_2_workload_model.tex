@@ -1,6 +1,6 @@
 \subsection{Workload Model and Online Duration Estimation}
 \label{sec:model}
-Because both modules test predicted time against a live deadline window, the controller estimates a Draft Sequence's remaining modeled stage time from durations observed on device and rescales it as conditions change.
+Because both modules test predicted time against a remaining Capture Timeout budget, the controller estimates a Draft Sequence's remaining modeled stage time from durations observed on device and rescales it as conditions change.
 
 \smallskip\noindent\textbf{Modeled workload sequence.}
 The controller models the Draft Sequence for capture \(i\) as an ordered workload sequence \(\mathcal{K}_i=(k_1,\ldots,k_m)\), where each workload key \(k\) identifies a processing stage by output-size bucket and configuration.

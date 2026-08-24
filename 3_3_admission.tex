@@ -18,15 +18,16 @@ Only workloads with \(p(k)>0\) enter the comparison, since a skipped stage produ
 \end{equation}
 The per-key maximum prevents a faster-than-estimated stage from cancelling another stage's overrun and thus ensures \(\phi(\mathcal{K})\geq1\). 
 Normalizing by the predicted sum over the same stages makes the factor comparable across duration scales.
-When a new factor is recorded, existing weights in both the matching sequence history and the cross-sequence pool are multiplied by \(0.90\), after which the new factor is inserted into both with unit weight.
-The controller selects the weighted \(\tau\)-quantile of the factors in the sequence's own history when that history is nonempty and in the pool otherwise, taking \(\tau\) from the Kish effective sample size \(n_{\mathrm{eff}}\) over the selected history's current weights \(w_l\)~\cite{kish-survey-sampling}:
+As in the condition-factor estimator, when a new factor is recorded, the controller multiplies the existing weights in both the matching sequence history and the cross-sequence pool by \(0.90\), then inserts the new factor into both with unit weight.
+The controller selects the weighted \(\tau\)-quantile from the sequence's own factor history when available, and from the cross-sequence pool otherwise.
+It determines \(\tau\) from the Kish effective sample size \(n_{\mathrm{eff}}\) of the current weights \(w_l\) in the selected factor~\cite{kish-survey-sampling}:
 \[
   n_{\mathrm{eff}}
   =\frac{(\sum_l w_l)^2}{\sum_l w_l^2},
   \qquad
   \tau=\frac{n_{\mathrm{eff}}}{n_{\mathrm{eff}}+1}.
 \]
-The choice \(\tau=n_{\mathrm{eff}}/(n_{\mathrm{eff}}+1)\) is motivated by the expected quantile position \(n/(n+1)\) of the maximum of \(n\) samples~\cite{david-order-statistics}, with \(n_{\mathrm{eff}}\) substituting for the sample count. As \(n_{\mathrm{eff}}\) grows, this rule selects increasingly high weighted quantiles (e.g., \(\tau=0.91\) for \(n_{\mathrm{eff}}=10\)), while downweighting older residuals allows the degree of conservatism to adapt without a separately tuned target percentile.
+The choice \(\tau=n_{\mathrm{eff}}/(n_{\mathrm{eff}}+1)\) is motivated by the expected CDF position \(n/(n+1)\) of the maximum of \(n\) i.i.d. continuous samples~\cite{david-order-statistics}, with \(n_{\mathrm{eff}}\) substituting for the sample count. As \(n_{\mathrm{eff}}\) grows, the selected quantile moves further into the upper tail (e.g., \(\tau=0.91\) for \(n_{\mathrm{eff}}=10\)); downweighting older factors allows this degree of conservatism to adapt without a separately tuned target percentile.
 Applying the selected factor \(\phi_\tau(\mathcal K)\) to \(\hat P(\mathcal K)\) yields \(U(\mathcal K)\), an empirical high-side estimate of the modeled remaining time for \(\mathcal K\):
 \begin{equation}
   U(\mathcal{K})
@@ -36,7 +37,7 @@ Applying the selected factor \(\phi_\tau(\mathcal K)\) to \(\hat P(\mathcal K)\)
 
 \smallskip\noindent\textbf{Live-budget admission.}
 At admission point \(j\), \(R_{i,j}\) denotes the time remaining until the Capture Timeout deadline for capture \(i\).
-The model admits the optional stage exactly when
+The controller admits the optional stage exactly when
 \begin{equation}
   U(\mathcal{K}_{i,j})\leq R_{i,j}
   \quad\text{or}\quad
