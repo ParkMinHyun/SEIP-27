@@ -7,7 +7,8 @@ It calibrates \(\hat P\) with residual evidence to form \(U\), then compares \(U
 \smallskip\noindent\textbf{Residual-calibrated upper estimate.}
 The point estimate \(\hat P\) does not account for the upper-tail overruns driven by variation in on-device runtime conditions and image content.
 The controller therefore learns a high-side correction from observed residuals rather than hand-tuning additive margins for individual devices and stages.
-At Draft Sequence completion, each remaining sequence \(\mathcal{K}\) estimated at an admission decision during that sequence contributes a residual factor comparing the stored per-key predictions \(\hat p(k)\) with realized durations \(p(k)\).
+For each admission decision, the controller records the per-key predictions \(\hat p(k)\) for the corresponding remaining sequence \(\mathcal K\).
+When the Draft Sequence completes, it compares those predictions with the realized durations \(p(k)\) and computes a residual factor \(\phi(\mathcal{K})\).
 Only workloads with \(p(k)>0\) enter the comparison, since a skipped stage produces no duration to compare:
 \begin{equation}
   \phi(\mathcal{K})
@@ -15,8 +16,9 @@ Only workloads with \(p(k)>0\) enter the comparison, since a skipped stage produ
          {\sum_{k\in\mathcal{K}:p(k)>0}\hat p(k)}.
   \label{eq:residual-factor}
 \end{equation}
-The per-key maximum prevents a faster-than-estimated stage from cancelling another stage's overrun and so ensures \(\phi(\mathcal K)\geq1\), while normalizing by the predicted sum over the same stages makes the factor comparable across duration scales.
-Each new factor enters two histories, one keyed by the sequence that ran and one cross-sequence pool, and every stored factor weight follows the same shared decay.
+The per-key maximum prevents a faster-than-estimated stage from cancelling another stage's overrun and thus ensures \(\phi(\mathcal{K})\geq1\). 
+Normalizing by the predicted sum over the same stages makes the factor comparable across duration scales.
+When a new factor is recorded, existing weights in both the matching sequence history and the cross-sequence pool are multiplied by \(0.90\), after which the new factor is inserted into both with unit weight.
 The controller selects the weighted \(\tau\)-quantile of the factors in the sequence's own history when that history is nonempty and in the pool otherwise, taking \(\tau\) from the Kish effective sample size \(n_{\mathrm{eff}}\) over the selected history's current weights \(w_l\)~\cite{kish-survey-sampling}:
 \[
   n_{\mathrm{eff}}
@@ -24,8 +26,8 @@ The controller selects the weighted \(\tau\)-quantile of the factors in the sequ
   \qquad
   \tau=\frac{n_{\mathrm{eff}}}{n_{\mathrm{eff}}+1}.
 \]
-\(\tau\) reflects the expected quantile position of a sample maximum~\cite{david-order-statistics}, selecting increasingly high weighted quantiles (e.g., \(\tau=0.91\) for \(n_{\mathrm{eff}}=10\)); downweighting older residuals lets conservatism adapt without a separately tuned target percentile.
-Applying the selected factor \(\phi_\tau(\mathcal K)\) to \(\hat P(\mathcal K)\) yields \(U(\mathcal K)\), an empirical high-side estimate of modeled stage time in \(\mathcal{K}\):
+The choice \(\tau=n_{\mathrm{eff}}/(n_{\mathrm{eff}}+1)\) is motivated by the expected quantile position \(n/(n+1)\) of the maximum of \(n\) samples~\cite{david-order-statistics}, with \(n_{\mathrm{eff}}\) substituting for the sample count. As \(n_{\mathrm{eff}}\) grows, this rule selects increasingly high weighted quantiles (e.g., \(\tau=0.91\) for \(n_{\mathrm{eff}}=10\)), while downweighting older residuals allows the degree of conservatism to adapt without a separately tuned target percentile.
+Applying the selected factor \(\phi_\tau(\mathcal K)\) to \(\hat P(\mathcal K)\) yields \(U(\mathcal K)\), an empirical high-side estimate of the modeled remaining time for \(\mathcal K\):
 \begin{equation}
   U(\mathcal{K})
   =\hat P(\mathcal{K})\,\phi_{\tau}(\mathcal{K}).
@@ -41,18 +43,17 @@ The model admits the optional stage exactly when
   \hat P(\mathcal{K}_{i,j})=0.
   \label{eq:admission}
 \end{equation}
-The cold-start case occurs only on each application session's leading capture, whose Draft Sequence starts against an empty queue with no queue wait charged against its budget; admitting there seeds the histories used by later decisions.
+The cold-start case occurs on the leading capture of an application session, whose Draft Sequence starts with an empty queue and therefore incurs no queueing delay against its budget; admitting the stage in this case seeds the histories used by later decisions.
 
-Once admission rejects an \(M\) or \(S\) stage, that group's optional stages are removed from subsequent remaining sequences until the queue drains.
-The two groups are tracked independently, so a rejection in one does not disable the other; this sticky demotion prevents effect alternation across consecutive captures while preserving timeout headroom.
+Once admission rejects an \(M\) or \(S\) stage, the optional stages in that group are removed from subsequent remaining sequences until the queue drains. The two groups are tracked independently, so a rejection in one does not disable the other; this sticky demotion prevents optional effects from alternating across consecutive captures while preserving timeout headroom.
 
 \smallskip\noindent\textbf{Watchdog fallback.}
 Admission cannot fully anticipate slowdowns after an optional stage begins.
-The watchdog therefore waits at most \(W_{i,j}\) for each admitted optional stage:
+The watchdog therefore allows each admitted optional stage to run for at most \(W_{i,j}\):
 \begin{equation}
   W_{i,j}=\max\{0,R_{i,j}-U(\mathcal{E}_i)\},
   \label{eq:watchdog}
 \end{equation}
-where \(\mathcal{E}_i\) contains only the mandatory terminal work from encoding through Draft image saving, reserving that time before the deadline.
-On expiration, the current Draft Sequence falls back to encoding and saving from a preserved copy of the original input.
-Already queued Draft Sequences also use their original inputs until the queue drains.
+where \(\mathcal{E}_i\) contains only the mandatory terminal work from encoding through Draft image saving; subtracting \(U(\mathcal E_i)\) reserves time for that work before the deadline.
+If the watchdog expires, the current Draft Sequence falls back to encoding and saving from a preserved copy of the original input. 
+Already queued Draft Sequences likewise follow the same fallback path until the queue drains.

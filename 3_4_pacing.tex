@@ -1,41 +1,37 @@
 \subsection{Admission-Aware Capture-Availability Pacing}
 \label{sec:pacing}
 
-Pacing runs when the framework becomes ready to deliver \texttt{captureAvailable}, controlling future arrivals using predicted time.
-It delays the callback when predicted Draft-worker pressure threatens the newest committed capture's deadline.
+Pacing runs when the framework becomes ready to deliver \texttt{captureAvailable}, using predicted Draft-worker occupancy to decide whether to expose the next capture opportunity immediately or after a delay.
+It delays the callback when a backlog-based forecast indicates insufficient deadline headroom for additional Draft work.
 
 \smallskip\noindent\textbf{Backlog tracking.}
-Pacing represents the backlog as predicted Draft processing time rather than as Draft Sequence queue depth, since captures differ in which stages their Draft Sequences run and in what those stages cost.
-To track that work, pacing maintains \(t^{\mathrm{end}}\), the predicted time at which the queue drains; for pacing decision \(i\) taken at \(t_i\), the predicted backlog \(\hat B_i\) is the time remaining until that drain point:
+While a Draft Sequence is executing, subsequent capture requests can continue to arrive, each triggering a pacing decision before its Draft Sequence is queued.
+Because their stage composition and processing cost vary, pacing tracks backlog as predicted processing time rather than queue depth.
+It maintains \(t^{\mathrm{end}}\), a predicted queue-drain time obtained by accumulating the sequence-level point estimates \(\hat P\) over the Draft work currently accounted for.
+At time \(t_i\), pacing estimates the backlog as
 \begin{equation}
-  \hat B_i=\max(0,t^{\mathrm{end}}-t_i).
+  \hat B_i=\max\{0,t^{\mathrm{end}}-t_i\}.
   \label{eq:backlog}
 \end{equation}
-After reading \(\hat B_i\) and computing \(d_i\) by Equation~\ref{eq:pacing}, pacing extends the clock with one provisional estimate of Draft processing time for the capture the callback will enable:
-\begin{equation}
-  t^{\mathrm{end}}\gets\max(t^{\mathrm{end}},t_i+d_i)+\lceil\hat P^{\mathrm{last}}\rceil .
-  \label{eq:clock-update}
-\end{equation}
-Because the enabled capture's workload sequence is not yet known and the capture cannot be requested before callback release, the update uses the point estimate \(\hat P^{\mathrm{last}}\) from the most recently started Draft Sequence and anchors the extension at \(t_i+d_i\) whenever the clock drains earlier.
-Several decisions may extend the clock before the next Draft Sequence starts.
-At each Draft Sequence start, pacing rebases \(t^{\mathrm{end}}\) from the actual start using its resolved point estimate and the remaining stored provisional estimates, discarding completed-sequence timing error without repricing those estimates.
 
 \smallskip\noindent\textbf{Delay sizing.}
-Pacing charges the predicted backlog \(\hat B_i\) and a per-Draft-Sequence reserve \(\hat C\) against the newest committed capture's remaining Capture Timeout window \(T_i\), and computes
+Pacing charges the predicted backlog \(\hat B_i\) and two per-Draft-Sequence high-side reserves \(\hat C\) against the newest committed capture's remaining Capture Timeout window \(T_i\), and computes
 \begin{equation}
   d_i=
   \left\lceil
-    \frac{\max(0,\hat B_i+2\hat C-T_i)}{2}
-  \right\rceil .
+    \frac{\max\{0,\hat B_i+2\hat C-T_i\}}{2}
+  \right\rceil.
   \label{eq:pacing}
 \end{equation}
-By the time a decision runs, the capture the previous callback enabled is committed; because Draft Sequences execute in arrival order, the newest committed capture is therefore the last one accounted for by \(t^{\mathrm{end}}\), which predicts when its Draft Sequence completes.
-Thus, \(T_i-\hat B_i\) is the slack predicted to remain on that capture's deadline when the queue drains.
+At decision \(i\), the current capture is already committed, but its Draft Sequence has not yet been added to \(t^{\mathrm{end}}\); thus, \(\hat B_i\) reflects the Draft work accounted for before that decision.
+The factor \(2\) extends this backlog by one reserve for the current capture's soon-to-be-queued Draft Sequence and one for the Draft Sequence of the capture enabled by the delayed callback.
+The divisor assigns only half of any positive deficit to callback delay, limiting user-perceived delay while admission independently responds to deadline pressure within the active Draft Sequence.
+Together, these choices form a coordination heuristic rather than a fixed-point derivation or an optimality claim.
 
-Pacing uses \(\hat C\) as a high-side reserve for a Draft Sequence starting after the backlog drains, when on-device runtime conditions may have changed further.
-Unlike \(U\), which calibrates the remaining suffix of an in-progress Draft Sequence, \(\hat C\) draws on completed Draft Sequence durations.
+Pacing derives \(\hat C\) from completed Draft Sequence durations as a high-side reserve for work starting after the backlog drains, when on-device runtime conditions may have changed further.
+Unlike \(U\), which calibrates the remaining sequence of an in-progress Draft Sequence, \(\hat C\) operates at whole-sequence granularity.
 Until the first Draft Sequence start establishes \(\hat C\), pacing delivers the callback immediately.
-At each start, pacing applies admission's queue-local group set \(G\) to workload sequence \(\mathcal{K}\), yielding \(\mathcal{K}^G\), and refreshes
+At each start, pacing applies the queue-local set \(G\) of optional-stage groups retained by admission to workload sequence \(\mathcal{K}\), yielding \(\mathcal{K}^G\), and refreshes
 \begin{equation}
   \hat C = \max\!\left(
     C^{\max}_s-\bigl[\hat P(\mathcal{K})-\hat P(\mathcal{K}^G)\bigr],\;
@@ -45,10 +41,24 @@ At each start, pacing applies admission's queue-local group set \(G\) to workloa
 \end{equation}
 Here \(C^{\max}_s\) is the largest completed Draft Sequence duration observed since the queue last drained for the output-size bucket \(s\) of \(\mathcal{K}^G\); an unseen bucket uses the largest observed bucket maximum.
 The subtraction removes the predicted cost of stages excluded by \(G\), making the observation comparable to \(\mathcal{K}^G\).
-The outer maximum falls back to the current prediction when this correction would under-price \(\mathcal{K}^G\), such as after a recent slowdown or when \(C^{\max}_s\) already reflects the same demotion.
+The outer maximum uses the current prediction when this correction would under-price \(\mathcal{K}^G\), such as after a recent slowdown or when \(C^{\max}_s\) already reflects the same demotion.
 If no Draft Sequence has completed since the drain, the prediction alone determines \(\hat C\).
 Thus, \(\hat C\) is an empirical reserve rather than a bound.
 
-Beyond the predicted drain, the factor \(2\) requires \(T_i-\hat B_i\) to cover two future Draft Sequences: one for the capture enabled by the delayed callback and one for the following capture.
-The divisor assigns only half of any positive deficit to callback delay, reducing user-perceived delay while admission independently responds to remaining deadline pressure at each optional stage.
-Together they form a coordination heuristic rather than a fixed-point derivation or an optimality claim.
+\smallskip\noindent\textbf{Provisional backlog accounting.}
+After computing \(d_i\), pacing provisionally adds the Draft Sequence that will be queued after the decision to the backlog clock:
+\begin{equation}
+  t^{\mathrm{end}}
+  \gets
+  \max\{t^{\mathrm{end}},t_i+d_i\}
+  +\lceil\hat P^{\mathrm{last}}\rceil.
+  \label{eq:clock-update}
+\end{equation}
+Because that Draft Sequence's workload composition is not yet resolved at decision time, pacing uses \(\hat P^{\mathrm{last}}\), the most recently resolved sequence-level point estimate, as its provisional charge.
+If the previously accounted work drains before the callback is released, \(t_i+d_i\) anchors the extension; otherwise, the new charge extends the existing backlog.
+When Draft processing is slow, several pacing decisions can therefore accumulate provisional charges before the next queued Draft Sequence starts.
+
+At each Draft Sequence start, its workload sequence becomes known and pacing resolves its point estimate.
+Pacing then rebases \(t^{\mathrm{end}}\) from the actual start time, charging the starting Draft Sequence at its resolved estimate and repricing every remaining provisional charge using that latest estimate.
+The resolved estimate becomes \(\hat P^{\mathrm{last}}\) for subsequent pacing decisions.
+Rebasing removes timing error accumulated since the preceding Draft start, while repricing prevents stale provisional estimates from propagating through the queued backlog.

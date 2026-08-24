@@ -19,7 +19,7 @@ The per-key base duration \(\hat b(k)\) is a condition-normalized cumulative mea
 This cumulative base limits the influence of transient spikes by giving them no recency advantage, while the shared \(\gamma\) tracks recent execution trends across workload keys.
 To estimate \(\gamma\), the controller takes the recency-weighted median of measured-to-base duration ratios across workload keys.
 Using ratios prevents long-running workloads from dominating the estimate, while the median avoids cancellation between workloads that change in opposite directions.
-Each recency-weighted update multiplies existing weights by \(0.90\) before adding new observations.
+At each update, existing observation weights are multiplied by \(0.90\) before new observations are added.
 For an unseen output-size bucket, the estimator uses the previously observed bucket with the largest base duration in the same stage family as a reference and scales that duration by the ratio of the target to reference pixel counts. 
 If the stage family has no history, the estimate is zero, indicating a cold-start case.
 Histories are cleared only after both the camera application has closed and all queued Draft Sequences have completed.
