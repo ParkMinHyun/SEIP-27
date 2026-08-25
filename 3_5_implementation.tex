@@ -1,7 +1,7 @@
 \subsection{Framework Integration}
 \label{sec:implementation}
 
-The controller integrates at existing framework decision points without restructuring the Draft execution path or changing HAL or application interfaces.
+The controller integrates at existing framework decision points without restructuring the Draft pipeline or changing HAL or application interfaces.
 This narrow integration limits cross-component coordination and broad revalidation required for changes to the capture workflow.
 
 \smallskip\noindent\textbf{Ownership and attachment.}
@@ -17,9 +17,7 @@ The watchdog-fallback thread provides the fallback path because an admitted opti
 On expiration, the fallback thread processes the preserved original input independently of the in-flight optional stage; resources owned by the latter are released only when that processing completes.
 
 \smallskip\noindent\textbf{Deployment scope.}
-With the controller integrated into the Draft pipeline, supporting a new optional stage requires only defining its workload key; the estimation and control logic remain unchanged.
+Additional optional stages can reuse the same estimation and control logic by defining their workload keys, without stage-specific controller changes.
 History learned from observed execution times allows both modules to adapt to runtime performance on the current device without relying on explicit device-state signals, per-model timing tables, or branches specialized for particular device models or features.
-Accordingly, the shared decay factor and the two-sequence reserve horizon are the only fixed controller parameters, while all learned histories and controller state remain scoped to the current camera application session.
+Accordingly, the shared decay factor and the two-sequence reserve horizon are fixed controller choices, while all learned histories and controller state remain scoped to the current camera application session.
 The controller has been integrated into the product branch and is undergoing release validation for a forthcoming Galaxy flagship smartphone line.
-For backward compatibility during that rollout, a feature flag allows the controller to be disabled.
-When disabled, its estimator is not instantiated, and the framework follows its pre-existing Draft and capture-availability paths unchanged.

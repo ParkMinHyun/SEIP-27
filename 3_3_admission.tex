@@ -8,18 +8,18 @@ It calibrates \(\hat P\) with residual evidence to form \(U\), then compares \(U
 The point estimate \(\hat P\) does not account for the upper-tail overruns driven by variation in on-device runtime conditions and image content.
 The controller therefore learns a high-side correction from observed residuals rather than hand-tuning additive margins for individual devices and stages.
 For each admission decision, the controller records the per-key predictions \(\hat p(k)\) for the corresponding remaining sequence \(\mathcal K\).
-When the Draft Sequence completes, it compares those predictions with the realized durations \(p(k)\) and computes a residual factor \(\phi(\mathcal{K})\).
-Only workloads with \(p(k)>0\) enter the comparison, since a skipped stage produces no duration to compare:
+When the Draft Sequence completes, the controller compares those predictions with the realized durations \(p(k)\).
+A recorded \(\mathcal K\) contributes a residual factor only if \(\hat P(\mathcal K)>0\) and \(p(k)>0\) for all \(k\in\mathcal K\):
 \begin{equation}
   \phi(\mathcal{K})
-  =\frac{\sum_{k\in\mathcal{K}:p(k)>0}\max\{\hat p(k),p(k)\}}
-         {\sum_{k\in\mathcal{K}:p(k)>0}\hat p(k)}.
+  =\frac{\sum_{k\in\mathcal{K}}\max\{\hat p(k),p(k)\}}
+         {\sum_{k\in\mathcal{K}}\hat p(k)}.
   \label{eq:residual-factor}
 \end{equation}
-A zero-denominator cold-start case contributes no residual factor.
+A skipped stage therefore excludes only the recorded sequences containing that stage.
 The per-key maximum prevents a faster-than-estimated stage from cancelling another stage's overrun and thus ensures \(\phi(\mathcal{K})\geq1\). 
 Normalizing by the predicted sum over the same stages makes the factor comparable across duration scales.
-As in the condition-factor estimator, when a new factor is recorded, the controller multiplies the existing weights in both the matching sequence history and the cross-sequence pool by \(0.90\), then inserts the new factor into both with unit weight.
+When a completion yields factors, the controller first multiplies all existing weights in the sequence histories and cross-sequence pool by the same \(0.90\), then inserts each resulting factor into its corresponding sequence history and the pool with unit weight.
 The controller selects the weighted \(\tau\)-quantile from the sequence's own factor history when available, and from the cross-sequence pool otherwise, and uses \(\phi_\tau(\mathcal K)=1\) if neither contains a factor.
 It determines \(\tau\) from the Kish effective sample size \(n_{\mathrm{eff}}\) of the current weights \(w_l\) in the selected factor~\cite{kish-survey-sampling}:
 \[
@@ -45,8 +45,7 @@ The controller admits the optional stage exactly when
   \hat P(\mathcal{K}_{i,j})=0.
   \label{eq:admission}
 \end{equation}
-Cold start occurs on the session's leading capture, which begins with an empty Draft queue; the stage is admitted to seed later estimates, with any Capture Timeout in this phase treated as release-blocking.
-
+When \(\hat P(\mathcal K_{i,j})=0\), the controller admits the stage to bootstrap subsequent estimates; during validation, any Capture Timeout observed in this case constitutes a release blocker.
 Once admission rejects an \(M\) or \(S\) stage, the optional stages in that group are removed from subsequent remaining sequences until the queue drains. The two groups are tracked independently, so a rejection in one does not disable the other; this sticky demotion prevents optional effects from alternating across consecutive captures while preserving timeout headroom.
 
 \smallskip\noindent\textbf{Watchdog fallback.}
