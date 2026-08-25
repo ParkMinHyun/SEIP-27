@@ -7,8 +7,8 @@ Unlike other flagship variants, this model has no queue-depth- or feature-specif
 Across configurations, we keep the production-based camera stack and the study recording path fixed and vary only the controller policy.
 The static thermal guard is bypassed throughout, so admission is the only mechanism that skips an optional stage.
 
-From the baseline sweep over resolution, memory condition, and starting overheat level, we evaluate its two endpoints: 12MP normal capture, the production-default configuration, and 24MP capture under memory pressure, where the uncontrolled configuration fails earliest.
-The 24MP condition names the requested mode; capture falls back to 12MP at overheat level~5 and above.
-Runs are grouped by the overheat level observed at the first capture, and each run uses a fresh camera application session.
+We evaluate two representative endpoints spanning the operating conditions: the production-default 12MP configuration under normal memory conditions and the more demanding 24MP configuration under memory pressure.
+The 24MP condition refers to the requested capture mode; at overheat level~5 and above, the production pipeline falls back to 12MP.
+Runs are grouped by the overheat level observed at the first capture; thermal state is otherwise allowed to evolve naturally across the 30 captures.
 The ADB loop issues the next capture as soon as capture becomes available, exercising the maximum request rate permitted by the capture-availability path.
 \input{tables/tab_setup.tex}
