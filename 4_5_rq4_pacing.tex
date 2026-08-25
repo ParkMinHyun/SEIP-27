@@ -1,8 +1,21 @@
 \subsection{RQ4: Pacing-Delay Sizing}
 \label{sec:rq4}
 
-RQ4 analyzes 1{,}920 and 1{,}861 pacing decisions over 70 and 69 full-controller runs.
-For each decision, the study recording path retains the decision-time backlog and budget estimates used by Equation~\ref{eq:pacing}, the requested delay \(d_i\), and the realized timing used for retrospective sizing.
-A 30-capture run yields 29 capture-availability transitions; pacing activation rates and \(d_i\) percentiles are therefore computed over those transitions, excluding the delay associated with the final capture because it gates no subsequent capture.
-Deadline margins are normalized by the Capture Timeout budget.
+RQ4 analyzes 1{,}920 and 1{,}861 pacing decisions over 70 and 69 full-controller runs, excluding each run's final capture because it gates no subsequent capture.
+Table~\ref{tab:rq4_pacing_sizing} bins each transition by the deadline pressure reconstructed from its realized trace, and deadline margins are normalized by the Capture Timeout budget.
 \input{tables/tab_rq4_pacing_sizing.tex}
+
+\smallskip\noindent\textbf{The delay engages selectively and stays proportionate.}
+Activation rises monotonically across the four bands in both conditions, from 1.4\% and 1.0\% where over 40\% of the budget remained spare to 77.2\% and 68.8\% on the band carrying a positive retrospective target, and 19 of the 70 runs at 12MP and 13 of the 69 at 24MP released every callback without delay.
+Where pacing acted, the delay was 10.4\% and 8.6\% of the outstanding Draft backlog at the median, and 100.0\% and 98.7\% of every applied millisecond elapsed while at least that much Draft work was outstanding.
+Its cost is user-perceived and bounded rather than absent: the delay accounts for 18.1\% and 9.8\% of a run's elapsed time at the median, and 24.5\% and 29.7\% at the ninety-fifth percentile.
+
+\smallskip\noindent\textbf{Where the delay covered less, admission was acting.}
+Reconstructing a sufficient reservation for the mandatory part of each Draft Sequence gives a floor that pacing met on every decision requiring a reservation at 12MP and on 90\% of them at 24MP.
+On the 14 that fell below it, admission demotion is recorded on every one, every optional stage of those sequences was skipped, and no run reached Capture Timeout or invoked the watchdog; their realized slack is the widest of the three coverage classes at the fifth percentile, 4.53\% of the budget against 1.03\% and 2.48\%, which indicates that the reconstructed floor is conservative.
+Equation~\ref{eq:pacing} converts part of the projected deficit into delay rather than pricing all of it as shot-to-shot latency, while admission independently applies its own live-budget test at each optional stage; the two modules exchange no state, and this coordination is observed in their outcomes.
+We report no sweep over that split: pacing is closed-loop, so a different setting changes subsequent arrivals, backlog, admission decisions, and realized Draft duration, and establishing its effect requires new matched runs rather than a rescaling of the recorded trace.
+
+\smallskip\noindent\textbf{The tightest realized margin.}
+Of the 3{,}781 analyzed decisions, 11 completed with under 1\% of the budget remaining and the tightest kept 0.11\%, or 8~ms; all eleven are saturated cases, with backlog already at 42--79\% of the budget and queue wait at 31--75\%, and pacing, an optional-stage skip, or both engaged on every one.
+Realized slack is an outcome, not a bound.

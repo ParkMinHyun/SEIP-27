@@ -2,13 +2,18 @@
 \label{sec:setup}
 
 Table~\ref{tab:setup} summarizes the experimental platform and common run conditions.
-The lightweight multi-frame composition targets Portrait mode and requires coordinated HAL and image-solution support; at the time of evaluation, an end-to-end binary carrying both was available only for the Galaxy S26 Ultra.
-Unlike other flagship variants, this model has no queue-depth- or feature-specific restrictions on parallel capture beyond the static thermal guard, allowing us to isolate the effects of admission and pacing.
-Across configurations, we keep the production-based camera stack and the study recording path fixed and vary only the controller policy.
-The static thermal guard is bypassed throughout, so admission is the only mechanism that skips an optional stage.
+The lightweight multi-frame composition targets Portrait mode and requires coordinated HAL and image-solution support.
+At the time of evaluation, an end-to-end binary integrating both was available only for the Galaxy S26 Ultra.
+Unlike other flagship variants, this model has no queue-depth- or feature-specific restrictions on parallel capture beyond the static thermal guard, allowing us to isolate admission and pacing.
+All configurations use the same production-based camera stack and measurement instrumentation, with only the controller policy varied.
+The static thermal guard is bypassed in all runs, so optional-stage skips are attributable to admission rather than the production guard.
 
-We evaluate two representative endpoints spanning the operating conditions: the production-default 12MP configuration under normal memory conditions and the more demanding 24MP configuration under memory pressure.
-The 24MP condition refers to the requested capture mode; at overheat level~5 and above, the production pipeline falls back to 12MP.
-Runs are grouped by the overheat level observed at the first capture; thermal state is otherwise allowed to evolve naturally across the 30 captures.
-The ADB loop issues the next capture as soon as capture becomes available, exercising the maximum request rate permitted by the capture-availability path.
 \input{tables/tab_setup.tex}
+
+We evaluate two representative operating points spanning the target workload range: the production-default 12MP configuration under normal memory conditions and a more demanding 24MP configuration under memory pressure.
+The 24MP condition refers to the requested capture mode; at overheat level~5 and above, the production pipeline falls back to 12MP.
+Before each run, we force-stop and relaunch the camera application, resetting the process-local controller state and estimator history.
+
+We do not control thermal state; starting levels arise through repeated capture and idle cooling.
+Each run is grouped by its initial overheat level, after which thermal state evolves naturally over the 30 captures.
+The ADB loop issues the next capture as soon as capture becomes available, exercising the maximum request rate allowed by the capture-availability path.

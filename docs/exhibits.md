@@ -1057,11 +1057,26 @@ swap away from `tab_rq4_pacing_summary`.  That reasoning still applies: the
 summary table measured d against d*, which is a decomposition of prediction
 error at a fixed coefficient rather than a sizing report.
 
-CAPTION AND LABEL ARE STILL THE PREDECESSOR'S.  The caption title reads "RQ4
-pacing selectivity" and the label is tab:rq4_pacing_selectivity_half.  Nothing
-references that label yet, so both can be renamed when the RQ4 prose is
-written; until then do not assume the printed title matches the
-research-question name.
+CAPTION AND LABEL RENAMED 2026-08-25, when the RQ4 prose was drafted.  The
+title now reads "RQ4 pacing-delay sizing" and the label is
+tab:rq4_pacing_sizing; the predecessor's title "RQ4 pacing selectivity" and
+label tab:rq4_pacing_selectivity_half were carried unchanged until then and
+are referenced nowhere.  4_5_rq4_pacing.tex is the only \ref site.
+
+THE CAPTION'S SECOND CLAUSE CHANGED WITH IT, and the reason is a framing
+decision, not a wording preference.  It used to read "most positive-target
+misses came from backlog underestimation because the virtual backlog
+accumulates point predictions and is rebased only at Draft start".  That is
+true and it is recorded in the estimator analysis below, but as the caption of
+the RQ4 exhibit it made the table's own headline a statement about a model
+defect, directly under the deficit-band cells (77.2% and 68.8%) that a reader
+already reads as a miss rate.  The clause now states what the printed columns
+show -- selective activation, and a delay that is a small share of the backlog
+-- and the shortfall is answered in the prose by the coordination evidence
+(admission demotion recorded on 14/14 below-floor decisions, widest Slack P5 of
+the three classes) instead of by an estimator diagnostic.  The estimator error
+decomposition is deliberately NOT in the RQ4 prose; if it is ever reinstated,
+put it in threats or discussion, not in this caption.
 
 Sources, all committed, one CSV row per printed cell.  From
 data/rq3/policy/summary.csv:
