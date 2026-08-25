@@ -31,6 +31,6 @@ With a fixed timeout window,
   \label{eq:margin-recursion}
 \end{equation}
 The controller's two levers act prospectively on the interval terms of the recursion, which affect the margin in opposite directions: admission can reduce \(\pi_i\) by skipping optional stages but cannot restore consumed budget; pacing can increase \(\delta_{i+1}\) by deferring the next capture opportunity but cannot alter work already in progress.
-Equation~\ref{eq:margin-recursion} is an accounting identity, not a control law: neither module tracks \(\mu_i\); each compares its forecast with the live remaining window.
+Equation~\ref{eq:margin-recursion} is an accounting identity, not a control law: the controller does not maintain \(\mu_i\) as controller state, but instead compares its forecast with the live remaining timeout budget at each decision point.
 Within this safety constraint, each lever carries a different product cost, and the controller favors user-perceived responsiveness: capture delay irreversibly lengthens the shot-to-shot interval, whereas skipping an optional stage reduces Draft fidelity until the final image replaces the Draft image.
 The controller therefore implements a deadline-constrained, responsiveness-dominant trade-off rather than a global cost optimization.

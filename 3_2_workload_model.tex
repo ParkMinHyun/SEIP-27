@@ -7,7 +7,7 @@ The controller models the Draft Sequence for capture \(i\) as an ordered workloa
 From position \(j\), \(\mathcal{K}_{i,j}=(k_j,\ldots,k_m)\) denotes the remaining sequence, ending in a mandatory terminal key measured from encoding start until the Draft image is saved.
 
 \smallskip\noindent\textbf{Online point estimation.}
-For an ordered workload sequence \(\mathcal{K}\), the controller sums the predicted per-key durations:
+The controller estimates the duration of a modeled workload sequence \(\mathcal{K}\) by summing its predicted per-key durations:
 \begin{equation}
   \hat P(\mathcal{K})
   =\sum_{k\in\mathcal{K}}\hat p(k),
@@ -20,6 +20,6 @@ This cumulative base limits the influence of transient spikes by giving them no 
 To estimate \(\gamma\), the controller takes the recency-weighted median of measured-to-base duration ratios across workload keys.
 Using ratios prevents long-running workloads from dominating the estimate, while the median avoids cancellation between workloads that change in opposite directions.
 At each update, existing observation weights are multiplied by \(0.90\) before new observations are added.
-For an unseen output-size bucket, the estimator uses the previously observed bucket with the largest base duration in the same stage family as a reference and scales that duration by the ratio of the target to reference pixel counts. 
+For an unseen output-size bucket, the estimator uses the previously observed bucket with the largest base duration in the same stage family as a reference and scales that duration by the ratio of the target to reference pixel counts.
 If the stage family has no history, the estimate is zero, indicating a cold-start case.
 Histories are cleared only after both the camera application has closed and all queued Draft Sequences have completed.
