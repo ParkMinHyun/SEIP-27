@@ -16,10 +16,11 @@ Only workloads with \(p(k)>0\) enter the comparison, since a skipped stage produ
          {\sum_{k\in\mathcal{K}:p(k)>0}\hat p(k)}.
   \label{eq:residual-factor}
 \end{equation}
+A zero-denominator cold-start case contributes no residual factor.
 The per-key maximum prevents a faster-than-estimated stage from cancelling another stage's overrun and thus ensures \(\phi(\mathcal{K})\geq1\). 
 Normalizing by the predicted sum over the same stages makes the factor comparable across duration scales.
 As in the condition-factor estimator, when a new factor is recorded, the controller multiplies the existing weights in both the matching sequence history and the cross-sequence pool by \(0.90\), then inserts the new factor into both with unit weight.
-The controller selects the weighted \(\tau\)-quantile from the sequence's own factor history when available, and from the cross-sequence pool otherwise.
+The controller selects the weighted \(\tau\)-quantile from the sequence's own factor history when available, and from the cross-sequence pool otherwise, and uses \(\phi_\tau(\mathcal K)=1\) if neither contains a factor.
 It determines \(\tau\) from the Kish effective sample size \(n_{\mathrm{eff}}\) of the current weights \(w_l\) in the selected factor~\cite{kish-survey-sampling}:
 \[
   n_{\mathrm{eff}}
@@ -44,13 +45,13 @@ The controller admits the optional stage exactly when
   \hat P(\mathcal{K}_{i,j})=0.
   \label{eq:admission}
 \end{equation}
-The cold-start case occurs on the leading capture of an application session, whose Draft Sequence starts with an empty queue and therefore incurs no queueing delay against its budget; admitting the stage in this case seeds the histories used by later decisions.
+Cold start occurs on the session's leading capture, which begins with an empty Draft queue; the stage is admitted to seed later estimates, with any Capture Timeout in this phase treated as release-blocking.
 
 Once admission rejects an \(M\) or \(S\) stage, the optional stages in that group are removed from subsequent remaining sequences until the queue drains. The two groups are tracked independently, so a rejection in one does not disable the other; this sticky demotion prevents optional effects from alternating across consecutive captures while preserving timeout headroom.
 
 \smallskip\noindent\textbf{Watchdog fallback.}
 Admission cannot fully anticipate slowdowns after an optional stage begins.
-The watchdog therefore allows each admitted optional stage to run for at most \(W_{i,j}\):
+The watchdog therefore allows the Draft pipeline to wait at most \(W_{i,j}\) for each admitted optional stage:
 \begin{equation}
   W_{i,j}=\max\{0,R_{i,j}-U(\mathcal{E}_i)\},
   \label{eq:watchdog}

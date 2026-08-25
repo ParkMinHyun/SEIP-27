@@ -1,52 +1,40 @@
 % Notes: docs/exhibits.md#alg_admission
 \begin{algorithm}[t]
-\caption{Remaining-Sequence Admission Flow}
+\caption{Remaining-Sequence Admission and Calibration}
 \label{alg:admission}
 \small
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
 \begin{algorithmic}[1]
-\Require remaining sequence $\mathcal{K}_{i,j}$ and live budget $R_{i,j}$
-\Ensure \textsc{skip}, or \textsc{admit} with watchdog $W_{i,j}$
-
-\Procedure{Admit}{$\mathcal{K}_{i,j}$, $R_{i,j}$}
-  \State $g \gets M$ or $S$, the group of the optional stage
+\Require $\mathcal{K}_{i,j}$ and $R_{i,j}$ per decision; $p(k)$ per capture
+\Ensure \textsc{skip} or \textsc{admit} with $W_{i,j}$; updated histories
+\Procedure{DecideAdmission}{$\mathcal{K}_{i,j}$, $R_{i,j}$}
+  \State $g \gets$ the optional stage's group \Comment{$M$ or $S$}
   \If{$g \in \mathit{demoted}$}
     \State \Return \textsc{skip}
   \EndIf
-
-  \State $U \gets \Call{EstimateUpper}{\mathcal{K}_{i,j}}$
-  \State \Call{RecordPrediction}{$\mathcal{K}_{i,j}$}
-
-  \If{$U > R_{i,j}$ \textbf{and} $\hat P(\mathcal{K}_{i,j}) \neq 0$}
-    \State $\mathit{demoted} \gets \mathit{demoted} \cup \{g\}$ \Comment{queue-local}
+  \State record $\hat p(k)$ for $k \in \mathcal{K}_{i,j}$
+  \If{$\hat P(\mathcal{K}_{i,j})>0$ \textbf{and} $U(\mathcal{K}_{i,j})>R_{i,j}$}
+    \Comment{Eqs.~\ref{eq:upper-estimate},~\ref{eq:admission}}
+    \State $\mathit{demoted} \gets \mathit{demoted} \cup \{g\}$
     \State \Return \textsc{skip}
   \EndIf
-
-  \State $W_{i,j} \gets
-    \max\{0,R_{i,j}-\Call{EstimateUpper}{\mathcal{E}_i}\}$
+  \State $W_{i,j} \gets \max\{0,R_{i,j}-U(\mathcal{E}_i)\}$
+    \Comment{Eq.~\ref{eq:watchdog}}
   \State \Return \textsc{admit} with watchdog $W_{i,j}$
 \EndProcedure
 
 \Statex
-\Procedure{EstimateUpper}{$\mathcal{K}$}
-  \State $H \gets \mathcal{K}$'s own factor history if nonempty, else the pool
-  \If{$H = \emptyset$}
-    \State \Return $\hat P(\mathcal{K})$ \Comment{$\phi_{\tau}=1$}
-  \EndIf
-  \State $\tau \gets n_{\mathrm{eff}}/(n_{\mathrm{eff}}+1)$
-    \Comment{$n_{\mathrm{eff}}$ over $w_l,\, l \in H$}
-  \State traverse $H$ in ascending $\phi_l$ order
-  \State $\phi_{\tau} \gets$ first $\phi_l$ with cumulative weight
-    $\geq \tau\sum_{l \in H} w_l$
-  \State \Return $\hat P(\mathcal{K})\,\phi_{\tau}$
-\EndProcedure
-
-\Statex
-\Procedure{UpdateEvidence}{$i$} \Comment{at completion}
-  \State $w_l \gets 0.90\,w_l \quad \forall$ stored factors $l$
-  \ForAll{measured parts $\mathcal{K}'$ of the recorded sequences}
-    \State $\phi \gets \Call{ResidualFactor}{\mathcal{K}'}$
-    \State \Call{UpdateFactorHistory}{$\mathcal{K}', \phi$}
+\Procedure{LearnFromCapture}{$i$} \Comment{at completion}
+  \ForAll{measured parts priced in capture $i$}
+    \State form $\phi(\mathcal{K})$ once per distinct part, if $\hat P>0$
+      \Comment{Eq.~\ref{eq:residual-factor}}
   \EndFor
+  \If{any factor was formed}
+    \State $w_l \gets 0.90\,w_l$ for every stored $l$
+    \State insert each into its history with unit weight
+  \EndIf
+  \State update $\hat b(k)$ and $\gamma$ \Comment{Section~\ref{sec:model}}
 \EndProcedure
 \end{algorithmic}
 \end{algorithm}

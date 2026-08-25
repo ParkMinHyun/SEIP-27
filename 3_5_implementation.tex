@@ -6,6 +6,7 @@ This narrow integration limits cross-component coordination and broad revalidati
 
 \smallskip\noindent\textbf{Ownership and attachment.}
 The framework component that already owns the single Draft worker hosts the shared estimator as well; admission therefore runs within the same lifecycle and queries remaining-sequence estimates directly.
+Unlike the static thermal guard, which removes optional stages during sequence construction, admission evaluates them immediately before execution.
 Pacing attaches differently because the framework path that delivers \texttt{captureAvailable} to the application has a separate lifecycle and cannot retain direct access to the estimator.
 The framework therefore exposes a framework-internal single-method interface over the existing event channel, through which the callback-delivery path requests only the computed delay \(d_i\).
 The estimator and its execution history therefore remain confined to the Draft worker's lifecycle, without exposing estimator state to the callback-delivery path.
@@ -13,10 +14,10 @@ The estimator and its execution history therefore remain confined to the Draft w
 The integration adds two dedicated threads: a callback-delivery thread and a watchdog-fallback thread.
 Pacing posts the \texttt{captureAvailable} callback to the callback-delivery thread for release after \(d_i\).
 The watchdog-fallback thread provides the fallback path because an admitted optional stage cannot be cancelled once it enters native image processing.
-On expiration, the fallback thread processes the preserved original input independently of the in-flight optional stage; resources owned by the latter are released only when that processing eventually completes.
+On expiration, the fallback thread processes the preserved original input independently of the in-flight optional stage; resources owned by the latter are released only when that processing completes.
 
 \smallskip\noindent\textbf{Deployment scope.}
-Adaptation uses the configured stage sequence, observed on-device execution times, queue state, and the live Capture Timeout budget.
+With the controller integrated into the Draft pipeline, supporting a new optional stage requires only defining its workload key; the estimation and control logic remain unchanged.
 History learned from observed execution times allows both modules to adapt to runtime performance on the current device without relying on explicit device-state signals, per-model timing tables, or branches specialized for particular device models or features.
 Accordingly, the shared decay factor and the two-sequence reserve horizon are the only fixed controller parameters, while all learned histories and controller state remain scoped to the current camera application session.
 The controller has been integrated into the product branch and is undergoing release validation for a forthcoming Galaxy flagship smartphone line.

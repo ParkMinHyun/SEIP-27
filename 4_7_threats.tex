@@ -6,7 +6,7 @@ The controller carries no per-model performance profile and no calibrated thresh
 The same limit bounds the broader claim of Section~\ref{sec:release-process}.
 Because its decisions read observed execution time against the remaining deadline window rather than a fixed proxy, the controller is designed to subsume restrictions keyed to captures in flight or to which stages a mode enables, but this paper demonstrates that replacement only for the thermal guard.
 
-Neither module offers a formal deadline guarantee.
+The controller offers no formal deadline guarantee and does not address arbitrary stalls in mandatory encoding or saving; such stalls must be fixed before release, or the affected feature is disabled.
 Admission compares a residual-calibrated high-side estimate against the live budget, pacing charges an empirical reserve, and both are evidence-adaptive rather than bounding, which is why the watchdog of Section~\ref{sec:admission} exists at all.
 The results therefore support a claim about observed deadline behavior on the evaluated population rather than about worst-case behavior.
 
