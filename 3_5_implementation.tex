@@ -9,7 +9,7 @@ The framework component that already owns the single Draft worker hosts the shar
 Unlike the static thermal guard, which removes optional stages during sequence construction, admission evaluates them immediately before execution.
 Pacing attaches differently because the framework path that delivers \texttt{captureAvailable} to the application has a separate lifecycle and cannot retain direct access to the estimator.
 The framework therefore exposes a framework-internal single-method interface over the existing event channel, through which the callback-delivery path requests only the computed delay \(d_i\).
-The estimator and its execution history therefore remain confined to the Draft worker's lifecycle, without exposing estimator state to the callback-delivery path.
+The estimator and its execution history remain confined to the Draft worker's lifecycle; only the computed delay crosses into the callback-delivery path.
 
 The integration adds two dedicated threads: a callback-delivery thread and a watchdog-fallback thread.
 Pacing posts the \texttt{captureAvailable} callback to the callback-delivery thread for release after \(d_i\).

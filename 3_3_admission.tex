@@ -49,8 +49,7 @@ When \(\hat P(\mathcal K_{i,j})=0\), the controller admits the stage to bootstra
 Once admission rejects an \(M\) or \(S\) stage, the optional stages in that group are removed from subsequent remaining sequences until the queue drains. The two groups are tracked independently, so a rejection in one does not disable the other; this sticky demotion prevents optional effects from alternating across consecutive captures while preserving timeout headroom.
 
 \smallskip\noindent\textbf{Watchdog fallback.}
-Admission cannot fully anticipate slowdowns after an optional stage begins.
-The watchdog therefore allows the Draft pipeline to wait at most \(W_{i,j}\) for each admitted optional stage:
+Admission cannot fully anticipate post-admission slowdowns. The watchdog therefore limits each admitted optional stage's execution time to \(W_{i,j}\):
 \begin{equation}
   W_{i,j}=\max\{0,R_{i,j}-U(\mathcal{E}_i)\},
   \label{eq:watchdog}
