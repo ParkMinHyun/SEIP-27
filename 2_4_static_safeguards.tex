@@ -7,7 +7,7 @@ Samsung's overheat level is an ordinal thermal indicator on a 0--6 scale, where 
 During pre-release validation, level-4 throttling delayed a single-frame Draft stage and caused a Capture Timeout.
 After the failure recurred despite optimization, we adopted a uniform safeguard that skips optional stages at level 4 or higher.
 Because the Draft Sequence is implemented in framework code shared across models, the safeguard applies uniformly rather than through model-specific branches.
-However, level 4 can also occur during ordinary use under high ambient temperatures, charging, or preceding device workloads, so the uniform guard may suppress optional Draft processing even when sufficient capture budget remains.
+However, level 4 can also occur during ordinary use under high ambient temperatures, charging, or preceding device workloads, so the uniform guard may suppress optional stages even when sufficient capture budget remains.
 More fundamentally, the thermal level does not indicate how much of the deadline has already been consumed by queueing or how much Draft work remains.
 
 \smallskip\noindent\textbf{Required runtime control.}
@@ -21,8 +21,13 @@ Table~\ref{tab:timeout_index} reports the earliest and median first-timeout indi
 
 \input{tables/tab_timeout_index.tex}
 
-Some trials starting at overheat levels 0--3 timed out even though the production guard permits optional stages to run at those levels. 
-Conversely, at starting levels 4--6, multiple captures successfully completed optional stages before the first timeout occurred, although the production guard would suppress those stages from the first capture.
-Together, these results show that a fixed thermal threshold cannot reliably identify which captures have sufficient budget to execute optional stages.
-Neither executing optional stages unconditionally nor adjusting only the current capture's work resolves this mismatch: the former requires wider capture spacing to prevent queued work from consuming later budgets, whereas the latter cannot recover budget already lost waiting for the Draft worker.
-Running optional stages reliably therefore requires coordinated runtime control over each capture's Draft work and the timing of subsequent captures.
+Some trials starting at overheat levels 0--3 timed out even though the production guard permits optional stages at those levels.
+Conversely, at levels 4--6, multiple captures completed those stages before the first timeout, although the guard would suppress them from the outset.
+The fixed cutoff therefore fails in both directions: it permits optional stages in captures that later exhaust their budgets but would suppress them in captures that retain sufficient budget.
+Draft workload also shifts the outcome under matched starting conditions: whenever M+S timed out within 30 captures, reducing the Draft Sequence to M delayed the first timeout or avoided it within the window.
+
+The mismatch is therefore structural rather than a matter of threshold placement.
+Parallel capture overlaps the deadline windows of successive captures while their Draft Sequences execute one at a time, and lightweight multi-frame composition adds Draft work to each sequence.
+A capture's remaining budget consequently depends on the live backlog and the time already spent waiting, both of which vary from capture to capture.
+Adjusting only the current capture's Draft work cannot recover time already lost behind earlier Draft Sequences, whereas executing optional stages without regard to the backlog consumes the budgets of subsequent captures.
+Reliable optional-stage execution therefore requires coordinated runtime control over the Draft work each capture performs and when the next capture can be requested.
