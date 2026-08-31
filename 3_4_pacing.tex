@@ -30,15 +30,16 @@ Whereas \(U\) estimates the active Draft Sequence's remaining stage time, \(\hat
 At each Draft Sequence start, pacing projects the configured workload sequence \(\mathcal K\) through admission's current demotion state to obtain \(\mathcal K^{\mathrm{eff}}\), and computes
 \begin{equation}
   \hat C = \max\!\left(
-    C^{\max}_s-\left[\hat P(\mathcal K)-\hat P(\mathcal K^{\mathrm{eff}})\right],\;
+    C^{\max}-\left[\hat P(\mathcal K)-\hat P(\mathcal K^{\mathrm{eff}})\right],\;
     \hat P(\mathcal K^{\mathrm{eff}})
   \right).
   \label{eq:reserve}
 \end{equation}
-Here, the bracketed difference is the total predicted duration of the optional stages excluded by the current demotion state and is zero when no stages are excluded.
-\(C^{\max}_s\) is the longest completed Draft Sequence observed for output-size bucket \(s\); an unseen bucket uses the largest maximum among the observed buckets.
-Taking the maximum with \(\hat P(\mathcal K^{\mathrm{eff}})\) ensures that \(\hat C\) is at least the current effective-sequence prediction.
-Thus, \(\hat C\) is an empirical reserve, not a bound.
+Here, \(C^{\max}\) is the maximum Draft Sequence duration observed since the queue last drained.
+A Draft Sequence beyond the predicted backlog may start after thermal throttling has intensified, causing the latest point estimate to understate its duration; pacing therefore uses this observed maximum to hedge against such underestimation.
+The bracketed difference subtracts the predicted duration of optional stages excluded by the current demotion state because the completed Draft Sequence that produced \(C^{\max}\) may have executed them.
+The outer maximum keeps \(\hat P(\mathcal K^{\mathrm{eff}})\) as a floor and selects it as the reserve when no post-drain observation exists or when model updates have raised it above the adjusted maximum.
+Thus, \(\hat C\) is an empirical reserve rather than an execution-time bound.
 
 \smallskip\noindent\textbf{Provisional backlog accounting.}
 Following a queue drain, pacing releases callbacks without delay and does not extend \(t^{\mathrm{end}}\) until a Draft Sequence starts.

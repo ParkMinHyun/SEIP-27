@@ -3,7 +3,7 @@
 Both control modules require online estimates of remaining Draft work. The controller therefore represents each Draft Sequence as an ordered workload sequence and learns workload durations from completed sequences.
 
 \smallskip\noindent\textbf{Modeled workload sequence.}
-The controller models the Draft Sequence for capture \(i\) as an ordered workload sequence \(\mathcal{K}_i=(k_1,\ldots,k_m)\), where each workload key \(k\) identifies a processing stage by output-size bucket and configuration.
+The controller models the Draft Sequence for capture \(i\) as an ordered workload sequence \(\mathcal{K}_i=(k_1,\ldots,k_m)\), where each workload key \(k\) identifies a processing stage and its configuration.
 From position \(j\), \(\mathcal{K}_{i,j}=(k_j,\ldots,k_m)\) denotes the remaining sequence, ending in a mandatory terminal key measured from encoding start until the Draft image is saved.
 
 \smallskip\noindent\textbf{Online point estimation.}
@@ -20,5 +20,5 @@ This cumulative base limits the influence of transient spikes by giving them no 
 To estimate \(\gamma\), the controller takes the recency-weighted median of measured-to-base duration ratios across workload keys.
 Using ratios prevents long-running workloads from dominating the estimate, while the median avoids cancellation between workloads that change in opposite directions.
 After each completed Draft Sequence, the estimator downweights earlier ratio observations by \(0.90\) before incorporating the new measurements.
-For an unseen output size, it extrapolates from the slowest previously observed size in the same stage family in proportion to pixel count, or uses a zero estimate if no such history exists.
+For an unseen workload key, it derives an estimate from the slowest previously observed workload in the same stage family, or uses a zero estimate if no such history exists.
 Histories are cleared only after both the camera application has closed and all queued Draft Sequences have completed.
