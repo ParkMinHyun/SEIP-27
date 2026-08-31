@@ -10,23 +10,25 @@
   \renewcommand{\arraystretch}{1.15}%
   \setlength{\tabcolsep}{3pt}%
   \begin{tabular}{>{\raggedright\arraybackslash}p{0.29\columnwidth}
-                  >{\raggedright\arraybackslash}p{0.66\columnwidth}}
+                  >{\raggedright\arraybackslash}p{0.36\columnwidth}
+                  >{\raggedright\arraybackslash}p{0.24\columnwidth}}
     \toprule
-    \textbf{Setting} & \textbf{Value} \\
+    \textbf{Setting} & \multicolumn{2}{c}{\textbf{Value}} \\
     \midrule
-    Device & Galaxy S26 Ultra \\
-    SoC & Snapdragon 8 Elite Gen 5 for Galaxy \\
-    RAM & 12\,GB \\
-    OS & Android~17 (API level~37) \\
-    Camera software & 17.0.00.55, July 2026 \\
-    Camera mode & Portrait \\
-    Draft Sequence extension & Lightweight multi-frame composition \\
-    Capture conditions & 12MP normal; 24MP under memory pressure \\
-    Memory pressure & AnTuTu Benchmark~11.1.4 memory-stress workload \\
-    Starting overheat level & 0--6 \\
-    Environment & Air-conditioned office, fixed scene with a static subject \\
-    Capture request & Immediately upon capture availability via ADB \\
-    Repetitions & Ten 30-capture runs per condition and level \\
+    Device & \textbf{Galaxy S26 Ultra} & \textbf{Galaxy S26} \\
+    SoC & Snapdragon 8 Elite Gen 5 & Exynos~2600 \\
+    RAM & \multicolumn{2}{>{\raggedright\arraybackslash}p{0.66\columnwidth}}{12\,GB} \\
+    \midrule
+    OS & \multicolumn{2}{>{\raggedright\arraybackslash}p{0.66\columnwidth}}{Android~17 (API level~37)} \\
+    Camera software & \multicolumn{2}{>{\raggedright\arraybackslash}p{0.66\columnwidth}}{17.5.00.10, July 2026} \\
+    Camera mode & \multicolumn{2}{>{\raggedright\arraybackslash}p{0.66\columnwidth}}{Portrait} \\
+    Draft Sequence extension & \multicolumn{2}{>{\raggedright\arraybackslash}p{0.66\columnwidth}}{Lightweight multi-frame composition} \\
+    Capture conditions & \multicolumn{2}{>{\raggedright\arraybackslash}p{0.66\columnwidth}}{12MP normal; 24MP under memory pressure} \\
+    Memory pressure & \multicolumn{2}{>{\raggedright\arraybackslash}p{0.66\columnwidth}}{AnTuTu Benchmark~11.1.4 memory-stress workload} \\
+    Starting overheat level & \multicolumn{2}{>{\raggedright\arraybackslash}p{0.66\columnwidth}}{0--6} \\
+    Environment & \multicolumn{2}{>{\raggedright\arraybackslash}p{0.66\columnwidth}}{Air-conditioned office, fixed scene with a static subject} \\
+    Capture request & \multicolumn{2}{>{\raggedright\arraybackslash}p{0.66\columnwidth}}{Continuous shutter-input injection via an ADB loop} \\
+    Repetitions & \multicolumn{2}{>{\raggedright\arraybackslash}p{0.66\columnwidth}}{Ten 30-capture runs per condition and level} \\
     \bottomrule
   \end{tabular}}
 \end{table}

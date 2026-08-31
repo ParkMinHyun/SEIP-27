@@ -12,23 +12,21 @@
   \newsavebox{\rqablbox}%
   \newcommand{\rqabltabular}{%
   \begin{tabular}{@{}%
-      >{\centering\arraybackslash}p{33pt}%
-      >{\raggedright\arraybackslash}p{46pt}V%
-      >{\raggedleft\arraybackslash}p{28pt}%
-      >{\raggedleft\arraybackslash}p{29pt}V%
-      >{\raggedleft\arraybackslash}p{21pt}%
-      >{\raggedleft\arraybackslash}p{21pt}V%
-      >{\raggedleft\arraybackslash}p{29pt}%
-      >{\raggedleft\arraybackslash}p{22pt}%
+      >{\raggedright\arraybackslash}p{60pt}V%
+      >{\raggedleft\arraybackslash}p{32pt}%
+      >{\raggedleft\arraybackslash}p{33pt}V%
+      >{\raggedleft\arraybackslash}p{23pt}%
+      >{\raggedleft\arraybackslash}p{23pt}V%
+      >{\raggedleft\arraybackslash}p{34pt}%
+      >{\raggedleft\arraybackslash}p{26pt}%
     @{}}
     \toprule
-    \multirow[c]{2}{=}[-8.4pt]{\textbf{Condition}}
-      & \multirow[c]{2}{=}[-8.4pt]{\textbf{Configuration}}
+    \multirow[c]{2}{=}{\centering\textbf{Configuration}}
       & \multicolumn{2}{cV}{\makecell[c]{\textbf{Deadline safety}}}
       & \multicolumn{2}{cV}{\makecell[c]{\textbf{Draft stages}\\\textbf{executed}}}
       & \multicolumn{2}{c}{\makecell[c]{\textbf{Pacing cost}}} \\
-    \cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(l){7-8}
-    & & \multicolumn{1}{c}{\makecell[c]{\textbf{Survived}\\\textbf{runs}}}
+    \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(l){6-7}
+      & \multicolumn{1}{c}{\makecell[c]{\textbf{Survived}\\\textbf{runs}}}
       & \multicolumn{1}{cV}{\makecell[c]{\textbf{Captures}\\\textbf{(\%)}}}
       & \multicolumn{1}{c}{\makecell[c]{\mbox{\boldmath$M$}\\\textbf{(\%)}}}
       & \multicolumn{1}{cV}{\makecell[c]{\mbox{\boldmath$S$}\\\textbf{(\%)}}}
@@ -36,23 +34,34 @@
       & \multicolumn{1}{c}{\makecell[c]{\mbox{\boldmath$d$}\textbf{ P50}\\\textbf{(ms)}}} \\
     \midrule
 
-    \multirow{4}{*}{\makecell[c]{12MP\\normal\\Lv4}}
-      & No control     & 0/10   & 29.0  & 29.0 & 29.0 & 0 & -- \\
-      & Admission only & 10/10  & 100.0 & 29.3 & 33.7 & 0 & -- \\
-      & Pacing only    & 1/10   & 40.7  & 40.7 & 40.7 & 37.2 & 411 \\
-      & \textbf{Full}  & \textbf{10/10} & \textbf{100.0}
-                       & \textbf{34.3} & \textbf{97.3} & \textbf{33.8} & \textbf{387} \\
+    \multicolumn{7}{@{}l}{\textbf{(a)}\enspace S26 Ultra, 12MP normal, Lv4} \\
+    \addlinespace[1pt]
+    No control     & 0/10   & 29.0  & 29.0 & 29.0 & 0 & -- \\
+    Admission only & 10/10  & 100.0 & 29.3 & 33.7 & 0 & -- \\
+    Pacing only    & 1/10   & 40.7  & 40.7 & 40.7 & 37.2 & 411 \\
+    \textbf{Full}  & \textbf{10/10} & \textbf{100.0}
+                   & \textbf{34.3} & \textbf{97.3} & \textbf{33.8} & \textbf{387} \\
     \midrule
 
-    \multirow{4}{*}{\makecell[c]{24MP\\memory\\Lv4}}
-      & No control     & 0/10   & 24.3  & 24.3 & 24.3 & 0 & -- \\
-      & Admission only & 8/10   & 87.3  & 24.3 & 51.0 & 0 & -- \\
-      & Pacing only    & 1/10   & 29.0  & 29.0 & 29.0 & 29.1 & 370 \\
-      & \textbf{Full}  & \textbf{10/10} & \textbf{100.0}
-                       & \textbf{41.7} & \textbf{80.3} & \textbf{13.4} & \textbf{313} \\
+    \multicolumn{7}{@{}l}{\textbf{(b)}\enspace S26 Ultra, 24MP memory, Lv4} \\
+    \addlinespace[1pt]
+    No control     & 0/10   & 24.3  & 24.3 & 24.3 & 0 & -- \\
+    Admission only & 8/10   & 87.3  & 24.3 & 51.0 & 0 & -- \\
+    Pacing only    & 1/10   & 29.0  & 29.0 & 29.0 & 29.1 & 370 \\
+    \textbf{Full}  & \textbf{10/10} & \textbf{100.0}
+                   & \textbf{41.7} & \textbf{80.3} & \textbf{13.4} & \textbf{313} \\
+    \midrule
+
+    \multicolumn{7}{@{}l}{\textbf{(c)}\enspace S26, 12MP normal, Lv4} \\
+    \addlinespace[1pt]
+    No control     & 0/10   & 42.3  & 42.3 & 42.3 & 0 & -- \\
+    Admission only & 7/10   & 90.7  & 51.3 & 44.3 & 0 & -- \\
+    Pacing only    & 0/11   & 53.3  & 53.3 & 53.3 & 49.4 & 360 \\
+    \textbf{Full}  & \textbf{11/11} & \textbf{100.0}
+                   & \textbf{54.5} & \textbf{66.1} & \textbf{40.1} & \textbf{425.5} \\
     \bottomrule
   \end{tabular}}%
-  \fittabcolsep{\rqablbox}{\rqabltabular}{\columnwidth}{14}%
+  \fittabcolsep{\rqablbox}{\rqabltabular}{\columnwidth}{12}%
   \rqabltabular
   }
 \end{table}
