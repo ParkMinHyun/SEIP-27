@@ -23,6 +23,7 @@ with `AGENTS.md`, `AGENTS.md` wins and this file should be corrected.
 | --- | --- | --- |
 | [`tab_casestudy_selection`](#tab_casestudy_selection) | `tables/` | Live -- `_4_experiments.tex`, case study |
 | [`tab_controller_state`](#tab_controller_state) | `tables/` | Not input by any section |
+| [`tab_rq1_cadence_diagnostic`](#tab_rq1_cadence_diagnostic) | `tables/` | Not input by any section |
 | [`tab_rq1_end_to_end_summary`](#tab_rq1_end_to_end_summary) | `tables/` | Live -- `_4_experiments.tex`, RQ1 |
 | [`tab_rq2_ablation`](#tab_rq2_ablation) | `tables/` | Live -- `_4_experiments.tex`, RQ2 |
 | [`tab_rq3_admission_summary`](#tab_rq3_admission_summary) | `tables/` | Live -- `_4_experiments.tex`, RQ3 |
@@ -193,6 +194,96 @@ the same timing component abstractly, so doing so would double count it. If the
 implementation-specific decomposition is ever restored, replace the \(\hat Q\)
 definition and both uses consistently rather than adding \(\hat H\) to \(\hat Q\).
 
+## tab_rq1_cadence_diagnostic
+
+`tables/tab_rq1_cadence_diagnostic.tex` &middot; Not input by any section
+
+Compact cross-device diagnostic for the 24MP-request memory-pressure
+collection. The upper block contrasts the capture interval after subtracting
+the recorded controller-added pacing delay with whole Draft Sequence duration
+at low and high starting overheat levels, and reports the ratio between those
+two base metrics. The lower block decomposes the deadline usage of S26
+captures that timed out.
+
+External working-collection sources:
+
+- `SM-S942B_metrics_24MP_memory_0829_original.xlsx`
+- `48U_metrics_24MP_memory_0803_1.xlsx`
+- `48U_metrics_24MP_memory_0803_2.xlsx`
+
+The source population is the three named original workbooks, not the balanced
+RQ1 population currently printed in `tab_rq1_end_to_end_summary`. Runs are
+selected by `RQ1Runs.includedForRq1`, namespaced by workbook and run ID, and
+grouped by `startingOverheatLevel`: Lv1--2 contains 14 S26 and 21 S26 Ultra
+runs; Lv5--6 contains 24 and 20, respectively. Timeout runs contribute their
+factual observed prefix.
+
+Each P50 pools event rows rather than averaging run-level medians. Capture
+interval uses `shotToShotWithoutRecordedPacingMs`, exported as
+`max(shotToShotTimeMs - transitionDelayMs, 0)`. This is an arithmetic
+recorded-delay subtraction, not a counterfactual trace replayed with pacing
+disabled; policy divergence, subsequent queue state, and thermal trajectory
+are not replayed. The zero floor occurs more often for S26 and can bias its
+capture interval downward.
+
+Draft Sequence P50 uses `draftSequenceDurationMs` only for
+captures on which both `bokehExecuted` and `filterExecuted` are true. The
+field is the wall-clock interval from Draft start to completion: it includes
+the executed \(M\) and \(S\) stages, mandatory encoding and saving, and
+between-stage overhead. It is not the arithmetic sum of the two optional-stage
+durations. Conditioning on both stages avoids making the high-level cells look
+artificially short merely because admission skipped optional stages.
+
+The upper block's `Sequence/interval ratio` divides the two unrounded pooled
+P50s shown in the same row. It is a ratio of marginal medians, not the median
+of per-capture ratios, a paired capture measure, or a worker-utilization
+estimate.
+
+The lower block is timeout-conditional. It selects the 11 `CaseStudyTrace`
+rows from included S26 runs at `startingOverheatLevel` 1, 2, 5, or 6 for which
+`captureTimedOut` is true; this population originates from
+`SM-S942B_metrics_24MP_memory_0829_original.xlsx`. Pre-Draft elapsed time is
+`draftStartUptimeMs - (timeoutDeadlineUptimeMs - captureTimeoutMs)`;
+deadline consumption substitutes `draftEndUptimeMs` into the same expression,
+and margin is `timeoutMarginMs`. Because these are marginal P50s, the median
+Pre-Draft elapsed time and median Draft Sequence duration need not sum to the
+median deadline consumption.
+
+The source workbooks describe a 24MP-request condition, not an all-24MP
+execution population: Lv5--6 rows are 4000x3000 on both devices, and most
+Lv1--2 rows have also fallen back to that output size.
+
+Unrounded pooled values, in printed row order, are:
+
+```text
+Lv1--2  S26 Ultra  capture interval 506.0  Draft Sequence 678.0   ratio 1.34
+Lv1--2  S26        capture interval 288.5  Draft Sequence 662.0   ratio 2.29
+Lv5--6  S26 Ultra  capture interval 695.0  Draft Sequence 1341.0  ratio 1.93
+Lv5--6  S26        capture interval 432.0  Draft Sequence 1087.0  ratio 2.52
+S26 timeout (n=11) pre-Draft elapsed 6534.0  Draft Sequence 659.0
+S26 timeout (n=11) deadline consumption 7114.0  margin -114.0
+```
+
+The 2026-08-31 two-metric revision removed raw measured S2S and executed \(M\)
+duration so the exhibit directly compares device cadence before added pacing
+with whole-sequence worker occupancy. Their former values, in row order, were
+`551/407/776/451` ms and `253.5/201.5/539/350` ms, respectively. Restore them
+from `shotToShotTimeMs` and positive `bokehActualDurationMs` on captures where
+`bokehExecuted` is true.
+
+The table rounds timing values to the nearest millisecond and the derived
+ratios to two decimal places; ratios are computed from the corresponding
+unrounded P50s. The pacing exclusion is defined in this entry rather than the
+caption so the caption stays on one line.
+`Draft Sequence duration` is the whole wall-clock interval described above,
+not the literal sum of \(M\) and \(S\).
+The first stub is `Starting overheat level`, matching the RQ1 terminology.
+The table has an outer border, a vertical rule between every column, and
+single horizontal rules throughout so that the header and body form one
+continuous grid. The timeout separator spans the same grid as the upper block.
+The five-column tabular uses `\fittabcolsep` with divisor 10
+to fit exactly to `\columnwidth`.
+
 ## tab_rq1_end_to_end_summary
 
 `tables/tab_rq1_end_to_end_summary.tex` &middot; Live -- `_4_experiments.tex`, RQ1
@@ -201,6 +292,32 @@ RQ1: Baseline failure reference, full-controller Draft availability, and
 pacing cost.
 This is the RQ1 table; the per-loop ablation is now its own research
 question, RQ2, in tables/tab_rq2_ablation.tex.
+
+2026-08-31 S26 EXTENSION.  The S26 block is reconstructed from the external
+working collection:
+  - SM-S942B_metrics_12MP_normal_0829.xlsx
+  - SM-S942B_metrics_24MP_memory_0829.xlsx
+  - SM-S942B_metrics_12MP_normal_baseline_0829.xlsx
+  - SM-S942B_metrics_24MP_memory_baseline_0829.md/.png
+
+The 12MP baseline onsets come from the baseline workbook.  The original 24MP
+baseline workbook was replaced, so its earliest observed timeout indices are
+recovered from the preserved notes and rendering:
+  - 12MP Lv0--Lv6: --, --, 22, 15, 9, 9, 9.
+  - 24MP Lv0--Lv6: 23, 21, 19, 9, 6, 3, 6.
+
+S26 full-controller values use every run marked `includedForRq1` and are
+recomputed from `RQ1Runs` and `RQ3Pacing`.  M, S, and Activated remain per-run
+counts; captures not reached after an observed timeout add no executed stage or
+paced transition.  Delay P50 pools positive observed transition delays.
+
+S26 run counts are therefore not balanced: 12MP has N=5/5/5/10/11/10/10,
+and 24MP has N=5/7/7/10/10/11/10 for Lv0--Lv6.  The 24MP block retains nine
+observed Capture Timeout runs (Lv1 two, Lv2 four, Lv5 one, Lv6 two) rather
+than treating them as invalid measurements.
+
+All pre-2026-08-31 source, balancing, and fixed-denominator notes below apply
+to the S26 Ultra block unless they explicitly name S26.
 
 Controller-off Timeout onset retains the previously reported baseline
 reference.  Full-controller values are reconstructed from the balanced copy in
@@ -319,13 +436,15 @@ vertically (\multirow with the offsets below), and every DATA cell is
 right-aligned.  The three leading columns stay centred because they are row
 labels, not measurements.
 
-Header geometry is unchanged from the 20-column form -- still four rows,
-still the same line counts per row -- so the -1.8ex and -0.4ex \multirow
-nudges carry over.  Re-derive them if a header gains or loses a line.
-  "Timeout onset" is broken across two lines on purpose.  Set on one line it
-measures wider than any other header here, and with a two-character datum
-under it the right-aligned value would sit an implausible distance from its
-own label.  Two lines put the column near the width of its neighbours.
+The header remains four rows, but the 2026-08-31 layout revision compacts its
+two single-column groups.  Deadline safety remains on one line at 6pt, while
+Survived runs breaks across two lines.  The baseline label breaks as Earliest /
+Timeout / onset, using a 6pt font with 6pt leading and smashed vertical metrics
+so it fits the two-row span without enlarging the header; both row-spanning
+labels keep the existing -0.4ex multirow adjustment.  Re-derive these settings if either label gains or
+loses a line.  The compact headers keep two-character baseline indices and
+run-survival fractions visually associated with their labels instead of letting
+header text create disproportionately wide columns.
 
 $d$, not "Applied Delay".  RQ4 prints the applied pacing delay as $d$
 throughout Table~\ref{tab:rq4_pacing_summary}, and one quantity carries one
@@ -354,6 +473,49 @@ Split out of RQ1 and promoted to its own research question on 2026-08-11:
 RQ1 characterizes the full controller across starting levels, and RQ2 isolates
 what each control loop contributes.  The file was tables/tab_rq1_ablation.tex
 and the label was tab:rq1_ablation before that split.
+
+2026-08-31 S26 EXTENSION.  The file emits one table float and one tabular with
+a shared two-row metric header.  Device, resolution, memory condition, and
+starting level are combined into full-width scenario rows, leaving
+Configuration as the sole stub column.  This avoids dedicated Device and
+Condition columns while keeping the metric header unique.  The S26 scenario
+reports the currently available 12MP-normal/Lv4 data; no empty 24MP block is printed.
+
+2026-08-31 PANEL-HEADER REFINEMENT.  The three scenario rows are left-aligned
+panel headers labeled (a)--(c).  The panel marker alone is bold; the device and
+condition remain roman, and the former full-width rule beneath each label is
+removed.  A 1pt gap attaches each panel header to its four configuration rows,
+while the existing midrules continue to separate panels.  This changes only
+the visual hierarchy and preserves the one-tabular, one-header geometry
+described above.
+
+The S26 sources are:
+  - No control: SM-S942B_metrics_12MP_normal_baseline_0829.xlsx
+  - Admission only: SM-S942B_metrics_12MP_normal_pacing_only_0829.xlsx
+  - Pacing only: SM-S942B_metrics_12MP_normal_admit_only_0829.xlsx
+  - Full: SM-S942B_metrics_12MP_normal_0829.xlsx
+
+The two ablation filenames are reversed relative to their actual
+configurations, as confirmed by the operator.  In the file named
+`pacing_only`, actual pacing was forced to 0L while admission remained active;
+this is the Admission-only source.  In the file named `admit_only`, admission
+skip handling and the watchdog timeout were removed while pacing remained
+active; this is the Pacing-only source.  The S26 table uses all Lv4 runs marked
+`includedForRq1`: N=10/10/11/11 in the order above.  Admission-only RunId 2 is
+the one included run whose exported `draftConfiguration` is M rather than M+S;
+it remains in the displayed workbook inclusion set and depresses S retention.
+
+Each S26 Captures, M, and S rate uses 30 x N requested captures.  Captures not
+reached after a timeout and the timeout capture itself contribute zero.
+The No-control and actual Admission-only workbooks retain computed delay
+observations that were not applied, so their Activated and d P50 cells remain
+structurally 0 and --, respectively.
+For Pacing only and Full, Activated divides positive transition delays by all
+nonblank observed transition delays over eligible outgoing-shot intervals;
+their positive values are pooled for d P50.
+
+No S26 24MP four-arm collection was supplied.  All following source,
+balancing, fixed-300-denominator, and mechanism notes refer to S26 Ultra.
 
 This table still reports M and S as PERCENTAGES, whereas RQ1 now prints
 per-run capture counts.  That is deliberate, not an oversight: RQ1's
@@ -2193,6 +2355,17 @@ Recorded from the column-spec labels that used to sit in the tabular preamble.
 
 The platform, capture conditions and run protocol of the evaluation, in one
 half-column table.
+
+2026-08-31 S26 EXTENSION.  Device and SoC use one value column per device:
+Galaxy S26 Ultra / Snapdragon 8 Elite Gen 5 for Galaxy and Galaxy S26 /
+Exynos 2600.  RAM is the common 12 GB value, and it and all remaining common
+configuration rows span both device columns.
+
+The compact hardware block uses a 0.36/0.24 device-column split and bold device
+names.  The longer S26 Ultra SoC wraps deliberately after `5`, rather than being
+squeezed against the S26 value.  Use no vertical or per-row rules: one midrule
+after SoC separates the device-specific hardware from RAM and the other common
+platform and protocol settings.
 
 Added 2026-08-21 when Section 4.1 was compressed.  Before it, the same material
 ran as two bold run-in blocks of prose, `Experimental platform.` and `Capture

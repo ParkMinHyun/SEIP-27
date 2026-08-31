@@ -1,0 +1,34 @@
+% Notes: docs/exhibits.md#tab_rq1_cadence_diagnostic
+\begin{table}[t]
+  \centering
+  \setlength{\abovecaptionskip}{2pt}%
+  \setlength{\belowcaptionskip}{3pt}%
+  \caption{S26 timeout breakdown under 24MP memory pressure.}
+  \label{tab:rq1_cadence_diagnostic}
+
+  {\scriptsize
+  \setlength{\arrayrulewidth}{0.35pt}%
+  \renewcommand{\arraystretch}{1.08}%
+  \newsavebox{\rqcadencebox}%
+  \newcommand{\rqcadencetabular}{%
+  \begin{tabular}{|c|l|r|r|r|}
+    \hline
+    \makecell[c]{\textbf{Overheat}\\\textbf{level}} &
+    \textbf{Device} &
+    \makecell[c]{\textbf{Capture}\\\textbf{interval P50}\\\textbf{(ms)}} &
+    \makecell[c]{\textbf{Draft Sequence}\\\textbf{duration P50}\\\textbf{(ms)}} &
+    \makecell[c]{\textbf{Duration /}\\\textbf{interval ratio}} \\
+    \hline
+    \multirow{2}{*}{Lv1--2}
+      & S26 Ultra & 506 & 678  & $\times1.34$ \\
+      & S26       & 289 & 662  & $\times2.29$ \\
+    \hline
+    \multirow{2}{*}{Lv5--6}
+      & S26 Ultra & 695 & 1341 & $\times1.93$ \\
+      & S26       & 432 & 1087 & $\times2.52$ \\
+    \hline
+  \end{tabular}}%
+  \fittabcolsep{\rqcadencebox}{\rqcadencetabular}{\columnwidth}{10}%
+  \rqcadencetabular
+  }
+\end{table}

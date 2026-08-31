@@ -1,0 +1,33 @@
+% Notes: docs/exhibits.md#tab_rq1_cadence_diagnostic
+\begin{table}[t]
+  \centering
+  \setlength{\abovecaptionskip}{2pt}%
+  \setlength{\belowcaptionskip}{3pt}%
+  \caption{S2S and Draft Sequence duration under 24MP memory pressure.}
+  \label{tab:rq1_cadence_diagnostic}
+
+  {\scriptsize
+  \setlength{\arrayrulewidth}{0.35pt}%
+  \renewcommand{\arraystretch}{1.08}%
+  \newsavebox{\rqcadencebox}%
+  \newcommand{\rqcadencetabular}{%
+  \begin{tabular}{|c|l|r|r|}
+    \hline
+    \makecell[c]{\textbf{Starting}\\\textbf{overheat level}} &
+    \textbf{Device} &
+    \makecell[c]{\textbf{Capture interval}\\\textbf{P50 (ms)}} &
+    \makecell[c]{\textbf{Draft Sequence}\\\textbf{duration P50 (ms)}} \\
+    \hline
+    \multirow{2}{*}{Lv1--2}
+      & S26 Ultra & 506 & 678 \\
+      & S26       & 289 & 662 \\
+    \hline
+    \multirow{2}{*}{Lv5--6}
+      & S26 Ultra & 695 & 1341 \\
+      & S26       & 432 & 1087 \\
+    \hline
+  \end{tabular}}%
+  \fittabcolsep{\rqcadencebox}{\rqcadencetabular}{\columnwidth}{8}%
+  \rqcadencetabular
+  }
+\end{table}

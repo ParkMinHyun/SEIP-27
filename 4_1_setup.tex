@@ -1,19 +1,23 @@
 \subsection{Experimental Setup}
 \label{sec:setup}
 
-Table~\ref{tab:setup} summarizes the experimental platform and common run conditions.
-The lightweight multi-frame composition targets Portrait mode and requires coordinated HAL and image-solution support.
-At the time of evaluation, an end-to-end binary integrating both was available only for the Galaxy S26 Ultra.
-Unlike other flagship variants, this model has no queue-depth- or feature-specific restrictions on parallel capture beyond the static thermal guard, allowing us to isolate admission and pacing.
-All configurations use the same production-based camera stack and measurement instrumentation, with only the controller policy varied.
-The static thermal guard is bypassed in all runs, so optional-stage skips are attributable to admission rather than the production guard.
-
 \input{tables/tab_setup.tex}
 
-We evaluate two representative operating points spanning the target workload range: the production-default 12MP configuration under normal memory conditions and a more demanding 24MP configuration under memory pressure.
-The 24MP condition refers to the requested capture mode; at overheat level~5 and above, the production pipeline falls back to 12MP.
+Table~\ref{tab:setup} summarizes the two experimental platforms and their common run conditions.
+The Draft Sequence's lightweight multi-frame composition targets Portrait mode and requires coordinated support from the HAL and image-solution layers.
+We evaluate end-to-end binaries incorporating this support on the Galaxy S26 Ultra and Galaxy S26.
+The evaluation binaries bypass the production static thermal guard on both devices.
+The Exynos-based Galaxy S26 restricts parallel capture when either \(M\) or \(S\) is enabled; we disable this restriction for evaluation.
+For each experimental condition, all controller configurations use the same production-based capture implementation and differ only in controller policy.
+Consequently, any skipped optional stage or applied pacing delay originates from the controller configuration rather than either production restriction.
+
+On each device, we evaluate two operating points: the production-default 12MP configuration under normal memory conditions and a 24MP-requested configuration under memory pressure.
+These conditions form the low- and high-load endpoints among the four collected resolution--memory combinations.
+We induce memory pressure by running AnTuTu Benchmark~11.1.4 alongside the camera application.
+The 24MP condition denotes the requested capture mode; at overheat level~5 and above, the production camera stack falls back to 12MP.
 Before each run, we force-stop and relaunch the camera application, resetting the process-local controller state and estimator history.
 
-We do not control thermal state; starting levels arise through repeated capture and idle cooling.
-Each run is grouped by its initial overheat level, after which thermal state evolves naturally over the 30 captures.
-The ADB loop issues the next capture as soon as capture becomes available, exercising the maximum request rate allowed by the capture-availability path.
+We do not hold thermal state constant during a run.
+We reach each target starting level through repeated captures or idle cooling and begin the run when the device reports that level.
+Thermal state then evolves without external intervention for the remainder of the run.
+An ADB loop continuously injects shutter input, saturating the request rate exposed by the application-facing capture-availability path.
