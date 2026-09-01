@@ -2,21 +2,21 @@
 \label{sec:pacing}
 
 Pacing runs when the framework becomes ready to deliver \texttt{captureAvailable}, using predicted Draft-worker occupancy to decide whether to expose the next capture opportunity immediately or delay it.
-It delays the callback when the predicted backlog and additional Draft work exceed the newest committed capture's time to Capture Timeout.
+It delays the callback when the predicted backlog and additional Draft work exceed the live remaining timeout budget.
 
 \smallskip\noindent\textbf{Backlog tracking.}
 While a Draft Sequence is executing, subsequent capture requests can continue to arrive, each triggering a pacing decision before its Draft Sequence is queued.
 Because queued Draft Sequences differ in stage composition and processing cost, queue depth alone does not reflect their processing-time backlog.
 Pacing therefore maintains \(t^{\mathrm{end}}\), the predicted queue-drain time obtained by accumulating their sequence-level point estimates \(\hat P\).
-After capture \(i\), pacing estimates the backlog at decision time \(t_i\) as
+At decision time \(t_i\), pacing estimates the backlog as
 \begin{equation}
   \hat B_i=\max\{0,t^{\mathrm{end}}-t_i\}.
   \label{eq:backlog}
 \end{equation}
 
 \smallskip\noindent\textbf{Delay sizing.}
-Let \(T_i\) denote the newest committed capture's remaining Capture Timeout window at \(t_i\).
-Pacing charges the predicted backlog \(\hat B_i\) and twice the per-Draft-Sequence reserve \(\hat C\) against \(T_i\), and computes the delay applied to the next capture opportunity as
+At \(t_i\), let \(T_i\) denote the time remaining until the Capture Timeout deadline for the capture whose Draft Sequence is predicted to complete at \(t^{\mathrm{end}}\).
+Pacing charges the predicted backlog \(\hat B_i\) and twice the per-Draft-Sequence reserve \(\hat C\) against \(T_i\), and computes
 \begin{equation}
   d_i=
   \left\lceil
@@ -24,6 +24,7 @@ Pacing charges the predicted backlog \(\hat B_i\) and twice the per-Draft-Sequen
   \right\rceil.
   \label{eq:pacing}
 \end{equation}
+The resulting \(d_i\) is applied to the next capture opportunity.
 The \(2\hat C\) term reserves processing time for two Draft Sequences beyond the predicted backlog: one entering the queue after \(t_i\) and one for the capture enabled by the paced callback.
 The divisor assigns half of any positive deficit to callback delay, limiting user-perceived delay while admission independently responds to deadline pressure within the active Draft Sequence.
 
