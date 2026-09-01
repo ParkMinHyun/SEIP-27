@@ -1,6 +1,6 @@
 % Notes: docs/exhibits.md#tab_rq4_pacing_sizing
 \begin{table}[t]
-  \caption{\textbf{RQ4 pacing-delay sizing.} Activation rises as retrospective pressure tightens, and the applied delay stays a small share of the backlog it drains. Bands are cut by the retrospective matched-policy target and partition the analyzed transitions.}
+  \caption{RQ4 Pacing-Delay Sizing under Backlog Pressure.}
   \label{tab:rq4_pacing_sizing}
   \centering
   \scriptsize
@@ -9,20 +9,16 @@
   \resizebox{\columnwidth}{!}{%
   \begin{tabular}{lrrrrrr}
     \toprule
-    & \multicolumn{4}{c}{\textbf{Paced by pressure band}} & & \\
-    \multicolumn{1}{c}{\multirow[c]{2}{*}{\textbf{Condition}}}
-    & \multicolumn{4}{c}{\textbf{\% (counts)}}
-    & \multicolumn{1}{c}{\textbf{$d/B$}} & \multicolumn{1}{c}{\textbf{Overlap}} \\
+    \multicolumn{1}{c}{\multirow[c]{3}{*}{\makecell[c]{\textbf{S26 Ultra}\\\textbf{Condition}}}}
+    & \multicolumn{4}{c}{\textbf{Paced by retrospective margin band}}
+    & \multicolumn{1}{c}{\multirow[c]{3}{*}{\makecell[c]{\textbf{$d/B$}\\\textbf{P50}}}}
+    & \multicolumn{1}{c}{\multirow[c]{3}{*}{\makecell[c]{\textbf{Overlap}\\\textbf{backlog}}}} \\
+    & \multicolumn{4}{c}{\textbf{\% (counts)}} & & \\
     \cmidrule(lr){2-5}
-    & \multicolumn{1}{c}{\textbf{$>40\%$}}
+    & \multicolumn{1}{c}{{\boldmath\raisebox{0.15ex}{$\scriptstyle >$}}\textbf{40\%}}
     & \multicolumn{1}{c}{\textbf{20--40\%}}
     & \multicolumn{1}{c}{\textbf{0--20\%}}
-    & \multicolumn{1}{c}{\textbf{$>0\%$}}
-    & \multicolumn{1}{c}{\textbf{P50}} & \multicolumn{1}{c}{\textbf{backlog}} \\
-    & \multicolumn{1}{c}{\textbf{spare}}
-    & \multicolumn{1}{c}{\textbf{spare}}
-    & \multicolumn{1}{c}{\textbf{spare}}
-    & \multicolumn{1}{c}{\textbf{deficit}}
+    & \multicolumn{1}{c}{{\boldmath\raisebox{0.15ex}{$\scriptstyle \leq$}}\textbf{0\%}}
     & & \\
     \midrule
     12MP norm. & \makecell[cr]{\textbf{1.4\%}\\{\tiny $(9/652)$}} & \makecell[cr]{11.8\%\\{\tiny $(80/676)$}} & \makecell[cr]{50.9\%\\{\tiny $(261/513)$}} & \makecell[cr]{\textbf{77.2\%}\\{\tiny $(61/79)$}} & \makecell[cr]{10.4\%\\{\tiny (411 paced)}} & \makecell[cr]{100.0\%\\{\tiny (411 paced)}} \\

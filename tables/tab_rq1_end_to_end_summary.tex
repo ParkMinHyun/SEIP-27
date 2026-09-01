@@ -11,9 +11,12 @@
   \setlength{\arrayrulewidth}{0.35pt}%
   \setlength{\doublerulesep}{0.8pt}%
   \renewcommand{\arraystretch}{1.08}%
+  \newlength{\rqsurvivedwidth}%
+  \settowidth{\rqsurvivedwidth}{\textbf{10/10} (--)}%
+  \newcommand{\rqsurvived}[1]{\makebox[\rqsurvivedwidth][r]{#1}}%
   \newsavebox{\rqtabbox}%
   \newcommand{\rqtabular}{%
-  \begin{tabular}{|c|c|c|r||r||r||rr|rr||rr|rr|}
+  \begin{tabular}{|c|c|c|r||c||c||rr|rr||rr|rr|}
     \hline\hline
     \multirow{4}{*}[-1.8ex]{\textbf{Device}} &
     \multirow{4}{*}[-1.8ex]{\textbf{Condition}} &
@@ -30,9 +33,9 @@
     \cline{5-5}\cline{6-14}
     & & & &
     \multicolumn{1}{c||}{\multirow{2}{*}[-0.4ex]{%
-      \makecell[c]{\textbf{Earliest}\\\textbf{Timeout onset}}}} &
+      \makecell[c]{\textbf{Survived runs}\\\textbf{(timeout onset)}}}} &
     \multicolumn{1}{c||}{\multirow{2}{*}[-0.4ex]{%
-      \makecell[c]{\textbf{Survived runs}\\\textbf{(earliest onset)}}}} &
+      \makecell[c]{\textbf{Survived runs}\\\textbf{(timeout onset)}}}} &
     \multicolumn{2}{c|}{\makecell[c]{\mbox{\boldmath$M$}\\\textbf{(captures)}}} &
     \multicolumn{2}{c||}{\makecell[c]{\mbox{\boldmath$S$}\\\textbf{(captures)}}} &
     \multicolumn{2}{c|}{\makecell[c]{\textbf{Activated}\\\textbf{(transitions)}}} &
@@ -46,119 +49,119 @@
     \hline\hline
     \multirow{14}{*}{\makecell[c]{S26\\Ultra}}
       & \multirow{7}{*}{\makecell[c]{12MP\\normal}}
-      & Lv0 & 10 & -- & 10/10 (--)
+      & Lv0 & 10 & \rqsurvived{\textbf{10/10} (--)} & \rqsurvived{\textbf{10/10} (--)}
         & \textbf{5.0} & 30.0 & \textbf{5.0} & 30.0
         & \textbf{0.0} & 1.1 & \textbf{--} & 106 \\
     \cline{3-14}
-      & & Lv1 & 10 & -- & 10/10 (--)
+      & & Lv1 & 10 & \rqsurvived{\textbf{10/10} (--)} & \rqsurvived{\textbf{10/10} (--)}
         & \textbf{5.0} & 28.8 & \textbf{5.0} & 30.0
         & \textbf{0.0} & 0.1 & \textbf{--} & 74 \\
     \cline{3-14}
-      & & Lv2 & 10 & 24 & 10/10 (--)
+      & & Lv2 & 10 & \rqsurvived{7/10 (24)} & \rqsurvived{\textbf{10/10} (--)}
         & \textbf{5.0} & 26.8 & \textbf{5.0} & 30.0
         & \textbf{0.0} & 4.0 & \textbf{--} & 234 \\
     \cline{3-14}
-      & & Lv3 & 10 & 13 & 10/10 (--)
+      & & Lv3 & 10 & \rqsurvived{1/10 (13)} & \rqsurvived{\textbf{10/10} (--)}
         & \textbf{5.0} & 13.4 & \textbf{5.0} & 26.3
         & \textbf{0.0} & 8.1 & \textbf{--} & 385 \\
     \cline{3-14}
-      & & Lv4 & 10 & 8 & 10/10 (--)
+      & & Lv4 & 10 & \rqsurvived{0/10 (8)} & \rqsurvived{\textbf{10/10} (--)}
         & \textbf{5.0} & 10.3 & \textbf{5.0} & 29.2
         & \textbf{0.1} & 9.8 & \textbf{291} & 387 \\
     \cline{3-14}
-      & & Lv5 & 10 & 8 & 10/10 (--)
+      & & Lv5 & 10 & \rqsurvived{0/10 (8)} & \rqsurvived{\textbf{10/10} (--)}
         & \textbf{5.0} & 8.2 & \textbf{5.0} & 21.8
         & \textbf{0.0} & 8.5 & \textbf{--} & 467 \\
     \cline{3-14}
-      & & Lv6 & 10 & 7 & 10/10 (--)
+      & & Lv6 & 10 & \rqsurvived{0/10 (7)} & \rqsurvived{\textbf{10/10} (--)}
         & \textbf{5.0} & 8.3 & \textbf{5.0} & 26.3
         & \textbf{0.5} & 9.5 & \textbf{78} & 446 \\
     \Xcline{2-14}{0.7pt}
       & \multirow{7}{*}{\makecell[c]{24MP\\memory\\pressure}}
-      & Lv0 & 10 & 26 & 10/10 (--)
+      & Lv0 & 10 & \rqsurvived{7/10 (26)} & \rqsurvived{\textbf{10/10} (--)}
         & \textbf{5.0} & 29.8 & \textbf{5.0} & 30.0
         & \textbf{0.0} & 2.6 & \textbf{--} & 200 \\
     \cline{3-14}
-      & & Lv1 & 10 & 19 & 10/10 (--)
+      & & Lv1 & 10 & \rqsurvived{2/10 (19)} & \rqsurvived{\textbf{10/10} (--)}
         & \textbf{5.0} & 29.1 & \textbf{5.0} & 30.0
         & \textbf{0.0} & 2.0 & \textbf{--} & 150 \\
     \cline{3-14}
-      & & Lv2 & 10 & 14 & 10/10 (--)
+      & & Lv2 & 10 & \rqsurvived{0/10 (14)} & \rqsurvived{\textbf{10/10} (--)}
         & \textbf{5.0} & 21.3 & \textbf{5.0} & 23.7
         & \textbf{0.1} & 3.7 & \textbf{83} & 257 \\
     \cline{3-14}
-      & & Lv3 & 10 & 5 & 10/10 (--)
+      & & Lv3 & 10 & \rqsurvived{0/10 (5)} & \rqsurvived{\textbf{10/10} (--)}
         & \textbf{4.7} & 14.0 & \textbf{5.0} & 24.3
         & \textbf{0.4} & 10.7 & \textbf{404} & 296 \\
     \cline{3-14}
-      & & Lv4 & 10 & 3 & 10/10 (--)
+      & & Lv4 & 10 & \rqsurvived{0/10 (3)} & \rqsurvived{\textbf{10/10} (--)}
         & \textbf{4.7} & 12.5 & \textbf{5.0} & 24.1
         & \textbf{0.4} & 3.9 & \textbf{852} & 313 \\
     \cline{3-14}
-      & & Lv5 & 10 & 4 & 10/10 (--)
+      & & Lv5 & 10 & \rqsurvived{0/10 (4)} & \rqsurvived{\textbf{10/10} (--)}
         & \textbf{4.8} & 11.4 & \textbf{4.9} & 24.1
         & \textbf{1.7} & 13.4 & \textbf{440} & 421 \\
     \cline{3-14}
-      & & Lv6 & 10 & 3 & 10/10 (--)
+      & & Lv6 & 10 & \rqsurvived{0/10 (3)} & \rqsurvived{\textbf{10/10} (--)}
         & \textbf{4.0} & 7.1 & \textbf{4.7} & 20.6
         & \textbf{1.2} & 12.6 & \textbf{872} & 269 \\
     \Xcline{1-14}{0.7pt}
     \multirow{14}{*}{S26}
       & \multirow{7}{*}{\makecell[c]{12MP\\normal}}
-      & Lv0 & 10 & 28 & 10/10 (--)
+      & Lv0 & 10 & \rqsurvived{7/10 (28)} & \rqsurvived{\textbf{10/10} (--)}
         & \textbf{5.0} & 28.7 & \textbf{5.0} & 28.8
         & \textbf{0.0} & 1.2 & \textbf{--} & 277 \\
     \cline{3-14}
-      & & Lv1 & 10 & 26 & 10/10 (--)
+      & & Lv1 & 10 & \rqsurvived{5/10 (26)} & \rqsurvived{\textbf{10/10} (--)}
         & \textbf{5.0} & 27.7 & \textbf{5.0} & 27.8
         & \textbf{0.0} & 2.5 & \textbf{--} & 252 \\
     \cline{3-14}
-      & & Lv2 & 10 & 22 & 10/10 (--)
+      & & Lv2 & 10 & \rqsurvived{4/10 (22)} & \rqsurvived{\textbf{10/10} (--)}
         & \textbf{5.0} & 26.4 & \textbf{5.0} & 26.7
         & \textbf{0.0} & 3.5 & \textbf{--} & 316 \\
     \cline{3-14}
-      & & Lv3 & 10 & 15 & 10/10 (--)
+      & & Lv3 & 10 & \rqsurvived{0/10 (15)} & \rqsurvived{\textbf{10/10} (--)}
         & \textbf{5.0} & 19.7 & \textbf{5.0} & 23.1
         & \textbf{0.0} & 11.5 & \textbf{--} & 316 \\
     \cline{3-14}
-      & & Lv4 & 10 & 9 & 10/10 (--)
+      & & Lv4 & 10 & \rqsurvived{0/10 (9)} & \rqsurvived{\textbf{10/10} (--)}
         & \textbf{5.0} & 16.4 & \textbf{5.0} & 19.8
         & \textbf{0.0} & 11.6 & \textbf{--} & 425 \\
     \cline{3-14}
-      & & Lv5 & 10 & 9 & 10/10 (--)
+      & & Lv5 & 10 & \rqsurvived{0/10 (9)} & \rqsurvived{\textbf{10/10} (--)}
         & \textbf{5.0} & 14.4 & \textbf{5.0} & 14.3
         & \textbf{0.2} & 8.9 & \textbf{144} & 448 \\
     \cline{3-14}
-      & & Lv6 & 10 & 9 & 10/10 (--)
+      & & Lv6 & 10 & \rqsurvived{0/10 (9)} & \rqsurvived{\textbf{10/10} (--)}
         & \textbf{5.0} & 12.8 & \textbf{5.0} & 18.1
         & \textbf{0.6} & 15.1 & \textbf{108} & 469 \\
     \Xcline{2-14}{0.7pt}
       & \multirow{7}{*}{\makecell[c]{24MP\\memory\\pressure}}
-      & Lv0 & 10 & 23 & 10/10 (--)
+      & Lv0 & 10 & \rqsurvived{1/10 (23)} & \rqsurvived{\textbf{10/10} (--)}
         & \textbf{5.0} & 27.6 & \textbf{5.0} & 27.8
         & \textbf{0.0} & 11.8 & \textbf{--} & 287 \\
     \cline{3-14}
-      & & Lv1 & 10 & 21 & 8/10 (26)
+      & & Lv1 & 10 & \rqsurvived{1/10 (21)} & \rqsurvived{8/10 (26)}
         & \textbf{5.0} & 25.7 & \textbf{5.0} & 26.1
         & \textbf{0.0} & 13.6 & \textbf{--} & 338 \\
     \cline{3-14}
-      & & Lv2 & 10 & 19 & 7/10 (23)
+      & & Lv2 & 10 & \rqsurvived{0/10 (19)} & \rqsurvived{7/10 (23)}
         & \textbf{5.0} & 18.1 & \textbf{5.0} & 21.1
         & \textbf{0.0} & 9.9 & \textbf{--} & 373 \\
     \cline{3-14}
-      & & Lv3 & 10 & 9 & 10/10 (--)
+      & & Lv3 & 10 & \rqsurvived{0/10 (9)} & \rqsurvived{\textbf{10/10} (--)}
         & \textbf{5.0} & 19.3 & \textbf{5.0} & 22.8
         & \textbf{0.1} & 15.6 & \textbf{100} & 557 \\
     \cline{3-14}
-      & & Lv4 & 10 & 6 & 10/10 (--)
+      & & Lv4 & 10 & \rqsurvived{0/10 (6)} & \rqsurvived{\textbf{10/10} (--)}
         & \textbf{5.0} & 20.7 & \textbf{5.0} & 26.6
         & \textbf{0.0} & 16.2 & \textbf{--} & 463 \\
     \cline{3-14}
-      & & Lv5 & 10 & 3 & 9/10 (10)
+      & & Lv5 & 10 & \rqsurvived{0/10 (3)} & \rqsurvived{9/10 (10)}
         & \textbf{5.0} & 6.0 & \textbf{5.0} & 7.7
         & \textbf{0.8} & 6.6 & \textbf{266} & 396 \\
     \cline{3-14}
-      & & Lv6 & 10 & 6 & 8/10 (11)
+      & & Lv6 & 10 & \rqsurvived{0/10 (6)} & \rqsurvived{8/10 (11)}
         & \textbf{5.0} & 9.0 & \textbf{5.0} & 9.9
         & \textbf{0.7} & 10.1 & \textbf{400} & 505 \\
     \hline\hline
