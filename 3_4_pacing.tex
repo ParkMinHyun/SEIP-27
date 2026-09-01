@@ -8,14 +8,14 @@ It delays the callback when the predicted backlog and additional Draft work exce
 While a Draft Sequence is executing, subsequent capture requests can continue to arrive, each triggering a pacing decision before its Draft Sequence is queued.
 Because queued Draft Sequences differ in stage composition and processing cost, queue depth alone does not reflect their processing-time backlog.
 Pacing therefore maintains \(t^{\mathrm{end}}\), the predicted queue-drain time obtained by accumulating their sequence-level point estimates \(\hat P\).
-For capture \(i\)'s pacing decision at \(t_i\), pacing estimates the backlog as
+After capture \(i\), pacing estimates the backlog at decision time \(t_i\) as
 \begin{equation}
   \hat B_i=\max\{0,t^{\mathrm{end}}-t_i\}.
   \label{eq:backlog}
 \end{equation}
 
 \smallskip\noindent\textbf{Delay sizing.}
-At the same decision, \(T_i\) denotes the remaining Capture Timeout window read for the newest committed capture.
+Let \(T_i\) denote the newest committed capture's remaining Capture Timeout window at \(t_i\).
 Pacing charges the predicted backlog \(\hat B_i\) and twice the per-Draft-Sequence reserve \(\hat C\) against \(T_i\), and computes the delay applied to the next capture opportunity as
 \begin{equation}
   d_i=
