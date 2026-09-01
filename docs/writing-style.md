@@ -398,12 +398,14 @@ shape.
 
 Section 3 uses \(T\) for the live remaining Capture Timeout window in both
 control modules. Admission reads \(T_{i,j}\) for capture \(i\) at admission
-point \(j\). At pacing decision time \(t_i\), \(T_i\) is the remaining window
-of the capture whose Draft Sequence is predicted to complete at
-\(t^{\mathrm{end}}\), and the resulting \(d_i\) applies to the next capture
-opportunity. The shared letter identifies the common deadline-window concept;
-the decision point identifies the reading. Do not restore admission's former
-\(R_{i,j}\) notation.
+point \(j\). Pacing keeps \(i\) as the capture index: capture \(i\)'s
+request triggers the decision at \(t_i\), \(T_i\) is the window that
+decision reads for the capture whose Draft Sequence is predicted to complete
+at \(t^{\mathrm{end}}\), and \(d_i\) applies to the next capture
+opportunity, which is what lets Section 3.1 pair pacing with
+\(\delta_{i+1}\). The shared letter identifies the common deadline-window
+concept; the decision point identifies the reading. Do not restore
+admission's former \(R_{i,j}\) notation.
 
 `Backlog tracking.` is ordered representation, clock and Equation 7, the
 per-capture extension and Equation 8, the gloss on \(\hat P^{\mathrm{last}}\)
