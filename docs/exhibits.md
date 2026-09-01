@@ -2489,6 +2489,11 @@ point at the equations rather than restating them, so the float must be
 re-read whenever an equation in 3.2 or 3.3 is renumbered or its content
 changes.
 
+The live-budget input changed from \(R_{i,j}\) to \(T_{i,j}\) on 2026-09-01
+when Section 3 unified its remaining Capture Timeout window notation. The
+second index still identifies the admission point at which capture \(i\)'s
+window is read; the notation change does not alter the decision or watchdog.
+
 The float's scope is the admission decision, and the watchdog appears only as
 the window \(W_{i,j}\) that decision sizes. What happens when that window
 expires -- the original-input save, which thread performs it, how long the

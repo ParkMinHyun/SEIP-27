@@ -37,10 +37,10 @@ Applying the selected factor \(\phi_\tau(\mathcal K)\) to \(\hat P(\mathcal K)\)
 \end{equation}
 
 \smallskip\noindent\textbf{Live-budget admission.}
-At admission point \(j\), \(R_{i,j}\) denotes the time remaining until the Capture Timeout deadline for capture \(i\).
+At admission point \(j\), \(T_{i,j}\) denotes the time remaining until the Capture Timeout deadline for capture \(i\).
 The controller admits the optional stage exactly when
 \begin{equation}
-  U(\mathcal{K}_{i,j})\leq R_{i,j}
+  U(\mathcal{K}_{i,j})\leq T_{i,j}
   \quad\text{or}\quad
   \hat P(\mathcal{K}_{i,j})=0.
   \label{eq:admission}
@@ -51,7 +51,7 @@ Once admission rejects an \(M\) or \(S\) stage, the optional stages in that grou
 \smallskip\noindent\textbf{Watchdog fallback.}
 Admission cannot fully anticipate post-admission slowdowns. The watchdog therefore limits each admitted optional stage's execution time to \(W_{i,j}\):
 \begin{equation}
-  W_{i,j}=\max\{0,R_{i,j}-U(\mathcal{E}_i)\},
+  W_{i,j}=\max\{0,T_{i,j}-U(\mathcal{E}_i)\},
   \label{eq:watchdog}
 \end{equation}
 where \(\mathcal{E}_i\) contains only the mandatory terminal work from encoding through Draft image saving; subtracting \(U(\mathcal E_i)\) reserves time for that work before the deadline.

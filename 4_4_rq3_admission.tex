@@ -5,7 +5,7 @@
 % For each decision, the study recording path retains the decision-time upper estimate \(U\) and the realized duration from that stage through Draft completion.
 % In the audit pool, admission is evaluated in shadow mode while every optional stage executes, so the recorded decisions can be compared with realized completion times without enforcing a skip.
 % Each decision is labelled retrospectively from the realized trace.
-% A decision is \emph{feasible} when the realized duration fits the \(R_{i,j}\) read at decision time, and \emph{unsafe} when it exceeds that budget or the watchdog intervenes.
+% A decision is \emph{feasible} when the realized duration fits the \(T_{i,j}\) read at decision time, and \emph{unsafe} when it exceeds that budget or the watchdog intervenes.
 % These labels are the realized counterparts of Equation~\ref{eq:admission}, which the runtime evaluates against \(U\) because the realized duration is not yet available.
 % For the shadow audit, neither the queue-local demotion nor the watchdog of Section~\ref{sec:admission} is applied, so the labels reflect model misjudgement rather than outcomes produced by an enforced admission policy.
 \input{tables/tab_rq3_admission_summary.tex}
