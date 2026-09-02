@@ -15,10 +15,9 @@ For any modeled workload sequence \(\mathcal K\), the controller estimates the d
   \hat p(k)=\hat b(k)\,\gamma .
   \label{eq:point-estimate}
 \end{equation}
-The per-key base duration \(\hat b(k)\) is a condition-normalized cumulative mean of the durations observed for key \(k\), and \(\hat p(k)\) scales this base by the current condition factor \(\gamma\).
-This cumulative base limits the influence of transient spikes by giving them no recency advantage, while the shared \(\gamma\) tracks recent execution trends across workload keys.
-To estimate \(\gamma\), the controller takes the recency-weighted median of measured-to-base duration ratios across workload keys.
-Using ratios prevents long-running workloads from dominating the estimate, while the median avoids cancellation between workloads that change in opposite directions.
-After each completed Draft Sequence, the estimator downweights earlier ratio observations by \(0.90\) before incorporating the new measurements.
+For each workload key \(k\), the controller models its predicted duration as the product of a stable long-term baseline \(\hat b(k)\) and a shared condition factor \(\gamma\).
+\(\hat b(k)\) is computed as a cumulative average of condition-normalized durations, reducing the influence of transient workload-level spikes.
+The controller estimates \(\gamma\) as the median of measured-to-baseline duration ratios across workloads in the most recently completed Draft Sequence.
+Thus, \(\gamma\) captures device-wide execution shifts while limiting the influence of workload-specific fluctuations.
 For an unseen workload key, it derives an estimate from the slowest previously observed workload in the same stage family, or uses a zero estimate if no such history exists.
 Histories are cleared only after both the camera application has closed and all queued Draft Sequences have completed.
