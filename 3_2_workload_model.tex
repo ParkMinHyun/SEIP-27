@@ -19,5 +19,5 @@ For each workload key \(k\), the controller models its predicted duration as the
 \(\hat b(k)\) is computed as a cumulative average of condition-normalized durations, reducing the influence of transient workload-level spikes.
 The controller estimates \(\gamma\) as the median of measured-to-baseline duration ratios across workloads in the most recently completed Draft Sequence.
 Thus, \(\gamma\) captures device-wide execution shifts while limiting the influence of workload-specific fluctuations.
-For an unseen workload key, it derives an estimate from the slowest previously observed workload in the same stage family, or uses a zero estimate if no such history exists.
+For cold-start cases such as the first capture of an application session, the estimator uses zero until workload durations are observed at Draft Sequence completion.
 Histories are cleared only after both the camera application has closed and all queued Draft Sequences have completed.
