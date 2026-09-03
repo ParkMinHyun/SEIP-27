@@ -1,12 +1,14 @@
-\subsection{Production Release Process and Capture Reliability}
+\subsection{Image Capture Reliability}
 \label{sec:release-process}
-
-The Samsung camera software studied here is a privileged preloaded system application that interacts with Samsung-specific Android framework extensions, system services, vendor components, and companion applications.
-Capture is a core cross-layer workflow that spans these components, so a failure discovered late can require a firmware update rather than an application-only fix.
-Because firmware updates require cross-component coordination and broad revalidation, daily development builds undergo automated black-box testing across supported camera workflows, device models, and OS versions.
-Periodically, the camera-validation team and development engineers stress-test the latest builds, diagnose timing and memory-pressure failures, and verify fixes.
+The Samsung camera software is a privileged system application whose image-capture workflow spans multiple system-level components across the Android software stack.
+Consequently, capture failures discovered late in the release cycle may require firmware-level changes involving cross-component coordination and extensive revalidation.
+To detect capture failures early, the latest development builds are automatically tested each day across camera workflows, device models, and OS versions.
+In addition to this daily testing, the camera-validation team and development engineers periodically stress-test the latest builds to identify timing- and memory-related failures, diagnose their root causes, and verify fixes.
+Together, these activities form the core validation process for capture reliability.
 
 \smallskip\noindent\textbf{Capture Timeout.}
-To maintain reliable capture across diverse devices and runtime conditions, the product treats compliance with its fixed internal Capture Timeout deadline as a high-priority camera reliability KPI and a hard release gate.
-For each capture, the timeout clock starts when the framework accepts the application's request and stops once the required frames and metadata are collected and the \emph{Draft Sequence} produces an early user-visible \emph{Draft image}.
-Each violation triggers a fail-fast application crash to expose the failure and blocks release until developers correct its cause or restrict the affected feature under those conditions.
+A key reliability criterion in this validation process is a fixed internal deadline, referred to as the \emph{Capture Timeout}.
+For each capture request, the timeout clock starts when the framework accepts the request and stops when the ``draft sequence" produces an initial user-visible draft image.
+A timeout violation intentionally crashes the application, making the failure immediately observable during testing.
+Any such violation blocks the release until developers address its root cause or restrict the affected feature under the conditions that trigger the violation.
+Therefore, identifying and resolving Capture Timeout violations is an important reliability task in Samsung's camera development process.
