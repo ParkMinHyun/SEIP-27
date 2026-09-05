@@ -1,42 +1,41 @@
-\subsection{Limitations of Static Thermal Gating}
+\subsection{Limitations of the Thermal Guard}
 \label{sec:guard-limit}
-Enabling the Draft Sequence's lightweight multi-frame composition requires determining when optional stages can finish within the Capture Timeout deadline.
-The production framework uses a thermal safeguard to restrict these stages, but thermal state alone does not describe the time available to each capture.
+Enabling the Draft Sequence's lightweight multi-frame composition requires the whole sequence, including encoding and saving, to finish before Capture Timeout.
+The production thermal guard restricts optional stages using a cutoff that does not reflect each capture's remaining time.
 
 \smallskip\noindent\textbf{Production thermal guard.}
 Samsung's overheat level is an ordinal thermal indicator on a 0--6 scale, where larger values denote stronger throttling.
 During pre-release validation, throttling at level 4 delayed a single-frame Draft stage and caused a Capture Timeout.
-The failure recurred despite optimization, so we introduced a safeguard that skips optional stages at level 4 or higher.
+The failure recurred despite optimization, so we introduced a thermal guard that skips optional stages at level 4 or higher.
 Because the Draft Sequence is implemented in framework code shared across device models, the same cutoff applies to all supported models.
 
-However, level 4 can also occur during ordinary use because of high ambient temperatures, charging, or preceding device workloads.
-The guard may therefore skip optional stages even when a capture has enough time to complete them.
-Moreover, the overheat level does not indicate how long a capture has already waited for the Draft worker or how much Draft work remains.
+The restriction also affects ordinary use: level 4 can occur under high ambient temperatures, charging, or preceding device workloads.
+The overheat level does not indicate a capture's waiting time or remaining Draft work.
+The guard may therefore skip optional stages even when enough time remains to complete the Draft Sequence.
 
-\smallskip\noindent\textbf{Capture trials.}
-For the target Portrait configuration, we denote the lightweight multi-frame Draft stage by \(M\) and the deployed optional single-frame stages collectively by \(S\).
-We compared \(M\) alone with \(M+S\), with both configurations followed by the same mandatory encoding and saving stages.
-We first evaluated these configurations on the Galaxy S26 Ultra because it does not impose the additional model-specific restrictions on parallel capture used by other flagship variants.
+\smallskip\noindent\textbf{Motivating experiment.}
+To examine when the extended Draft Sequence can complete within its deadline, we evaluated two Portrait configurations.
+The optional stages comprise the lightweight multi-frame Draft stage, denoted by \(M\), and the deployed single-frame stages, collectively denoted by \(S\).
+We compared \(M\) alone with \(M+S\), both followed by the same mandatory encoding and saving stages.
+We selected the Galaxy S26 Ultra because it lacks the additional parallel-capture restrictions used by other flagship variants.
 
 With \(M\) enabled and the thermal guard bypassed, we ran ten 30-capture trials for each combination of starting overheat level (0--6), resolution (12MP or 24MP), memory condition, and Draft Sequence configuration.
+An Android Debug Bridge (ADB) loop requested each subsequent capture as soon as the application permitted it.
 The motivating level-4 failure occurred near the 20th consecutive capture with 12 Draft Sequences pending.
 We therefore extended each trial to 30 captures to exercise the Draft pipeline beyond that observed failure point.
 For the memory-pressure condition, we ran the camera alongside AnTuTu Benchmark~11.1.4's memory-stress workload.
-Table~\ref{tab:timeout_index} reports the earliest capture index at which a timeout occurred across the ten trials for each condition.
+Table~\ref{tab:timeout_index} reports the earliest timeout capture index across the ten trials for each condition.
 
 \input{tables/tab_timeout_index.tex}
 
-Some trials starting at levels 0--3 timed out within 30 captures.
-Conversely, trials starting at levels 4--6 completed several captures with optional stages before the first timeout, although the production guard would suppress those stages at the starting level.
-For example, under normal 12MP capture starting at level 4, the earliest timeout occurred at capture 8 with \(M+S\) and at capture 16 with \(M\) alone.
-Across all tested conditions in which \(M+S\) timed out, using \(M\) alone moved the earliest timeout to a later capture or avoided a timeout within the 30-capture window.
-These results show that the starting thermal level alone does not determine how many consecutive captures can complete optional stages within their deadlines; the Draft Sequence configuration also matters.
+Timeout onset differed between the two Draft Sequence configurations under matched starting conditions.
+Under normal 12MP capture starting at level 4, for example, the earliest timeout occurred at capture 8 with \(M+S\) and at capture 16 with \(M\) alone.
+Across all tested conditions in which \(M+S\) timed out, the earliest timeout with \(M\) alone occurred later or was not observed within 30 captures.
+The starting thermal level alone therefore cannot characterize the observed timeout onset without accounting for the Draft stages executed.
 
 \smallskip\noindent\textbf{Need for runtime control.}
-The thermal guard uses a fixed cutoff, whereas the time available for Draft processing changes from capture to capture.
-Under parallel capture, each request starts its timeout clock before earlier Draft Sequences have necessarily finished.
-A later capture can therefore spend much of its timeout window waiting, even before its own Draft Sequence begins.
-Skipping an optional stage in that sequence reduces its processing time, but cannot recover time already spent waiting.
-Executing optional stages can also lengthen the wait for subsequent captures.
-Allowing new requests to arrive faster than the worker completes Draft Sequences can continue to increase this wait.
-Enabling lightweight multi-frame composition whenever safely possible therefore requires coordinated runtime control of both the optional stages each capture executes and when the next capture can be requested.
+The thermal cutoff does not capture how earlier Draft Sequences consume a later capture's time budget.
+Skipping optional stages shortens that capture's processing but cannot recover time already spent waiting.
+Executing those stages can also lengthen the wait for subsequent captures.
+Delaying new requests can limit queue growth, but lengthens the shot-to-shot interval.
+These constraints motivate coordinated runtime control of optional-stage execution and capture arrivals to keep lightweight multi-frame composition available under parallel capture whenever safely possible.

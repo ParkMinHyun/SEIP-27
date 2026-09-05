@@ -34,6 +34,26 @@ in `docs/writing-style.md`.
   remain author-reported facts from the existing manuscript. The accessible
   implementation excerpt does not independently establish those product and
   validation-history claims.
+- On 2026-09-05, the author clarified the development history: the original
+  Draft Sequence saved incoming JPEG input without decoding or re-encoding;
+  the subsequent extension decoded JPEG input to apply single-frame stages
+  before encoding and saving; the multi-frame extension received multiple YUV
+  inputs for lightweight multi-frame composition. This chronology is
+  author-reported. The clean implementation at
+  `bb27a0fdc145ab0d6ba7883039a84a1024b951c9` contains compatible JPEG
+  passthrough (`SavingDraftImageTask.java`, `SavingSingleDraftImageTask.java`),
+  decoding (`WorkloadKey.kt`), and multi-frame processing paths, but does not
+  independently establish their introduction order. Encoding is mandatory for
+  the extended configurations in the motivating experiment, not a stage that
+  the original JPEG-saving sequence necessarily executed.
+  At the author's request, Section 2.3 presents this evolution through the
+  added processing stages; image formats and conversion steps remain here
+  as verification detail rather than background exposition.
+- The author also confirmed on 2026-09-05 that the motivating experiment
+  used the same ADB request protocol described in `4_1_setup.tex`: request
+  each subsequent capture as soon as the application permits it through
+  capture availability. This is author-confirmed experimental procedure,
+  not an inference from controller-evaluation traces.
 - `tables/tab_timeout_index.tex` supplies the existing motivating measurements.
   Its entries are earliest timeout indices across ten trials grouped by
   **starting** thermal level, not the level at failure. The prose comparison of

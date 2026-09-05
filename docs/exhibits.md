@@ -2434,20 +2434,25 @@ were collected and lie between them.
 
 `tables/tab_timeout_index.tex` &middot; Live -- `2_4_static_safeguards.tex`
 
-Earliest and median Capture Timeout indices within a 30-capture horizon.
-The timeout-level column reports the range of overheat levels observed when
-the first timeout occurred across the trials in each starting-level row.
+Earliest Capture Timeout indices within a 30-capture horizon, grouped by
+starting overheat level. The current table prints neither medians nor
+thermal levels at failure. Do not infer failure-time temperatures from the
+starting-level rows. Evidence limits and the unavailable per-trial export
+are documented in `docs/rq-evidence.md` (Part 3).
 
 Protocol: ten 30-capture continuous-capture trials per combination of
 starting level, resolution, memory condition, and M/M+S configuration;
 M was enabled and the deployed guard was bypassed in a validation build.
+The author confirmed on 2026-09-05 that an ADB loop requested each subsequent
+capture as soon as the application permitted it, as in `4_1_setup.tex`.
 
 Severity shading follows the earliest first-timeout index: white = no timeout;
 the single-hue ramp darkens as the first failure moves earlier.
 
-Give the two Overheat headers enough width while preserving the table width.
+Give the starting-overheat header enough width while preserving the table width.
 
-Each colored cell reports earliest/median; shading follows the earliest index.
+Each colored cell reports the earliest index across ten trials; shading
+follows that index. A dash means no timeout was observed within 30 captures.
 
 ### Column map
 
