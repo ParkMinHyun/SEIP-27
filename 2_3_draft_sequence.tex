@@ -18,6 +18,6 @@ To reduce visual differences between Draft and final images, the framework later
 As post-processing became more resource-intensive, the framework deferred its start for selected shot modes until the application entered the background to preserve foreground responsiveness.
 In these modes, the Draft image remains the user-visible result throughout the foreground session, making its visual quality more important.
 The draft--final visual gap is particularly pronounced in Portrait mode.
-To reduce this gap, we implemented lightweight multi-frame composition in the Draft Sequence before the existing single-frame stages on supported models.
-However, the additional processing can make later captures wait longer for the single Draft worker under parallel capture.
+To reduce this gap, we implemented lightweight multi-frame composition in the Draft Sequence on supported models.
+However, the additional processing can make later captures wait longer for the single Draft worker.
 Capture Timeout therefore constrains deployment of this feature under parallel capture.

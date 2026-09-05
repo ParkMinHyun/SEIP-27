@@ -1,7 +1,6 @@
 \subsection{Limitations of the Thermal Guard}
 \label{sec:guard-limit}
-Enabling the Draft Sequence's lightweight multi-frame composition requires the whole sequence, including encoding and saving, to finish before Capture Timeout.
-The production thermal guard restricts optional stages using a cutoff that does not reflect each capture's remaining time.
+The goal is to enable lightweight multi-frame composition under parallel capture whenever the Draft Sequence can finish within its deadline.
 
 \smallskip\noindent\textbf{Production thermal guard.}
 Samsung's overheat level is an ordinal thermal indicator on a 0--6 scale, where larger values denote stronger throttling.
@@ -19,7 +18,7 @@ The optional stages comprise the lightweight multi-frame Draft stage, denoted by
 We compared \(M\) alone with \(M+S\), both followed by the same mandatory encoding and saving stages.
 We selected the Galaxy S26 Ultra because it lacks the additional parallel-capture restrictions used by other flagship variants.
 
-With \(M\) enabled and the thermal guard bypassed, we ran ten 30-capture trials for each combination of starting overheat level (0--6), resolution (12MP or 24MP), memory condition, and Draft Sequence configuration.
+With the thermal guard bypassed, we ran ten 30-capture trials for each combination of starting overheat level (0--6), resolution (12MP or 24MP), memory condition, and Draft Sequence configuration.
 An Android Debug Bridge (ADB) loop requested each subsequent capture as soon as the application permitted it.
 The motivating level-4 failure occurred near the 20th consecutive capture with 12 Draft Sequences pending.
 We therefore extended each trial to 30 captures to exercise the Draft pipeline beyond that observed failure point.
