@@ -81,25 +81,13 @@ Implementation-reference rules:
 - Do not invent class names, file names, algorithms, parameters, evaluation scripts, or results.
 - Do not commit private credentials, tokens, machine-specific absolute paths, or private implementation source snapshots into this paper repository unless the user explicitly requests it.
 
-## Reference Papers
+## Writing Style Authority (changed 2026-09-05)
 
-Use the two PDFs in `references/` as style and organization references:
-
-- `references/ICSE25_TOPSEED Learning Seed Selection Strategies for.pdf`
-- `references/ICSE26_Enhancing Symbolic Execution with Self-Configuring Parameters.pdf`
-
-Apply them as guidance for:
-
-- overall paper structure and section flow;
-- academic tone, argument rhythm, and transition style;
-- how motivation, examples, experiments, threats, and related work are framed;
-- table/figure caption style and result discussion style.
-
-Read `docs/writing-style.md` when drafting manuscript text or giving writing
-feedback. It records the recurring style patterns found across the two papers
-and explains how to adapt them to an SEIP industrial paper.
-
-Do not copy text, claims, or citations from the reference papers unless the user explicitly asks and the source is properly cited. The research topic of this manuscript is different, so use the references for writing form rather than technical substance.
+- Read `docs/writing-style.md` before drafting manuscript text or giving writing feedback. Its current authority is the professor's revision of `2_1_release_process.tex` in `c5c4532000a18ddfd8fe7131a14f9b70d4fb187a`, compared with its parent.
+- At the user's request, the previous writing-style guide was replaced in full. Do not restore its reference-paper synthesis, section-specific prescriptions, or historical wording constraints from Git history as active writing rules.
+- The PDFs in `references/` remain reference material, but no longer supply default style instructions. Use them for style only if the user explicitly requests it.
+- Apply the revised guide's observed explanatory principles without treating one background subsection as a template for every section. Preserve this file's research framing, evidence limits, and terminology rules.
+- Keep the professor's supplied 2.1 text intact unless the user requests an edit to it.
 
 ## Writing Rules
 

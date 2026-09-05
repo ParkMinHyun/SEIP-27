@@ -1,20 +1,27 @@
-\subsection{Draft Processing and Production Constraints}
+\subsection{Draft Sequence}
 \label{sec:draft-background}
 
-Within each capture, the Draft Sequence and post-processing pipeline produce the Draft and final images, respectively.
-If a Draft image has been published, the final image replaces it when post-processing completes; if post-processing fails or is interrupted, the Draft image remains available for recovery.
-The Draft Sequence supports both user-perceived responsiveness and capture reliability.
-Figure~\ref{fig:draft-pipeline} illustrates this workflow.
+The Draft Sequence is the sequence of processing stages that produces an initial user-visible Draft image for each capture.
+It was introduced together with the post-processing pipeline, which produces the final image.
+When post-processing completes, the final image replaces the Draft image if one has already been published.
+If post-processing fails or is interrupted, the published Draft image remains available as a recovery result.
+The Draft Sequence therefore provides an early capture result and preserves that result when post-processing cannot complete.
+Figure~\ref{fig:draft-pipeline} illustrates the relationship between the two pipelines.
 
 \smallskip\noindent\textbf{Single-worker Draft execution.}
-Like post-processing, the Draft pipeline uses a single worker to preserve capture-order publication and limit active processing to one sequence.
-Concurrent Draft execution would require buffering out-of-order results to preserve order and would overlap workloads across captures, raising peak compute and memory demand and degrading performance as active sequences increase.
+Like the post-processing pipeline, the Draft pipeline uses a single worker to publish images in capture order and limit active processing to one sequence.
+Executing Draft Sequences concurrently would require buffering results that finish out of order until preceding results are ready for publication.
+It would also increase peak compute and memory demand by processing several captures at once.
 
-\smallskip\noindent\textbf{Increasing Draft processing workload.}
-Initially, the Draft Sequence selected a representative frame and proceeded directly through the required encoding and saving stages.
-It was later extended to include lightweight single-frame image-processing stages, such as Filter and Watermark, to reduce visible differences between Draft and final images.
-As post-processing became more sophisticated and resource-intensive, the framework preserved foreground responsiveness by deferring the start of post-processing for selected shot modes until the application entered the background.
-Because this gap is particularly pronounced in Portrait mode, we implemented Draft Sequence that performs lightweight multi-frame composition before the existing single-frame stages on supported models.
-Under parallel capture, however, this stage can grow the Draft-worker backlog and increase Capture Timeout risk.
+\smallskip\noindent\textbf{Extending the Draft Sequence.}
+The original Draft Sequence selected a representative frame and then encoded and saved it.
+To reduce visual differences between the Draft and final images, the framework later added lightweight single-frame stages, such as Filter and Watermark, before encoding and saving.
+
+As post-processing became more resource-intensive, the framework deferred its start for selected shot modes until the application entered the background to preserve foreground responsiveness.
+In these modes, the Draft image remains the user-visible result throughout the foreground session, making its visual quality more important.
+The draft--final visual gap is particularly pronounced in Portrait mode.
+To reduce this gap, we implemented lightweight multi-frame composition in the Draft Sequence before the existing single-frame stages on supported models.
+However, the additional processing can make later captures wait longer for the single Draft worker under parallel capture.
+Enabling this feature therefore requires accounting for its effect on Capture Timeout across consecutive captures.
 
 \input{figures/fig_capture_pipeline.tex}

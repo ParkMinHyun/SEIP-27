@@ -1,12 +1,17 @@
-\subsection{Parallel Capture and Cross-Shot Deadline Contention}
+\subsection{Parallel Capture}
 \label{sec:parallel-capture}
 
-Without parallel capture, the application accepts the next shutter input only after the preceding capture satisfies the Capture Timeout completion conditions.
-Parallel capture removes this serialization: the hardware abstraction layer (HAL) can signal \texttt{captureAvailable} before those conditions are met, allowing the application to accept the next shutter input earlier and shorten the shot-to-shot interval.
+Parallel capture allows the camera application to accept the next shutter input before the preceding capture has produced its Draft image.
+Without this capability, the application must wait until the preceding capture meets the Capture Timeout completion condition.
+To allow an earlier request, the hardware abstraction layer (HAL) can issue a capture-availability signal, \texttt{captureAvailable}, before that condition is met.
+This early signal allows the application to shorten the shot-to-shot interval.
 
-Each accepted capture request starts its own Capture Timeout clock; under parallel capture, these clocks can overlap.
-Because Draft Sequences execute on a single worker that publishes results in capture order (Section~\ref{sec:draft-background}), Draft-worker waiting accumulates when requests arrive faster than that worker completes the sequences.
-This wait can push a later capture past its deadline even when successive Draft Sequences take equal time, as Figure~\ref{fig:overlap} illustrates.
+This overlap also affects how much time each capture has left for Draft processing.
+Each accepted request starts its own Capture Timeout clock, but Draft Sequences execute one at a time on a single worker in capture order.
+When requests arrive faster than the worker completes these sequences, later captures must wait for earlier ones to finish.
+Their timeout clocks continue to run during this wait, leaving less time to produce their Draft images.
+Figure~\ref{fig:overlap} illustrates how this waiting time grows across successive captures even when their Draft Sequences take the same time to execute.
+Thus, a capture can exceed its deadline because of processing associated with earlier requests, even if its own Draft processing has not become slower.
 
 \begin{figure}[t]
   \centering

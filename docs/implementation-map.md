@@ -1,12 +1,46 @@
 # Implementation map
 
-Where each part of Section 3 gets its facts. The implementation lives in the
-private repository `https://github.com/ParkMinhyun/ML`; every claim below was
-read at commit `cdd524f`. Re-verify against the latest accessible working tree
+Where the manuscript gets its implementation facts. The implementation lives in the
+private repository `https://github.com/ParkMinhyun/ML`; the Section 3 source map
+below was read at commit `cdd524f`. Re-verify against the latest accessible working tree
 before writing new implementation-derived text, and record the hash you used.
 
 `AGENTS.md` gives the lookup order for the working tree (`external/ML/`, then a
 sibling `../ML/`, then a path in `LOCAL_CONTEXT.md`).
+
+## Section 2 rewrite verification (2026-09-05)
+
+The rewrite of Sections 2.2-2.4 used the local paper at
+`ef180d31a776581491f33d77e9b976ba49931aa8` and the clean implementation working
+tree at `bb27a0fdc145ab0d6ba7883039a84a1024b951c9`. No synchronization was
+performed, as requested by the user. The style source is separately recorded
+in `docs/writing-style.md`.
+
+- `external/draftSaving/SavingDraftImageTaskManager.java` creates a single-thread
+  scheduled executor and submits Draft tasks to it. This verifies serialized
+  Draft execution in the normal processing flow.
+- `external/ProcessingPhotoMakerBase.java` receives the HAL capture-availability
+  callback; `external/PhotoMakerBase.java` routes its delivery toward the
+  application, including the pacing policy. This is separate from Draft task
+  completion. The common outstanding-capture limit is not a claim of unlimited
+  parallel capture.
+- `WorkloadKey.kt` identifies optional Bokeh, Filter, overlay Watermark, and
+  conditional Decoding stages, and the mandatory Encoding tail through Draft
+  saving. The manuscript's optional single-frame stages do not imply that every
+  Watermark variant is optional.
+- Draft/post-processing introduction history, foreground deferral for selected
+  modes, the visual gap in Portrait mode, the production level-4 safeguard,
+  model-selection rationale, and the motivating failure and trial protocol
+  remain author-reported facts from the existing manuscript. The accessible
+  implementation excerpt does not independently establish those product and
+  validation-history claims.
+- `tables/tab_timeout_index.tex` supplies the existing motivating measurements.
+  Its entries are earliest timeout indices across ten trials grouped by
+  **starting** thermal level, not the level at failure. The prose comparison of
+  configurations concerns these reported earliest indices, not paired outcomes
+  for individual trials. The trial-level exports are unavailable in the local
+  evidence collection, as documented in `docs/rq-evidence.md`; no new statistics
+  were derived for this rewrite.
 
 ## Section 3 sources
 
@@ -29,9 +63,9 @@ The table above is provenance, not vocabulary. No class, field, or method name
 from it may appear in printed manuscript text -- prose, table cells, figure
 labels, or captions. Section 3.5 once transliterated the ownership graph
 (`the Draft-saving manager owns the predictor, the admission policy, and the
-pacer`); it was rewritten on 2026-08-20. `docs/writing-style.md`, section
-"Section 3.5, naming the integration points", records the full removal list and
-the replacement wording rule.
+pacer`); it was rewritten on 2026-08-20. For current writing guidance, consult
+`docs/writing-style.md` and the terminology rules in `AGENTS.md`; the old
+section-specific style instructions have been removed.
 
 Two identifiers are deliberate exceptions, because the manuscript needs to name
 the interface it paces rather than an internal component:
