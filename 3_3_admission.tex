@@ -1,14 +1,14 @@
 \subsection{Remaining-Sequence Admission}
 \label{sec:admission}
 
-Admission runs immediately before each optional stage, inline on the Draft critical path.
+Admission runs immediately before each optional stage, inline on the draft critical path.
 It calibrates \(\hat P\) with residual evidence to form \(U\), then compares \(U\) with the capture's live budget to admit or skip the stage.
 
 \smallskip\noindent\textbf{Residual-calibrated upper estimate.}
 The point estimate \(\hat P\) does not account for the upper-tail overruns driven by variation in on-device runtime conditions and image content.
 The controller therefore learns a high-side correction from observed residuals rather than hand-tuning additive margins for individual devices and stages.
 For each admission decision, the controller records the per-key predictions \(\hat p(k)\) for the corresponding remaining sequence \(\mathcal K\).
-When the Draft Sequence completes, the controller compares those predictions with the realized durations \(p(k)\).
+When the draft sequence completes, the controller compares those predictions with the realized durations \(p(k)\).
 A recorded \(\mathcal K\) contributes a residual factor only if \(\hat P(\mathcal K)>0\) and \(p(k)>0\) for all \(k\in\mathcal K\):
 \begin{equation}
   \phi(\mathcal{K})
@@ -54,6 +54,6 @@ Admission cannot fully anticipate post-admission slowdowns. The watchdog therefo
   W_{i,j}=\max\{0,T_{i,j}-U(\mathcal{E}_i)\},
   \label{eq:watchdog}
 \end{equation}
-where \(\mathcal{E}_i\) contains only the mandatory terminal work from encoding through Draft image saving; subtracting \(U(\mathcal E_i)\) reserves time for that work before the deadline.
-If the watchdog expires, the current Draft Sequence falls back to encoding and saving from a preserved copy of the original input. 
-Already queued Draft Sequences likewise follow the same fallback path until the queue drains.
+where \(\mathcal{E}_i\) contains only the mandatory terminal work from encoding through draft image saving; subtracting \(U(\mathcal E_i)\) reserves time for that work before the deadline.
+If the watchdog expires, the current draft sequence falls back to encoding and saving from a preserved copy of the original input.
+Already queued draft sequences likewise follow the same fallback path until the queue drains.

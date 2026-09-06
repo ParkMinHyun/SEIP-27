@@ -1,10 +1,10 @@
 \subsection{Workload Model and Online Duration Estimation}
 \label{sec:model}
-Both control modules require online estimates of remaining Draft work. The controller therefore represents each Draft Sequence as an ordered workload sequence and learns workload durations from completed sequences.
+Both control modules require online estimates of remaining draft work. The controller therefore represents each draft sequence as an ordered workload sequence and learns workload durations from completed sequences.
 
 \smallskip\noindent\textbf{Modeled workload sequence.}
-The controller models the Draft Sequence for capture \(i\) as an ordered workload sequence \(\mathcal{K}_i=(k_1,\ldots,k_m)\), where each workload key \(k\) identifies a processing stage and its configuration.
-From position \(j\), \(\mathcal{K}_{i,j}=(k_j,\ldots,k_m)\) denotes the remaining sequence, ending in a mandatory terminal key measured from encoding start until the Draft image is saved.
+The controller models the draft sequence for capture \(i\) as an ordered workload sequence \(\mathcal{K}_i=(k_1,\ldots,k_m)\), where each workload key \(k\) identifies a processing stage and its configuration.
+From position \(j\), \(\mathcal{K}_{i,j}=(k_j,\ldots,k_m)\) denotes the remaining sequence, ending in a mandatory terminal key measured from encoding start until the draft image is saved.
 
 \smallskip\noindent\textbf{Online point estimation.}
 For any modeled workload sequence \(\mathcal K\), the controller estimates the duration of a modeled workload sequence \(\mathcal{K}\) by summing its predicted per-key durations:
@@ -17,7 +17,7 @@ For any modeled workload sequence \(\mathcal K\), the controller estimates the d
 \end{equation}
 For each workload key \(k\), the controller models its predicted duration as the product of a stable long-term baseline \(\hat b(k)\) and a shared condition factor \(\gamma\).
 \(\hat b(k)\) is computed as a cumulative average of condition-normalized durations, reducing the influence of transient workload-level spikes.
-The controller estimates \(\gamma\) as the median of measured-to-baseline duration ratios across workloads in the most recently completed Draft Sequence.
+The controller estimates \(\gamma\) as the median of measured-to-baseline duration ratios across workloads in the most recently completed draft sequence.
 Thus, \(\gamma\) captures device-wide execution shifts while limiting the influence of workload-specific fluctuations.
-For cold-start cases such as the first capture of an application session, the estimator uses zero until workload durations are observed at Draft Sequence completion.
-Histories are cleared only after both the camera application has closed and all queued Draft Sequences have completed.
+For cold-start cases such as the first capture of an application session, the estimator uses zero until workload durations are observed at draft sequence completion.
+Histories are cleared only after both the camera application has closed and all queued draft sequences have completed.

@@ -10,21 +10,21 @@
   \caption{Overview of the Budget-Aware Draft Controller.}
   \label{fig:controller-overview}
 \end{figure*}
-We introduce the \emph{Budget-Aware Draft Controller} to make the Draft Sequence's lightweight multi-frame composition deployable under parallel capture by adapting stage admission and capture pacing to the live budget.
+We introduce the \emph{Budget-Aware Draft Controller} to make the draft sequence's lightweight multi-frame composition deployable under parallel capture by adapting stage admission and capture pacing to the live budget.
 
 \smallskip\noindent\textbf{Controller architecture.}
 The controller consists of two framework-local modules.
 Figure~\ref{fig:controller-overview} summarizes their coordination.
-Under parallel capture, Draft Sequences queue for the single worker, and the two modules act at opposite ends of that queue.
-\emph{Remaining-Sequence Admission} controls the active Draft Sequence's service demand: using an estimate of its remaining work and live budget, it admits or skips each optional stage.
+Under parallel capture, draft sequences queue for the single worker, and the two modules act at opposite ends of that queue.
+\emph{Remaining-Sequence Admission} controls the active draft sequence's service demand: using an estimate of its remaining work and live budget, it admits or skips each optional stage.
 \emph{Capture-Availability Pacing} controls when the application can request the next capture: using estimated worker occupancy and the remaining deadline window, it schedules the \texttt{captureAvailable} callback for immediate or delayed delivery.
-Both modules share runtime state and online estimates learned incrementally from the observed per-stage and sequence-level durations of completed Draft Sequences.
+Both modules share runtime state and online estimates learned incrementally from the observed per-stage and sequence-level durations of completed draft sequences.
 They operate within the single-worker model and require no HAL or application-interface changes.
 
 \smallskip\noindent\textbf{Control objective.}
-The controller treats avoiding Capture Timeout within the Draft pipeline as a hard product constraint while executing optional stages whenever safely possible.
-This constraint spans captures: each capture has its own Capture Timeout window, while Draft Sequences execute sequentially on a single worker.
-Let \(\mu_i\) be capture \(i\)'s realized margin at Draft completion, \(\delta_i\) the interval between capture requests \(i-1\) and \(i\), and \(\pi_i\) the interval between their Draft completions.
+The controller treats avoiding Capture Timeout within the draft pipeline as a hard product constraint while executing optional stages whenever safely possible.
+This constraint spans captures: each capture has its own Capture Timeout window, while draft sequences execute sequentially on a single worker.
+Let \(\mu_i\) be capture \(i\)'s realized margin at draft sequence completion, \(\delta_i\) the interval between capture requests \(i-1\) and \(i\), and \(\pi_i\) the interval between their draft sequence completions.
 With a fixed timeout window,
 \begin{equation}
   \mu_i=\mu_{i-1}+\delta_i-\pi_i .
@@ -32,5 +32,5 @@ With a fixed timeout window,
 \end{equation}
 The controller's two levers act prospectively on the interval terms of the recursion, which affect the margin in opposite directions: admission can reduce \(\pi_i\) by skipping optional stages but cannot restore consumed budget; pacing can increase \(\delta_{i+1}\) by deferring the next capture opportunity but cannot alter work already in progress.
 Equation~\ref{eq:margin-recursion} is an accounting identity, not a control law: the controller does not maintain \(\mu_i\) as controller state, but instead compares its forecast with the live remaining timeout budget at each decision point.
-Within this safety constraint, each lever carries a different product cost, and the controller favors user-perceived responsiveness: capture delay irreversibly lengthens the shot-to-shot interval, whereas skipping an optional stage reduces Draft fidelity until the final image replaces the Draft image.
+Within this safety constraint, each lever carries a different product cost, and the controller favors user-perceived responsiveness: capture delay irreversibly lengthens the shot-to-shot interval, whereas skipping an optional stage reduces draft fidelity until the final image replaces the draft image.
 The controller therefore implements a deadline-constrained, responsiveness-dominant trade-off rather than a global cost optimization.
