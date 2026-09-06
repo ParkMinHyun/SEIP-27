@@ -10,27 +10,34 @@
   \caption{Overview of the Budget-Aware Draft Controller.}
   \label{fig:controller-overview}
 \end{figure*}
-We introduce the \emph{Budget-Aware Draft Controller} to make the draft sequence's lightweight multi-frame composition deployable under parallel capture by adapting stage admission and capture pacing to the live budget.
+We introduce the \emph{Budget-Aware Draft Controller} to enable lightweight multi-frame composition under parallel capture while meeting each capture's deadline.
 
 \smallskip\noindent\textbf{Controller architecture.}
-The controller consists of two framework-local modules.
-Figure~\ref{fig:controller-overview} summarizes their coordination.
-Under parallel capture, draft sequences queue for the single worker, and the two modules act at opposite ends of that queue.
-\emph{Remaining-Sequence Admission} controls the active draft sequence's service demand: using an estimate of its remaining work and live budget, it admits or skips each optional stage.
-\emph{Capture-Availability Pacing} controls when the application can request the next capture: using estimated worker occupancy and the remaining deadline window, it schedules the \texttt{captureAvailable} callback for immediate or delayed delivery.
-Both modules share runtime state and online estimates learned incrementally from the observed per-stage and sequence-level durations of completed draft sequences.
-They operate within the single-worker model and require no HAL or application-interface changes.
+The controller manages both the work occupying the single draft worker and the requests entering its queue, as shown in Figure~\ref{fig:controller-overview}.
+\emph{Remaining-Sequence Admission} runs immediately before an optional stage in the active draft sequence.
+It compares the estimated time for the remaining sequence with the capture's remaining timeout budget to decide whether to execute the stage.
+\emph{Capture-Availability Pacing} controls delivery of \texttt{captureAvailable}, which exposes the next capture opportunity to the application.
+It uses estimated worker occupancy and the remaining deadline window to decide whether to deliver the callback immediately or delay it.
+
+Both modules learn duration estimates from the per-stage and sequence-level measurements of completed draft sequences.
+Their shared runtime state connects the two decisions: when admission removes optional stages, pacing adjusts its duration reserve to reflect the stages still eligible for execution.
 
 \smallskip\noindent\textbf{Control objective.}
-The controller treats avoiding Capture Timeout within the draft pipeline as a hard product constraint while executing optional stages whenever safely possible.
-This constraint spans captures: each capture has its own Capture Timeout window, while draft sequences execute sequentially on a single worker.
-Let \(\mu_i\) be capture \(i\)'s realized margin at draft sequence completion, \(\delta_i\) the interval between capture requests \(i-1\) and \(i\), and \(\pi_i\) the interval between their draft sequence completions.
+Capture Timeout is a hard product constraint on enabling optional stages.
+Each accepted capture starts its own deadline clock, but its draft sequence may wait behind earlier captures on the shared worker.
+Let \(\mu_i\) denote the time left before capture \(i\)'s deadline when its draft sequence completes.
+For successive captures, let \(\delta_i\) be the interval between requests \(i-1\) and \(i\), and \(\pi_i\) the interval between their draft sequence completions.
 With a fixed timeout window,
 \begin{equation}
   \mu_i=\mu_{i-1}+\delta_i-\pi_i .
   \label{eq:margin-recursion}
 \end{equation}
-The controller's two levers act prospectively on the interval terms of the recursion, which affect the margin in opposite directions: admission can reduce \(\pi_i\) by skipping optional stages but cannot restore consumed budget; pacing can increase \(\delta_{i+1}\) by deferring the next capture opportunity but cannot alter work already in progress.
-Equation~\ref{eq:margin-recursion} is an accounting identity, not a control law: the controller does not maintain \(\mu_i\) as controller state, but instead compares its forecast with the live remaining timeout budget at each decision point.
-Within this safety constraint, each lever carries a different product cost, and the controller favors user-perceived responsiveness: capture delay irreversibly lengthens the shot-to-shot interval, whereas skipping an optional stage reduces draft fidelity until the final image replaces the draft image.
+When completions fall farther apart than requests, \(\pi_i>\delta_i\), and successive captures lose deadline margin.
+Admission can shorten \(\pi_i\) by skipping optional stages, but it cannot recover time already spent waiting.
+Pacing can lengthen \(\delta_{i+1}\) by delaying the next capture opportunity, but it cannot change work already in progress.
+Equation~\ref{eq:margin-recursion} is an accounting identity, not a control law.
+The controller does not maintain \(\mu_i\) as state; at each decision, it compares a processing-time forecast with the live remaining timeout budget.
+
+Within this deadline constraint, the controller prioritizes user-perceived responsiveness.
+Capture delay lengthens the shot-to-shot interval and cannot be recovered, whereas the fidelity cost of a skipped stage ends when the final image replaces the draft image.
 The controller therefore implements a deadline-constrained, responsiveness-dominant trade-off rather than a global cost optimization.

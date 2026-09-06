@@ -1,23 +1,24 @@
 \subsection{Framework Integration}
 \label{sec:implementation}
 
-The controller integrates at existing framework decision points without restructuring the Draft pipeline or changing HAL or application interfaces.
-This narrow integration limits cross-component coordination and broad revalidation required for changes to the capture workflow.
+The framework already separates draft sequence execution from delivery of the capture-availability callback.
+The controller attaches to these two decision points within the framework, preserving the HAL and application interfaces.
 
 \smallskip\noindent\textbf{Ownership and attachment.}
-The framework component that already owns the single Draft worker hosts the shared estimator as well; admission therefore runs within the same lifecycle and queries remaining-sequence estimates directly.
-Unlike the static thermal guard, which removes optional stages during sequence construction, admission evaluates them immediately before execution.
-Pacing attaches differently because the framework path that delivers \texttt{captureAvailable} to the application has a separate lifecycle and cannot retain direct access to the estimator.
-The framework therefore exposes a framework-internal single-method interface over the existing event channel, through which the callback-delivery path requests only the computed delay \(d_i\).
-The estimator and its execution history remain confined to the Draft worker's lifecycle; only the computed delay crosses into the callback-delivery path.
+The framework component that owns the single Draft worker also hosts the shared estimator.
+This places admission beside the stages whose durations it measures, allowing it to read the remaining timeout window immediately before an optional stage executes.
+The component that delivers \texttt{captureAvailable} has a separate lifecycle, so it requests the pacing delay through a single-method internal interface over the existing event channel.
+Only the computed delay \(d_i\) crosses this interface; the estimator and its execution history remain with the Draft pipeline.
 
-The integration adds two dedicated threads: a callback-delivery thread and a watchdog-fallback thread.
-Pacing posts the \texttt{captureAvailable} callback to the callback-delivery thread for release after \(d_i\).
-The watchdog-fallback thread provides the fallback path because an admitted optional stage cannot be cancelled once it enters native image processing.
-On expiration, the fallback thread processes the preserved original input independently of the in-flight optional stage; resources owned by the latter are released only when that processing completes.
+The integration adds two threads: one for callback delivery and one for watchdog fallback.
+The delivery thread releases \texttt{captureAvailable} after \(d_i\), allowing the Draft worker to continue while the callback waits.
+The fallback thread addresses a different constraint: an admitted optional stage cannot be cancelled once it enters native image processing.
+If the watchdog expires, the fallback thread encodes and saves from the preserved original input independently of that stage.
+Resources owned by the in-flight stage are released only after it finishes.
+This lets fallback produce the draft image without waiting for the native operation to return.
 
 \smallskip\noindent\textbf{Deployment scope.}
-Additional optional stages can reuse the same estimation and control logic by defining their workload keys, without stage-specific controller changes.
-History learned from observed execution times allows both modules to adapt to runtime performance on the current device without relying on explicit device-state signals, per-model timing tables, or branches specialized for particular device models or features.
-Accordingly, the shared decay factor and the two-sequence reserve horizon are fixed controller choices, while all learned histories and controller state remain scoped to the current camera application session.
+The controller identifies processing stages through workload keys, so an additional optional stage can use the same estimation and control logic once its key is defined.
+Both modules learn durations from execution on the current device instead of selecting per-model timing tables or using explicit thermal-state signals in their decisions.
+The controller keeps its decay factor and two-sequence reserve horizon fixed, while learning durations within each camera application session.
 The controller has been integrated into the product branch and is undergoing release validation for a forthcoming Galaxy flagship smartphone line.

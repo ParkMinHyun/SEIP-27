@@ -1,13 +1,16 @@
 \subsection{Workload Model and Online Duration Estimation}
 \label{sec:model}
-Both control modules require online estimates of remaining draft work. The controller therefore represents each draft sequence as an ordered workload sequence and learns workload durations from completed sequences.
+A draft sequence's duration depends on its stages and how fast they execute under current conditions.
+The controller therefore learns stage durations from completed draft sequences and combines them according to the sequence being considered.
 
 \smallskip\noindent\textbf{Modeled workload sequence.}
-The controller models the draft sequence for capture \(i\) as an ordered workload sequence \(\mathcal{K}_i=(k_1,\ldots,k_m)\), where each workload key \(k\) identifies a processing stage and its configuration.
-From position \(j\), \(\mathcal{K}_{i,j}=(k_j,\ldots,k_m)\) denotes the remaining sequence, ending in a mandatory terminal key measured from encoding start until the draft image is saved.
+The controller represents capture \(i\)'s draft sequence as \(\mathcal{K}_i=(k_1,\ldots,k_m)\), where each workload key \(k\) identifies a processing stage and its configuration.
+At position \(j\), the remaining sequence is \(\mathcal{K}_{i,j}=(k_j,\ldots,k_m)\).
+Its terminal key covers mandatory processing from the start of encoding until the draft image is saved.
+Including this terminal interval lets admission account for the time needed to produce the image after the optional stages finish.
 
 \smallskip\noindent\textbf{Online point estimation.}
-For any modeled workload sequence \(\mathcal K\), the controller estimates the duration of a modeled workload sequence \(\mathcal{K}\) by summing its predicted per-key durations:
+For any modeled sequence \(\mathcal K\), the controller sums the predicted per-key durations:
 \begin{equation}
   \hat P(\mathcal{K})
   =\sum_{k\in\mathcal{K}}\hat p(k),
@@ -15,9 +18,11 @@ For any modeled workload sequence \(\mathcal K\), the controller estimates the d
   \hat p(k)=\hat b(k)\,\gamma .
   \label{eq:point-estimate}
 \end{equation}
-For each workload key \(k\), the controller models its predicted duration as the product of a stable long-term baseline \(\hat b(k)\) and a shared condition factor \(\gamma\).
-\(\hat b(k)\) is computed as a cumulative average of condition-normalized durations, reducing the influence of transient workload-level spikes.
-The controller estimates \(\gamma\) as the median of measured-to-baseline duration ratios across workloads in the most recently completed draft sequence.
-Thus, \(\gamma\) captures device-wide execution shifts while limiting the influence of workload-specific fluctuations.
-For cold-start cases such as the first capture of an application session, the estimator uses zero until workload durations are observed at draft sequence completion.
-Histories are cleared only after both the camera application has closed and all queued draft sequences have completed.
+The baseline \(\hat b(k)\) represents the stage's long-term processing cost, while the shared factor \(\gamma\) adjusts that cost to recent execution conditions.
+At draft sequence completion, the controller updates each baseline with a cumulative average of condition-normalized durations.
+It computes \(\gamma\) as the median of measured-to-baseline duration ratios across the stages in the most recently completed sequence.
+The median limits the influence of isolated stage spikes, while the shared factor carries broader changes in execution speed into subsequent estimates.
+
+An unobserved workload key has a zero estimate until its first duration is recorded at draft sequence completion.
+Section~\ref{sec:admission} explains how admission obtains these initial observations.
+Learned histories survive queue drains and are discarded only after the camera application closes and its queued draft sequences finish.
