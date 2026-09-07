@@ -2497,16 +2497,16 @@ The shaded controller-off timeout window from the previous data collection is
 removed.  The 2026-09-06 workbook contains controller-on sessions only and is
 from a different device, so retaining the old 8--12 window would create an
 invalid cross-device baseline.  Red is now reserved for the Capture Timeout
-floor in the Slack panel.
+floor in the merged panel.
 
-The five panels map workbook fields directly: bokehExecuted to M,
-filterExecuted to S, appliedDelayMs to the pacing bars, realBacklogMs to
-normalized Draft backlog, realQueueDepth to Draft Sequence queue depth, and
-timeoutMarginMs to normalized Slack.  The exported CSVs preserve runShotIndex
-as the capture index.
+The four panels map workbook fields directly: bokehExecuted to M,
+filterExecuted to S, appliedDelayMs to the pacing bars, realQueueDepth to
+Draft Sequence queue depth, and realBacklogMs and timeoutMarginMs to the two
+curves of the merged share-of-timeout panel.  The exported CSVs preserve
+runShotIndex as the capture index.
 
 Queue depth is an integer count, so it is drawn as a staircase rather
-than as the interpolated series used for the two time-valued panels.
+than as the interpolated series used for the two time-valued curves.
 
 ---- stage execution strip -------------------------------------
 
@@ -2529,19 +2529,99 @@ bottom tick labels distinct in the rendered column.  This case-study panel is
 scaled to the selected run; the all-run RQ4 summary reports delay
 distributions numerically instead.
 
----- real Draft backlog ----------------------------------------
+---- Draft backlog and Slack (merged) ---------------------------
 
-Backlog peaks at 4775 ms at capture 15, or 68.2% of the timeout.  The axis
-ends at 75% so the peak marker and top tick remain inside the frame.
+Draft backlog and Slack shared an axis on 2026-09-07; they were two stacked
+panels before.  Both are durations divided by the same 7000 ms Capture
+Timeout budget, so a shared ordinate is dimensionally legitimate, and it
+shows what the split panels could not: backlog and realized Slack move
+against each other across the whole run, which is the coupling the
+controller exists to manage.  The two stacked panels also duplicated the
+ordinate scale, the grid, and the 0--60% tick column for one shared unit.
 
----- deadline margin -------------------------------------------
+What the shared axis must NOT be read as: the two curves do not partition
+the budget and do not sum to 100%.
+Verified against ML@bb27a0f, `CaptureMetricsExcelExporter.kt`:
+`timeoutMarginMs` is `timeoutTimestampMs - draftEndUptimeMs` (L1594), read
+from the capture's own deadline clock, while `realBacklogMs` is
+`max(draftEndUptimeMs)` over unfinished earlier Drafts minus the pacing
+decision snapshot (L352).  The origins differ, and neither term contains the
+capture's own Draft duration, so the identity is
+`Slack = T_i - backlog - (own Draft + release gap)`, where `T_i` is the
+decision-time remaining window -- 3,792 to 7,000 ms at 12MP per the
+tab_rq4_pacing_sizing entry above, and not a quantity this figure prints.
+On the plotted run the pair sums to 45.5%--73.2%.  Capture 8 is the case
+that prompted the check: 3,033 ms of backlog against 150 ms of Slack, with
+3,817 ms of the capture's own work (including its 386 ms applied delay) in
+between, totalling 6,850 ms of the 7,000 ms budget.
 
-Slack reaches its minimum of 217 ms at capture 15, which is 3.10% and is
-rounded to the annotated 3.1%.  The run-level P5 is 6.1%.  The axis ends at
-75% to include the 69.8% maximum.  ymin remains -11 so the Capture Timeout
-label can hang below the 0% floor without clipping.  The red floor line is
-the only failure encoding; no below-zero tint or cross-device reference band
-is drawn.
+For the same reason the crossings carry no threshold meaning.  Two
+differently anchored intervals becoming equal is not a safety event, and
+`backlog > Slack` reduces to `2*backlog + own work > budget`, which is not a
+criterion the controller uses or the paper claims.  Do not annotate the
+crossings, and do not describe them in prose as the point where Draft
+pressure overtakes the remaining window.  An additive panel would need `T_i`
+stacked as backlog + own Draft + Slack; `T_i` is not in
+`data/case_study/12mp_normal_*.csv`, so that variant requires a new export
+rather than arithmetic on the current files.
+
+The non-additivity belongs in the caption, not the ylabel, and the ylabel is
+`\% of\\Capture Timeout` for that reason.  Two attempts to make the label
+carry it were tried on 2026-09-07 and both stated something false about a
+curve.  `Duration` reads as elapsed processing time, which Slack is not: it
+is `deadline - draftEnd`, time deliberately left unspent, so the word
+reclassifies the safety quantity as a cost.  `Interval` is correct for both
+and is the word the implementation note uses for backlog, but on a
+per-capture ordinate it collides with the completion-to-completion interval
+$\pi_i$ of Section 3.1 and reads as the gap between shots.  The plain
+normalization is true of both curves and asserts no genus; the caption is
+where the reader is told the pair does not add up, and it is also where a
+reviewer looks for that qualification.
+
+Encoding: Draft backlog is a solid blue!55!black line, reusing the pacing
+bars' color so the delay panel above reads as the response to the curve
+below; Slack is a solid black!80 line.  Both carry the same round 0.9pt mark
+the two panels used before the merge, and both are solid: color alone
+separates them, and the identical line and mark keep the two series reading
+as the same kind of measured per-capture quantity rather than as a series
+and a reference.  Dashing is therefore free, and it is spent on the Capture
+Timeout floor below, which is what a dash pattern conventionally marks.  The
+legend entry is "Backlog", not "Draft backlog": the panel's other curve is
+"Slack", the ylabel already scopes both to the Capture Timeout budget, and
+the one-word pair keeps the two-column legend inside the corner it occupies.
+That legend sits at the panel's north east, the one corner neither curve
+enters.
+
+Timeout floor: the 0% line is Slack's failure boundary and not Backlog's.
+Backlog shares the ordinate because it is a duration against the same
+denominator, but no horizontal line is a threshold for it, and it
+legitimately sits at 0% on capture 1, where the queue is empty.  The
+merge therefore made a full-width solid red rule read as a threshold for
+both curves, with its label landing next to exactly the point that misreads
+worst.  Two changes fix the ownership without weakening the deadline: the
+label reads "Capture Timeout (Slack = 0)" and moves to the panel's south
+east, the far side from the capture-1 backlog origin; and the rule is dashed
+so it reads as a reference rather than a third series.  The floor stays the
+only failure encoding; no below-zero tint or cross-device reference band is
+drawn, and the minimum-approach annotations stay on the Slack curve.
+
+Geometry: the merged panel is 0.40 column widths, against 0.30 + 0.30 plus a
+separation for the pair, so the figure is about 0.20 column widths shorter.
+ymax is 80 rather than the pair's 70 to clear the legend row above the
+backlog peak; ymin remains -11 so the Capture Timeout label can hang below
+the 0% floor without clipping.  Labelled ticks stay at 0/20/40/60%.  The
+ylabel is the shared unit alone, since the legend names the quantities.
+
+Values in this entry are not all reconcilable with the tree: the 68.2%
+backlog peak at capture 15, the 3.10% Slack minimum, the 75% axis, the 900 ms
+delay ceiling, and the removal of the shaded window describe the 2026-09-06
+collection, which was documented here in d135b2e but whose figure and CSVs
+never landed.  `data/case_study/12mp_normal_*.csv` is still the earlier
+collection: backlog peaks at 4469 ms (63.8%) at capture 23, Slack bottoms at
+150 ms (2.14%) at capture 8 with a second low of 354 ms (5.06%) at capture
+24, and those are the two annotations the figure prints.  The geometry above
+describes the file as it stands; resolve the numeric half when the 2026-09-06
+data is transferred.
 
 ---- stage legend -----------------------------------------------
 The two-row legend remains right-aligned above the execution strip.  Both

@@ -23,11 +23,17 @@
       ybar,bar width=2.1pt,
       draw=blue!55!black,fill=blue!55!black,fill opacity=0.55,line width=0.35pt,
     },
-    cs series/.style={
-      line width=0.7pt,mark=*,mark size=0.9pt,
-      mark options={draw=none,fill=black!80},
+    cs backlog/.style={
+      line width=0.7pt,draw=blue!55!black,
+      mark=*,mark size=0.9pt,
+      mark options={solid,draw=none,fill=blue!55!black},
     },
-    cs floor/.style={red!70!black,line width=0.6pt},
+    cs slack/.style={
+      line width=0.7pt,draw=black!80,
+      mark=*,mark size=0.9pt,
+      mark options={solid,draw=none,fill=black!80},
+    },
+    cs floor/.style={red!70!black,line width=0.6pt,densely dashed},
     cs step/.style={
       const plot,no marks,line width=0.65pt,draw=black!80,
     },
@@ -36,7 +42,7 @@
   \begin{tikzpicture}
     \begin{groupplot}[
       group style={
-        group size=1 by 5,
+        group size=1 by 4,
         vertical sep=3.5pt,
         xticklabels at=edge bottom,
       },
@@ -103,30 +109,33 @@
         {\caseStudyDataDir/12mp_normal_delay.csv};
 
       \nextgroupplot[
-        height=0.30\columnwidth,
-        ylabel={Draft backlog\\(\% of timeout)},
-        ymin=0,ymax=70,
-        ytick={0,20,40,60},
-        yticklabels={0\%,20\%,40\%,60\%},
-      ]
-      \csTimeoutRange{8}{12}
-      \addplot[cs series] table[x=shot,y expr={\thisrow{backlog_ms}/70},col sep=comma]
-        {\caseStudyDataDir/12mp_normal_backlog.csv};
-
-      \nextgroupplot[
-        height=0.30\columnwidth,
+        height=0.40\columnwidth,
         xlabel={Capture index within the 30-shot run},
-        ylabel={Slack\\(\% of timeout)},
-        ymin=-11,ymax=69,
+        ylabel={\% of\\Capture Timeout},
+        ymin=-11,ymax=80,
         ytick={0,20,40,60},
         yticklabels={0\%,20\%,40\%,60\%},
+        legend style={
+          at={(0.995,0.995)},anchor=north east,
+          font=\tiny,draw=none,
+          fill=white,fill opacity=0.75,text opacity=1,
+          inner xsep=2pt,inner ysep=1pt,
+          legend columns=2,
+          /tikz/every even column/.append style={column sep=4pt},
+        },
+        legend cell align=left,
       ]
       \csTimeoutRange{8}{12}
-      \addplot[cs floor] coordinates {(0.5,0) (30.5,0)};
-      \node[anchor=north west,font=\tiny,text=red!70!black,inner sep=1.5pt]
-        at ([yshift=-1pt]axis cs:0.5,0) {Capture Timeout};
-      \addplot[cs series] table[x=shot,y expr={\thisrow{margin_ms}/70},col sep=comma]
+      \addplot[cs floor,forget plot] coordinates {(0.5,0) (30.5,0)};
+      \node[anchor=north east,font=\tiny,text=red!70!black,inner sep=1.5pt]
+        at ([xshift=-1pt,yshift=-1pt]axis cs:30.5,0)
+        {Capture Timeout (Slack \(=0\%\))};
+      \addplot[cs backlog] table[x=shot,y expr={\thisrow{backlog_ms}/70},col sep=comma]
+        {\caseStudyDataDir/12mp_normal_backlog.csv};
+      \addlegendentry{Backlog}
+      \addplot[cs slack] table[x=shot,y expr={\thisrow{margin_ms}/70},col sep=comma]
         {\caseStudyDataDir/12mp_normal_margin.csv};
+      \addlegendentry{Slack}
       \node[anchor=east,font=\tiny,inner sep=1.5pt] at (axis cs:7.7,2.5)
         {2.1\%};
       \node[anchor=west,font=\tiny,inner sep=1.5pt] at (axis cs:24.4,5.1)
