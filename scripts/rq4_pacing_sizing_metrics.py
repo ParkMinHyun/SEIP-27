@@ -12,15 +12,15 @@ controller prices its own reserve.  This script asks the two questions neither
 answers:
 
   1. Why do the two boundary mismatches happen?  Some transitions were paced
-     although the retrospective trace later showed more than 40% of the budget
-     spare, and some projected an overrun retrospectively yet received no delay.
+     although reservation consumed less than 60% of the decision-time TTL, and
+     some reservations exceeded the TTL yet received no delay.
      Both groups are diagnosed against the controller's own estimation error, the
      admission demotions that preceded the decision, and the thermal drift over
      the target's queue residence.
   2. Is the applied delay the right SIZE for what admission left behind?  The
      deployed delay is
 
-         d = ceil( max(0, Bhat + 2*Chat_adm - max(0,T)) / 2 )
+         d = ceil( max(0, Bhat + G + 2*Chat_adm - max(0,T)) / 2 )
 
      The deployed policy deliberately applies half of the positive projected
      deficit over its two-Draft horizon so pacing does not convert all residual
@@ -34,24 +34,25 @@ Loader, populations and intervals are inherited rather than reimplemented: the
 eligible transition set comes from rq3_calibration_metrics.load, and the binning
 and cluster bootstrap come from rq3_selectivity_metrics.  Every population count
 printed here therefore matches those scripts exactly, including the interval
-for the projected-overrun band.
+for the reservation-at-least-100%-of-TTL band.
 
 What may and may not be reported
 --------------------------------
 Activation is d > 0.  The pacer applies a delay exactly when its own online score
-Bhat + 2*Chat_adm - max(0,T) is positive, so activation against that score is true
-by construction and is NOT evidence of selectivity.  The orderings used here are
-ones the controller did not observe: the retrospective pressure B + 2C - max(0,T)
-computed from the measured backlog and the Draft as it actually ran, the measured
-backlog itself, and the burst's elapsed time.
+Bhat + G + 2*Chat_adm - max(0,T) is positive, so activation against that score is
+true by construction and is NOT evidence of selectivity.  The table instead uses
+the trace-conditioned reservation load R/T, where R = B + G + 2C.  B and C are
+measured after the fact, while G is the recorded decision-time backlog-growth
+term because the workbook exposes no realized counterpart.  T is the remaining
+window at the decision and is positive on every analyzed transition.  The other
+orderings use the measured backlog and the burst's elapsed time.
 
-Units.  Risk quantities are shares of the Capture Timeout budget and never
-milliseconds, so that no rendered cell or axis discloses the budget; the backlog
-estimation error is therefore reported in points of budget.  The budget is a
-single constant across every analyzed transition (asserted below), so normalising
-per transition and by the pooled value are the same operation.  Durations that are
-not budget-normalised anywhere -- the reserve errors and the queue residence --
-stay in milliseconds.
+Units.  Reservation load is the trace-conditioned reservation as a percentage
+of the decision-time TTL and is normalized per transition because TTL varies.
+The backlog estimation error used by the boundary diagnostics remains in points
+of the Capture Timeout budget so that no rendered artifact discloses that budget.
+Durations that are not normalized anywhere -- the reserve errors and the queue
+residence -- stay in milliseconds.
 
 Signs.  Every estimation-error quantity is signed estimate minus realized, so a
 positive number always means the controller reserved more than it turned out to
@@ -62,13 +63,15 @@ Definitions
 -----------
   B          measured backlog at the decision (RQ3Pacing.realBacklogMs)
   C          realized duration of the admitted Draft sequence
+  G          recorded decision-time backlog-growth term
   T          window left on the newest committed capture's deadline
   Bhat       the controller's backlog estimate at the decision
   Chat_adm   reserved duration of the sequence admission selected, i.e. the
              post-admission reserve and not that of the sequence first planned
-  pressure   B + 2C - max(0,T), as a share of the budget; negative is spare
-  safe but paced      pressure < -40% of budget with d > 0
-  overrun, unpaced    pressure >= 0 with d = 0
+  R          B + G + 2C, the trace-conditioned reservation
+  load       100R/T, reservation as a percentage of decision-time TTL
+  low load but paced  load < 60% with d > 0
+  over-TTL, unpaced   load > 100% with d = 0
   demotion   the executed sequence's class ranks below the planned class, on
              Bokeh+Filter > Filter only > Encoding only.  NOTE this is not
              load()'s 'demoted' field, which compares the two workload keys for
@@ -111,34 +114,21 @@ from rq3_selectivity_metrics import bin_stats, boot_bins, bursts
 PAPER = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(PAPER, 'data', 'rq3', 'policy')
 
-# The pressure bands.  Twenty points wide rather than the ten of
-# The shared selectivity helper uses narrower bands for distribution inspection;
-# this summary support uses twenty-point bands because its boundary classes are
-# defined on the outer two bands. Half-open [lo, hi); the last is open at its
-# lower edge and is exactly the required set of the retrospective envelope.
-BANDS = ((-10 ** 9, -40.0, 'spare_over_40'),
-         (-40.0, -20.0, 'spare_20_40'),
-         (-20.0, 0.0, 'spare_0_20'),
-         (0.0, 0.0, 'projected_overrun'))
+# Reservation-to-TTL bands, expressed as percentages.  They are half-open
+# [lo, hi); with open_top=True the last band is [100, infinity).
+BANDS = ((-10 ** 9, 60.0, 'reservation_under_60_ttl'),
+         (60.0, 80.0, 'reservation_60_80_ttl'),
+         (80.0, 100.0, 'reservation_80_100_ttl'),
+         (100.0, 100.0, 'reservation_at_least_100_ttl'))
 # bin_stats takes (lo, hi) pairs and ignores the last hi under open_top, so the
 # band names travel separately.
 BAND_EDGES = [(lo, hi) for lo, hi, _ in BANDS]
 BAND_NAMES = [name for _, _, name in BANDS]
-# The safe-but-paced cut, i.e. the lower edge of the loosest band.
-SAFE_SPARE_PCT = -40.0
-# The overrun cut, and why it is not simply the last band.
-#
-# bin_stats bins half-open [lo, hi), so the projected_overrun BAND collects
-# pressure >= 0.  That is the right form for the historical selectivity exhibit,
-# which bins a shape and must not leave a value unbinned, and those bands are
-# left exactly as they were.  It is the wrong form for a COUNT of decisions that
-# needed a delay: d*_exec = ceil(pressure/2), so pressure == 0 needs none.
-# Everything the summary reports as a required-delay population therefore uses
-# this strict cut, which makes it the same set as
-# rq3_coordination_metrics.py's positive required delay by construction.  The
-# two forms differ on decisions whose pressure is exactly zero: one in this
-# collection, 24MP run 2#27 capture 28.
-OVERRUN_PCT = 0.0
+# The boundary classes use the outer band limits.
+LOW_LOAD_MAX_PCT = 60.0
+# The last band includes equality, while a positive matched-policy target
+# requires the reservation to exceed the TTL strictly.
+TTL_LIMIT_PCT = 100.0
 # How close to the deadline projection a crossing has to be to count as shallow.
 BOUNDARY_NEAR_PCT = 10.0
 # Quantiles of the backlog error drawn as the marginal strip in panel (b).
@@ -239,8 +229,10 @@ def enrich(condition, files):
             'status': fnum(r['shotThermalStatus']),
             'overheat': fnum(r['shotOverheatLevel']),
         })
-        t['risk'] = t['B'] + 2 * t['C'] - max(0.0, t['T'])
-        t['riskPct'] = 100 * t['risk'] / t['budget']
+        if t['T'] <= 0:
+            raise ValueError(f'{condition}: nonpositive decision-time TTL')
+        t['reservation'] = t['B'] + t['G'] + 2 * t['C']
+        t['loadPct'] = 100 * t['reservation'] / t['T']
         # Estimate minus realized throughout: positive means over-reserved.
         t['backlogError'] = t['Bhat'] - t['B']
         t['backlogErrorPct'] = 100 * t['backlogError'] / t['budget']
@@ -289,10 +281,10 @@ def enrich(condition, files):
 
 
 def boundary_class(t):
-    if t['riskPct'] < SAFE_SPARE_PCT and t['d'] > 0:
+    if t['loadPct'] < LOW_LOAD_MAX_PCT and t['d'] > 0:
         return 'safe_but_paced'
-    # Strictly positive, NOT >= 0; see OVERRUN_PCT.
-    if t['riskPct'] > OVERRUN_PCT and t['d'] == 0:
+    # Strictly above 100%, not >=; equality needs no matched-policy delay.
+    if t['loadPct'] > TTL_LIMIT_PCT and t['d'] == 0:
         return 'overrun_but_unpaced'
     return 'other'
 
@@ -305,9 +297,9 @@ def analyse(condition, files):
     runs = bursts(tx)
     paced = [t for t in tx if t['d'] > 0]
 
-    bands = bin_stats(tx, 'riskPct', BAND_EDGES, open_top=True)
-    band_ci, _ = boot_bins(runs, 'riskPct', BAND_EDGES, open_top=True)
-    assert all(b is not None for b in bands), f'{condition}: an empty pressure band'
+    bands = bin_stats(tx, 'loadPct', BAND_EDGES, open_top=True)
+    band_ci, _ = boot_bins(runs, 'loadPct', BAND_EDGES, open_top=True)
+    assert all(b is not None for b in bands), f'{condition}: an empty reservation-load band'
     for b, ci in zip(bands, band_ci):
         b['actLo'], b['actHi'] = ci
 
@@ -316,8 +308,8 @@ def analyse(condition, files):
     # would mean the recorded delay is not the deployed formula's output, which is
     # the one claim in this block that is not a measurement.
     matches = sum(1 for t in tx
-                  if t['d'] == math.ceil(max(0.0, t['Bhat'] + 2 * t['Chat']
-                                             - max(0.0, t['T'])) / 2))
+                  if t['d'] == math.ceil(max(0.0, t['Bhat'] + t['G']
+                                             + 2 * t['Chat'] - max(0.0, t['T'])) / 2))
     # Work conservation: the share of applied delay that ran while at least that
     # much Draft work was still outstanding.  min(d, B) is the overlap; a wait
     # longer than the backlog it drains is idle for the remainder.
@@ -347,11 +339,11 @@ def analyse(condition, files):
         'neverPaced': sum(1 for s in shares if s == 0),
         'safeButPaced': [t for t in tx if boundary_class(t) == 'safe_but_paced'],
         'overrunButUnpaced': [t for t in tx if boundary_class(t) == 'overrun_but_unpaced'],
-        # The strict overrun population; see OVERRUN_PCT for why this and not
-        # the last band.  It is the denominator of every overrun rate the
+        # The strict over-TTL population; equality belongs to the last band but
+        # needs no matched-policy delay.  This is the denominator of every overrun rate the
         # summary table prints, and equals the coordination script's count of
         # decisions with a positive required delay.
-        'overrun': [t for t in tx if t['riskPct'] > OVERRUN_PCT],
+        'overrun': [t for t in tx if t['loadPct'] > TTL_LIMIT_PCT],
     }
 
 
@@ -403,8 +395,8 @@ def boundary_stats(cases):
                           if t['statusDelta'] is not None and t['statusDelta'] > 0),
         'overheatRose': sum(1 for t in cases
                             if t['overheatDelta'] is not None and t['overheatDelta'] > 0),
-        'nearBoundary': sum(1 for t in cases if abs(t['riskPct']) <= BOUNDARY_NEAR_PCT),
-        'riskP50Pct': med([t['riskPct'] for t in cases]),
+        'nearBoundary': sum(1 for t in cases if abs(t['loadPct'] - TTL_LIMIT_PCT) <= BOUNDARY_NEAR_PCT),
+        'loadP50Pct': med([t['loadPct'] for t in cases]),
     }
 
 
@@ -417,7 +409,7 @@ def report(res):
     print(f'{c}  ({res["nAnalyzed"]} analyzed transitions, {res["nBursts"]} bursts)')
     print(f'  activation (d > 0): {res["nPaced"]} of {res["nAnalyzed"]} '
           f'= {res["activation"]:.1f}%')
-    print('  activation by retrospective pressure band (negative = spare time):')
+    print('  activation by reservation / decision-time TTL band:')
     for b, name in zip(res['bands'], BAND_NAMES):
         if b is None:
             continue
@@ -432,8 +424,8 @@ def report(res):
           f'P95 {res["delayP95"]:.0f}')
     print(f'  per-burst delay share (%): P50 {res["shareP50"]:.1f}  '
           f'P95 {res["shareP95"]:.1f}   ({res["neverPaced"]} of {res["nBursts"]} never paced)')
-    print(f'  boundary: {len(res["safeButPaced"])} safe-but-paced, '
-          f'{len(res["overrunButUnpaced"])} overrun-but-unpaced')
+    print(f'  boundary: {len(res["safeButPaced"])} low-load-but-paced, '
+          f'{len(res["overrunButUnpaced"])} over-TTL-but-unpaced')
 
 
 def report_boundary(name, cases):
@@ -453,9 +445,9 @@ def report_boundary(name, cases):
           f'(median delta {s["headroomDeltaP50"]:+.3f})')
     print(f'  thermal status / level rose     {s["statusRose"]} / {s["overheatRose"]} '
           f'of {s["n"]}')
-    print(f'  within {BOUNDARY_NEAR_PCT:.0f} points of projection  '
+    print(f'  within {BOUNDARY_NEAR_PCT:.0f} points of the 100% TTL limit '
           f'{s["nearBoundary"]} of {s["n"]}')
-    print(f'  median retrospective pressure  {s["riskP50Pct"]:+.1f}% of budget')
+    print(f'  median reservation / TTL       {s["loadP50Pct"]:.1f}%')
 
 
 # ---------------------------------------------------------------------------
@@ -469,7 +461,7 @@ def write(name, header, rows):
 
 
 CASE_COLUMNS = ('boundaryClass', 'condition', 'run', 'shot', 'captureIndex', 'level',
-                'plannedClass', 'executedClass', 'seqDemoted', 'riskPct', 'd',
+                'plannedClass', 'executedClass', 'seqDemoted', 'reservationToTtlPct', 'd',
                 'B', 'Bhat', 'backlogError', 'backlogErrorPct', 'C', 'Chat',
                 'reserveError', 'wait', 'headroom', 'headroomDelta',
                 'statusDelta', 'overheatDelta', 'aheadCount', 'aheadDemotedCount',
@@ -479,7 +471,7 @@ CASE_COLUMNS = ('boundaryClass', 'condition', 'run', 'shot', 'captureIndex', 'le
 def case_row(cls, t):
     return [cls, t['condition'], t['run'], t['shot'], t['captureIndex'], t['level'],
             t['plannedClass'], t['executedClass'], t['seqDemoted'],
-            round(t['riskPct'], 4), round(t['d']),
+            round(t['loadPct'], 4), round(t['d']),
             round(t['B']), round(t['Bhat']), round(t['backlogError']),
             round(t['backlogErrorPct'], 4), round(t['C']), round(t['Chat']),
             round(t['reserveError']),
@@ -536,8 +528,8 @@ def write_all(results, safe, overrun):
 
     for name, cases in (('safe_paced', safe), ('overrun_unpaced', overrun)):
         write(f'boundary_{name}.csv',
-              ['backlog_error_pts', 'pressure_pct', 'condition'],
-              [[round(t['backlogErrorPct'], 2), round(t['riskPct'], 2), t['condition']]
+              ['backlog_error_pts', 'reservation_to_ttl_pct', 'condition'],
+              [[round(t['backlogErrorPct'], 2), round(t['loadPct'], 2), t['condition']]
                for t in cases])
 
     write('boundary_case_details.csv', list(CASE_COLUMNS),
@@ -546,8 +538,8 @@ def write_all(results, safe, overrun):
 
     # The population behind the marginal strip of panel (b), and the five
     # quantiles the figure draws from it.
-    write('pressure_cloud.csv', ['backlog_error_pts', 'pressure_pct'],
-          [[round(t['backlogErrorPct'], 2), round(t['riskPct'], 2)] for t in every])
+    write('pressure_cloud.csv', ['backlog_error_pts', 'reservation_to_ttl_pct'],
+          [[round(t['backlogErrorPct'], 2), round(t['loadPct'], 2)] for t in every])
     write('backlog_error_quantiles.csv', ['quantile', 'backlog_error_pts', 'n'],
           [[q, round(pct_inc([t['backlogErrorPct'] for t in every], q), 2), len(every)]
            for q in MARGINAL_QUANTILES])
@@ -564,12 +556,10 @@ def write_summary(results, safe, overrun):
         put('activationPercent', round(res['activation'], 2), res['nAnalyzed'])
         for b, name in zip(res['bands'], BAND_NAMES):
             put(f'activationPercent band {name}', round(b['activation'], 2), b['n'])
-        # The strict overrun population and its activation.  The band row above
-        # keeps the half-open [0, inf) form the historical selectivity exhibit
-        # needs; these two are what the summary table prints, so that its
-        # denominator matches the coordination script's.  See OVERRUN_PCT.
-        put('projectedOverrunStrict', len(res['overrun']), res['nAnalyzed'])
-        put('activationPercent overrunStrict',
+        # The strict over-TTL population excludes equality, which needs no
+        # matched-policy delay even though it belongs to the >=100% display band.
+        put('reservationExceedsTtlStrict', len(res['overrun']), res['nAnalyzed'])
+        put('activationPercent reservationExceedsTtlStrict',
             round(100 * sum(1 for t in res['overrun'] if t['d'] > 0) / len(res['overrun']), 2),
             len(res['overrun']))
         put('safeButPaced', len(res['safeButPaced']), res['bands'][0]['n'])
@@ -587,9 +577,9 @@ def write_summary(results, safe, overrun):
 
     # The denominators that make the two boundary classes rates rather than raw
     # counts, pooled over both conditions as the classes themselves are.
-    # safe-but-paced is defined on the loosest band and takes that band's
-    # population; overrun-but-unpaced takes the strict overrun population, not
-    # the last band, for the reason recorded at OVERRUN_PCT.
+    # low-load-but-paced takes the <60% band population; over-TTL-but-unpaced
+    # takes the strictly-above-100% population rather than the last display band,
+    # which also includes equality.
     band_pop = {'safeButPaced': sum(res['bands'][0]['n'] for res in results.values()),
                 'overrunButUnpaced': sum(len(res['overrun']) for res in results.values())}
 
@@ -610,8 +600,8 @@ def write_summary(results, safe, overrun):
                 ('medianHeadroomDelta', round(s['headroomDeltaP50'], 6), s['headroomN']),
                 ('thermalStatusRose', s['statusRose'], s['n']),
                 ('overheatLevelRose', s['overheatRose'], s['n']),
-                (f'within{BOUNDARY_NEAR_PCT:.0f}BudgetPointsOfBoundary', s['nearBoundary'], s['n']),
-                ('medianRetrospectivePressurePct', round(s['riskP50Pct'], 2), s['n'])):
+                (f'within{BOUNDARY_NEAR_PCT:.0f}PointsOfTtlLimit', s['nearBoundary'], s['n']),
+                ('medianReservationToTtlPct', round(s['loadP50Pct'], 2), s['n'])):
             rows.append(['pooled', f'{name} {metric}', value, den])
 
     write('summary.csv', ['condition', 'metric', 'value', 'denominator'], rows)

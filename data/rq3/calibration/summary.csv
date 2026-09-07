@@ -1,9 +1,0 @@
-condition,band,nRequired,nCovered,coveragePercent,worstDeficitMs,surplusP50Ms,reserveTermMs,backlogTermMs,backlogP95Percent
-12MP normal,Lv0--2,33,14,42.4,205,191,309,-108,71.0
-12MP normal,Lv3--4,31,24,77.4,582,380,264,102,64.5
-12MP normal,Lv5--6,15,15,100.0,,407,351,0,56.6
-12MP normal,All,79,53,67.1,582,357,302,-30,65.4
-24MP mode + memory pressure,Lv0--2,39,12,30.8,552,198,183,-34,75.4
-24MP mode + memory pressure,Lv3--4,46,22,47.8,920,255,228,-66,67.0
-24MP mode + memory pressure,Lv5--6,55,49,89.1,195,294,594,-60,52.3
-24MP mode + memory pressure,All,140,83,59.3,920,257,445,-60,69.5

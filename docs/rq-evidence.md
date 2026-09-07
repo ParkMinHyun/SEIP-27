@@ -52,43 +52,46 @@ The current evaluation does not compare the controller against pacing methods
 transplanted from unrelated domains. Such methods optimize different signals
 and would not isolate whether this controller sizes its own intervention
 appropriately. RQ3 instead evaluates four properties of the deployed control
-structure, in the order the table presents them:
+structure: trace-derived targeting, admission-aware envelope coverage, work
+conservation, and responsiveness cost.
 
-1. how much of the delay the realized Draft work required each decision
-   actually applied;
-2. what happened to the captures where it applied less — whether admission
-   absorbed the remainder and whether the deadline still held;
-3. where the difference between applied and required delay comes from, which is
-   an exact decomposition into the errors of the two estimators the controller
-   builds; and
-4. whether the resulting wait drains measured backlog at a reported
-   user-visible cost.
+#### Current collection and reservation-load bands
 
-Property 3 is the one earlier revisions were missing. They could report that the
-short-fall decisions under-estimated backlog but not what produced the
-under-estimate, which reads as a model-quality complaint rather than as a
-mechanism. It is now measured, and it is the finding an industrial reader can
-act on.
+The four printed populations partition the analyzed transitions by the
+trace-conditioned reservation load
 
-#### No threshold the reader cannot recompute
+    rho_i = R_i / T_i, where R_i = B_i + G_i + 2C_i.
 
-Every population in the current table is cut by the retrospective matched-policy
-target \(d^{*}\)
-itself. It prints no band edge, no "over 40% budget left", and no constant that
-is not derivable from the two formulas below. An earlier revision printed a 40%
-cut inherited from the historical selectivity exhibit, which the current table
-does not ship; a reader had no way to know where it came from.
+$B_i$ and $C_i$ come from the completed trace; $G_i$ is the recorded
+decision-time backlog-growth term, for which the workbook exposes no realized
+counterpart.  $R_i$ is therefore a reservation rather than actual consumed
+time.  $T_i$ is the TTL available at the pacing decision and is positive on
+every analyzed transition.  The bands are $\rho_i<60\%$,
+$60\%\leq\rho_i<80\%$, $80\%\leq\rho_i<100\%$, and
+$\rho_i\geq100\%$.  The last means that reservation equals or exceeds the
+remaining window, not that a Capture Timeout occurred.  Their activation rates
+diagnose whether pacing increases as reservation consumes more of the TTL; the
+bands are descriptive and are not thresholds consumed by the online controller.
+The sizing columns then report
+the median applied delay relative to measured backlog and the share of applied
+delay that overlaps that backlog.
 
 ### Current artifacts
 
-The current main-paper exhibit is `tables/tab_rq4_pacing_selectivity.tex`, and
-it is the only RQ3 exhibit; RQ3 ships no figure. It replaced
-`tables/tab_rq4_pacing_summary.tex` on 2026-08-13, which stays on disk
-unreferenced; an earlier generation of policy, selectivity, and calibration TeX
-pairs — not the current selectivity table — was removed outright. The blocks
-described in the rest of this part were written for the summary table; read
-them as the analysis behind the RQ4 claim, not as a description of the printed
-exhibit.
+The current main-paper exhibit is `tables/tab_rq4_pacing_sizing.tex`, and it is
+the only pacing-delay-sizing exhibit; it ships no figure. The 2026-09-07 refresh
+uses the S26 Ultra 12MP-normal and 24MP-memory workbooks named and hashed in
+`docs/exhibits.md`. It analyzes 1,414 and 1,553 transitions over 55 and 59
+complete runs, with 463 and 578 paced transitions. The printed rows and prose
+audit are in `data/rq3/policy/s26_ultra_0906_summary.csv`, and the two current
+sub-1% margin observations are in
+`data/rq3/estimator/s26_ultra_0906_thin_margin_tail.csv`.
+
+The detailed blocks below were written for the earlier sampling collection and
+are retained as design lineage. Their 1,920/1,861 populations and two-block
+table layout are historical, not current numeric evidence.
+
+### Earlier sampling-collection design (historical)
 
 The table is a single-column `table` float carrying two blocks, and **each block
 has its own population**, which is the point of the split:
@@ -1154,53 +1157,41 @@ Retention is measured by **execution**, as in section 4.3. In this arm that
 agrees with the exporter's `Completed` flag; the two diverge only in the
 forced-execution arms of RQ1(b).
 
-Every cell reports a balanced `N = 10`; the protocol and its bias are in
-section 4.3.1.
+Every RQ1(a) cell reports a balanced `N = 10`; its protocol and bias are
+recorded in `data/U_ablation_sampling/README.md`.
 
 #### 4.3 RQ1(b): Controller ablation
 
-The four configurations are:
+This evidence-layer subsection retains the former RQ1(b) name; the manuscript
+reports it as RQ2.  The table contains three level-4 panels: S26 Ultra 12MP
+normal, S26 Ultra 24MP memory pressure, and S26 12MP normal.  Within each panel
+the configurations appear as No control, Admission only, Pacing only, and Full.
 
-| Configuration | Admission | Pacing | Interpretation |
-|---|---:|---:|---|
-| No control | Off | Off | No controller |
-| Pacing only | Off | On | Controls future arrivals only |
-| Admission only | On | Off | Controls current service demand only |
-| Ours (Full) | On | On | Coordinated workload and arrival control |
+`S(30)` alone is not sufficient.  Admission could avoid timeout by skipping
+optional stages, while Pacing only can execute both stages on every capture it
+reaches and still fail before the requested horizon.  The table therefore
+reports requested-capture completion, M and S execution, and pacing incidence
+and magnitude beside survived runs.
 
-The ablation table reports two conditions, each a (capture condition, starting
-overheat level) pair: 12MP normal and 24MP memory pressure at starting level 4.
-Within a condition the four configurations are listed in the order above, so
-the listing itself walks the Admission-by-Pacing factorial; the table does not
-carry separate On/Off columns, because the configuration name already states
-them.
+| Column | Definition |
+|---|---|
+| Survived runs | Runs completing 30 captures with no Capture Timeout, over the displayed arm's included runs |
+| Captures `(%)` | 100 times on-time captures divided by `30 x N`; the timeout capture and unreached captures contribute zero |
+| M / S `(%)` | 100 times on-time captures with literal `bokehExecuted` / `filterExecuted` execution divided by `30 x N` |
+| Activated `(%)` | Positive `transitionDelayMs` observations divided by all nonblank observed transition delays |
+| d P50 `(ms)` | Inclusive median of pooled positive `transitionDelayMs`; `--` when pacing is off |
 
-`S(30)` alone is **not** sufficient and must never be the only reported column.
-An arm can reach zero timeouts trivially by discarding optional Draft work, and
-Pacing only can execute all optional work before failure while surviving only
-one run per condition. Each row therefore also reports retained optional work,
-the incidence of pacing, and the conditional magnitude of the applied delay.
-RQ3 separately evaluates whether that delay is appropriately sized.
+Execution, not the exporter's recommendation-qualified Completed flag, is the
+stage metric.  A watchdog-missing stage observation is scored as a skip.  The
+watchdog does not cause the other 29 captures in a complete run to be removed.
 
-| Column | Printed as | Definition |
-|---|---|---|
-| `S(30)` | Survived runs | Runs completing 30 captures with no Capture Timeout, over included runs; the denominator carries `N` |
-| \(M\) `(%)` | Work completion | Per-run Bokeh execution rate over the first 30 captures, set to zero when the run does not survive 30 captures without Capture Timeout, then macro-averaged across all included runs |
-| \(S\) `(%)` | Work completion | Per-run Filter execution rate over the first 30 captures, set to zero when the run does not survive 30 captures without Capture Timeout, then macro-averaged across all included runs |
-| Activated `(%)` | Pacing cost | Percentage of observed eligible outgoing-shot intervals with `transitionDelayMs > 0`; structurally zero when the pacer is off |
-| Applied delay P50 `(ms)` | Pacing cost | Inclusive median of positive `transitionDelayMs` values over observed eligible outgoing-shot intervals; `--` when pacing is off |
+Pacing-only Capture Timeout runs remain in the population because they are the
+measured outcome of that arm.  Their timeout capture and all unreached
+requested captures contribute zero to Captures, M, and S.  Full-arm records
+labelled Capture Timeout are known invalid measurements and are excluded rather
+than interpreted as controller failures.
 
-\(M\) and \(S\) must be measured by **execution** — the node has a positive observed
-duration — and *not* by the exporter's `bokehCompleted`/`filterCompleted` flags.
-Per ReplayNotes "Recommendation vs execution", `Completed` additionally requires
-`recommendedAdmit = true`, and the recommendation is still recorded in the two
-forced-execution arms. First compute the execution rate within each run; then
-multiply it by the run's `S(30)` indicator before macro-averaging. Thus a failed
-run contributes zero even if the node executed on every observed capture. This
-gives 0% for No control and 10% for each N=10 Pacing-only cell, where only one
-run survives.
-
-Activated uses the same convention as RQ1(a):
+Activated uses the same transition convention as the end-to-end table:
 
 ```text
 Activated (%)
@@ -1208,38 +1199,32 @@ Activated (%)
             / count(nonblank transitionDelayMs)
 ```
 
-The denominator includes zero-delay intervals. Applied delay P50 excludes them
-and reports intervention magnitude conditional on pacing having activated.
-Together, the two Pacing cost columns report incidence and magnitude; RQ3
-evaluates the required versus applied delay and its calibration.
+The denominator includes zero-delay transitions and excludes the first capture,
+which has no incoming transition.  The delay median excludes zero-delay
+transitions and is therefore conditional on pacing having activated.
 
-24MP is a requested-mode label: only the first one or two captures are 24MP and
-the remaining captures are 12MP.  Starting-level 5--6 runs use the product's
-12MP fallback and must not be presented as 24MP ablation evidence.
+The 24MP condition is a requested-mode label.  It is not regrouped by the
+per-capture size bucket recorded after fallback.
 
-The sessions previously described as Full-arm Capture Timeout outcomes are now
-known to contain an invalid timeout measurement. They are removed as invalid
-observations, not as unfavorable outcomes. No valid Full-arm run experienced an
-actual Capture Timeout; preserve the measurement-fault and invalid-run manifest
-when reporting the valid-run denominator.
+#### 4.3.1 Data sources and populations
 
-#### 4.3.1 Data sources and balancing
+The 2026-09-07 refresh replaces only Pacing only and Full.  No control and
+Admission only retain the repository sources recorded by the earlier
+collection.  The refreshed external workbooks are:
 
-All four arms live in this repository. `data/ablation_original/` is the untouched source
-of record; `data/ablation_sampling/` is the balanced copy the tables read.
+| Panel | Pacing only | Full |
+|---|---|---|
+| S26 Ultra, 12MP normal | `SM-S948U_metrics_12MP_normal_pacing_only_0906.xlsx` | `SM-S948U_metrics_12MP_normal_0906.xlsx` |
+| S26 Ultra, 24MP memory pressure | `SM-S948U_metrics_24MP_only_pacing_only_0906.xlsx` | `SM-S948U_metrics_24MP_memory_0906.xlsx` |
+| S26, 12MP normal | `SM-S942B_metrics_12MP_normal_pacing_only_0906.xlsx` | `SM-S942B_metrics_12MP_normal_0906.xlsx` |
 
-| Arm | Workbooks (`48U_metrics_<condition>_…`) |
-|---|---|
-| No control | `…_baseline_0803.xlsx` |
-| Pacing only | `…_pacing_only_0803.xlsx` |
-| Admission only | `…_admit_only_0803.xlsx` |
-| Full | `…_0803_1.xlsx` **and** `…_0803_2.xlsx` |
-
-The Full arm pools both parts, which is the run set RQ1(a) has always used. Both
-parts carry the same policy label (`ReplayScope`: `RECORDED_RUNTIME` /
-`FACTUAL_RECORDED_TARGET` / `M+S`) and the deployed pacing formula reproduces
-`beforeAppliedDelayMs` on 100% of recorded decisions in each, so they are one
-arm.
+Select `includedForRq1 = true` and starting overheat level 4 from `RQ1Runs`,
+join `RQ3Pacing` by `runId`, and cap each run at capture 30.  After the Full
+timeout exclusion, use every selected run rather than balancing each cell to
+ten.  The resulting Pacing-only/Full populations are N=10/10, N=12/11, and
+N=14/10 for the three panels in table order.  Detailed checksums, numerator
+counts, and transition denominators are recorded in
+`docs/exhibits.md#tab_rq2_ablation`.
 
 #### 4.4 RQ1 workbook mapping
 
@@ -1272,6 +1257,10 @@ The detailed historical aggregation convention is recorded in
 `data/rq1_metrics_aggregation.md` in the ML implementation repository.
 
 ### 5. RQ2: Admission decision quality
+
+**Current exhibit scope (2026-09-07).** The live manuscript table prints only
+the Always-admit audit in Section 5.3 below. The Controller-enforced metrics in
+Section 5.2 remain as historical evidence and are not printed.
 
 #### 5.1 Research question
 
@@ -1418,9 +1407,9 @@ Factual unsafe       unsafe-admit      unsafe-skip
 ```
 
 Here, feasible means \(C \le B\). Unsafe means \(C > B\) or watchdog
-intervention. The table reports the four counts for each condition and
-optional-work group. The feasible-admission and unsafe-rejection rates can be
-derived as:
+intervention. For each condition and optional-work group, the table reports
+all four counts together with their within-class percentages. The feasible-
+admission and unsafe-rejection rates are calculated as:
 
 ```text
 feasible-admission rate
@@ -1979,26 +1968,21 @@ queue depth look alike: the two accumulate together on average. Within a single
 session they separate, because admission and pacing act on different terms.
 Backlog is the *time* queued and falls when admission makes each Draft cheaper;
 queue depth is the *count* queued and falls only when arrivals stop outrunning
-service. In the selected 12MP session the two part company over captures
-23--30, immediately after the \(S\) demotion: real backlog drops from 63.8% to
-27.6% of the deadline while the queue stays at five or six. Backlog
-alone reads as "the session recovered"; the pair shows that the queue never
-shortened and only became cheaper to serve, which is the coordination claim the
-case study exists to make. `figures/fig_casestudy_12mp.tex` therefore carries a
-queue-depth strip, reading the `queue_depth` column of
-`data/case_study/<condition>_backlog.csv`. Keep
-the strip in any case-study figure that shows a demotion; drop it only if a
-future session shows the two moving together throughout.
+service. In the selected 12MP session the two part company after the M-stage
+demotion at capture 15: real backlog falls from 68.2% to 48.2% of the deadline
+through capture 19 while the waiting queue remains at four.  At capture 20,
+the queue drops to three and backlog reaches 38.7%.  The pair therefore separates
+the amount of queued time from the number of waiting Draft Sequences, which is
+the coordination distinction the case study needs to expose.
+`figures/fig_casestudy_12mp.tex` carries a queue-depth strip reading the
+`queue_depth` column of `data/case_study/<condition>_backlog.csv`. Keep the
+strip in any case-study figure that shows a demotion; drop it only if a future
+session shows the two moving together throughout.
 
-That column counts the Draft in service as well as those waiting -- the
-`realOutstandingDraftCount` convention noted under \(Q_{\max}\) in section 6.2,
-not `realQueueDepth`, which excludes the running Draft and therefore reads one
-lower wherever one is running (four or five over the same captures). The
-committed file is not reproduced by `scripts/export_casestudy.py`: the exporter
-can only write the waiting-only count, and it also has no value for the shot-2
-backlog the file carries, so it leaves an existing backlog CSV in place unless
-`CASESTUDY_WRITE_BACKLOG=1` is set. Quote five or six for the figure and four
-or five for `realQueueDepth`, and name the column whenever the number appears.
+The column now maps directly to workbook field `realQueueDepth`; it does not
+include the Draft in service.  Both `realQueueDepth` and `realBacklogMs` are
+observed for all 30 captures in the selected run, so the plot uses no imputed
+values or gap markers.
 The cumulative-delay panel draws policy medians and IQR bands for the arms
 whose traces are currently available because run-to-run pacing cost is central
 to its interpretation. After all four arms are populated, verify that four
@@ -2462,11 +2446,20 @@ Full 34.3/97.3 against 10.3/29.2, and 24MP Lv4 Full 41.7/80.3 against 12.5/24.1.
   12MP/Lv4 macro-averages. Those are now 9.8 transitions, 10.3 M captures and
   29.2 S captures, not 33.8% / 34.3% / 97.3%.
 
+**Superseded 2026-09-06.** The case-study figure and peer table now use
+SM-S948U_metrics_12MP_normal_0906.xlsx.  The figure no longer draws the 8--12
+window because the replacement workbook has no matched controller-off
+population, and the peer audit is computed wholly within the new workbook.
+
 ---
 
 ### 3. RQ3 — two columns removed and the two blocks merged
 
 `tables/tab_rq3_admission_summary.tex`.
+
+**Superseded 2026-09-07.** The live table now retains only the Always-admit
+block. The Controller-enforced half and the merged-layout constraints below are
+kept solely as provenance and a restoration record.
 
 #### 3.1 Removed: Feasible-work **Margin** and Unsafe-work **Overrun**
 
@@ -2590,9 +2583,9 @@ unsafe admits, not the script's eight. Resolving this needs to know which
 regeneration produced the published cells. Resolve before submission; if the
 script wins, the figure moves with the table.
 
-Separately, `figures/fig_casestudy_12mp.tex` claims Table I reads "10/17" for
-normal capture / 12MP / M+S / Lv4. `tables/tab_timeout_index.tex` prints 8/12
-there. Pre-existing and not touched by this revision.
+Resolved 2026-09-06: `figures/fig_casestudy_12mp.tex` removed the
+controller-off timeout band when it moved to the new device workbook, so it
+no longer quotes or depends on the inconsistent Table I range.
 
 ---
 
