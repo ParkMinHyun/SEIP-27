@@ -28,8 +28,8 @@ with `AGENTS.md`, `AGENTS.md` wins and this file should be corrected.
 | [`tab_rq2_ablation`](#tab_rq2_ablation) | `tables/` | Live -- `_4_experiments.tex`, RQ2 |
 | [`tab_rq3_admission_summary`](#tab_rq3_admission_summary) | `tables/` | Live -- `_4_experiments.tex`, RQ3 |
 | [`tab_rq4_pacing_sizing`](#tab_rq4_pacing_sizing) | `tables/` | Live -- `_4_experiments.tex`, RQ4 |
-| [`tab_rq4_pacing_selectivity`](#tab_rq4_pacing_selectivity) | `tables/` | Superseded 2026-08-21 by `tab_rq4_pacing_sizing`; kept on disk |
-| [`tab_rq4_pacing_summary`](#tab_rq4_pacing_summary) | `tables/` | Superseded 2026-08-13 by `tab_rq4_pacing_selectivity`; kept on disk |
+| [`tab_rq4_pacing_selectivity`](#tab_rq4_pacing_selectivity) | `tables/` | Superseded 2026-08-21; deleted from disk |
+| [`tab_rq4_pacing_summary`](#tab_rq4_pacing_summary) | `tables/` | Superseded 2026-08-13; deleted from disk |
 | [`tab_setup`](#tab_setup) | `tables/` | Live -- `4_1_setup.tex`, evaluation setup |
 | [`tab_timeout_index`](#tab_timeout_index) | `tables/` | Live -- `2_4_static_safeguards.tex` |
 | [`alg_admission`](#alg_admission) | `figures/` | Live -- `3_3_admission.tex` |
@@ -354,7 +354,8 @@ over the runs RQ1Runs marks includedForRq1, which is exactly ten per cell in
 the balanced copy.  The recomputation reproduces all 14 rows of the previous
 percentage-form table on every M, S, Activated and d cell, so the unit change
 moved no underlying number.  Totals behind the per-run means, and the
-percentages they replace, are tabulated in the revision document.
+percentages they replace, are tabulated in docs/rq-evidence.md (Part 3)
+section 2.5.
 
 Cells that did not change, because they already held ten runs: 12MP Lv0, Lv1
 and 24MP Lv0, Lv2, Lv4, Lv5, Lv6.
@@ -506,7 +507,7 @@ Numerical audit behind the refreshed cells:
 | Panel | Configuration | N | Survived | Reached / on time | M / S | Positive / eligible transitions | d P50 (ms) |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | S26 Ultra 12MP | Pacing only | 10 | 0/10 | 143 / 133 | 133 / 133 | 68 / 133 | 242.5 |
-| S26 Ultra 12MP | Full | 10 | 10/10 | 300 / 300 | 174 / 300 | 110 / 290 | 437 |
+| S26 Ultra 12MP | Full | 10 | 10/10 | 300 / 300 | 174 / 287 | 110 / 290 | 437 |
 | S26 Ultra 24MP | Pacing only | 12 | 0/12 | 113 / 101 | 101 / 101 | 59 / 101 | 483 |
 | S26 Ultra 24MP | Full | 11 | 11/11 | 330 / 330 | 147 / 254 | 117 / 319 | 400 |
 | S26 12MP | Pacing only | 14 | 1/14 | 271 / 258 | 258 / 258 | 115 / 257 | 387 |
@@ -747,7 +748,8 @@ optional:
   3. The prose must still state both denominators.  See WHAT THE RQ3 PROSE
      MUST CARRY below.
 If a reviewer ever reads a left cell against a right cell as the same
-decisions, restore the two-block layout from the revision document.
+decisions, restore the two-block layout from docs/rq-evidence.md (Part 3)
+section 3.2.
 ---
 
 The Controller-enforced cells come from the balanced Full arm,
@@ -869,8 +871,9 @@ WHAT THE RQ3 PROSE MUST CARRY
                         by the Capture Timeout deadline over model skips in
                         the deployed half.  The audit half no longer prints a
                         severity column; if the prose needs the realized
-                        magnitudes, take them from the revision document and
-                        say they are not in the table.
+                        magnitudes, take them from docs/rq-evidence.md
+                        (Part 3) section 3.1 and say they are not in the
+                        table.
   the group definition  Each capture contributes at most one decision per
                         optional-work group: Multi-frame = Bokeh, Single-frame
                         = Filter.
@@ -1037,101 +1040,480 @@ Recorded from the column-spec labels that used to sit in the tabular preamble.
 
 `tables/tab_rq4_pacing_sizing.tex` &middot; Live -- `_4_experiments.tex`, RQ4
 
-RQ4: the delay engages selectively as reservation consumes more of the
-decision-time TTL, and stays a small share of the backlog it drains.
+RQ4: pacing engages in proportion to the queued Draft work, and it was acting
+on nearly every capture whose deadline margin still ran thin.
 
-Adopted as the RQ4 exhibit of record on 2026-08-21, succeeding
-`tab_rq4_pacing_selectivity`, whose entry keeps the reasoning for the earlier
-swap away from `tab_rq4_pacing_summary`.  That reasoning still applies: the
-summary table measured d against d*, which is a decomposition of prediction
-error at a fixed coefficient rather than a sizing report.
+ADOPTED 2026-09-08 as the RQ4 exhibit of record, succeeding
+`tab_rq4_pacing_sizing`.  Why the swap, at the author's direction: every RQ4
+exhibit before this one measured the applied delay against a quantity derived
+from Equation~\ref{eq:pacing} itself -- $d^{*}$ in `tab_rq4_pacing_summary`,
+then a reservation-to-$T$ ratio in the selectivity and sizing tables.  Each
+therefore reports how internally consistent the rule is with a reconstruction of
+its own inputs, which is not a claim the author wants to defend, and which
+leaves a reviewer's first question -- why the coefficient is one half -- exactly
+where it started.  This table asks a different question: does the module act
+where the load it exists to control is actually present, and was it acting on
+the captures that came closest to the deadline.  Both halves are stated against
+quantities the controller does not compute.
 
-FORMAT REFRESHED 2026-09-07 from the user-supplied table form.  The caption is
-"RQ4 Pacing-Delay Sizing under Backlog Pressure" and the label remains
-tab:rq4_pacing_sizing.  The three-row header names the device, states that the
-four activation columns are reservation-to-TTL bands, and keeps the two sizing
-diagnostics ($d/B$ P50 and backlog overlap) separate.  The final band is printed
-as reservation at least 100% of TTL; it does not identify an actual Capture
-Timeout.  4_5_rq4_pacing.tex is the only \ref site.
+THE BAND DENOMINATOR IS THE CONSTANT BUDGET, NOT THE REMAINING WINDOW, and
+this is the opposite of what `tab_rq4_pacing_sizing` did.  Read the two rules
+together before changing either.  That table banded on `rho_i = R_i / T_i` and
+its entry carries a DO NOT RENORMALIZE BY THE FULL BUDGET note, because there
+the 100% edge was the algorithm's own trigger and a constant denominator would
+have destroyed it.  This table has no trigger-aligned edge to protect, and it
+divides by `captureTimeoutMs`, a constant 7,000 ms on every analyzed row, so the
+band means "how much Draft work was queued" in units a reader can hold fixed
+across rows.  The remaining window `T` stays a separate axis and it varies --
+4,375 ms at the fifth percentile to 6,337 ms at the ninety-fifth.
 
-The four bands partition transitions by
+  THE CONSEQUENCE IS THE POINT, not a defect: the printed band does not know how
+much window was left, so it cannot order risk on its own, and that is precisely
+why 16.6% of the heaviest band drew no delay.  Quantified, the choice is not
+cosmetic -- normalizing by `T` instead would put 1,138 decisions in the `>= 50`
+band rather than 688, and activation there would read 78.0% rather than 83.4%.
 
-    rho_i = R_i / T_i, where R_i = B_i + G_i + 2C_i.
+  ALSO KEEP THE TWO CLOCKS STRAIGHT.  The numerator is decision-time STATE but
+RETROSPECTIVE MEASUREMENT: `realBacklogMs` is anchored at the decision timestamp
+yet reconstructed from realized Draft end times, so the controller never saw it.
+What the controller saw is `controllerBacklogMs`, which runs below it -- on the
+unpaced part of the `>= 50` band, below on 78.9% of decisions by a 290 ms median.
+Every other quantity quoted in the diagnoses below (`timeToDeadlineMs`,
+`draftSequenceReservedDurationMs`, `deadlineDeficitMs`) is a recorded pacer field
+and therefore decision-time on both counts; `timeoutSlackPercent` is purely an
+outcome.  Do not mix the three classes in one sentence without saying which is
+which.
 
-Here $B_i$ and $C_i$ are measured from the completed trace and $G_i$ is the
-recorded online backlog-growth term.  The workbook exposes no realized
-counterpart for $G_i$, so $R_i$ is deliberately called a trace-conditioned
-reservation rather than actual consumed time.  $T_i$ is the TTL at the pacing
-decision, and every analyzed transition has $T_i>0$.  The half-open bands are
-$\rho_i<60\%$, $60\%\leq\rho_i<80\%$,
-$80\%\leq\rho_i<100\%$, and $\rho_i\geq100\%$.
+Panel (a) bands the decisions by MEASURED queued Draft work as a percentage of
+the Capture Timeout budget: `realBacklogMs / captureTimeoutMs`, where
+`realBacklogMs` is the workbook's trace reconstruction, defined in its own
+ReplayNotes as `max(draftEndUptimeMs)` over unfinished earlier Draft Sequences
+minus the pacing decision time.  It carries neither the growth term nor the
+two-Draft reserve, so it is one step further from the rule than the superseded
+sizing bands were -- but only one step.  The axis still shares the rule's
+dominant term, so PANEL (a) DESCRIBES THE DEPLOYED RESPONSE AND DOES NOT TEST
+IT, and `4_5_rq4_pacing.tex` says so in the same paragraph that quotes it.  Do
+not promote those four columns into a selectivity claim on their own.
 
-Current source workbooks (2026-09-07 refresh):
+Panel (b) is the part that carries independent content, and it is labelled from
+the OUTCOME: the realized `timeoutSlackPercent` of the capture each decision
+released.  Because that outcome is measured after the intervention, the panel
+bounds missed interventions and says nothing about unnecessary ones.  The
+factual trace cannot expose the second: a closed loop has no counterfactual of
+the same capture released without its delay.  State this limit wherever the
+panel is quoted; the cost of the interventions that did occur is bounded
+separately by the $d$ P50 column and by the pacing-cost columns of
+`tab_rq1_end_to_end_summary`.
 
-- `SM-S948U_metrics_12MP_normal_0906.xlsx` (SHA-256
-  `1a8d1da73367446272d51e87896ec588e9725e8b9296b71f5df6224fc4bce83e`);
-- `SM-S948U_metrics_24MP_memory_0906.xlsx` (SHA-256
-  `3b79b5fcd7484625233252b0cbc203244c0f8468828689bc7e1e2d03a250e3be`).
+COLUMN SET REVISED 2026-09-08, at the author's direction, and three of the
+first draft's columns are gone.  Each removal has a reason worth keeping:
 
-The workbooks are external measurement sources and are not copied into this
-repository.  The derived cells and their audit counts are recorded in
-`data/rq3/policy/s26_ultra_0906_summary.csv`:
+  `Stage skipped` and `Either` were dropped because ADMISSION IS RQ3'S SUBJECT.
+The first draft printed both, `Either` being `paced OR an optional stage skipped
+on the released capture`, and it did carry the stronger coverage number: panel
+(b) reached 99.3% under `Either` where pacing alone reaches 95.7%.  But an RQ4
+table that reports admission behaviour mixes the two claims, and the reader
+cannot tell which module the exhibit is about.  The coordination readout now
+lives where it belongs -- the figure's third panel, which shows the same
+handover over time, and the thin-margin prose, which needs `Either` to state
+that only one sub-1% decision met neither module.  Both numbers stay in
+`data/rq4/thin_margin_coverage.csv`.  Do not reinstate the columns here.
 
-  activationPercent band reservation_under_60_ttl / reservation_60_80_ttl /
-    reservation_80_100_ttl / reservation_at_least_100_ttl
-                          the four reservation-to-TTL band cells; the CSV carries
-                          the percentage in value and the band size in denominator,
-                          while adjacent activationCount rows carry the numerators
-  delayOverBacklogPercent P50   the d/B column; its denominator is
-                          pacedTransitions, retained in the audit CSV
-  backlogDrainingDelaySharePercent   the Overlap backlog column
+  `d P50` was dropped because RQ1 AND RQ2 BOTH PRINT IT, RQ1 per starting
+thermal level, so the column spent width on a number the reader already has.
+Its replacement, `d_i/B_i` P50, is the same action expressed against the load
+it responds to, and it is not printed anywhere else in the paper.  It also
+carries a result the absolute delay hides: the ratio FALLS as pressure rises,
+29.1% -> 13.0% -> 8.3%, so the delay is a shrinking share of what is queued.
+That is the cross-section of the figure's plateau -- pacing trims the arrival
+rate instead of draining the queue -- and the two exhibits should be read
+together.
 
-The same CSV now also records the run-level delay-share percentiles,
-never-paced-run counts, admission-aware envelope counts, and thin-margin
-summary quoted in `4_5_rq4_pacing.tex`.  The two sub-1% observations are kept
-row by row in `data/rq3/estimator/s26_ultra_0906_thin_margin_tail.csv`.
+  `Slack P5` was dropped because panel (b)'s rows are DEFINED by a margin
+threshold, so the column restated the row label there and printed an em dash on
+four of six rows.  The realized margin still reaches the reader through those
+row labels and through the prose.  `slackP5Percent` remains in the CSV as the
+cross-check against RQ1.
 
-Population.  The S26 Ultra 12MP-normal Full workbook contains 56 run
-summaries.  Run 11 is incomplete at 29 shots and is excluded, leaving 1,414
-analyzed transitions over 55 complete runs, of which 463 were paced.  The
-24MP-memory Full workbook contains 68 run summaries; nine incomplete runs are
-excluded, leaving 1,553 analyzed transitions over 59 complete runs, of which
-578 were paced.  For 12MP and 24MP respectively, the four band denominators
-sum to 1,414 and 1,553, and their paced counts sum to 463 and 578.  The
-recorded delay agrees between `RQ3Pacing.transitionDelayMs` and
-`PacingReplay.beforeAppliedDelayMs` on every analyzed transition in both
-conditions.
+Columns as printed:
 
-THE BANDS ARE TRACE-CONDITIONED, NOT TIMEOUT OUTCOMES.  They replace the
-controller's backlog and Draft-duration estimates with measured $B_i$ and $C_i$
-while retaining its recorded $G_i$, because the workbook exposes no realized
-backlog-growth counterpart.  Their sum $R_i$ is a reservation, not actual
-consumed time; $\rho_i=R_i/T_i$ normalizes it by the TTL available at that
-decision.  Every band uses this same ratio, half-open [lo, hi), with the last
-band open at its upper edge.
-Activation against the controller's own online score is true by construction
-and must not be reported as a result.  This distinction is encoded in
-scripts/rq3_calibration_metrics.py and scripts/rq3_pacing_summary_metrics.py.
+  n           decisions in the group
+  Paced % (n) percent with `appliedDelayMs > 0`, with the count in parentheses
+              because it is the denominator of the two columns to its right
+  d_i/B_i P50 median per-decision ratio of applied delay to measured queued
+              Draft work, over the PACED decisions only
+  Overlap     `sum(min(d_i, B_i)) / sum(d_i)`, a ratio of sums and therefore a
+              different statistic from the column beside it -- the share of
+              applied delay that elapsed with Draft work still outstanding.
+              A band with no paced decision prints em dashes in both derived
+              columns.
 
-2026-09-07 REAGGREGATION.  Against the source hashes above, the 12MP row is
-1.3% (7/551), 18.1% (62/343), 57.0% (151/265), 95.3% (243/255), 12.5% over
-463 paced transitions, and 99.1% overlap.  The 24MP row is 9.6% (55/572),
-32.8% (144/439), 62.2% (240/386), 89.1% (139/156), 13.2% over 578 paced
-transitions, and 96.9% overlap.  Each displayed percentage is rounded to one
-decimal after computing from the printed counts.
-Every denominator is valid: decision-time TTL is positive on all analyzed
-transitions, ranging from 3,792 to 7,000 ms at 12MP and from 2,426 to 7,000 ms
-at 24MP.
+THE 114 UNPACED DECISIONS OF THE `>= 50` BAND, diagnosed 2026-09-08, and they
+are a different population from the six below even though the two overlap on two
+rows.  All 114 carry `pacingObservationSource = RECORDED_DECISION` and all 114
+recorded `deadlineDeficitMs <= 0`, median -496 ms: the controller's own test
+declined, it did not fail to run.  Three terms put them under the trigger, in
+medians against the 574 paced decisions of the same band: the remaining window
+was 278 ms longer (6,033 against 5,755), the reserve for the sequence about to
+run was 193 ms smaller (861 against 1,054), and the backlog estimate was 592 ms
+lower (3,618 against 4,210).  Measured backlog was itself 340 ms lower and they
+sit at the bottom of the band, 54% against 59%.
 
-2026-09-07 LAYOUT FOLLOW-UP.  A thin `\cmidrule(lr){1-7}` separates the two
-condition rows.  The repeated `(N paced)` annotations were removed from the
-$d/B$ and overlap cells; their 463 and 578 denominators remain in the audit CSV.
-Vertical rules separate every data column.  The `\multicolumn` header formats
-repeat the relevant right-hand rules so the separators continue through all
-three header rows instead of disappearing inside the spanning cells.
-The former `Overlap backlog` prose header is printed as its pooled definition,
-$\sum_i\min(d_i,B_i)/\sum_i d_i$, to distinguish this ratio of sums from the
-per-transition $d/B$ P50 beside it.
+  THE OUTCOME VINDICATES THE DECLINE, WHICH IS THE POINT WORTH KEEPING: the 114
+finished at 19.3% of the budget at the median and 8.3% at the fifth percentile,
+against 10.9% and 2.6% for the paced decisions of the same band, and only 2 of
+the 114 ended under 5% against 99 of the 574.  The pooled skip rate looks
+uninformative -- an optional stage was skipped on 40.4% of them against 39.4% of
+the paced ones -- but that aggregate hides two opposite tilts and must not be
+quoted on its own: at overheat level 3 and 4 the unpaced decisions are the LESS
+demoted ones (0% and 12% against 13% and 32%), while at level 5 and 6 they are
+the MORE demoted ones (55% and 86% against 39% and 59%).  At the hot end,
+therefore, admission is exactly why pacing declined: it had already stripped the
+sequence, the reserve for what was about to run fell to 843 ms against 1,092 ms
+over Lv5-6, and the test passed on a genuinely lighter forecast.  That is
+coordination, not a miss.  ESTABLISH THAT ORDERING ON DECISION-TIME FIELDS, NOT
+ON THE SKIP RATE: whether the released capture itself skipped a stage is realized
+after the decision and can only corroborate.  The decision-time evidence is the
+reserve, which is a recorded pacer field, plus the demotion already in force --
+the preceding capture was already demoted on 75.0% of the Lv5-6 unpaced group
+against 43.5% of the Lv5-6 paced group, and on only 5.2% of the Lv3-4 unpaced
+group, which is what makes the two halves of this population different in kind
+rather than in degree.  Nor is this a low-thermal population, which is the natural guess: the
+median overheat level is 4 on both sides and 31.6% of the 114 sit at level 6.
+The one real thermal tilt is at level 3, where 31.6% of high-load decisions went
+unpaced against 11.8-17.6% at the other levels, and level 3 contributes only 24
+of the 114.  Across all four levels the term that separates the two groups most
+consistently is the backlog estimate, 500-850 ms lower on the unpaced side at
+every level, followed by the remaining window, 90-372 ms longer.  So high queued
+Draft work is not high risk
+by itself: the band axis measures the queue and not the window, and two
+decisions at the same backlog differ by how much of the capture's own window
+remains and how long the sequence about to run is.  This is the answer to the
+question the band invites, and `4_5_rq4_pacing.tex` states it in one sentence so
+a reviewer does not have to ask.
+
+  WHY THE BACKLOG WAS STILL ABOVE HALF THE BUDGET WITH THE SEQUENCE ALREADY
+DEMOTED, which is the obvious follow-up and has a mechanical answer.  The queue
+is deep, not expensive: on the Lv5-6 unpaced decisions the median queue depth is
+4 and the backlog works out to 899 ms per queued Draft Sequence, so four cheap
+sequences already fill 51% of the budget, and their own realized durations are
+716 ms at the median.  Nor was the demotion fresh -- the unbroken run of demoted
+captures before these decisions is 10 at the median and reaches 20.  The reason
+a long-demoted queue still does not empty is that demotion parks the offered
+load at unity instead of pushing it below: at Lv5-6 the median Draft Sequence
+runs 1,091 ms against a 685 ms capture interval when nothing is demoted, a ratio
+of 1.59, and 697 ms against 704 ms once demoted, a ratio of 0.99.  Measured
+directly on the trace, queued Draft work moves +3.48 points of the budget per
+capture while not demoted and -0.69 while demoted.  So admission stops the
+growth and has no surplus left to drain what earlier captures already put in the
+queue; the level simply holds wherever it stood when the demotion took hold.
+(Both ratios are medians of the two quantities, not a ratio of sums, so quote
+them as descriptive.  A third contributor is smaller and applies to 32.1% of
+these decisions: the demotion streak was shorter than the queue depth, so part
+of the queue was still pre-demotion work.)  This is the same plateau the
+withdrawn figure showed, seen from its cause, and it is why a high but static
+backlog of cheap work passes the pacing test while a growing backlog of full
+sequences does not.
+
+  THE WEAK PART, and it must not be dropped: the backlog estimate ran below
+measurement on 78.9% of the 114, median -290 ms, against 53.3% for the paced
+group.  Substituting the measured backlog moves 28 of the 114 across the
+trigger.  Those 28 finished at 13.8% at the median with a 0.24% minimum, while
+the other 86 finished at 20.4% with a 3.29% minimum -- so a quarter of this
+group was carried by an estimator undershoot rather than by a correct reading,
+and it is the same undershoot that the two rows shared with the `Slack < 5%`
+diagnosis below (S26 run 17 capture 22 and run 19 capture 30) sit inside.
+
+THE SIX UNPACED CAPTURES OF THE `Slack < 5%` ROW, diagnosed 2026-09-08
+because the 4.3% complement is the first thing a reader asks about panel (b).
+All six are S26, all carry `pacingObservationSource = RECORDED_DECISION`, and
+all six recorded `deadlineDeficitMs <= 0`: the controller's own test said no
+delay was called for, so none of them is missing data or a queue-drain
+bootstrap.  Substituting the measured backlog for the controller's estimate
+moves only one of the six across the trigger, so this group is NOT mainly an
+estimator miss -- unlike the unpaced part of the `>= 50` band, where the
+substitution moves 28 of 114.  WHAT KEPT THE FIVE INSIDE THE DEADLINE WAS ADMISSION, not luck.  Admission
+recommended skipping an optional stage on five of the six, the executed sequence
+dropped to single-frame or to the mandatory floor on those five, and the time
+that skip saved -- 220 to 377 ms, estimated against the median full-sequence
+duration of the same device at the same overheat level -- exceeds every one of
+their realized margins, which run 17 to 230 ms.  The estimate is a counterfactual
+against a population median and not a measurement of that capture's own
+alternative, so state it as an estimate.  The sixth capture, S26 run 11 capture
+14, is the untouched decision the prose already names: it executed both optional
+stages at overheat level 6 under no delay, drew the longest Draft Sequence of its
+run at 1,072 ms against 840-972 ms for its neighbours, and finished with 11 ms
+left.  Nothing carried it.  Pacing had applied 654, 663 and 288 ms on the three
+captures before it and admission demoted from the capture after it and stayed
+demoted, but the capture itself passed through both modules untouched -- which is
+the honest limit of the coverage claim and the reason the prose reports it.  On the axis that actually consumed their budget they are
+indistinguishable from the 133 paced captures of the same row: 84.5-92.3% of
+the budget was already spent before their own Draft Sequence started, against
+79-91% (P5-P95) for the paced ones, and their own Draft Sequences ran 450-1,072
+ms.  The capture after each of the five with a successor finished at 5.7-16.9%
+of the budget, median 8.8%, against a median 4.9% and a minimum 0.20% after a
+paced thin decision.
+
+  ONE ATTRIBUTION QUESTION IS OPEN AND THE PROSE MUST NOT OUTRUN IT.  Panel (b)
+is currently worded as coverage of the captures that finished thin, which reads
+as pacing having acted on those captures.  Two workbook facts pull against each
+other on that point.  `delayAppliesBeforeShotIndex` equals the row's own shot
+index and ReplayNotes calls the persisted decision "the delay on the incoming
+transition to shot i", which makes the delay precede that capture.  But
+`timeToDeadlineMs` on a row equals that row's own capture's remaining window at
+the decision -- verified over the 12MP population, median difference 0 ms
+against `timeoutDeadlineUptimeMs - decisionUptimeMs` -- and the decision sits
+about 1,000 ms INSIDE that window at the median, which makes the capture
+already committed when the decision is taken and points the delay at the next
+capture opportunity, as AGENTS.md states for \(d_i\) and \(\delta_{i+1}\).
+Both cannot hold.  Resolve it against `CaptureAvailablePacer.decideDelay` and
+the release path in the `ML` clone, record the commit, and only then let the
+prose say which capture a delay protects.  Until it is resolved, "pacing was
+acting" is the safe wording and "pacing protected that capture" is not.
+
+OVERLAP COLUMN REMOVED 2026-09-08, at the author's direction, and the reason is
+redundancy rather than an inconvenient value.  `sum min(d_i,B_i) / sum d_i` is
+capped at 100% by construction and can only detect a delay that outran the queue
+it was waiting on, so it is a one-sided check; and once the neighbouring column
+shows the median d_i/B_i at 8-29%, most delays are far inside B_i and a high
+overlap largely follows.  Its unique content on this population is 2 of 1,057
+paced decisions and 2.0 s of 453.3 s of applied delay, 0.4%.  That is a clause,
+not a column, and `4_5_rq4_pacing.tex` now carries it as one.  Two consequences
+to keep: `overlapPercent` stays in `data/rq4/pressure_response.csv` and
+`thin_margin_coverage.csv`, so nothing has to be recomputed to restore the
+column; and the work-conservation claim -- that pacing does not idle the worker
+to buy margin -- now rests on that prose clause alone, so do not delete it while
+trimming.  If a reviewer doubts the metric could ever fall, the 24MP `<10` band
+answers it at 57.9% over 8 paced decisions, where a 162 ms median delay met a
+527 ms median backlog; that row is in the CSV and is not printed.
+
+HEADERS AND CAPTION SETTLED 2026-09-08 after three passes, all at the author's
+direction, and the end state is deliberately terse.  The columns are `Group`,
+`n`, `Pacing activated % (n)` and `d/B P50`; the caption is the one line "RQ4
+Pacing activation and delay size."; and the `\parbox` note that had carried the
+definitions is gone.  The intermediate pass, which spelled the last two columns
+out as `Delay / queued work P50` and `Delay elapsed with work outstanding` over
+three header lines with the algebra in a note, is recorded here because it was
+the right shape for a five-column table and would be again if a column returns.
+
+  THE SYMBOLS ARE UNINDEXED IN THE TABLE AND INDEXED IN THE PROSE, and that
+split is intentional rather than sloppy: `d/B` and `B` name the ratio and the
+quantity in general, while `4_5_rq4_pacing.tex` writes \(d_i\) and \(B_i\)
+because it describes one decision.  This is the idiom `tab_rq4_pacing_sizing`
+already used for \(T\) against \(T_i\), and AGENTS.md fixes it for the pacing
+subsection.  The prose is where both symbols are bound for the reader, in the
+setup sentence, so that paragraph cannot be dropped without leaving `d/B`
+undefined.
+
+  THE PACED DENOMINATOR NOW LIVES IN THE PROSE.  `d/B` P50 is taken over the
+decisions that paced, not over the group, so its denominator is the count in
+the `Pacing activated` cell beside it.  The removed note said so; the setup
+sentence of `4_5_rq4_pacing.tex` now says it instead.  Do not delete that
+sentence while trimming, and do not let a reader infer that n is the
+denominator.
+
+  LAYOUT REBUILT 2026-09-08.  The table sets `tabcolsep` to 8pt with a 62pt
+`Group` column and takes its natural width, centered, a little under
+`columnwidth`.  It does NOT use `fittabcolsep`, which every other table in the
+paper does: with four columns of short content that macro had roughly 100pt of
+slack to spread over eight column gaps, and because three of the four columns
+are numeric the slack landed between the numbers and scattered them.  The 8pt
+`tabcolsep` and the slightly wide `Group` column are the compromise that widens
+the table without reopening that.
+
+  IT DOES NOT USE `resizebox` EITHER, AND THAT WAS TRIED AND REJECTED THE SAME
+DAY.  Wrapping the tabular in `resizebox{0.90columnwidth}{!}` does widen it, but
+`resizebox` magnifies the type and the rules along with everything else, so the
+target width silently becomes the effective font size and the declared
+scriptsize stops describing what prints: 0.90 rendered about 1.2x the
+surrounding tables and a full `columnwidth` about 1.33x, which reads as a
+mistake beside `tab_rq3_admission_quality` directly above it on the page.  The
+author's requirement is that RQ4 match RQ1--RQ3 in type size, so the only
+legitimate levers on this table's width are `tabcolsep` and the `Group` column.
+Do not reach for `resizebox` here.
+
+  The underlying constraint, for whoever revisits this: four columns of seven
+short rows cannot fill `columnwidth` at true scriptsize.  If a future revision
+restores the 24MP block or adds a column, the content itself fills the width and
+`fittabcolsep` becomes the better choice again.
+
+  THE PANEL LABELS CARRY THE TIMESTAMP, AND THAT IS THEIR JOB.  They read
+"(a) Draft backlog B at the decision" and "(b) Slack at Draft Sequence
+completion", settled 2026-09-08 after the author reported that the previous pair
+-- "(a) Queued Draft work B" and "(b) Realized deadline margin (Slack)" -- did
+not land.  The diagnosis was that both named a quantity and neither named a
+moment, while the moment is the whole difference between the panels: the same
+3,050 decisions are cut by an input the controller read and by an outcome
+measured after it acted.  The `at the decision` / `at ... completion` pair is
+therefore load-bearing, not padding, and it is what lets a reader see why panel
+(b) is the half that carries independent content.  Three alternatives were
+offered and rejected: a role-first pair ("Decision state:" / "Capture
+outcome:"), which was blunter but stiff; a plain-English pair ("Draft work
+already queued when pacing decided"), too long for the column; and correcting
+only panel (a), which would have left the outcome panel silent about its own
+timing.
+
+  `backlog`, NOT `queued Draft work`, and this correction matters beyond the
+table.  The first RQ4 draft called the quantity "queued Draft work" throughout
+the table, the section prose and the withdrawn figure's axis.  It is a defensible
+phrase under the AGENTS.md rule that `Draft work` names an amount, but it was a
+SECOND NAME FOR A REFERENT SECTION 3.4 ALREADY PRINTS AS `backlog` -- seven times,
+including the sentence that introduces the delay and the `Provisional backlog
+accounting` run-in heading, with the estimate itself labelled `eq:backlog`.  The
+table reports on that equation, so it has to use that equation's word.  The
+adjective survives because both pipelines are in scope in this paper and a bare
+`backlog` in a standalone table could be read as the post-processing queue; the
+case study's legend prints bare `Backlog` only because its neighbouring curve
+disambiguates it.  `4_5_rq4_pacing.tex` and the RQ4 question in
+`_4_experiments.tex` were converted in the same revision, and the one file that
+still said `queued Draft work` -- the withdrawn episode figure -- was deleted
+later the same day, so no file carries the phrase now.
+
+  The hat still separates the two readings of the same word: Section 3.4's
+\(\hat B\) is the controller's online estimate and this table's \(B\) is the
+measured reconstruction.  That is exactly why the table must never print hatted
+symbols -- the entry above says so -- and it is why the label says `at the
+decision` rather than naming the estimator.
+
+  Both panels measure percentages of the same Capture Timeout budget, so the
+unit is stated once in the `Group (% of budget)` header rather than in either
+label or on any row.  If a future column is added whose groups are not
+percentages of the budget, that arrangement breaks and the unit has to move back
+into the labels.
+
+  THE `Pacing activated` CELLS ARE PADDED BY HAND AND THE PADDING IS LOAD-BEARING.
+The column is `r`, so a cell shorter than its neighbours drifts left unless
+phantoms make every cell the same width.  Two phantoms are in use: a leading
+`\phantom{0}` on any percentage below 10, and a trailing phantom sized to the
+widest count in the table, currently `(410)` and `(574)` at three digits.  The
+`< 10` row has no count at all and carries `\phantom{(000)}`; it printed
+`\phantom{0(000)}` until 2026-09-08, one digit too wide, which pushed its `0.0%`
+visibly out of the column.  Re-derive both phantoms whenever a row is added, a
+count crosses a digit boundary, or the table is rescoped -- restoring the 24MP
+block would do all three.
+
+  THE UNIT LIVES IN THE PANEL LABEL, NOT ON THE ROWS, in both panels, fixed
+2026-09-08 after panel (a) printed bare ranges while panel (b) carried a percent
+sign on every row.  Each label now names the quantity, binds its short name, and
+states the unit once -- "queued Draft work \(B\), % of budget" and "realized
+deadline margin (Slack), % of budget" -- so the rows are bare numeric ranges in
+both.  The `(Slack)` binding is what lets the rows drop the word: `Slack` is the
+name RQ1 and the case study already print for that quantity, so it has to appear
+somewhere in the exhibit even though the label prefers the descriptive phrase.
+Note that `< 10` now appears in both panels meaning different things; the labels
+disambiguate, and that is the reason neither may be shortened away.
+
+  PANEL (b) RUNS WIDEST-FIRST -- `< 20%`, `< 10%`, `< 5%` -- so the coverage
+figure rises down the column, 85.4 -> 92.3 -> 95.7, and the tightest class lands
+last where the eye stops.  ONE VALUE IS BOLD PER PANEL and it is the panel's
+headline: 83.4% on the heaviest queued-Draft-work band in (a), 95.7% on the
+tightest margin class in (b).  Bolding every coverage figure, which the first
+draft did, flattens the emphasis and makes the panel read as three equal claims
+rather than one claim with two supporting rows.
+
+HEADER SIMPLIFIED 2026-09-08, at the author's direction.  The Overlap column
+first printed its definition, `sum min(d_i,B_i) / sum d_i`, in the header, on
+the precedent `tab_rq4_pacing_sizing` set for its own overlap column: the
+formula is what distinguishes this ratio of sums from the per-decision
+`d_i/B_i` P50 beside it.  It was too heavy for a two-line header and made the
+column the widest in the table, so the header now reads `Overlap (% of delay)`
+and the distinction is recorded here instead.  KEEP THE DISTINCTION LIVE: if
+prose ever describes the two columns together, it must not call both a median
+or both a share, and it must not average the Overlap column across bands.
+
+ROW ADDED 2026-09-08: panel (b) prints a third threshold, `Slack < 20%`, at the
+author's request.  The three rows are nested, not disjoint -- the 139 captures
+under 5% are inside the 392 under 10% and the 869 under 20% -- so their counts
+must never be summed.  The row earns its place by showing the coverage falling
+gently as the class widens, 95.7 -> 92.3 -> 85.4, while `d_i/B_i` barely moves,
+11.2 -> 10.7 -> 10.1: the coverage comes from engaging on those captures, not
+from spending more delay on them.
+
+THE MINIMUM REALIZED MARGIN IS NOT IN THIS TABLE, and that is deliberate, on the
+same reasoning AGENTS.md records for the superseded exhibit: a bare minimum
+column reads as "no timeout was luck".  The prose owns it, with the saturation
+context that explains it.  On the 12MP population the table prints, 11 of
+3,050 decisions finished under 1% of the budget, the tightest keeping 0.16%
+(11 ms); all 11 sat at 27-71% queued Draft work with a 28-72% queue wait at
+overheat level 4 or above; 10 of the 11 met pacing, a skipped optional stage,
+or both.  On the one exception -- S26 run 11, capture 14 -- pacing had applied
+654, 663 and 288 ms on the three preceding captures and admission skipped an
+optional stage from the next capture onward.  Pooling 24MP back in makes it 18
+of 6,119 with a 0.06% (4 ms) tightest; do not mix the two figures.  Never
+upgrade any of this into a bounded-margin claim.
+
+Source:
+
+  data/S26_Ultra/SM-S948U_metrics_12MP_normal_0906.xlsx
+  data/S26_Ultra/SM-S948U_metrics_24MP_memory_0906.xlsx
+  data/S26/SM-S942B_metrics_12MP_normal_0906.xlsx
+  data/S26/SM-S942B_metrics_24MP_memory_0829.xlsx
+
+generated by `scripts/rq4_pacing_sizing_metrics.py` into
+`data/rq4/pressure_response.csv` and `data/rq4/thin_margin_coverage.csv`.
+
+NO `.tex` FILE READS THOSE CSVs, and that is worth stating because
+`fig_casestudy_12mp` works the opposite way: it pulls its series from
+`data/case_study/*.csv` at build time, so those files are build inputs and
+deleting them breaks the paper.  This table's values are typed into the `.tex`,
+so `data/rq4/` can be deleted and the paper still compiles -- verified
+2026-09-08.  The two CSVs are kept anyway, at 1.3 KB each, as the provenance of
+the printed cells: one row per printed row, so a coauthor can diff a cell
+against its source without a pandas run over 30 MB of workbooks.  KEEP THEM IN
+STEP: if a cell is edited by hand and the script is not rerun, nothing detects
+the disagreement.
+
+The script's other two frames were dropped from the repository the same day.
+The capture-aligned episode frame died with the figure that read it.  The
+per-run peak frame, 232 rows at 17 KB, backed only the three numbers the prose
+quotes -- median peak backlog 59.4% of the budget, and above 80% in three of the
+116 runs -- and the script prints those to stdout, so carrying the frame bought
+nothing.
+Unlike the superseded RQ4 exhibits, whose workbooks were external, these four
+are committed, so the table is reproducible from the repository alone.
+
+Population.  RQ4 IS 12MP NORMAL ONLY as of 2026-09-08, at the author's
+direction: 3,050 decisions over 116 runs, pooled across the two devices, and
+`4_5_rq4_pacing.tex` quotes those two counts rather than the whole collection's
+6,119 and 232.  The script still analyzes both conditions and still emits the
+24MP rows to `data/rq4/pressure_response.csv`, so restoring a second block is a
+matter of copying rows out of the CSV, not of re-deriving anything -- but a
+restored 24MP block also changes the thin-margin tail the prose carries, which
+is scoped to 12MP.  `scripts/rq4_pacing_sizing_metrics.py` prints that tail
+per condition for exactly this reason.
+
+Three exclusions, all recorded in the script:
+runs whose `runStatus` is CAPTURE_TIMEOUT (9 runs; the author confirmed on
+2026-09-08 that they are operator test captures, not evaluation runs), rows
+without a recorded pacing decision, and rows without a reconstructed backlog.
+The last two are per decision, not per run.  No analyzed decision timed out.
+
+The two devices are POOLED per condition, unlike RQ1 and RQ2, which separate
+them.  The ordering holds on each device read alone -- at 12MP the lowest band
+activates on 0.0% of decisions on both -- and the per-device split is one
+`groupby` away in the script if a reviewer asks for it.
+
+
+THE FILE NAME AND THE LABEL WERE REUSED 2026-09-08, at the author's request,
+and a reader of `git log` has to be warned: `tables/tab_rq4_pacing_sizing.tex`
+and `\label{tab:rq4_pacing_sizing}` now hold a DIFFERENT TABLE from the one
+they held before that date.  The file was first drafted under the name
+`tab_rq4_pressure_response`; the earlier occupant of this name -- the
+reservation-to-$T$ band table, itself the third RQ4 exhibit after
+`tab_rq4_pacing_summary` and `tab_rq4_pacing_selectivity` -- was deleted in the
+same revision, as was the drafted-and-withdrawn `fig_rq4_pressure_episode`.
+The two older superseded tables were already gone from disk before this
+revision, so their entries below document files that no longer exist and are
+kept only for the supersession chain.
+
+WHY THE NAME NO LONGER DESCRIBES THE CONTENT, AND WHY THAT IS ACCEPTED.  This
+table does not report delay *sizing*: that framing is exactly what the RQ4
+reframing rejected, because every sizing exhibit measured $d$ against a
+quantity derived from the pacing equation itself.  The name was kept anyway so
+that the file path and cross-reference stay stable for collaborators and for
+Overleaf.  Read the name as an address, not as a description; the caption
+"RQ4 Pacing activation and delay size" is what describes the exhibit.  Do not
+"restore" sizing content on the strength of the file name.
 
 ## tab_rq4_pacing_selectivity
 
