@@ -16,7 +16,7 @@ We introduce the \emph{Budget-Aware Draft Controller} to enable the Draft Sequen
 The controller coordinates optional-stage execution on the single Draft worker with capture arrivals, as shown in Figure~\ref{fig:controller-overview}.
 \emph{Remaining-Sequence Admission} runs immediately before an optional stage in the active Draft Sequence.
 It compares the estimated time for the remaining sequence with the capture's remaining timeout budget to decide whether to execute the stage.
-Skipping a stage reduces the remaining processing time, but cannot recover time already spent waiting.
+Skipping a stage saves processing time but cannot recover elapsed waiting time.
 
 \emph{Capture-Availability Pacing} controls delivery of \texttt{captureAvailable}, which exposes the next capture opportunity to the application.
 It uses estimated worker occupancy and the remaining deadline window to decide whether to deliver the callback immediately or delay it.
@@ -30,4 +30,4 @@ Each accepted capture must produce its Draft image before its deadline.
 Within this constraint, the controller prioritizes user-perceived responsiveness.
 Capture delay lengthens the shot-to-shot interval and cannot be recovered.
 The fidelity cost of a skipped stage, however, ends when the final image replaces the Draft image.
-The controller therefore implements a deadline-constrained, responsiveness-dominant trade-off.
+The controller adopts a deadline-constrained, responsiveness-dominant trade-off.
