@@ -150,6 +150,22 @@ missing timeout means none was observed within 30 captures. These are limits
 of the evidence, not stylistic preferences. Implementation verification and
 source distinctions for this rewrite are recorded in `docs/implementation-map.md`.
 
+## Applying the model to Section 3.1
+
+The author's 2026-09-15 review applies the explanatory principles above to
+`3_1_overview.tex`; it does not make the professor's background subsection a
+template for methodology. Explain each module's operation and limitation
+together, once. Keep the control objective focused on the deadline constraint
+and the reason responsiveness takes priority, rather than repeating the two
+decision rules or the background's timeout-clock explanation.
+
+Describe the connection between the modules through its effect: pacing takes
+admission decisions into account when estimating upcoming Draft Sequence
+durations. Leave shared-state mechanics and duration-reserve adjustment to
+the pacing subsection, and estimation details to the workload-model
+subsection. Preserve the difference in recoverability between capture delay
+and skipped-stage fidelity cost when shortening the objective.
+
 ## Review questions
 
 - Is the subject understandable before its importance or limitation is asserted?
