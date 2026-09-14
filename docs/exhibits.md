@@ -1265,7 +1265,7 @@ the decision -- verified over the 12MP population, median difference 0 ms
 against `timeoutDeadlineUptimeMs - decisionUptimeMs` -- and the decision sits
 about 1,000 ms INSIDE that window at the median, which makes the capture
 already committed when the decision is taken and points the delay at the next
-capture opportunity, as AGENTS.md states for \(d_i\) and \(\delta_{i+1}\).
+capture opportunity, as AGENTS.md specifies for the callback delay \(d_i\).
 Both cannot hold.  Resolve it against `CaptureAvailablePacer.decideDelay` and
 the release path in the `ML` clone, record the commit, and only then let the
 prose say which capture a delay protects.  Until it is resolved, "pacing was
@@ -2954,9 +2954,9 @@ curve.  `Duration` reads as elapsed processing time, which Slack is not: it
 is `deadline - draftEnd`, time deliberately left unspent, so the word
 reclassifies the safety quantity as a cost.  `Interval` is correct for both
 and is the word the implementation note uses for backlog, but on a
-per-capture ordinate it collides with the completion-to-completion interval
-$\pi_i$ of Section 3.1 and reads as the gap between shots.  The plain
-normalization is true of both curves and asserts no genus; the caption is
+per-capture ordinate it can read as the gap between successive Draft Sequence
+completions.  The plain normalization is true of both curves and asserts no
+genus; the caption is
 where the reader is told the pair does not add up, and it is also where a
 reviewer looks for that qualification.
 

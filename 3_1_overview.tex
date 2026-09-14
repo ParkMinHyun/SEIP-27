@@ -20,23 +20,15 @@ It compares the estimated time for the remaining sequence with the capture's rem
 It uses estimated worker occupancy and the remaining deadline window to decide whether to deliver the callback immediately or delay it.
 
 Both modules learn duration estimates from the per-stage and sequence-level measurements of completed draft sequences.
-Their shared runtime state connects the two decisions: when admission removes optional stages, pacing adjusts its duration reserve to reflect the stages still eligible for execution.
+Their shared runtime state connects the two decisions: when admission skips optional stages, pacing adjusts its duration reserve to reflect the stages still eligible for execution.
 
 \smallskip\noindent\textbf{Control objective.}
 Capture Timeout is a hard product constraint on enabling optional stages.
-Each accepted capture starts its own deadline clock, but its draft sequence may wait behind earlier captures on the shared worker.
-Let \(\mu_i\) denote the time left before capture \(i\)'s deadline when its draft sequence completes.
-For successive captures, let \(\delta_i\) be the interval between requests \(i-1\) and \(i\), and \(\pi_i\) the interval between their draft sequence completions.
-With a fixed timeout window,
-\begin{equation}
-  \mu_i=\mu_{i-1}+\delta_i-\pi_i .
-  \label{eq:margin-recursion}
-\end{equation}
-When completions fall farther apart than requests, \(\pi_i>\delta_i\), and successive captures lose deadline margin.
-Admission can shorten \(\pi_i\) by skipping optional stages, but it cannot recover time already spent waiting.
-Pacing can lengthen \(\delta_{i+1}\) by delaying the next capture opportunity, but it cannot change work already in progress.
-Equation~\ref{eq:margin-recursion} is an accounting identity, not a control law.
-The controller does not maintain \(\mu_i\) as state; at each decision, it compares a processing-time forecast with the live remaining timeout budget.
+Each accepted capture starts its own deadline clock, but its Draft Sequence may wait behind earlier captures on the shared worker.
+This waiting consumes the budget available for the remaining stages.
+Admission can reduce the remaining processing time by skipping optional stages, but it cannot recover time already spent waiting.
+Pacing can delay the next capture opportunity to let the worker progress, but it cannot change work already in progress.
+At each decision, the controller compares a processing-time forecast with the live remaining timeout budget.
 
 Within this deadline constraint, the controller prioritizes user-perceived responsiveness.
 Capture delay lengthens the shot-to-shot interval and cannot be recovered, whereas the fidelity cost of a skipped stage ends when the final image replaces the draft image.
