@@ -62,12 +62,31 @@ in `docs/writing-style.md`.
   evidence collection, as documented in `docs/rq-evidence.md`; no new statistics
   were derived for this rewrite.
 
+## Section 3.2 wording verification (2026-09-15)
+
+The wording review used the clean local implementation at
+`27d296795eab702ff3c4f38da64ac8720cd082cf`, without synchronization.
+`DraftSequenceExecutionPredictor.kt` verifies the update order: baseline
+observations are divided by the shared factor available before the update,
+and the new factor uses observed-to-baseline ratios computed from the
+baselines available before the update. Only existing positive baselines
+contribute ratios; without any ratios, the shared factor remains unchanged.
+
+`external/draftSaving/SavingDraftImageTaskManager.java` retains the predictor
+across queue drains while resetting admission and pacing state. Section 3.2
+therefore describes reuse of learned baselines and the shared factor. The
+previous statement that histories are discarded only after application close
+and completion of all queued Draft Sequences was removed: the accessible
+manager does not explicitly clear the predictor, and its shutdown can stop
+waiting before all queued work completes. The full application-close path
+is not present in this implementation excerpt.
+
 ## Section 3 sources
 
 | Subsection | Sources | What they establish |
 |---|---|---|
 | 3.1 overview (`sec:objective`) | `DraftSequenceExecutionPredictor.kt`, `CaptureAvailablePacer.kt`, `DraftSequenceExecutionProfiler.kt` (`completeDraftSequenceExecution`) | The two modules, that neither passes numeric state to the other, and that both models are updated from measured durations at Draft Sequence completion |
-| 3.2 workload model (`sec:model`) | `DraftSequenceExecutionPredictor.kt`, `WorkloadKey.kt`, `WorkloadSequenceKey.kt`, `RecencyWeightedDistribution.kt` | Key taxonomy, cumulative base duration, the shared condition factor and its `0.90` decay, cold-start handling |
+| 3.2 workload model (`sec:model`) | `DraftSequenceExecutionPredictor.kt`, `WorkloadKey.kt`, `WorkloadSequenceKey.kt` | Key taxonomy, cumulative base duration, the shared condition factor updated from the latest sequence's median ratio, cold-start handling; reverified in the 2026-09-15 note above |
 | 3.3 admission (`sec:admission`) | `DraftSequenceExecutionPredictor.kt` (residual factor, Kish selector, watchdog), `DraftSequenceAdmissionPolicy.kt` (sticky group demotion), `DraftSequenceExecutionProfiler.kt` (where a decision is taken) | Equations for the residual factor, upper estimate, admission test, and watchdog window |
 | 3.4 pacing (`sec:pacing`) | `CaptureAvailablePacer.kt`, `CaptureAvailablePacingSession.kt` | Backlog clock and its rebase, the reserve refresh, the delay formula and its `2C` horizon |
 | 3.5 integration (`sec:implementation`) | `external/draftSaving/SavingDraftImageTaskManager.java` (ownership, single-thread executor, queue-drain boundary), `external/apm/policy/CaptureAvailableApmPolicy.java` and `external/apm/util/SingleThreadDelayedScheduler.java` (callback release), `external/PhotoMakerBase.java` (fail-open and immediate callback paths) | Where the controller attaches, what it costs, which paths bypass it |

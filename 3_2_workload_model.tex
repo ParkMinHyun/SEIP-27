@@ -1,16 +1,19 @@
 \subsection{Workload Model and Online Duration Estimation}
 \label{sec:model}
-A draft sequence's duration depends on its stages and how fast they execute under current conditions.
-The controller therefore learns stage durations from completed draft sequences and combines them according to the sequence being considered.
+A Draft Sequence's duration depends on its stages and how fast they execute under current conditions.
+The controller therefore learns stage durations from completed Draft Sequences and combines them according to the sequence being considered.
 
 \smallskip\noindent\textbf{Modeled workload sequence.}
-The controller represents capture \(i\)'s draft sequence as \(\mathcal{K}_i=(k_1,\ldots,k_m)\), where each workload key \(k\) identifies a processing stage and its configuration.
+Each combination of a processing stage and its configuration is identified by a workload key \(k\).
+Capture \(i\)'s Draft Sequence is represented by the ordered keys \(\mathcal{K}_i=(k_1,\ldots,k_m)\).
 At position \(j\), the remaining sequence is \(\mathcal{K}_{i,j}=(k_j,\ldots,k_m)\).
-Its terminal key covers mandatory processing from the start of encoding until the draft image is saved.
-Including this terminal interval lets admission account for the time needed to produce the image after the optional stages finish.
+The last key covers mandatory processing from encoding through Draft image saving.
+Including this processing lets admission account for the time needed to produce the image after the optional stages finish.
 
 \smallskip\noindent\textbf{Online point estimation.}
-For any modeled sequence \(\mathcal K\), the controller sums the predicted per-key durations:
+The controller maintains a baseline duration \(\hat b(k)\) for each key to represent its long-term processing cost.
+A shared factor \(\gamma\) adjusts these baselines to recent execution conditions.
+Multiplying the two gives the predicted duration \(\hat p(k)\), and summing these predictions gives the duration estimate for a modeled sequence \(\mathcal K\):
 \begin{equation}
   \hat P(\mathcal{K})
   =\sum_{k\in\mathcal{K}}\hat p(k),
@@ -18,11 +21,13 @@ For any modeled sequence \(\mathcal K\), the controller sums the predicted per-k
   \hat p(k)=\hat b(k)\,\gamma .
   \label{eq:point-estimate}
 \end{equation}
-The baseline \(\hat b(k)\) represents the stage's long-term processing cost, while the shared factor \(\gamma\) adjusts that cost to recent execution conditions.
-At draft sequence completion, the controller updates each baseline with a cumulative average of condition-normalized durations.
-It computes \(\gamma\) as the median of measured-to-baseline duration ratios across the stages in the most recently completed sequence.
-The median limits the influence of isolated stage spikes, while the shared factor carries broader changes in execution speed into subsequent estimates.
+At Draft Sequence completion, the controller divides each observed stage duration by the shared factor available before the update to account for the previously estimated execution conditions.
+It incorporates this adjusted duration into the key's cumulative average to update \(\hat b(k)\).
 
-An unobserved workload key has a zero estimate until its first duration is recorded at draft sequence completion.
+To update \(\gamma\), the controller divides each observed duration by the corresponding baseline available before the update and takes the median of these ratios.
+Only keys with an existing baseline contribute; if none are available, \(\gamma\) remains unchanged.
+The median limits the influence of isolated stage slowdowns, while the shared factor carries recent changes in execution speed into subsequent estimates.
+
+An unobserved key has a zero estimate until its first duration is recorded at Draft Sequence completion.
 Section~\ref{sec:admission} explains how admission obtains these initial observations.
-Learned histories survive queue drains and are discarded only after the camera application closes and its queued draft sequences finish.
+The learned baselines and shared factor are retained when the queue drains, so subsequent captures can reuse the estimates.
