@@ -14,25 +14,18 @@ Ambient heat, charging, or preceding device workloads can also raise the overhea
 If a session starts at this level, the guard skips optional stages even for its first capture.
 
 \smallskip\noindent\textbf{Motivating experiment.}
-To examine when the extended draft sequence can complete within its deadline, we evaluated two Portrait configurations.
-The optional stages comprise the lightweight multi-frame draft stage, denoted by \(M\), and the deployed single-frame stages, collectively denoted by \(S\).
-We compared \(M\) alone with \(M+S\), both followed by the same mandatory encoding and saving stages.
-We selected the Galaxy S26 Ultra because it lacks the additional parallel-capture restrictions used by other flagship variants.
-
-With the thermal guard bypassed, we ran ten 30-capture trials for each combination of starting overheat level (0--6), resolution (12MP or 24MP), memory condition, and draft sequence configuration.
-An Android Debug Bridge (ADB) loop requested each subsequent capture as soon as the application permitted it.
-The motivating level-4 failure occurred near the 20th consecutive capture with 12 draft sequences pending.
-We therefore extended each trial to 30 captures to exercise the draft pipeline beyond that observed failure point.
-For the memory-pressure condition, we ran the camera alongside AnTuTu Benchmark~11.1.4's memory-stress workload.
-Table~\ref{tab:timeout_index} reports the earliest timeout capture index across the ten trials for each condition.
+We compared two Portrait configurations on the Galaxy S26 Ultra with the thermal guard bypassed.
+The optional stages are the lightweight multi-frame Draft stage (\(M\)) and the deployed single-frame stages (collectively \(S\)).
+Both \(M\) alone and \(M+S\) retain the same mandatory encoding and saving stages.
+For each condition in Table~\ref{tab:timeout_index}, we ran ten trials of up to 30 consecutive captures.
+We chose 30 captures to extend testing beyond the earlier level-4 validation failure near the 20th consecutive capture.
+The table reports the earliest timeout capture index across the ten trials, grouped by starting overheat level; a dash denotes no timeout within 30 captures.
 
 \input{tables/tab_timeout_index.tex}
 
 With \(M+S\), timeouts occurred across the full range of starting overheat levels.
-Retaining \(M\) while omitting \(S\) delayed the earliest observed timeout in every affected condition or yielded no timeout within 30 captures.
-Under normal 12MP capture starting at level 4, however, \(M\) alone still timed out: the earliest timeout moved from capture 8 with \(M+S\) to capture 16.
-Starting lower did not necessarily postpone failure: the earliest \(M+S\) timeout occurred at capture 5 under memory-pressure 24MP capture starting at level 3.
-All ten normal 12MP \(M+S\) trials starting at level 4 completed the first seven captures, whereas the guard would skip \(M\) at that starting level.
+Even on the same device, the earliest timeout varied with resolution, memory pressure, and draft sequence configuration.
+Using \(M\) alone delayed the earliest timeout or resulted in no observed timeout within 30 captures.
 
 \smallskip\noindent\textbf{Need for runtime control.}
 The thermal cutoff does not capture how earlier draft sequences consume a later capture's time budget.

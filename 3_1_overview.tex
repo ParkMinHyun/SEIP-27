@@ -10,24 +10,20 @@
   \caption{Overview of the Budget-Aware Draft Controller.}
   \label{fig:controller-overview}
 \end{figure*}
-We introduce the \emph{Budget-Aware Draft Controller} to enable the Draft Sequence's lightweight multi-frame composition under parallel capture while meeting each capture's deadline.
+We introduce the \emph{Budget-Aware Draft Controller} to enable the draft sequence's lightweight multi-frame composition under parallel capture while meeting each capture's deadline.
 
 \smallskip\noindent\textbf{Controller architecture.}
-The controller coordinates optional-stage execution on the single Draft worker with capture arrivals, as shown in Figure~\ref{fig:controller-overview}.
-\emph{Remaining-Sequence Admission} runs immediately before an optional stage in the active Draft Sequence.
+The controller coordinates optional-stage execution on the single draft worker with capture arrivals, as shown in Figure~\ref{fig:controller-overview}.
+\emph{Remaining-Sequence Admission} runs immediately before an optional stage in the active draft sequence.
 It compares the estimated time for the remaining sequence with the capture's remaining timeout budget to decide whether to execute the stage.
-Skipping a stage saves processing time but cannot recover elapsed waiting time.
-
 \emph{Capture-Availability Pacing} controls delivery of \texttt{captureAvailable}, which exposes the next capture opportunity to the application.
 It uses estimated worker occupancy and the remaining deadline window to decide whether to deliver the callback immediately or delay it.
-A delay lets the worker progress before another capture arrives, but cannot change work already in progress.
-
-Both modules use duration estimates learned from completed Draft Sequences.
-Pacing accounts for admission decisions when estimating how long upcoming Draft Sequences will take.
+Both modules use duration estimates learned from completed draft sequences.
+Pacing accounts for admission decisions when estimating how long upcoming draft sequences will take.
 
 \smallskip\noindent\textbf{Control objective.}
-Each accepted capture must produce its Draft image before its deadline.
+Each accepted capture must produce its draft image before its deadline.
 Within this constraint, the controller prioritizes user-perceived responsiveness.
 Capture delay lengthens the shot-to-shot interval and cannot be recovered.
-The fidelity cost of a skipped stage, however, ends when the final image replaces the Draft image.
+The fidelity cost of a skipped stage, however, ends when the final image replaces the draft image.
 The controller adopts a deadline-constrained, responsiveness-dominant trade-off.

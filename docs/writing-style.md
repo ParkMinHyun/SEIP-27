@@ -154,10 +154,14 @@ source distinctions for this rewrite are recorded in `docs/implementation-map.md
 
 The author's 2026-09-15 review applies the explanatory principles above to
 `3_1_overview.tex`; it does not make the professor's background subsection a
-template for methodology. Explain each module's operation and limitation
-together, once. Keep the control objective focused on the deadline constraint
-and the reason responsiveness takes priority, rather than repeating the two
-decision rules or the background's timeout-clock explanation.
+template for methodology. Explain each module's operation once. Admission's
+inability to recover elapsed waiting time already motivates joint control in
+`2_4_static_safeguards.tex`; do not repeat that explanation in the overview.
+The overview also need not restate that pacing cannot change work already in
+progress. Retain the purpose of its delay: letting the worker progress before
+another capture arrives. Keep the control objective focused on the deadline
+constraint and the reason responsiveness takes priority, rather than repeating
+the two decision rules or the background's timeout-clock explanation.
 
 Describe the connection between the modules through its effect: pacing takes
 admission decisions into account when estimating upcoming Draft Sequence
