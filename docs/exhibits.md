@@ -36,6 +36,7 @@ with `AGENTS.md`, `AGENTS.md` wins and this file should be corrected.
 | [`fig_capture_pipeline`](#fig_capture_pipeline) | `figures/` | Live -- `2_3_draft_sequence.tex` |
 | [`fig_casestudy_12mp`](#fig_casestudy_12mp) | `figures/` | Live -- `_4_experiments.tex`, case study |
 | [`fig_casestudy_s26_12mp`](#fig_casestudy_s26_12mp) | `figures/` | Candidate -- not input by any section |
+| [`fig_controller_interaction`](#fig_controller_interaction) | `figures/` | Live -- `3_1_overview.tex` |
 | [`fig_parallel_capture_overlap`](#fig_parallel_capture_overlap) | `figures/` | Live -- `2_2_parallel_capture.tex` |
 | [`fig_rq3_unsafe_spike_anatomy`](#fig_rq3_unsafe_spike_anatomy) | `figures/` | Live -- `_4_experiments.tex`, RQ3 |
 
@@ -3188,6 +3189,16 @@ increase and left of a decrease and never cover the bar.
 Safeguard column, outside the plot box. The header sits on the box edge so
 it reads as this column's heading rather than as a floating note, and it
 states the outcome so the panel carries the conclusion without the caption.
+
+## fig_controller_interaction
+
+`figures/fig_controller_interaction.pptx` is the editable source for
+`figures/fig_controller_interaction.pdf`, included by `3_1_overview.tex`.
+At the author's request on 2026-09-15, the six general draft labels were
+lowercased in both files; `Budget-Aware Draft Controller` retains its spelling.
+The PDF keeps its 864 by 297.36 pt page and the existing artwork and layout.
+The labels were updated in place because presentation import altered a
+connector; the original PowerPoint objects and PDF graphics were preserved.
 
 ## Deleted exhibits
 

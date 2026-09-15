@@ -73,13 +73,29 @@ baselines available before the update. Only existing positive baselines
 contribute ratios; without any ratios, the shared factor remains unchanged.
 
 `external/draftSaving/SavingDraftImageTaskManager.java` retains the predictor
-across queue drains while resetting admission and pacing state. Section 3.2
-therefore describes reuse of learned baselines and the shared factor. The
+across queue drains while resetting admission and pacing state. At the author's
+request, Section 3.2 omits this lifetime detail and the forward reference to
+admission, and condenses the update explanation to the cumulative baseline
+average, the median factor update, and the median's purpose. The
 previous statement that histories are discarded only after application close
 and completion of all queued Draft Sequences was removed: the accessible
 manager does not explicitly clear the predictor, and its shutdown can stop
 waiting before all queued work completes. The full application-close path
 is not present in this implementation excerpt.
+
+## Section 3.3 residual eligibility verification (2026-09-15)
+
+Rechecked against the clean local implementation at
+`27d296795eab702ff3c4f38da64ac8720cd082cf`, without synchronization.
+`DraftSequenceExecutionPredictor.kt` first filters observations to positive
+durations, then restricts each recorded decision sequence to those measured
+keys. It computes a residual only when the recorded predictions for that
+measured sequence have a positive sum, and keys the sample by that sequence.
+The manuscript's residual formula therefore uses the measured sequence as
+`\(\mathcal K\)`; the previous condition requiring every key of the original
+decision sequence to have a positive observation was too restrictive.
+Within one capture, `distinctBy` retains the first factor for each measured
+sequence before inserting it into the sequence history and global pool.
 
 ## Section 3 sources
 

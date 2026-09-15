@@ -127,6 +127,14 @@ are not an instruction to rename `Draft Sequence` or `Draft image` elsewhere.
 Keep the professor's supplied text intact unless the user requests an edit to
 it; use the established terminology in newly written sections.
 
+The author's explicit 2026-09-15 instruction creates a Section 3 exception:
+use lowercase generic terms such as `draft sequence`, `draft work`, `draft stage`,
+`draft pipeline`, `draft image`, and `draft worker` in its prose and included
+figures and tables. Keep the system name `Budget-Aware Draft Controller`
+unchanged. This is an author-requested capitalization change, not an inference
+from the professor's typography. Preserve the terms' distinct meanings and the
+terminology rules for other sections.
+
 The revision uses passive voice as well as active voice. It does not support
 an active-voice-only rule, a prohibition on repetition, or a requirement that
 every sentence be short.

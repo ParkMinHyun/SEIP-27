@@ -1,14 +1,14 @@
 \subsection{Workload Model and Online Duration Estimation}
 \label{sec:model}
-A Draft Sequence's duration depends on its stages and how fast they execute under current conditions.
-The controller therefore learns stage durations from completed Draft Sequences and combines them according to the sequence being considered.
+A draft sequence's duration depends on its stages and how fast they execute under current conditions.
+The controller therefore learns stage durations from completed draft sequences and combines them according to the sequence being considered.
 
 \smallskip\noindent\textbf{Modeled workload sequence.}
 Each combination of a processing stage and its configuration is identified by a workload key \(k\).
-Capture \(i\)'s Draft Sequence is represented by the ordered keys \(\mathcal{K}_i=(k_1,\ldots,k_m)\).
+Capture \(i\)'s draft sequence is represented by the ordered keys \(\mathcal{K}_i=(k_1,\ldots,k_m)\).
 At position \(j\), the remaining sequence is \(\mathcal{K}_{i,j}=(k_j,\ldots,k_m)\).
-The last key covers mandatory processing from encoding through Draft image saving.
-Including this processing lets admission account for the time needed to produce the image after the optional stages finish.
+The last key covers mandatory processing from encoding through draft image saving.
+Including this processing lets admission account for the time needed to produce the draft image after the optional stages finish.
 
 \smallskip\noindent\textbf{Online point estimation.}
 The controller maintains a baseline duration \(\hat b(k)\) for each key to represent its long-term processing cost.
@@ -21,13 +21,7 @@ Multiplying the two gives the predicted duration \(\hat p(k)\), and summing thes
   \hat p(k)=\hat b(k)\,\gamma .
   \label{eq:point-estimate}
 \end{equation}
-At Draft Sequence completion, the controller divides each observed stage duration by the shared factor available before the update to account for the previously estimated execution conditions.
-It incorporates this adjusted duration into the key's cumulative average to update \(\hat b(k)\).
-
-To update \(\gamma\), the controller divides each observed duration by the corresponding baseline available before the update and takes the median of these ratios.
-Only keys with an existing baseline contribute; if none are available, \(\gamma\) remains unchanged.
-The median limits the influence of isolated stage slowdowns, while the shared factor carries recent changes in execution speed into subsequent estimates.
-
-An unobserved key has a zero estimate until its first duration is recorded at Draft Sequence completion.
-Section~\ref{sec:admission} explains how admission obtains these initial observations.
-The learned baselines and shared factor are retained when the queue drains, so subsequent captures can reuse the estimates.
+At draft sequence completion, the controller updates each baseline \(\hat b(k)\) by incorporating the observed duration divided by the previous \(\gamma\) into its cumulative average.
+When prior baselines are available, the controller updates \(\gamma\) to the median ratio of observed durations to those baselines.
+The median limits the influence of isolated stage slowdowns.
+An unobserved key has a zero estimate until its first duration is recorded at draft sequence completion.
