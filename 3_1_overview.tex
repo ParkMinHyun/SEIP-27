@@ -22,8 +22,21 @@ Both modules use duration estimates learned from completed draft sequences.
 Pacing accounts for admission decisions when estimating how long upcoming draft sequences will take.
 
 \smallskip\noindent\textbf{Control objective.}
-Each accepted capture must produce its draft image before its deadline.
-Within this constraint, the controller prioritizes user-perceived responsiveness.
-Capture delay lengthens the shot-to-shot interval and cannot be recovered.
-The fidelity cost of a skipped stage, however, ends when the final image replaces the draft image.
-The controller adopts a deadline-constrained, responsiveness-dominant trade-off.
+Capture Timeout is a hard product constraint on enabling optional stages.
+Each accepted capture starts its own deadline clock, but its draft sequence may wait behind earlier captures on the shared worker.
+Let \(\mu_i\) denote the time left before capture \(i\)'s deadline when its draft sequence completes.
+For successive captures, let \(\delta_i\) be the interval between requests \(i-1\) and \(i\), and \(\pi_i\) the interval between their draft sequence completions.
+With a fixed timeout window,
+\begin{equation}
+  \mu_i=\mu_{i-1}+\delta_i-\pi_i .
+  \label{eq:margin-recursion}
+\end{equation}
+When completions fall farther apart than requests, \(\pi_i>\delta_i\), and successive captures lose deadline margin.
+Admission can shorten \(\pi_i\) by skipping optional stages, but it cannot recover time already spent waiting.
+Pacing can lengthen \(\delta_{i+1}\) by delaying the next capture opportunity, but it cannot change work already in progress.
+Equation~\ref{eq:margin-recursion} is an accounting identity, not a control law.
+The controller does not maintain \(\mu_i\) as state; at each decision, it compares a processing-time forecast with the live remaining timeout budget.
+
+Within this deadline constraint, the controller prioritizes user-perceived responsiveness.
+Capture delay lengthens the shot-to-shot interval and cannot be recovered, whereas the fidelity cost of a skipped stage ends when the final image replaces the draft image.
+The controller therefore implements a deadline-constrained, responsiveness-dominant trade-off rather than a global cost optimization.
