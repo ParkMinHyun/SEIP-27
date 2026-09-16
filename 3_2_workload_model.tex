@@ -1,13 +1,13 @@
 \subsection{Workload Model and Online Duration Estimation}
 \label{sec:model}
-A draft sequence's duration depends on its stages and how fast they execute under current conditions.
+Both control modules require online estimates of remaining draft work.
 The controller therefore learns stage durations from completed draft sequences and combines them according to the sequence being considered.
 
 \smallskip\noindent\textbf{Modeled workload sequence.}
-Each combination of a processing stage and its configuration is identified by a workload key \(k\).
+Each workload key \(k\) identifies a processing stage and its configuration.
 Capture \(i\)'s draft sequence is represented by the ordered keys \(\mathcal{K}_i=(k_1,\ldots,k_m)\).
 At position \(j\), the remaining sequence is \(\mathcal{K}_{i,j}=(k_j,\ldots,k_m)\).
-The last key covers mandatory processing from encoding through draft image saving.
+The last key covers mandatory processing from encoding start through draft image saving.
 Including this processing lets admission account for the time needed to produce the draft image after the optional stages finish.
 
 \smallskip\noindent\textbf{Online point estimation.}
@@ -21,7 +21,7 @@ Multiplying the two gives the predicted duration \(\hat p(k)\), and summing thes
   \hat p(k)=\hat b(k)\,\gamma .
   \label{eq:point-estimate}
 \end{equation}
-At draft sequence completion, the controller updates each baseline \(\hat b(k)\) by incorporating the observed duration divided by the previous \(\gamma\) into its cumulative average.
+At draft sequence completion, the controller divides each observed duration by the previous \(\gamma\) and incorporates the result into the key's cumulative average \(\hat b(k)\).
 When prior baselines are available, the controller updates \(\gamma\) to the median ratio of observed durations to those baselines.
 The median limits the influence of isolated stage slowdowns.
-An unobserved key has a zero estimate until its first duration is recorded at draft sequence completion.
+An unobserved key has a zero estimate until its first positive duration is recorded at draft sequence completion.

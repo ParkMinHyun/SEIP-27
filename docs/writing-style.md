@@ -162,14 +162,15 @@ source distinctions for this rewrite are recorded in `docs/implementation-map.md
 
 The author's 2026-09-15 review applies the explanatory principles above to
 `3_1_overview.tex`; it does not make the professor's background subsection a
-template for methodology. Explain each module's operation once. Admission's
-inability to recover elapsed waiting time already motivates joint control in
-`2_4_static_safeguards.tex`; do not repeat that explanation in the overview.
-The overview also need not restate that pacing cannot change work already in
-progress. Retain the purpose of its delay: letting the worker progress before
-another capture arrives. Keep the control objective focused on the deadline
-constraint and the reason responsiveness takes priority, rather than repeating
-the two decision rules or the background's timeout-clock explanation.
+template for methodology. Explain each module's operation once, in the
+controller architecture, without its limits. The author later restored the
+margin recurrence to the control objective (`1fcc4f2`), so each module's limit
+now appears once, beside the lever the recurrence exposes: admission can
+shorten the completion interval but cannot recover time already spent waiting,
+and pacing can lengthen the request interval but cannot change work already in
+progress. Follow the recurrence with the caveat that it is an accounting
+identity rather than a control law, then state why responsiveness takes
+priority. Do not repeat the two decision rules in the objective.
 
 Describe the connection between the modules through its effect: pacing takes
 admission decisions into account when estimating upcoming Draft Sequence

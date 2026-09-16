@@ -1,24 +1,22 @@
 \subsection{Framework Integration}
 \label{sec:implementation}
 
-The framework already separates draft sequence execution from delivery of the capture-availability callback.
-The controller attaches to these two decision points within the framework, preserving the HAL and application interfaces.
+The controller attaches at two existing decision points in the framework: draft sequence execution on the draft worker and delivery of \texttt{captureAvailable}.
+Neither attachment restructures the draft pipeline or changes the HAL and application interfaces.
+Unchanged interfaces limit cross-component coordination and revalidation.
 
 \smallskip\noindent\textbf{Ownership and attachment.}
 The framework component that owns the single draft worker also hosts the shared estimator.
-This places admission beside the stages whose durations it measures, allowing it to read the remaining timeout window immediately before an optional stage executes.
-The component that delivers \texttt{captureAvailable} has a separate lifecycle, so it requests the pacing delay through a single-method internal interface over the existing event channel.
-Only the computed delay \(d_i\) crosses this interface; the estimator and its execution history remain with the draft pipeline.
+Admission therefore runs in the same lifecycle as the estimator and queries remaining-sequence estimates directly.
+In contrast, the component that delivers \texttt{captureAvailable} has a separate lifecycle and does not hold the estimator.
+The draft pipeline therefore provides the pacing decision to that component through a single-method internal interface over the framework's existing event channel.
 
-The integration adds two threads: one for callback delivery and one for watchdog fallback.
-The delivery thread releases \texttt{captureAvailable} after \(d_i\), allowing the draft worker to continue while the callback waits.
-The fallback thread addresses a different constraint: an admitted optional stage cannot be cancelled once it enters native image processing.
-If the watchdog expires, the fallback thread encodes and saves from the preserved original input independently of that stage.
-Resources owned by the in-flight stage are released only after it finishes.
-This lets fallback produce the draft image without waiting for the native operation to return.
+The integration adds two dedicated threads: a callback-delivery thread and a watchdog-fallback thread.
+Pacing posts the \texttt{captureAvailable} callback to the callback-delivery thread for release after \(d_i\).
+The watchdog-fallback thread provides the fallback path because an admitted optional stage cannot be cancelled once it enters native image processing.
+On expiration, the fallback thread processes the preserved original input independently of the in-flight optional stage; resources owned by the latter are released only when that processing completes.
 
 \smallskip\noindent\textbf{Deployment scope.}
-The controller identifies processing stages through workload keys, so an additional optional stage can use the same estimation and control logic once its key is defined.
-Both modules learn durations from execution on the current device instead of selecting per-model timing tables or using explicit thermal-state signals in their decisions.
-The controller keeps its decay factor and two-sequence reserve horizon fixed, while learning durations within each camera application session.
+Because each workload key declares whether its stage is optional, an additional optional stage can reuse the estimation, admission, watchdog, and pacing logic once its key is defined and assigned to an admission group.
+Both modules learn durations from execution on the current device instead of using per-model timing tables or device-state signals such as thermal level.
 The controller has been integrated into the product branch and is undergoing release validation for a forthcoming Galaxy flagship smartphone line.
