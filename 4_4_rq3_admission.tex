@@ -9,8 +9,10 @@ We audited 3{,}746 decisions by recording what admission would have decided whil
 Each decision is thus scored against its realized outcome: feasible if its remaining sequence completed within the timeout budget read at that decision, and unsafe otherwise.
 
 \smallskip\noindent\textbf{Decision accuracy.}
-Admission was accurate in both directions: it admitted 97.3\% of feasible decisions and skipped 97.2\% of unsafe ones.
-This separation did not rely on broad skipping of feasible decisions: only 2.7\% of them were skipped.
+Admission was accurate in both directions: it admitted 97.3\% of feasible decisions and correctly skipped 97.2\% of unsafe ones.
+Among feasible decisions, only 2.7\% were conservatively skipped.
+Among unsafe decisions, only 2.8\% were incorrectly admitted.
+Together, these rates show that admission reliably distinguished feasible from unsafe decisions without systematically favoring either admission or skipping.
 
 \smallskip\noindent\textbf{Unsafe admits and safeguards.}
 Only five unsafe decisions were admitted; with the watchdog disabled, each overran its deadline in the audit.
