@@ -259,6 +259,21 @@ pacing cost.
 This is the RQ1 table; the per-loop ablation is now its own research
 question, RQ2, in tables/tab_rq2_ablation.tex.
 
+THE `\input` LIVES IN `4_1_setup.tex`, NOT IN `4_2_rq1_effectiveness.tex`, and
+that is a float-placement constraint rather than an ownership statement.  This
+is the only `table*` in Section 4, so it can only be set at the top of a page,
+and LaTeX considers it only for pages it has not started building yet.  Issued
+from the top of 4.2 -- or even from the end of 4.1 -- the float is created
+midway down the page that carries the RQ1 prose, so it is deferred to the next
+page and drags the single-column RQ2 and RQ3 tables along behind it: before the
+move all three printed on one page while the page carrying their prose held
+only `fig_rq3_unsafe_spike_anatomy`.  Issued immediately after
+`tables/tab_setup.tex`, it reaches the top of the page where 4.2 begins, and
+each of the four RQ tables then prints on the page that discusses it.  The
+`% Float placement:` pointer in `4_1_setup.tex` marks the line.  If the
+preceding sections change length, re-check the placement before assuming the
+line can move back.
+
 2026-09-07 MEASUREMENT-IMAGE UPDATE.  The eight columns under `Draft stages
 executed` and `Pacing cost` were refreshed, in Lv0--Lv6 order, from these four
 external measurement renders:

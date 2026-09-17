@@ -1,33 +1,23 @@
 \subsection{RQ4: Pacing under Queue Pressure}
 \label{sec:rq4}
 
-% RQ4 reads 3{,}050 gating pacing decisions from the 116 full-controller runs of the 12MP normal condition, pooled over the two devices.
-% The decision persisted on a capture is the one that released it, so each decision carries the Draft backlog \(B_i\) measured at that decision, the delay \(d_i\) it applied, and that capture's realized deadline margin.
-% The backlog is reconstructed from the completed trace as the interval to the predicted completion of the queued Draft Sequences, not read from the controller's own estimate of Equation~\ref{eq:backlog}, and it is normalized by the Capture Timeout budget as margins are.
-% Every delay statistic is taken over the decisions that paced, so its denominator is that count and not the group size.
 \input{tables/tab_rq4_pacing_sizing.tex}
 
-% \smallskip\noindent\textbf{The delay engages with the load it exists to control, and stays a bounded share of it.}
-% Activation rises from 0.0\% of the decisions taken while the backlog stayed under a tenth of the budget to 83.4\% of those taken while it held at least half, and the ordering holds on each device read alone.
-% The size of the delay moves the other way: its median is 29.1\% of the backlog on the lightest band that paced at all and falls to 8.3\% on the heaviest, and all but 0.4\% of the 453~s of delay applied over the condition elapsed before that backlog had drained.
-% Pacing therefore trims the rate at which captures arrive rather than trying to drain what is already queued, and it never idles the worker to do so.
-% The 16.6\% of the heaviest band that drew no delay are not misses: they were read at a longer remaining window and, at the highest overheat levels, a sequence admission had already stripped, and they finished at 19.3\% of the budget at the median against 10.9\% for the paced decisions of the same band.
-% The backlog alone therefore does not order the risk, which is why the controller tests it against the window rather than against a threshold.
-% The queue this leaves is bounded in every run we measured: the backlog peaked at 59.4\% of the budget at the median run and above 80\% in three of the 116.
-% These three columns describe the deployed response and do not test it, because the band axis shares the dominant term of Equation~\ref{eq:pacing}; the independent content of the table is panel~(b), which is labelled from outcomes rather than from state.
+Table~\ref{tab:rq4_pacing_sizing} evaluates 3{,}050 pacing decisions from 116 \emph{Full} runs in the 12MP normal condition.
+Panel~(a) groups decisions by the measured backlog \(B_i\) as a fraction of the Capture Timeout budget.
+Panel~(b) reports pacing coverage for captures finishing within 20\%, 10\%, and 5\% of the deadline.
+For paced decisions, \(d_i/B_i\) reports the delay relative to the backlog.
 
-% \smallskip\noindent\textbf{Where the margin still ran thin, pacing was acting.}
-% Of the captures that completed within 5\% of the budget, 95.7\% were released by a paced callback; the share is 92.3\% within 10\% of the budget and 85.4\% within 20\%.
-% The delay those captures received was no larger in proportion to their load, at 10.1\% to 11.2\% of the backlog, so the coverage comes from engaging on them rather than from spending more on them.
-% On the six that pacing did not act on, admission had recommended skipping an optional stage on five, and the time that skip saved exceeds what those captures had left: 220 to 377~ms against the median full sequence of the same device and overheat level, where their realized margins were 17 to 230~ms.
-% The sixth executed both optional stages under no delay and finished with 11~ms to spare.
-% The intervention also precedes the exposure: in 94\% of the runs that ever reached a capture under 10\% of the budget, pacing had already acted before it, three captures earlier at the median.
-% On the 1{,}367 decisions that drew neither a delay nor an optional-stage skip, the realized margin was 24.7\% of the budget at the fifth percentile.
-% Coverage is labelled from the realized margin, which is an outcome measured after the intervention: it bounds the interventions that were missed, not the ones that were unnecessary, and a closed loop offers no counterfactual of the same capture released without its delay.
-% The cost of the interventions that did occur is bounded separately, by the \(d_i/B_i\) column here and by the pacing cost reported per cell in Table~\ref{tab:rq1_controller_behavior}.
+\smallskip\noindent\textbf{Queue response.}
+Pacing activation increased sharply with backlog, from 0\% below 10\% of the budget to 8.2\%, 45.0\%, and 83.4\% in successively higher bands.
+Among paced decisions, median \(d_i/B_i\) decreased from 29.1\% in the lightest active band to 13.0\% and 8.3\% as backlog increased.
+Pacing therefore responded to heavier queue pressure mainly by engaging more often, rather than by increasing delay in proportion to backlog.
 
-% \smallskip\noindent\textbf{The tightest realized margins.}
-% Eleven of the 3{,}050 decisions completed with under 1\% of the budget left and the tightest kept 0.16\%, or 11~ms.
-% All eleven are saturated: the backlog stood at 27--71\% of the budget, the released capture then waited 28--72\% of it before its own Draft Sequence started, and every one ran at overheat level 4 or above.
-% Pacing, an optional-stage skip, or both were engaged on ten of them; on the exception, pacing had applied 654, 663 and 288~ms on the three preceding captures and admission skipped an optional stage from the next capture onward.
-% Realized slack is an outcome and not a bound.
+\smallskip\noindent\textbf{Selective pacing under pressure.}
+High backlog alone did not trigger pacing.
+Of the 114 unpaced decisions with at least half of the budget already queued, 58 were already projected to fit within the remaining budget without delay.
+For the other 56, an admission skip had reduced the projected remaining workload enough to fit.
+Conversely, among captures that finished within 20\%, 10\%, and 5\% of the deadline, pacing engaged on 85.4\%, 92.3\%, and 95.7\%, respectively.
+Their median \(d_i/B_i\) remained within 10.1--11.2\%, indicating that coverage increased through more frequent activation rather than larger relative delays.
+All six captures within 5\% that received no delay had an optional stage skipped by admission.
+Thus, pacing remained selective under high backlog, while no capture finishing within 5\% of the deadline passed through both controls untouched.
