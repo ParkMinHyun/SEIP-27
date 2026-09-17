@@ -3,18 +3,16 @@
 
 \input{tables/tab_rq2_ablation.tex}
 
-Table~\ref{tab:rq2_ablation} separates the contributions of admission and pacing.
-We evaluate all configurations at starting overheat level 4, where the thermal guard begins suppressing optional stages.
-\emph{No control} enables neither module.
-\emph{Admission only} and \emph{Pacing only} enable one module each, and \emph{Full} enables both.
-Captures reports the fraction of requested captures completed on time.
-\(M\) and \(S\) additionally require the corresponding stage to execute.
+Table~\ref{tab:rq2_ablation} separates the contributions of admission and pacing at starting overheat level 4, where the thermal guard begins suppressing optional stages.
+\emph{No control} enables neither component.
+\emph{Admission only} and \emph{Pacing only} enable one each, and \emph{Full} enables both.
+Captures reports on-time completion, while \(M\) and \(S\) also require the corresponding stage to execute.
 
-\smallskip\noindent\textbf{Single-module control.}
+\smallskip\noindent\textbf{Single-component control.}
 Only \emph{Full} completed all requested captures on time in every panel.
 \emph{No control} completed \mbox{24.3--42.3\%} of requested captures, while \emph{Pacing only} completed \mbox{28.1--61.4\%}.
 \emph{Admission only} completed all requested captures in the S26 Ultra 12MP panel, but only 87.3\% and 90.7\% in the other two.
-Neither single-module configuration therefore achieved full completion across all three panels.
+Neither single-component configuration therefore achieved full completion across all three panels.
 
 \smallskip\noindent\textbf{Limits of admission alone.}
 In the S26 Ultra 12MP panel, \emph{Admission only} completed all requested captures on time, but \(M\) and \(S\) executed on only 29.3\% and 33.7\%, respectively.
