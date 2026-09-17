@@ -1,14 +1,26 @@
 \subsection{RQ1: End-to-End Effectiveness}
 \label{sec:rq1}
 
-% RQ1 reports the full-controller set: ten runs in each of the 14
-% (capture condition, starting level) cells, every one a complete 30-capture session.
-% It evaluates the end-to-end trade-off through Capture Timeout, optional-stage retention, capture delay, and deadline margin.
-% A capture counts toward \(M\) or \(S\) only when the corresponding stage has a positive observed duration, and deadline margins are normalized by the Capture Timeout budget.
-
 \input{tables/tab_rq1_end_to_end_summary.tex}
 
-% The deployed static guard is the reference these cells should be read against, and its behavior on them follows from its definition rather than from a separate arm.
-% On the six cells that start at level 4 or above it suppresses optional stages when each Draft Sequence is constructed, so \(M\) and \(S\) stay at zero there for as long as the level holds.
-% On the remaining cells it permits every optional stage, which is the configuration the Baseline column measures, and that column reaches Capture Timeout at levels 2 and 3 at 12MP and from level 0 onward at 24MP under memory pressure.
-% The deployed policy therefore withholds the feature where captures are safe and does not prevent the failure where they are not.
+Table~\ref{tab:rq1_controller_behavior} evaluates the full controller across 28 cells, each defined by a device, a capture condition, and a starting overheat level.
+The \emph{Baseline} column provides a failure reference by executing \(M\) and \(S\) on every capture with the thermal guard bypassed.
+Because Baseline runs were collected separately, the comparison is at the cell level rather than between paired runs.
+
+\smallskip\noindent\textbf{Deadline safety.}
+In all 28 cells, all included controller runs completed the 30-capture horizon without an observed Capture Timeout.
+Baseline reached Capture Timeout in 26 cells, as early as the third capture; in 17 cells, all ten runs timed out.
+Overall, the controller sustained timeout-free operation across the full evaluation grid within the 30-capture horizon, including cells in which Baseline failed in every run.
+
+\smallskip\noindent\textbf{Stage retention.}
+The controller did not obtain this result by broadly suppressing optional stages.
+Over the first five captures, \(M\) and \(S\) executed on at least 4.5 and 4.6 captures per run in every cell, and 23 of the 28 cells executed both on all five.
+Over the full horizon, the controller executed \(M\) on 5.2--22.2 captures per run even in the twelve cells starting at overheat level 4 or higher, where the production thermal guard begins suppressing optional stages.
+\(S\) was retained at least as often as \(M\) in every cell, with a maximum difference of 15.6 captures per run.
+This pattern shows that the controller retained optional stages progressively rather than reproducing the static cutoff's all-or-nothing behavior.
+
+\smallskip\noindent\textbf{Pacing cost.}
+Pacing was infrequent during the first five captures.
+It activated on none of the four eligible transitions in 14 cells and on at most 1.8 transitions per run in any cell, although \(d\)~P50 reached 737~ms when pacing did act.
+Over all 30 captures, pacing activated on as many as 17.7 of the 29 eligible transitions per run, with \(d\)~P50 ranging from 127 to 538~ms in cells with positive delays.
+Accordingly, early captures were usually left unpaced, while pacing became more prominent over sustained consecutive capture in cells under greater runtime pressure.
