@@ -1,12 +1,25 @@
 \subsection{RQ3: Admission Decision Quality}
 \label{sec:rq3}
 
-% RQ3 reads 8{,}430 enforced admission decisions from 143 full-controller runs and audits a disjoint pool of 3{,}746 decisions from the pacing-only runs.
-% For each decision, the study recording path retains the decision-time upper estimate \(U\) and the realized duration from that stage through Draft completion.
-% In the audit pool, admission is evaluated in shadow mode while every optional stage executes, so the recorded decisions can be compared with realized completion times without enforcing a skip.
-% Each decision is labelled retrospectively from the realized trace.
-% A decision is \emph{feasible} when the realized duration fits the \(T_{i,j}\) read at decision time, and \emph{unsafe} when it exceeds that budget or the watchdog intervenes.
-% These labels are the realized counterparts of Equation~\ref{eq:admission}, which the runtime evaluates against \(U\) because the realized duration is not yet available.
-% For the shadow audit, neither the queue-local demotion nor the watchdog of Section~\ref{sec:admission} is applied, so the labels reflect model misjudgement rather than outcomes produced by an enforced admission policy.
 \input{tables/tab_rq3_admission_quality.tex}
 \input{figures/fig_rq3_unsafe_spike_anatomy.tex}
+
+Table~\ref{tab:rq3_admission_audit} evaluates admission decisions rather than deployed stage execution.
+We audited 3{,}746 decisions by recording what admission would have decided while every optional stage executed with the watchdog disabled.
+Each decision is thus scored against its realized outcome: feasible if its remaining sequence completed within the timeout budget read at that decision, and unsafe otherwise.
+
+\smallskip\noindent\textbf{Decision accuracy.}
+Admission was accurate in both directions: it admitted 97.3\% of feasible decisions and skipped 97.2\% of unsafe ones.
+This separation did not rely on broad skipping of feasible decisions: only 2.7\% of them were skipped.
+
+\smallskip\noindent\textbf{Unsafe admits and safeguards.}
+Only five unsafe decisions were admitted; with the watchdog disabled, each overran its deadline in the audit.
+Figure~\ref{fig:rq3_unsafe_spike_anatomy} examines these misses against the preceding capture in the same run.
+For M1 and M2, latency rose to 2.32\(\times\) and 1.95\(\times\), whereas CPU time rose only to 1.41\(\times\) and 1.15\(\times\).
+Busy cores, defined as CPU time per unit of wall time, consequently fell to 0.60\(\times\) and 0.59\(\times\).
+These misses therefore coincided with post-decision latency increases that could not be reflected in the estimate at decision time.
+
+Replay simulation nevertheless confirmed the deployed response for all five unsafe admits.
+For M1 and M2, the watchdog started fallback before the admitted stage finished and discarded its result.
+For M3, S1, and S2, another admission decision in the same capture skipped an optional stage and kept the remaining sequence within budget.
+The five misses expose the boundary of admission prediction, but replay confirms that the deployed safeguards cover every case.
