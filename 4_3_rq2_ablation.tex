@@ -1,9 +1,29 @@
-\subsection{RQ2: Control-Loop Contribution}
+\subsection{RQ2: Contribution of Admission and Pacing}
 \label{sec:rq2}
 
-% RQ2 holds each capture condition at starting level 4, where the deployed guard sits at its decision boundary and the uncontrolled baseline already fails, and compares four configurations over ten runs per condition and configuration.
-% \emph{No control} is the stress baseline: it executes every optional stage and releases \texttt{captureAvailable} as soon as the framework is ready.
-% \emph{Admission only} enforces Equation~\ref{eq:admission} but never delays the callback.
-% \emph{Pacing only} applies Equation~\ref{eq:pacing} while executing every optional stage.
-% \emph{Full} enables both modules and is the controller described in Sections~\ref{sec:admission} and~\ref{sec:pacing}.
 \input{tables/tab_rq2_ablation.tex}
+
+Table~\ref{tab:rq2_ablation} separates the contributions of admission and pacing.
+We evaluate all configurations at starting overheat level 4, where the thermal guard begins suppressing optional stages.
+\emph{No control} enables neither module.
+\emph{Admission only} and \emph{Pacing only} enable one module each, and \emph{Full} enables both.
+Captures reports the fraction of requested captures completed on time.
+\(M\) and \(S\) additionally require the corresponding stage to execute.
+
+\smallskip\noindent\textbf{Single-module control.}
+Only \emph{Full} completed all requested captures on time in every panel.
+\emph{No control} completed \mbox{24.3--42.3\%} of requested captures, while \emph{Pacing only} completed \mbox{28.1--61.4\%}.
+\emph{Admission only} completed all requested captures in the S26 Ultra 12MP panel, but only 87.3\% and 90.7\% in the other two.
+Neither single-module configuration therefore achieved full completion across all three panels.
+
+\smallskip\noindent\textbf{Limits of admission alone.}
+In the S26 Ultra 12MP panel, it completed all requested captures on time, but \(M\) and \(S\) executed on only 29.3\% and 33.7\%, respectively.
+These rates remained close to the 29.0\% observed for both stages under \emph{No control}, despite the increase in completion.
+In the S26 12MP panel, it executed \(M\) and \(S\) more often, on 44.3\% and 51.3\%, but completed only 90.7\% on time.
+Admission alone therefore left an unresolved trade-off between completion and stage execution.
+
+\smallskip\noindent\textbf{Combined control.}
+\emph{Full} extends \emph{Admission only} with pacing.
+Across all three panels, \emph{Full} completed every requested capture on time, whereas \emph{Admission only} reached full completion in only one.
+At the same time, \emph{Full} executed both \(M\) and \(S\) more often than \emph{Admission~only} in every panel.
+Thus, the combined configuration paired full completion with greater stage execution across all three panels.
