@@ -1,14 +1,14 @@
 \subsection{Threats to Validity}
 \label{sec:threats}
 
-End-to-end evaluation is limited to one device because the lightweight multi-frame composition is still a production candidate whose HAL and image-solution patches were available only for the Galaxy S26 Ultra.
-The controller carries no per-model performance profile and no calibrated threshold, so nothing in its design encodes this device; we nonetheless do not claim cross-device effectiveness, which further end-to-end binaries would be needed to establish.
-The same limit bounds the broader claim of Section~\ref{sec:release-process}.
-Because its decisions read observed execution time against the remaining deadline window rather than a fixed proxy, the controller is designed to subsume restrictions keyed to captures in flight or to which stages a mode enables, but this paper demonstrates that replacement only for the thermal guard.
+\smallskip\noindent\textbf{Cold start.}
+Both components rely on observed draft sequence durations, so the controller has no prior timing evidence before the first sequence completes.
+If that sequence runs unusually long while parallel captures continue to arrive, the resulting queue cannot yet be reflected in either decision, and the bottleneck must be handled by the underlying image solution.
+We implemented warm-up data support but left it disabled: no cold-start timeout was observed, and maintaining the dataset would add storage and maintenance cost.
 
-The controller offers no formal deadline guarantee and does not address arbitrary stalls in mandatory encoding or saving; such stalls must be fixed before release, or the affected feature is disabled.
-Admission compares a residual-calibrated high-side estimate against the live budget, pacing charges an empirical reserve, and both are evidence-adaptive rather than bounding, which is why the watchdog of Section~\ref{sec:admission} exists at all.
-The results therefore support a claim about observed deadline behavior on the evaluated population rather than about worst-case behavior.
-
-The study recording path is present in every configuration alike, so comparisons between them are unaffected by it, but it is not part of a deployed build and we do not separately quantify its cost; absolute deadline margins are conservative with respect to a build without it.
-The ADB driver requests each capture as soon as the framework reports capture availability, which characterizes the saturated regime the single draft worker faces; a slower cadence would leave less backlog for either module to act on.
+\smallskip\noindent\textbf{Mandatory-stage stalls.}
+Encoding and saving are mandatory and cannot be skipped by admission.
+Persistent slowdowns are reflected in subsequent duration estimates, allowing both admission and pacing to respond.
+An isolated spike is not, because it is absent from the history available before it occurs, and the watchdog protects only the admitted optional stage.
+No isolated mandatory-stage stall was observed in our evaluation; deferring non-critical saving work through a deadline-aware fast path could further reduce this exposure.
+When one occurs in production, the source of the latency in encoding, database transactions, or file writing must be diagnosed directly.
