@@ -1,7 +1,7 @@
 \section{Related Work}\label{sec:related_work}
 
 \smallskip\noindent\textbf{Workload control.}
-Our admission controller belongs to a line of work that adapts per-input computation at run time to satisfy latency, resource, or thermal constraints.
+Our admission controller belongs to a line of work that adapts per-input computation at run time to satisfy latency, resource, or thermal constraints~\cite{liu-imprecise-computation,shih-imprecise-siam,zilberstein-anytime,loop-perforation-fse,apnet-rtss,branchynet-icpr,msdnet-iclr,mcdnn-mobisys,nestdnn-mobicom,reducto-sigcomm}.
 ApproxDet and Chanakya select execution configurations according to input content, resource contention, and latency--accuracy objectives~\cite{approxdet-sensys,chanakya-neurips}.
 Recent mobile and embedded systems similarly adapt execution under device constraints: Agile3D selects 3D-detection branches under changing scenes and GPU contention~\cite{agile3d-mobisys}, ARIA coordinates vision inference across heterogeneous mobile processors~\cite{aria-mobisys}, and Phoenix adjusts processor placement and DNN exit depth under thermal throttling~\cite{phoenix-tecs}.
 Timecard is closer to our admission logic, tracking each request's elapsed end-to-end budget and adapting its remaining processing to the time left~\cite{timecard-sosp}.
@@ -12,18 +12,18 @@ Reducing current-capture work alone is therefore insufficient.
 The pipeline must also control when the next capture is released.
 
 \smallskip\noindent\textbf{Arrival control.}
-Our pacing mechanism is related to systems that control request admission or release timing to limit queueing delay.
-Networking limits queue growth through active queue management and pacing~\cite{codel-cacm,bbr-queue}, while server systems admit, reject, or shed requests according to load or deadline signals~\cite{seda-sosp,breakwater-osdi,deadline-aware-d3}.
+Our pacing mechanism is related to systems that control request admission or release timing to limit queueing delay~\cite{cruz-network-calculus}.
+Networking limits queue growth through active queue management and pacing~\cite{red-floyd-jacobson,codel-cacm,rfc8289,rfc8033,rfc8290,bufferbloat-cacm,tcp-pacing-infocom,bbr-queue}, while server systems admit, reject, or shed requests according to load or deadline signals~\cite{seda-sosp,dagor-socc,breakwater-osdi,aurora-load-shedding,deadline-aware-d3}.
 Real-time schedulers similarly regulate job releases by stretching task periods or skipping job instances~\cite{buttazzo-elastic-task,koren-skip-over}.
 Preemptive systems can instead interrupt running work to serve short or urgent requests~\cite{shinjuku-nsdi}.
 Across these systems, the controller can alter job admission, release, or execution.
-In our camera framework, a user's shutter press cannot be rejected, and a running stage cannot be preempted.
+In our camera system, a user's shutter press cannot be rejected, and a running stage cannot be preempted.
 Our pacing therefore delays next-capture release.
-It limits queue growth without reducing work already admitted for the current capture.
+It limits queue growth without reducing work admitted for current capture.
 
 \smallskip\noindent\textbf{Coordinating workload and arrivals.}
 Our controller is most closely related to systems that combine incoming-load control with service-level or quality adaptation.
-Feedback-control systems jointly adjust request admission and service level from deadline-miss or response-time feedback~\cite{lu-feedback-control-edf,lu-feedback-control-scheduling,welsh-overload-control}, while QoS negotiation accepts requests at reduced quality rather than rejecting them~\cite{abdelzaher-qos-negotiation,abdelzaher-content-adaptation}.
+Feedback-control systems jointly adjust request admission and service level from deadline-miss or response-time feedback~\cite{lu-feedback-control-edf,lu-feedback-control-scheduling,welsh-overload-control}, while QoS negotiation accepts requests at reduced quality rather than rejecting them~\cite{abdelzaher-qos-negotiation,abdelzaher-content-adaptation,rajkumar-qos-resource-allocation,klein-brownout}.
 These approaches show that combining the two control directions is not itself new.
 Per-request adaptation to a remaining end-to-end budget is also established~\cite{timecard-sosp}.
 What differs in our capture pipeline is how the two are coupled: admission controls optional stages for the current capture, while pacing controls when the next user-triggered capture reaches the same non-preemptible worker.
