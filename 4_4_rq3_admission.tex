@@ -2,7 +2,8 @@
 \label{sec:rq3}
 
 Table~\ref{tab:rq3_admission_audit} evaluates admission decisions rather than deployed stage execution.
-We audited 3{,}746 decisions by recording what admission would have decided while every optional stage executed with the watchdog disabled.
+We audited 3{,}746 decisions under an always-admit model.
+Optional stages always executed with the watchdog suppressed, while admission ran in parallel and logged its decisions.
 Each decision is thus scored against its realized outcome: feasible if its remaining sequence completed within the timeout budget read at that decision, and unsafe otherwise.
 
 \smallskip\noindent\textbf{Decision accuracy.}
@@ -18,10 +19,11 @@ For M1 and M2, latency rose to 2.32\(\times\) and 1.95\(\times\), whereas CPU ti
 Busy cores, defined as CPU time per unit of wall time, consequently fell to 0.60\(\times\) and 0.59\(\times\).
 These misses therefore coincided with post-decision latency increases that could not be reflected in the estimate at decision time.
 
-Replay simulation nevertheless confirmed the deployed response for all five unsafe admits.
-For M1 and M2, the watchdog started fallback before the admitted stage finished and discarded its result.
-For M3, S1, and S2, another admission decision in the same capture skipped an optional stage and kept the remaining sequence within budget.
-The five misses expose the boundary of admission prediction, but replay confirms that the deployed safeguards cover every case.
+All five unsafe admits were covered by the controller's runtime safeguards in replay.
+The audit records each stage duration, budget, and upper estimate used by the controller. Replay therefore re-evaluates the safeguard logic from recorded runtime data rather than reconstructing the run from a timing model.
+For M1 and M2, the admitted stage exceeded the watchdog budget computed at its own decision, 1,460 ms against 1,202 ms and 1,648 ms against 889 ms, respectively, so the watchdog would trigger fallback before the stage returned.
+For M3, S1, and S2, another admission decision in the same capture skipped an optional stage, after which the measured remaining sequence stayed within the budget available at that decision.
+These misses therefore expose the limits of admission prediction, while all five remain covered by other runtime safeguards.
 
 \input{tables/tab_rq3_admission_quality.tex}
 \input{figures/fig_rq3_unsafe_spike_anatomy.tex}

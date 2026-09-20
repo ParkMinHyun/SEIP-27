@@ -4,8 +4,10 @@
 \input{tables/tab_rq4_pacing_sizing.tex}
 
 Table~\ref{tab:rq4_pacing_sizing} evaluates 3{,}050 pacing decisions from 116 \emph{Full} runs in the 12MP normal condition.
-Panel~(a) groups decisions by the measured backlog \(B_i\) as a fraction of the Capture Timeout budget.
-Panel~(b) reports pacing coverage for captures finishing within 20\%, 10\%, and 5\% of the deadline.
+This is the production-default setting without external memory pressure and approximates an ordinary capture session.
+Panel~(a) groups decisions by the measured backlog \(B_i\), expressed as a fraction of the Capture Timeout budget.
+Panel~(b) groups captures by slack, the remaining margin to the Capture Timeout deadline at draft sequence completion.
+It reports pacing coverage within 20\%, 10\%, and 5\% of the deadline.
 For paced decisions, \(d_i/B_i\) reports the delay relative to the backlog.
 
 \smallskip\noindent\textbf{Queue response.}

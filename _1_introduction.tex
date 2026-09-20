@@ -30,7 +30,7 @@ Both decisions are driven by live deadline state and predicted draft work rather
 The two costs it trades are not symmetric: a pacing delay lengthens the shot-to-shot interval and is never recovered, whereas a skipped stage's fidelity cost ends when the final image replaces the draft image.
 This asymmetry motivates a deadline-constrained, responsiveness-dominant trade-off between optional-stage fidelity and shot-to-shot delay.
 
-Across 28 combinations of device, capture condition, and starting overheat level on two current-generation commercial devices, every controller run completed a 30-capture horizon without an observed Capture Timeout, whereas the unguarded baseline reached Capture Timeout in 26 of the 28 combinations.
+Across two current-generation commercial devices, two capture conditions, and seven starting overheat levels, every controller run completed a 30-capture horizon without an observed Capture Timeout, whereas the unguarded baseline reached Capture Timeout in 26 of the 28.
 Admission selectively allowed optional stages to execute even at starting thermal levels where the production guard would disable them.
 Pacing was selectively activated and often remained inactive throughout the first five consecutive captures, introducing no additional shot-to-shot delay there.
 Ablation further shows that neither admission nor pacing alone reproduces the full controller's combination of on-time completion and optional-stage execution across the evaluated panels.
@@ -40,5 +40,5 @@ We summarize our contributions below:
 \begin{itemize}[leftmargin=1.2em]
   \item We characterize why a static thermal cutoff does not reflect whether an optional stage is feasible for an individual capture, motivating runtime decisions based on the capture's remaining deadline budget.
   \item We present the Budget-Aware Draft Controller, which coordinates remaining-budget admission of optional stages with next-capture pacing on a shared draft worker with non-preemptible stages. To our knowledge, this is the first work to combine these controls in a production camera system under a hard per-capture deadline.
-  \item We evaluate the controller using production-derived binaries on two commercial devices, covering end-to-end effectiveness, the contribution of each component, admission decision quality, and pacing-delay sizing under queue pressure.
+  \item We evaluate the controller using production-derived binaries on two commercial devices, covering end-to-end effectiveness, the contribution of each component, admission decision quality, and pacing behavior under queue pressure.
 \end{itemize}
