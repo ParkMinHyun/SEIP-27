@@ -9,20 +9,22 @@ Because Baseline runs were collected separately, the comparison is at the cell l
 
 \smallskip\noindent\textbf{Deadline safety.}
 In all 28 cells, all runs completed the 30-capture horizon without an observed Capture Timeout.
-Baseline reached Capture Timeout in 26 of the 28 cells, with the earliest failure occurring at the third capture. 
-In 17 cells, all ten runs timed out.
-Overall, the controller maintained timeout-free completion across all devices, conditions, and starting overheat levels over the 30-capture horizon.
+Baseline reached Capture Timeout in 26 of the 28 cells. 
+In 17 of these cells, all ten runs timed out, and the earliest failure occurred at the third capture.
+The controller therefore remained timeout-free across cases where the baseline frequently failed.
 
 \smallskip\noindent\textbf{Stage execution.}
-The controller did not obtain this result by broadly suppressing optional stages.
-Over the first five captures, \(M\) and \(S\) executed on at least 4.5 and 4.6 captures per run in every cell, and 23 of the 28 cells executed both stages in all five captures.
-Over the full horizon, the controller executed \(M\) on 5.2--22.2 captures per run even in the twelve cells starting at overheat level 4 or higher, where the production thermal guard begins suppressing optional stages.
-\(S\) was executed at least as often as \(M\) in all twelve cells.
-Thus, even above the production cutoff, both optional stages remained active across substantial fractions of the 30 captures.
-This pattern shows that the controller retained optional stages progressively rather than reproducing the static cutoff's all-or-nothing behavior.
+The controller retained substantial optional stage execution rather than broadly suppressing it.
+Over the first five consecutive captures, \(M\) and \(S\) executed on at least 4.5 and 4.6 captures per run in every cell.
+Both stages executed in all five consecutive captures in 23 of the 28 cells.
+Even in the twelve cells starting at overheat level 4 or higher, \(M\) executed on 5.2--22.2 captures per run over the full horizon, and \(S\) executed at least as often.
+At these levels, the production thermal guard begins suppressing optional stages.
+Within the same device and capture condition, optional stage execution generally decreased at higher starting overheat levels.
+Rather than disabling all optional work at a fixed level, the controller adjusted execution progressively across thermal conditions.
 
 \smallskip\noindent\textbf{Pacing cost.}
-Pacing was infrequent during the first five captures.
-It activated on none of the four eligible transitions in 14 cells and on at most 1.8 transitions per run in any cell, although \(d\)~P50 reached 737~ms when pacing did act.
+Pacing was infrequent during the first five consecutive captures.
+It activated on none of the four eligible transitions in 14 cells and on at most 1.8 transitions per run in any cell.
+When it did activate, \(d\)~P50 reached 737~ms, about 55\% of the corresponding delay with parallel capture disabled under the same condition.
 Over all 30 captures, pacing activated on as many as 17.7 of the 29 eligible transitions per run, while \(d\)~P50 remained at 127--538~ms in cells with positive delays.
-Thus, pacing preserved most of the responsiveness gained from parallel capture during early consecutive capture.
+Thus, pacing had limited impact on early shot-to-shot responsiveness while remaining available as queue pressure increased.
