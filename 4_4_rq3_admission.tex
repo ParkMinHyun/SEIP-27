@@ -1,9 +1,6 @@
 \subsection{RQ3: Admission Decision Quality}
 \label{sec:rq3}
 
-\input{tables/tab_rq3_admission_quality.tex}
-\input{figures/fig_rq3_unsafe_spike_anatomy.tex}
-
 Table~\ref{tab:rq3_admission_audit} evaluates admission decisions rather than deployed stage execution.
 We audited 3{,}746 decisions by recording what admission would have decided while every optional stage executed with the watchdog disabled.
 Each decision is thus scored against its realized outcome: feasible if its remaining sequence completed within the timeout budget read at that decision, and unsafe otherwise.
@@ -25,3 +22,6 @@ Replay simulation nevertheless confirmed the deployed response for all five unsa
 For M1 and M2, the watchdog started fallback before the admitted stage finished and discarded its result.
 For M3, S1, and S2, another admission decision in the same capture skipped an optional stage and kept the remaining sequence within budget.
 The five misses expose the boundary of admission prediction, but replay confirms that the deployed safeguards cover every case.
+
+\input{tables/tab_rq3_admission_quality.tex}
+\input{figures/fig_rq3_unsafe_spike_anatomy.tex}
