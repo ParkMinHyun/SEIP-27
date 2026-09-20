@@ -6,12 +6,12 @@ It was introduced together with the post-processing pipeline, which produces the
 When post-processing completes, the final image replaces the draft image if one has already been published.
 Figure~\ref{fig:capture-pipeline} illustrates this workflow.
 
-The Draft pipeline uses a single worker to publish images in capture order and limit resource demand.
+The draft pipeline uses a single worker to publish images in capture order and limit resource demand.
 Executing multiple draft sequences concurrently would require buffering out-of-order results and increase peak compute and memory demand.
 
 \input{figures/fig_capture_pipeline.tex}
 
-\smallskip\noindent\textbf{Extending the Draft Sequence.}
+\smallskip\noindent\textbf{Extending the draft sequence.}
 The original draft sequence saved an image without additional image processing.
 To reduce visual differences between draft and final images, the framework later added lightweight single-frame stages, such as Filter and Watermark.
 

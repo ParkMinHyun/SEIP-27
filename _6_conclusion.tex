@@ -1,7 +1,7 @@
 \section{Conclusion}\label{sec:conclusion}
 
 The draft sequence provides the initial user-visible image before post-processing completes, and lightweight multi-frame composition narrows its visual gap to the final image especially in Portrait mode.
-Under parallel capture, however, the added draft sequence can consume the fixed Capture Timeout budget as captures overlap on the shared worker.
+Under parallel capture, however, the added draft work can consume the fixed Capture Timeout budget as captures overlap on the shared worker.
 Production mitigates this risk with a static thermal guard that disables optional stages at a fixed thermal level, even when some captures retain sufficient budget to execute them.
 This paper presents the Budget-Aware Draft Controller, which estimates stage durations at run time, admits optional stages against each capture's remaining budget, and paces the release of the next capture when projected backlog threatens that budget.
 Across 28 combinations of device, capture condition, and starting overheat level, every controller run completed the 30-capture horizon without an observed Capture Timeout, whereas the unguarded baseline timed out in 26 combinations.

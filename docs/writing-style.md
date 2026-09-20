@@ -127,16 +127,21 @@ are not an instruction to rename `Draft Sequence` or `Draft image` elsewhere.
 Keep the professor's supplied text intact unless the user requests an edit to
 it; use the established terminology in newly written sections.
 
-The author's explicit 2026-09-15 instruction creates a Section 3 exception,
-extended to Section 4 prose on 2026-09-17: use lowercase generic terms such as
-`draft sequence`, `draft work`, `draft stage`, `draft backlog`, `draft pipeline`,
-`draft image`, and `draft worker` in Section 3 prose and its included figures and
-tables, and in Section 4 prose. Section 4's exhibits stay as printed, so prose and
-exhibit differ in case there by decision; `AGENTS.md` records which headers are
-affected. Keep the system name `Budget-Aware Draft Controller` unchanged. This is
-an author-requested capitalization change, not an inference from the professor's
-typography. Preserve the terms' distinct meanings and the terminology rules for
-other sections.
+The author's explicit 2026-09-15 instruction created a Section 3 exception,
+extended to Section 4 prose on 2026-09-17 and to every section on 2026-09-19: use
+lowercase generic terms such as `draft sequence`, `draft work`, `draft stage`,
+`draft backlog`, `draft pipeline`, `draft image`, and `draft worker` in the prose
+of every section, including the introduction and the conclusion. Subsection titles
+stay in title case, so the 2.3 heading `Draft Sequence` is unchanged while its
+run-in heading reads `Extending the draft sequence.` Exhibits stay as printed, so
+prose and exhibit differ in case in Sections 2 and 4 by decision; `AGENTS.md`
+records which headers are affected. Keep the system name `Budget-Aware Draft
+Controller` unchanged. This is an author-requested capitalization change, not an
+inference from the professor's typography, and lowercasing must not blur the three
+nested levels: a hand sweep on 2026-09-19 turned the conclusion's `the added Draft
+work` into `the added draft sequence`, which made a per-capture unit the thing that
+is added and consumes a budget. Preserve the terms' distinct meanings and the
+terminology rules.
 
 The revision uses passive voice as well as active voice. It does not support
 an active-voice-only rule, a prohibition on repetition, or a requirement that
