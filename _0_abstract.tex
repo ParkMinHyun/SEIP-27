@@ -1,6 +1,11 @@
 \begin{abstract}
-% TODO: Summarize the production Capture Timeout problem, the coordinated
-% remaining-sequence admission and capture-pacing design, the evaluation scope,
-% and the supported evidence after the corresponding manuscript sections are
-% finalized.
+We present the Budget-Aware Draft Controller, which supports lightweight multi-frame composition under a hard per-capture deadline in Samsung's production camera system.
+Each capture must publish an initial user-visible image before this deadline, and missing it raises Capture Timeout, a release-blocking reliability failure.
+Applying lightweight multi-frame composition while producing the initial user-visible image narrows its visual gap to the final image, but under parallel capture the added processing can push a capture past that deadline.
+Production mitigates this risk with a static thermal cutoff, but thermal state does not reveal how much deadline budget remains for an individual capture.
+Runtime control must instead decide both whether the current capture can afford additional processing and whether releasing the next capture would create excessive queueing, even though the future cost of either decision is not yet observable.
+The controller addresses this by estimating the remaining draft-processing time and projected queueing delay, admitting an optional stage only when it fits within the current capture's remaining budget and delaying the next capture when projected queueing threatens its deadline.
+We evaluate the controller using production-derived binaries on two commercial devices across 28 combinations of device, capture condition, and starting overheat level.
+Every controller run completed a 30-capture horizon without an observed Capture Timeout, whereas the unguarded baseline reached Capture Timeout in 26 of the 28 combinations.
+The controller executed optional stages at thermal levels where the production guard would disable them, and ablation showed that neither admission nor pacing alone reproduced the full controller's combination of on-time completion and optional-stage execution.
 \end{abstract}
