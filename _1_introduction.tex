@@ -1,44 +1,44 @@
 \section{Introduction}\label{sec:introduction}
 
-In Samsung's production camera system, each capture must publish an initial user-visible image within a fixed internal deadline. Missing this deadline raises a Capture Timeout, which crashes the camera application by design to expose the failure during testing and blocks release until its cause is resolved.
-Any change that lengthens capture processing must therefore preserve this deadline before release.
+% In Samsung's production camera system, each capture must publish an initial user-visible image within a fixed internal deadline. Missing this deadline raises a Capture Timeout, which crashes the camera application by design to expose the failure during testing and blocks release until its cause is resolved.
+% Any change that lengthens capture processing must therefore preserve this deadline before release.
 
-Two developments have made this deadline harder to preserve.
-The draft sequence, which produces the initial user-visible image, has evolved from image saving into a configured chain of image-processing stages that narrow the visual gap to the final image.
-To further reduce this gap, we implemented a lightweight multi-frame composition stage for Portrait mode.
-At the same time, parallel capture lets the application accept the next shutter request before the preceding draft image is produced.
-Multiple capture deadlines then overlap on a single draft worker, so draft work admitted for earlier captures consumes the budget available to later ones.
-The capture pipeline therefore faces greater per-capture work and cross-capture contention.
+% Two developments have made this deadline harder to preserve.
+% The draft sequence, which produces the initial user-visible image, has evolved from image saving into a configured chain of image-processing stages that narrow the visual gap to the final image.
+% To further reduce this gap, we implemented a lightweight multi-frame composition stage for Portrait mode.
+% At the same time, parallel capture lets the application accept the next shutter request before the preceding draft image is produced.
+% Multiple capture deadlines then overlap on a single draft worker, so draft work admitted for earlier captures consumes the budget available to later ones.
+% The capture pipeline therefore faces greater per-capture work and cross-capture contention.
 
-Production mitigates this risk with static safeguards, principally a thermal cutoff that disables optional stages once the device reports a fixed overheat level.
-Such a safeguard is simple and robust, but it observes device state rather than deadline state: it represents neither how much of an individual capture's budget has already been consumed by waiting nor how much draft work remains.
-The static thermal policy is therefore unnecessarily restrictive for a capture with budget to spare, and too permissive for one with little budget remaining.
-Section~\ref{sec:guard-limit} reports a motivating experiment in which, with the guard bypassed, timeouts occurred across the full range of starting overheat levels, showing that the static cutoff does not align with per-capture deadline safety.
+% Production mitigates this risk with static safeguards, principally a thermal cutoff that disables optional stages once the device reports a fixed overheat level.
+% Such a safeguard is simple and robust, but it observes device state rather than deadline state: it represents neither how much of an individual capture's budget has already been consumed by waiting nor how much draft work remains.
+% The static thermal policy is therefore unnecessarily restrictive for a capture with budget to spare, and too permissive for one with little budget remaining.
+% Section~\ref{sec:guard-limit} reports a motivating experiment in which, with the guard bypassed, timeouts occurred across the full range of starting overheat levels, showing that the static cutoff does not align with per-capture deadline safety.
 
-This mismatch calls for per-capture runtime control.
-Adapting the computation performed for the current input is a common response to latency and resource constraints~\cite{liu-imprecise-computation,approxdet-sensys,chanakya-neurips,timecard-sosp}, while controlling when requests are admitted or released is a common response to queueing delay~\cite{codel-cacm,seda-sosp,breakwater-osdi,buttazzo-elastic-task}.
-Neither direction is sufficient here.
-Reducing the work admitted for the current capture cannot prevent the next capture from joining a busy draft worker.
-In this pipeline, moreover, a user's shutter press cannot be rejected, and a running stage cannot be preempted.
-Reliable operation therefore requires coordinated control over both the work admitted for the current capture and the release timing of the next one.
+% This mismatch calls for per-capture runtime control.
+% Adapting the computation performed for the current input is a common response to latency and resource constraints~\cite{liu-imprecise-computation,approxdet-sensys,chanakya-neurips,timecard-sosp}, while controlling when requests are admitted or released is a common response to queueing delay~\cite{codel-cacm,seda-sosp,breakwater-osdi,buttazzo-elastic-task}.
+% Neither direction is sufficient here.
+% Reducing the work admitted for the current capture cannot prevent the next capture from joining a busy draft worker.
+% In this pipeline, moreover, a user's shutter press cannot be rejected, and a running stage cannot be preempted.
+% Reliable operation therefore requires coordinated control over both the work admitted for the current capture and the release timing of the next one.
 
-We present the Budget-Aware Draft Controller, which couples stage-level admission with capture-availability pacing.
-The central difficulty is that both decisions depend on future work that is not yet observable: admission must predict the remaining sequence, while pacing must predict the queueing delay the next capture would encounter.
-Underprediction risks a timeout, whereas overprediction either skips an optional stage that would have fit or adds unnecessary user-perceived delay.
-The controller therefore estimates draft-stage durations from completed draft sequences, admits an optional stage only when the predicted remaining sequence fits the capture's remaining budget, and delays the capture-availability callback when the projected backlog threatens that budget.
-Both decisions are driven by live deadline state and predicted draft work rather than a device-level threshold.
-The two costs it trades are not symmetric: a pacing delay lengthens the shot-to-shot interval and is never recovered, whereas a skipped stage's fidelity cost ends when the final image replaces the draft image.
-This asymmetry motivates a deadline-constrained, responsiveness-dominant trade-off between optional-stage fidelity and shot-to-shot delay.
+% We present the Budget-Aware Draft Controller, which couples stage-level admission with capture-availability pacing.
+% The central difficulty is that both decisions depend on future work that is not yet observable: admission must predict the remaining sequence, while pacing must predict the queueing delay the next capture would encounter.
+% Underprediction risks a timeout, whereas overprediction either skips an optional stage that would have fit or adds unnecessary user-perceived delay.
+% The controller therefore estimates draft-stage durations from completed draft sequences, admits an optional stage only when the predicted remaining sequence fits the capture's remaining budget, and delays the capture-availability callback when the projected backlog threatens that budget.
+% Both decisions are driven by live deadline state and predicted draft work rather than a device-level threshold.
+% The two costs it trades are not symmetric: a pacing delay lengthens the shot-to-shot interval and is never recovered, whereas a skipped stage's fidelity cost ends when the final image replaces the draft image.
+% This asymmetry motivates a deadline-constrained, responsiveness-dominant trade-off between optional-stage fidelity and shot-to-shot delay.
 
-Across two current-generation commercial devices, two capture conditions, and seven starting overheat levels, every controller run completed a 30-capture horizon without an observed Capture Timeout, whereas the unguarded baseline reached Capture Timeout in 26 of the 28.
-Admission selectively allowed optional stages to execute even at starting thermal levels where the production guard would disable them.
-Pacing was selectively activated and often remained inactive throughout the first five consecutive captures, introducing no additional shot-to-shot delay there.
-Ablation further shows that neither admission nor pacing alone reproduces the full controller's combination of on-time completion and optional-stage execution across the evaluated panels.
+% Across two current-generation commercial devices, two capture conditions, and seven starting overheat levels, every controller run completed a 30-capture horizon without an observed Capture Timeout, whereas the unguarded baseline reached Capture Timeout in 26 of the 28.
+% Admission selectively allowed optional stages to execute even at starting thermal levels where the production guard would disable them.
+% Pacing was selectively activated and often remained inactive throughout the first five consecutive captures, introducing no additional shot-to-shot delay there.
+% Ablation further shows that neither admission nor pacing alone reproduces the full controller's combination of on-time completion and optional-stage execution across the evaluated panels.
 
-\smallskip\noindent\textbf{Contributions.}
-We summarize our contributions below:
-\begin{itemize}[leftmargin=1.2em]
-  \item We characterize why a static thermal cutoff does not reflect whether an optional stage is feasible for an individual capture, motivating runtime decisions based on the capture's remaining deadline budget.
-  \item We present the Budget-Aware Draft Controller, which coordinates remaining-budget admission of optional stages with next-capture pacing on a shared draft worker with non-preemptible stages. To our knowledge, this is the first work to combine these controls in a production camera system under a hard per-capture deadline.
-  \item We evaluate the controller using production-derived binaries on two commercial devices, covering end-to-end effectiveness, the contribution of each component, admission decision quality, and pacing behavior under queue pressure.
-\end{itemize}
+% \smallskip\noindent\textbf{Contributions.}
+% We summarize our contributions below:
+% \begin{itemize}[leftmargin=1.2em]
+%   \item We characterize why a static thermal cutoff does not reflect whether an optional stage is feasible for an individual capture, motivating runtime decisions based on the capture's remaining deadline budget.
+%   \item We present the Budget-Aware Draft Controller, which coordinates remaining-budget admission of optional stages with next-capture pacing on a shared draft worker with non-preemptible stages. To our knowledge, this is the first work to combine these controls in a production camera system under a hard per-capture deadline.
+%   \item We evaluate the controller using production-derived binaries on two commercial devices, covering end-to-end effectiveness, the contribution of each component, admission decision quality, and pacing behavior under queue pressure.
+% \end{itemize}
