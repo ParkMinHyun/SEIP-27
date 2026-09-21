@@ -4,22 +4,24 @@
 \input{tables/tab_rq4_pacing_sizing.tex}
 
 Table~\ref{tab:rq4_pacing_sizing} evaluates 3{,}050 pacing decisions from 116 \emph{Full} runs in the 12MP normal condition.
-This is the production-default setting without external memory pressure and approximates an ordinary capture session.
-Panel~(a) groups decisions by the measured backlog \(B_i\), expressed as a fraction of the Capture Timeout budget.
-Panel~(b) groups captures by slack, the remaining margin to the Capture Timeout deadline at draft sequence completion.
-It reports pacing coverage within 20\%, 10\%, and 5\% of the deadline.
-For paced decisions, \(d_i/B_i\) reports the delay relative to the backlog.
+This is the production-default setting without external memory pressure.
+Panel~(a) groups decisions by the measured backlog \(B_i\) as a fraction of the Capture Timeout budget.
+Panel~(b) reports pacing coverage for captures that finished with less than 20\%, 10\%, and 5\% of the timeout budget remaining.
+For paced decisions, \(d_i/B_i\) expresses the pacing delay relative to the backlog.
 
 \smallskip\noindent\textbf{Queue response.}
 Pacing activation increased sharply with backlog, from 0\% below 10\% of the budget to 8.2\%, 45.0\%, and 83.4\% in successively higher bands.
 Among paced decisions, median \(d_i/B_i\) decreased from 29.1\% in the lightest active band to 13.0\% and 8.3\% as backlog increased.
-Pacing therefore responded to heavier queue pressure mainly by engaging more often, rather than by increasing delay in proportion to backlog.
+Pacing therefore scaled with queue pressure mainly through more frequent activation rather than larger relative delays.
 
 \smallskip\noindent\textbf{Selective pacing under pressure.}
 High backlog alone did not trigger pacing.
-Of the 114 unpaced decisions with at least half of the budget already queued, 58 were already projected to fit within the remaining budget without delay.
-For the other 56, an admission skip had reduced the projected remaining workload enough to fit.
-Conversely, among captures that finished within 20\%, 10\%, and 5\% of the deadline, pacing engaged on 85.4\%, 92.3\%, and 95.7\%, respectively.
-Their median \(d_i/B_i\) remained within 10.1--11.2\%, indicating that coverage increased through more frequent activation rather than larger relative delays.
-All six captures within 5\% that received no delay had an optional stage skipped by admission.
-Thus, pacing remained selective under high backlog, while no capture finishing within 5\% of the deadline passed through both controls untouched.
+In the \(\geq 50\%\) backlog group, 574 of 688 decisions were paced, leaving 114 unpaced.
+Of these 114, 58 were observed predominantly at lower overheat levels and were still projected to fit within the deadline without pacing.
+For the other 56, an admission skip had already reduced the projected remaining draft work enough to fit within the deadline.
+
+Pacing concentrated on captures closest to the deadline.
+Among captures finishing within 20\%, 10\%, and 5\% of the deadline, pacing engaged on 85.4\%, 92.3\%, and 95.7\%, respectively.
+In the tightest 5\% group, 133 of 139 were paced.
+The remaining six were backlog-underestimation misses at the pacing decision, but later admission skips kept each capture within budget.
+Despite this high near-deadline coverage, median pacing delay was only about 10\% of the queued backlog.
