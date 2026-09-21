@@ -14,5 +14,5 @@ However, a sudden stall cannot be reflected in the estimate because it is absent
 Encoding and saving are less CPU-intensive than optional image processing, and we observed no isolated stall during evaluation.
 We therefore did not add a safeguard for this path.
 If needed, the mandatory path could first be made more robust by preparing file and database resources earlier, deferring non-critical saving work, and bounding database waits.
-When overruns persist, a stronger extension is to report mandatory-stage progress to the application.
-While progress continues, the application could delay declaring Capture Timeout and route queued captures through the fallback sequence; if progress stops, the mandatory path requires system-level remediation.
+When overruns persist, a stronger extension is to report mandatory-stage progress to the application as a progress heartbeat.
+While forward progress continues, the application could defer declaring Capture Timeout and route queued captures through the fallback sequence; if progress ceases, the mandatory path would require system-level remediation.

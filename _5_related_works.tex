@@ -23,9 +23,11 @@ Our pacing therefore delays next-capture release.
 It limits queue growth without reducing work admitted for the current capture.
 
 \smallskip\noindent\textbf{Coordinating workload and arrivals.}
-Our controller is most closely related to systems that combine incoming-load control with service-level or quality adaptation.
-Feedback-control systems jointly adjust request admission and service level from deadline-miss or response-time feedback~\cite{lu-feedback-control-edf,lu-feedback-control-scheduling,welsh-overload-control}, while QoS negotiation accepts requests at reduced quality rather than rejecting them~\cite{abdelzaher-qos-negotiation,abdelzaher-content-adaptation,rajkumar-qos-resource-allocation,klein-brownout}.
-These studies establish that workload and arrival control can be coordinated.
-Per-request adaptation to a remaining end-to-end budget is also established~\cite{timecard-sosp}.
-What differs in our capture pipeline is how the two controls are coupled across consecutive captures: admission controls optional stages of the current capture, while pacing controls when the next capture enters the shared draft worker.
+Prior systems have also combined the two control dimensions discussed above.
+Feedback-control systems regulate incoming load through request admission while adjusting the service level of admitted requests from deadline-miss or response-time feedback~\cite{lu-feedback-control-edf,lu-feedback-control-scheduling,welsh-overload-control}.
+QoS negotiation similarly reduces service quality to accept requests that might otherwise be rejected~\cite{abdelzaher-qos-negotiation}.
+These systems control both whether incoming work is accepted and how much service it receives, with rejection remaining one of their control actions.
+Content adaptation and brownout instead reduce per-request work without controlling when requests arrive~\cite{abdelzaher-content-adaptation,klein-brownout}.
+Neither pattern directly matches our capture pipeline: once issued, a user-triggered capture must be served rather than rejected, and reducing current-capture work alone is insufficient under parallel capture.
+Our controller therefore couples the two controls across consecutive captures: admission decides which optional stages the current capture executes, while pacing delays the release of the next capture instead of rejecting it.
 To our knowledge, this is the first work to combine per-capture remaining-budget admission with next-capture pacing in a production camera system under a hard per-capture deadline.
