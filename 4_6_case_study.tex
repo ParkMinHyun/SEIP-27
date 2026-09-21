@@ -4,18 +4,22 @@
 \input{tables/tab_casestudy_selection.tex}
 \input{figures/fig_casestudy_12mp.tex}
 
-Table~\ref{tab:casestudy_selection} summarizes the selected run relative to its peers.
-The run exercises every coordination behavior and is worse than the peer median on all five reported metrics.
-We use it to illustrate control interaction rather than typical behavior.
-
-Figure~\ref{fig:casestudy_12mp} traces this 30-capture run in the production-default 12MP mode, without external memory pressure, starting at overheat level 4.
-This setting matches the motivating timeout and the level at which the production guard begins suppressing optional stages.
+Table~\ref{tab:casestudy_selection} summarizes the case-study setting and compares the run with its peers.
+We selected this run to examine pacing activation, relaxation, and reactivation alongside admission skips.
+Its stage-execution counts and slack \(P_5\) are below the peer medians, while both pacing costs are higher.
+Figure~\ref{fig:casestudy_12mp} traces these interactions over 30 captures.
 
 \smallskip\noindent\textbf{Control interaction.}
-The trace shows a repeated two-step response as backlog rises.
-Pacing engaged first, and when pressure persisted, admission skipped an optional stage.
-Afterward, backlog declined and Slack recovered.
-In the first period, pacing began at capture 5 and admission intervened at capture 9, with Slack reaching 27.3\% by capture 15.
-The same sequence recurred from capture 21, with admission intervening at capture 23.
-Backlog then fell from 63.8\% to 31.8\% of the budget while queue depth remained 6, and Slack recovered to 45.6\% by capture 30.
-Together, the trace shows the controller escalating its response as queue pressure persisted.
+The trace shows a clear division of labor between the two controls.
+Admission persistently reduced draft work, while pacing selectively delayed subsequent captures under queue pressure.
+
+Pacing began at capture 5, before slack became critical.
+Backlog continued to rise more slowly, but slack still narrowed to 2.1\% of the timeout budget by capture 8.
+Admission then began skipping an optional stage at capture 9.
+Backlog declined from capture 10, and slack recovered to 27.3\% by capture 15.
+Pacing was inactive over captures 13--20 while the stage remained skipped.
+Thus, the controller reduced persistent draft work without continuing to add capture delay.
+
+When backlog grew again, pacing resumed at capture 21 and admission began skipping another optional stage at capture 23.
+Backlog then declined from its 63.8\% peak, and slack reached 45.6\% by capture 30.
+The repeated pattern shows complementary control at two time scales: admission provides persistent workload reduction, while pacing provides reversible timing control as queue pressure changes.
