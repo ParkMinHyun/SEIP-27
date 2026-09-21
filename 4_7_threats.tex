@@ -13,4 +13,6 @@ When their slowdown persists across captures, the longer durations are incorpora
 However, a sudden stall cannot be reflected in the estimate because it is absent from the history available at the decision point, and the watchdog covers only the admitted optional stage.
 Encoding and saving are less CPU-intensive than optional image processing, and we observed no isolated stall during evaluation.
 We therefore did not add a safeguard for this path.
-If needed, the mandatory path could be made more robust by preparing file and database resources earlier, deferring non-critical saving work, and bounding database waits.
+If needed, the mandatory path could first be made more robust by preparing file and database resources earlier, deferring non-critical saving work, and bounding database waits.
+When overruns persist, a stronger extension is to report mandatory-stage progress to the application.
+While progress continues, the application could delay declaring Capture Timeout and route queued captures through the fallback sequence; if progress stops, the mandatory path requires system-level remediation.
