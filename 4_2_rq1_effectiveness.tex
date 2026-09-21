@@ -11,7 +11,7 @@ We therefore assess the full controller along three dimensions: deadline safety,
 \smallskip\noindent\textbf{Deadline safety.}
 Baseline reached Capture Timeout in 26 of the 28 cells.
 In 17 of these cells, all ten runs timed out, with the earliest failure occurring at the third capture.
-By contrast, every controller run in all 28 cells completed the full 30-capture horizon without an observed Capture Timeout.
+By contrast, no Capture Timeout was observed in any controller run over the full 30-capture horizon.
 
 \smallskip\noindent\textbf{Stage execution.}
 The controller retained substantial optional stage execution rather than broadly suppressing it.
@@ -19,7 +19,7 @@ Over the first five consecutive captures, \(M\) and \(S\) executed on at least 4
 Both stages executed in all five consecutive captures in 23 of the 28 cells.
 Even in the twelve cells starting at overheat level 4 or higher, \(M\) executed on 5.2--22.2 captures per run over the full horizon, while \(S\) generally executed more often than \(M\).
 At these levels, the production thermal guard begins suppressing optional stages.
-Within the same device and capture condition, optional-stage execution generally decreased at higher starting overheat levels.
+Within the same device and capture condition, stage execution generally decreased at higher starting overheat levels.
 Rather than disabling all optional work at a fixed level, the controller adapted stage execution across thermal conditions.
 
 \smallskip\noindent\textbf{Pacing cost.}
@@ -27,4 +27,4 @@ Pacing was infrequent during the first five consecutive captures.
 It activated on none of the four eligible transitions in 14 cells and on at most 1.8 transitions per run in any cell.
 When it did activate, \(d\)~P50 reached 737~ms, about 55\% of the corresponding delay with parallel capture disabled under the same condition.
 Over all 30 captures, pacing activated on as many as 17.7 of the 29 eligible transitions per run, while \(d\)~P50 remained at 127--538~ms in cells with positive delays.
-Thus, pacing had limited impact on early shot-to-shot responsiveness while remaining available as queue pressure increased.
+Thus, the responsiveness cost of pacing remained limited during early consecutive captures.

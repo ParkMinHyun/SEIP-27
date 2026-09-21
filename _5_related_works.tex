@@ -27,5 +27,5 @@ Our controller is most closely related to systems that combine incoming-load con
 Feedback-control systems jointly adjust request admission and service level from deadline-miss or response-time feedback~\cite{lu-feedback-control-edf,lu-feedback-control-scheduling,welsh-overload-control}, while QoS negotiation accepts requests at reduced quality rather than rejecting them~\cite{abdelzaher-qos-negotiation,abdelzaher-content-adaptation,rajkumar-qos-resource-allocation,klein-brownout}.
 These studies establish that workload and arrival control can be coordinated.
 Per-request adaptation to a remaining end-to-end budget is also established~\cite{timecard-sosp}.
-What differs in our capture pipeline is how the two are coupled: admission controls optional stages for the current capture, while pacing controls when the next user-triggered capture reaches the same non-preemptible worker.
+What differs in our capture pipeline is how the two controls are coupled across consecutive captures: admission controls optional stages of the current capture, while pacing controls when the next capture enters the shared draft worker.
 To our knowledge, this is the first work to combine per-capture remaining-budget admission with next-capture pacing in a production camera system under a hard per-capture deadline.
