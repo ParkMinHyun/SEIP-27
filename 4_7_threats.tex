@@ -11,8 +11,8 @@ We implemented warm-up data support, but left it disabled because no cold-start 
 Encoding and saving are mandatory stages that admission cannot skip.
 When their slowdown persists across captures, the longer durations are incorporated into subsequent estimates, allowing both admission and pacing to adapt.
 However, a sudden stall cannot be reflected in the estimate because it is absent from the history available at the decision point, and the watchdog covers only the admitted optional stage.
-Encoding and saving are less CPU-intensive than optional image processing, and we observed no isolated stall during evaluation.
-We therefore did not add a safeguard for this path.
+Under upper-bound admission and pacing intervention, no Capture Timeout was observed across our evaluation.
+We therefore did not add a separate safeguard for this path.
 If needed, the mandatory path could first be made more robust by preparing file and database resources earlier, deferring non-critical saving work, and bounding database waits.
-When overruns persist, a stronger extension is to report mandatory-stage progress to the application as a progress heartbeat.
-While forward progress continues, the application could defer declaring Capture Timeout and route queued captures through the fallback sequence; if progress ceases, the mandatory path would require system-level remediation.
+When overruns persist, a stronger extension is to report mandatory-stage progress to the application through a heartbeat.
+While forward progress continues, the application could extend the Capture Timeout timer and route queued captures through the fallback sequence; if progress ceases, the mandatory path would require system-level remediation.
