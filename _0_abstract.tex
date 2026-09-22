@@ -1,11 +1,10 @@
 \begin{abstract}
-% We present the Budget-Aware Draft Controller, which supports lightweight multi-frame composition under a hard per-capture deadline in Samsung's production camera system.
-% Each capture must publish an initial user-visible image before this deadline, and missing it raises Capture Timeout, a release-blocking reliability failure.
-% Applying lightweight multi-frame composition while producing the initial user-visible image narrows its visual gap to the final image, but under parallel capture the added processing can push a capture past that deadline.
-% Production mitigates this risk with a static thermal cutoff, but thermal state does not reveal how much deadline budget remains for an individual capture.
-% Runtime control must instead decide both whether the current capture can afford additional processing and whether releasing the next capture would create excessive queueing, even though the future cost of either decision is not yet observable.
-% The controller addresses this by estimating the remaining processing time and projected queueing delay, admitting an optional stage only when it fits within the current capture's remaining budget and delaying the next capture when projected queueing threatens its deadline.
-% We evaluate the controller using production-derived binaries across two commercial devices, two capture conditions, and seven starting overheat levels, 28 in all.
-% Every controller run completed a 30-capture horizon without an observed Capture Timeout, whereas the unguarded baseline reached Capture Timeout in 26 of them.
-% The controller executed optional stages at thermal levels where the production guard would disable them, and ablation showed that neither admission nor pacing alone reproduced the full controller's combination of on-time completion and optional-stage execution.
+% We present the Budget-Aware Draft Controller, which enables lightweight multi-frame composition in the initial-image pipeline of Samsung Galaxy cameras under parallel capture and a fixed per-capture deadline.
+% Under parallel capture, initial-image processing shares a serialized worker, so work admitted for one capture can consume the deadline budget of subsequent captures.
+% The production system limits this risk with a fixed thermal cutoff, which does not account for the live deadline state of individual captures.
+% Our controller coordinates remaining-sequence admission with capture-availability pacing using observed processing durations.
+% We evaluate the controller across 28 combinations of two devices, two capture conditions, and seven starting overheat levels.
+% Every controller run completed 30 captures without an observed deadline violation, whereas the unguarded baseline reached Capture Timeout in 26 of the 28 cells.
+% The controller also continued to execute lightweight multi-frame composition at or above the thermal cutoff.
+% These results show that coordinated admission and pacing can enable lightweight multi-frame composition in the initial-image pipeline without relying on static feature suppression under per-capture deadlines.
 \end{abstract}
