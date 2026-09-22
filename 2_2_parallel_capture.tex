@@ -3,7 +3,7 @@
 
 Parallel capture allows the camera application to accept the next shutter input before the preceding capture has produced its draft image.
 This is possible because the hardware abstraction layer (HAL) can issue a capture-availability signal, \texttt{captureAvailable}, before the draft sequence completes.
-The application can therefore shorten the shot-to-shot interval.
+This signal tells the application when it may accept next capture request, allowing a shorter shot-to-shot interval.
 
 Each accepted request starts its own Capture Timeout clock, but draft sequences execute one at a time on a single worker in capture order.
 When requests arrive faster than the worker completes these sequences, later captures must wait for earlier ones to finish.
@@ -14,6 +14,6 @@ Thus, earlier requests can cause a capture to miss its deadline even when its ow
 \begin{figure}[t]
   \centering
   \resizebox{\columnwidth}{!}{\input{figures/fig_parallel_capture_overlap.tex}}
-  \caption{Cross-shot deadline contention under parallel capture.}
+  \caption{Queueing consumes timeout budget under parallel capture.}
   \label{fig:overlap}
 \end{figure}
