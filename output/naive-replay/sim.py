@@ -122,13 +122,16 @@ class Sticky:
         return r if r else seq
 
 
-def run_arm(prep, arm, N=3, stat='mean', margin=0.0, rng=None):
+def run_arm(prep, arm, N=3, stat='mean', margin=0.0, rng=None, ovh=False, scale=1.0, log=None):
     rows = []
     for run, R in prep.items():
         caps, ex = R['caps'], R['ex']
         pr = Predictor()
+        sh = Predictor() if log is not None else None   # shadow: deployed model on this arm's own trajectory
         pol = Sticky()
         walls = []   # (end, wall)
+        stage_hist = {}  # key -> [(end, dur)] per executed occurrence
+        ovh_hist = []    # (end, non-node time of the draft)
         prev_end = None
         cur_sid = None
         for i, c in enumerate(caps):
@@ -145,12 +148,23 @@ def run_arm(prep, arm, N=3, stat='mean', margin=0.0, rng=None):
             executed = {}
             adm_log = []
             comp_so_far = []
+            node_durs = []
+            sh_dec = {}
+            pend = []
             full_seq = tuple(n['key'] for n in c['nodes'])
             for j, n in enumerate(c['nodes']):
                 t_node = start + n['pre'] + cum
                 T = c['D'] - t_node
                 key = n['key']
                 seq = pol.resolve(full_seq[j:])
+                fc = np.nan
+                if sh is not None:
+                    sP, sU, spm = sh.decide(seq)
+                    sh_dec[seq] = spm
+                    if seq[0] in OPTIONAL:
+                        rsv = tuple(k for k in seq if k.startswith('ENCODING'))
+                        if rsv:
+                            sh_dec[rsv] = sh.decide(rsv)[2]
                 if arm in ('DEP', 'DEP_P'):
                     P, U, pm = pr.decide(seq)
                     decisions[seq] = pm
@@ -175,19 +189,43 @@ def run_arm(prep, arm, N=3, stat='mean', margin=0.0, rng=None):
                             m_adm = True
                         else:
                             s = np.mean(hist) if stat == 'mean' else max(hist)
-                            m_adm = (s + margin - (t_node - start)) <= T
+                            fc = s + margin - (t_node - start)
+                            m_adm = fc <= T
+                    else:
+                        m_adm = True
+                elif arm == 'STAGE':
+                    if key in OPTIONAL:
+                        def est(k):
+                            h = [d_ for e_, d_ in stage_hist.get(k, []) if e_ <= t_node][-N:]
+                            if not h:
+                                return 0.0
+                            return float(np.mean(h)) if stat == 'mean' else float(max(h))
+                        rem = pol.resolve(full_seq[j:])
+                        f = sum(est(k) for k in rem)
+                        if f <= 0:
+                            m_adm = True
+                        else:
+                            if ovh:
+                                oh = [o for e_, o in ovh_hist if e_ <= t_node][-N:]
+                                f += float(np.mean(oh)) if oh else 0.0
+                            fc = f * scale + margin
+                            m_adm = fc <= T
                     else:
                         m_adm = True
                 elif arm == 'ALWAYS':
                     m_adm = True
                 elif arm == 'FACT':
                     m_adm = n['fadmit'] if key in OPTIONAL else True
+                was_demoted = pol.demoted(key)
                 if key in OPTIONAL:
                     adm = pol.admit(key, m_adm) if arm != 'FACT' else m_adm
                 else:
                     adm = True
                 if adm and key in OPTIONAL:
                     adm_log.append((key, j, T))
+                if sh is not None and key in OPTIONAL:
+                    pend.append(dict(run=run, shot=c['shot'], key=key[:6], T=T, f=fc, sP=sP, sU=sU, adm=adm,
+                                     sticky=was_demoted, t_node=t_node))
                 if adm:
                     d = n['fdur']
                     if d is None and not n['fadmit'] and key in OPTIONAL:
@@ -198,6 +236,7 @@ def run_arm(prep, arm, N=3, stat='mean', margin=0.0, rng=None):
                 executed[key] = executed.get(key, False) or (adm and d > 0)
                 if d > 0:
                     durs[key] = int(round(d))
+                    node_durs.append((key, d))
                 if adm:
                     comp_so_far.append(key)
                 cum += d
@@ -205,7 +244,15 @@ def run_arm(prep, arm, N=3, stat='mean', margin=0.0, rng=None):
             wall = end - start
             if arm in ('DEP', 'DEP_P'):
                 pr.learn(durs, list(decisions.items()))
+            if sh is not None:
+                sh.learn(durs, list(sh_dec.items()))
+                for r_ in pend:
+                    r_['G'] = end - r_['t_node']; r_['margin'] = c['D'] - end
+                    log.append(r_)
             walls.append((end, wall, tuple(comp_so_far)))
+            for k_, d_ in node_durs:
+                stage_hist.setdefault(k_, []).append((end, d_))
+            ovh_hist.append((end, c['post']))
             prev_end = end
             rows.append(dict(run=run, shot=c['shot'], cap=c['cap'], level=c['level'],
                              margin=c['D'] - end, fmargin=c['fmargin'], end=end, fend=c['fend'],

@@ -25,6 +25,12 @@ python arms.py early
 python summarize.py late early
 python sens.py          # imputation sensitivity (min / median of 5 nearest)
 python tables.py        # CSVs under out/  (copies are in results/)
+# follow-up: stage-wise naive (sum of each remaining stage's recent-N statistic)
+python arms_stage.py late          # summary_stage_late.csv (kept as results/B_stage_naive_arms.csv)
+python arms_stage_margin.py        # additive margin sweep (results/B_stage_naive_margin_sweep.csv)
+python arms_stage_scale.py         # multiplicative factor sweep (results/B_stage_naive_scale_sweep.csv)
+python partA_stage.py              # open-loop coverage, and U/P-hat by condition
+python shadow.py                   # shadow U / P-hat at naive admissions that ended in a miss
 ```
 
 ## What each layer is and is not
