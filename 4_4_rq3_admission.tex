@@ -2,29 +2,32 @@
 \label{sec:rq3}
 
 Table~\ref{tab:rq3_admission_audit} evaluates admission decisions rather than deployed stage execution.
-We audited 3{,}746 decisions under an always-admit model.
-Optional stages always executed with the watchdog suppressed, while admission ran in parallel and recorded its decisions for offline analysis.
+We audited 3{,}746 decisions under an always-admit configuration.
+Optional stages always executed with the watchdog suppressed; admission decisions were recorded but not enforced.
 Each decision is thus scored against its realized outcome: feasible if its remaining sequence completed within the timeout budget read at that decision, and unsafe otherwise.
 
 \smallskip\noindent\textbf{Decision accuracy.}
-Admission was accurate in both directions: it admitted 97.3\% of feasible decisions and correctly skipped 97.2\% of unsafe ones.
-Among feasible decisions, only 2.7\% were conservatively skipped, with a median remaining-sequence margin of only 0.7--2.6\% of the timeout budget.
-Among unsafe decisions, only 2.8\% were incorrectly admitted, while the 97.2\% that were skipped exceeded the budget by a median of 3.0--3.5\%.
-Admission errors therefore clustered near the decision boundary, while correct skips occurred on decisions already beyond the timeout budget.
+Admission recommended execution for 97.3\% of feasible decisions and skipping for 97.2\% of unsafe ones.
+Among feasible decisions, 2.7\% received conservative skip recommendations; their median remaining-sequence margins were only 0.7--2.6\% of the timeout budget across the condition--stage groups.
+Among unsafe decisions, 2.8\% received incorrect admit recommendations.
+In contrast, correct skip recommendations identified remaining sequences that exceeded the budget by a median of 3.0--3.5\% across those groups.
+Admission errors therefore occurred close to the decision boundary, whereas correct skips identified sequences already beyond the timeout budget.
 
 \smallskip\noindent\textbf{Unsafe admits and safeguards.}
-Only five unsafe decisions were admitted.
+Five unsafe decisions received admit recommendations.
 With the watchdog disabled, each overran its deadline in the audit.
-Figure~\ref{fig:rq3_unsafe_spike_anatomy} examines these misses against the prior capture in the same run.
+Figure~\ref{fig:rq3_unsafe_spike_anatomy} compares the remaining-sequence latency and CPU time of these five decisions with those of the preceding capture in the same run.
+M1--M3 label the multi-frame decisions, and S1--S2 label the single-frame decisions.
 For M1 and M2, latency rose to 2.32\(\times\) and 1.95\(\times\), whereas CPU time rose only to 1.41\(\times\) and 1.15\(\times\).
 The busy-core proxy, defined as CPU time per unit of wall time, consequently fell to 0.60\(\times\) and 0.59\(\times\).
-These misses therefore coincided with post-decision latency increases that could not be reflected in the estimate at decision time.
+These misses coincided with latency increases that were not captured by the decision-time estimates.
 
-We then used offline trace replay to evaluate how the deployed safeguards would respond to these five misses.
+In trace replay, the layered safeguards covered all five admission misses.
 The replay re-applied the safeguard logic to the recorded stage durations, budgets, upper estimates, and admission decisions.
 For M1 and M2, the admitted stage exceeded its watchdog budget, 1{,}460~ms against 1{,}202~ms and 1{,}648~ms against 889~ms, respectively, so fallback would trigger before the stage returned.
-For M3, S1, and S2, a later admission decision in the same capture would skip an optional stage, after which the measured remaining sequence stayed within the available budget.
-These cases expose the boundary of admission prediction while showing that the layered safeguards would contain all five observed misses under the recorded traces.
+For M3, a later decision would skip \(S\), reducing the remaining processing time.
+For S1 and S2, an earlier decision would skip \(M\), leaving more budget when execution reached \(S\).
+With these skips applied to the recorded durations, the remaining sequence fit within the adjusted budget in all three cases.
 
 \input{tables/tab_rq3_admission_quality.tex}
 \input{figures/fig_rq3_unsafe_spike_anatomy.tex}

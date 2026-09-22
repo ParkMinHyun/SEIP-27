@@ -1,18 +1,12 @@
 \subsection{Threats to Validity}
 \label{sec:threats}
 
+\smallskip\noindent\textbf{Evaluation scope.}
+The controller estimates processing durations from runtime observations rather than relying on device- or condition-specific timing tables.
+We evaluated the controller on two devices in Portrait mode with a fixed scene and a 30-capture horizon.
+This runtime adaptation reduces dependence on the specific configurations used in our evaluation, although broader validation across devices, capture modes, scenes, and additional image-processing stages remains future work.
+
 \smallskip\noindent\textbf{Cold start.}
 Both components rely on observed draft sequence durations, so the controller has no prior timing evidence before the first sequence completes.
-If that sequence runs unusually long while parallel captures continue to arrive, the resulting queue cannot yet be reflected in either decision.
-This cold-start bottleneck must therefore be addressed by the underlying image solution or by warm-up data.
+If that sequence runs unusually long while parallel captures continue to arrive, neither component yet has completed-duration observations with which to estimate the growing processing demand.
 We implemented warm-up data support, but left it disabled because no cold-start timeout was observed and maintaining the dataset would add storage and maintenance cost.
-
-\smallskip\noindent\textbf{Mandatory-stage stalls.}
-Encoding and saving are mandatory stages that admission cannot skip.
-When their slowdown persists across captures, the longer durations are incorporated into subsequent estimates, allowing both admission and pacing to adapt.
-However, a sudden stall cannot be reflected in the estimate because it is absent from the history available at the decision point, and the watchdog covers only the admitted optional stage.
-Under upper-bound admission and pacing intervention, no Capture Timeout was observed across our evaluation.
-We therefore did not add a separate safeguard for this path.
-If needed, the mandatory path could first be made more robust by preparing file and database resources earlier, deferring non-critical saving work, and bounding database waits.
-When overruns persist, a stronger extension is to report mandatory-stage progress to the application through a heartbeat.
-While forward progress continues, the application could extend the Capture Timeout timer and route queued captures through the fallback sequence; if progress ceases, the mandatory path would require system-level remediation.

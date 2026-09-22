@@ -6,14 +6,17 @@
 
 Table~\ref{tab:casestudy_selection} summarizes the case-study setting and compares the run with its peers.
 We selected this run to examine pacing activation, relaxation, and reactivation alongside admission skips.
-Its stage-execution counts and slack \(P_5\) are below the peer medians, while both pacing costs are higher.
+Its stage-execution counts and the fifth percentile of its realized deadline margin (slack) are below the peer medians, while both pacing costs are higher.
 Figure~\ref{fig:casestudy_12mp} traces these interactions over 30 captures.
+Queue depth includes the sequence in service.
+Backlog is measured at the pacing decision, whereas slack is measured at draft sequence completion, so their normalized values do not sum to 100\%.
+The shaded interval marks baseline first-timeout indices from a separate collection, not a paired outcome for this run.
 
 \smallskip\noindent\textbf{Control interaction.}
-The trace shows a clear division of labor between the two controls.
+The trace illustrates the different roles of the two controls.
 Admission persistently reduced draft work, while pacing selectively delayed subsequent captures under queue pressure.
 
-Pacing began at capture 5, before slack became critical.
+Pacing began at capture 5, before the run reached its smallest deadline margin.
 Backlog continued to rise more slowly, but slack still narrowed to 2.1\% of the timeout budget by capture 8.
 Admission then began skipping an optional stage at capture 9.
 Backlog declined from capture 10, and slack recovered to 27.3\% by capture 15.
@@ -22,4 +25,4 @@ Thus, the controller reduced persistent draft work without continuing to add cap
 
 When backlog grew again, pacing resumed at capture 21 and admission began skipping another optional stage at capture 23.
 Backlog then declined from its 63.8\% peak, and slack reached 45.6\% by capture 30.
-The repeated pattern shows complementary control at two time scales: admission provides persistent workload reduction, while pacing provides reversible timing control as queue pressure changes.
+The repeated pattern illustrates complementary control at two time scales: admission keeps a stage disabled until the queue drains, while pacing can resume or stop adding delay as queue pressure changes.

@@ -6,7 +6,8 @@ It delays the callback when the predicted backlog and additional draft work exce
 
 \smallskip\noindent\textbf{Backlog tracking.}
 While a draft sequence is executing, subsequent capture requests can continue to arrive.
-Each request for capture \(i\) triggers a pacing decision at \(t_i\) before its draft sequence is queued.
+For capture \(i\), pacing makes its decision at \(t_i\), before that capture's draft sequence is queued.
+The callback exposes the next capture opportunity, for capture \(i+1\).
 Because queued draft sequences differ in their stages and processing cost, queue depth alone does not reflect their processing-time backlog.
 Pacing therefore maintains \(t^{\mathrm{end}}\), the predicted queue-drain time obtained by accumulating their sequence-level point estimates \(\hat P\).
 At that decision, pacing estimates the backlog as
@@ -29,7 +30,8 @@ Using this window as a reference for queue pressure, pacing computes the callbac
 Pacing converts only half of the positive deficit into callback delay, sharing the response to deadline pressure with admission rather than absorbing the entire deficit as user-perceived delay.
 This sizing rule is a coordination heuristic, not a fixed-point derivation or an optimality claim.
 
-Let \(C_\tau\) be the recency-weighted \(\tau\)-quantile of completed draft sequence durations, with \(\tau\) computed from this history; \(C_\tau=0\) for an empty history.
+Let \(C_\tau\) be the recency-weighted \(\tau\)-quantile of completed draft sequence durations.
+The controller computes \(\tau\) from this duration history using the effective-sample-size rule in Section~\ref{sec:admission}; \(C_\tau=0\) when the history is empty.
 At each draft sequence start, pacing removes the stages admission has disabled from the configured sequence \(\mathcal K\), obtaining \(\mathcal K^{\mathrm{eff}}\).
 It then computes
 \begin{equation}
@@ -45,9 +47,9 @@ This reserve is empirical rather than an execution-time bound.
 
 \smallskip\noindent\textbf{Provisional backlog accounting.}
 For Equation~\ref{eq:backlog} to reflect the actual queue, \(t^{\mathrm{end}}\) must account for every draft sequence that is running or waiting in the queue.
-However, the stages of a draft sequence are determined only when it starts, whereas later pacing decisions may occur while it is still queued.
+However, the effective sequence used for prediction is resolved when each draft sequence starts, whereas pacing decisions for later captures may occur while that sequence is still queued.
 Pacing therefore adds each draft sequence to \(t^{\mathrm{end}}\) at its capture's decision, using a provisional estimate \(\hat P^{\mathrm{last}}\).
-At each draft sequence start, pacing sets \(\hat P^{\mathrm{last}}\) to \(\hat P(\mathcal K^{\mathrm{eff}})\), the point estimate for the stages that sequence will run.
+At each draft sequence start, pacing sets \(\hat P^{\mathrm{last}}\) to \(\hat P(\mathcal K^{\mathrm{eff}})\), the point estimate for the stages currently enabled for that sequence.
 Starting from an empty queue, pacing has no \(\hat P^{\mathrm{last}}\) and therefore releases callbacks without delay until a draft sequence starts.
 Thereafter, each decision provisionally extends \(t^{\mathrm{end}}\):
 \begin{equation}

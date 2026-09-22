@@ -3,13 +3,10 @@
 
 The draft sequence comprises the processing stages that produce each capture's initial user-visible draft image.
 It was introduced together with the post-processing pipeline, which produces the final image.
-When post-processing completes, the final image replaces the draft image if one has already been published.
-Figure~\ref{fig:capture-pipeline} illustrates this workflow.
+When post-processing completes, the final image replaces the draft image if one has been published.
 
 The draft pipeline uses a single worker to publish images in capture order and limit resource demand.
 Executing multiple draft sequences concurrently would require buffering out-of-order results and increase peak compute and memory demand.
-
-\input{figures/fig_capture_pipeline.tex}
 
 \smallskip\noindent\textbf{Extending the draft sequence.}
 The original draft sequence saved an image without additional image processing.
@@ -17,7 +14,9 @@ To reduce visual differences between draft and final images, the framework later
 
 As post-processing became more resource-intensive, the framework deferred its start for selected shot modes until the application entered the background to preserve foreground responsiveness.
 In these modes, the draft image remains the user-visible result throughout the foreground session, making its visual quality more important.
-The draft--final visual gap is particularly pronounced in Portrait mode.
+The draft--final visual gap is particularly pronounced in Portrait mode, as shown in Figure~\ref{fig:draft-final-gap}.
 To reduce this gap, we implemented lightweight multi-frame composition in the draft sequence.
 However, the added processing time can cause Capture Timeout, so we have not deployed the feature on any device model.
 Under parallel capture, this processing can also lengthen later captures' wait for the single draft worker.
+
+\input{figures/fig_draft_final_gap.tex}

@@ -1,7 +1,7 @@
 \subsection{Workload Model and Online Duration Estimation}
 \label{sec:model}
 Both control modules require online estimates of remaining draft work.
-The controller therefore learns stage durations from completed draft sequences and combines them according to the sequence being considered.
+The controller therefore estimates stage durations from observations of completed draft sequences and combines these estimates for the sequence being considered.
 
 \smallskip\noindent\textbf{Modeled workload sequence.}
 Each workload key \(k\) identifies a processing stage and its configuration.
@@ -11,7 +11,7 @@ The last key covers mandatory processing from encoding start through draft image
 Including this processing lets admission account for the time needed to produce the draft image after the optional stages finish.
 
 \smallskip\noindent\textbf{Online point estimation.}
-The controller maintains a baseline duration \(\hat b(k)\) for each key to represent its long-term processing cost.
+The controller maintains a baseline duration \(\hat b(k)\) for each key.
 A shared factor \(\gamma\) adjusts these baselines to recent execution conditions.
 Multiplying the two gives the predicted duration \(\hat p(k)\), and summing these predictions gives the duration estimate for a modeled sequence \(\mathcal K\):
 \begin{equation}

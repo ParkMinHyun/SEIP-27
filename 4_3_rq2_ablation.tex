@@ -6,7 +6,8 @@
 Table~\ref{tab:rq2_ablation} separates the contributions of admission and pacing at starting overheat level 4, where the thermal guard begins suppressing optional stages.
 \emph{No control} enables neither component.
 \emph{Admission only} and \emph{Pacing only} enable one each, and \emph{Full} enables both.
-Captures reports on-time completion, while \(M\) and \(S\) also require the corresponding stage to execute.
+The Captures column reports the percentage of requested captures completed on time.
+The \(M\) and \(S\) columns use the same denominator and additionally require the corresponding stage to execute.
 
 \smallskip\noindent\textbf{Single-component control.}
 Only \emph{Full} completed all requested captures on time in every cell.
@@ -23,4 +24,4 @@ Admission alone therefore did not achieve both full completion and high optional
 \smallskip\noindent\textbf{Combined control.}
 \emph{Full} extends \emph{Admission only} with pacing.
 Compared with \emph{Admission only}, \emph{Full} completed every requested capture on time in all three cells while executing both \(M\) and \(S\) more often in every cell.
-By applying pacing only when needed, the combined controller maintained deadline safety while preserving more optional-stage processing.
+The combined controller therefore achieved both on-time completion and higher optional-stage execution in these conditions.

@@ -5,6 +5,7 @@ A capture's timeout budget decreases while it waits for the draft worker and exe
 \emph{Remaining-Sequence Admission} therefore runs immediately before each optional stage and compares the estimated duration of the entire remaining sequence, including mandatory encoding and saving, with the live budget.
 
 \smallskip\noindent\textbf{Live-budget admission.}
+The controller tracks \(M\) and \(S\) as separate admission groups.
 At admission point \(j\), let \(T_{i,j}\) be the time remaining until capture \(i\)'s Capture Timeout deadline.
 Let \(U(\mathcal K_{i,j})\) be an empirical high-side estimate of its remaining processing time, obtained by correcting \(\hat P\) with observed prediction errors as described below.
 An optional stage in an enabled group is admitted when
@@ -15,7 +16,7 @@ An optional stage in an enabled group is admitted when
   \label{eq:admission}
 \end{equation}
 A zero point estimate permits execution to obtain the initial duration observations needed by the model.
-This cold-start decision has no learned timing evidence; any Capture Timeout observed during its validation remains a release blocker.
+This cold-start decision has no prior timing evidence; any Capture Timeout observed during its validation remains a release blocker.
 
 Once an \(M\) or \(S\) stage is rejected, the controller skips the optional stages in that group and removes them from subsequent remaining sequences until the queue drains.
 The two groups are tracked independently, so rejecting one does not disable the other.
@@ -23,7 +24,7 @@ Keeping a group disabled until the drain prevents optional effects from alternat
 
 \smallskip\noindent\textbf{Residual-calibrated upper estimate.}
 The point estimate \(\hat P\) can understate processing time when runtime conditions or image content cause a stage to run longer than predicted.
-The controller learns a multiplicative correction from completed sequences to account for these overruns without separate additive margins for each device or stage.
+The controller computes a multiplicative correction from observed prediction errors to account for these overruns without separate additive margins for each device or stage.
 For each admission decision, the controller records the per-key predictions \(\hat p(k)\) for the corresponding remaining sequence.
 At draft sequence completion, it retains the keys with positive measured durations \(p(k)\) from each recorded remaining sequence to form the measured sequence \(\mathcal K\).
 If their total predicted duration is positive, the residual factor is

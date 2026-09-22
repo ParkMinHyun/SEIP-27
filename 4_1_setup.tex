@@ -4,7 +4,7 @@
 \input{tables/tab_setup.tex}
 
 Table~\ref{tab:setup} summarizes the two experimental platforms and their common run conditions.
-The draft sequence's lightweight multi-frame composition targets Portrait mode and requires coordinated support from the HAL and image-solutions.
+The draft sequence's lightweight multi-frame composition targets Portrait mode and requires coordinated support from the HAL and image-processing components.
 We evaluate end-to-end binaries incorporating this support on the Galaxy S26 Ultra and Galaxy S26.
 The evaluation binaries bypass the production static thermal guard on both devices.
 The Exynos-based Galaxy S26 restricts parallel capture when either \(M\) or \(S\) is enabled; we disable this restriction for evaluation.
@@ -21,4 +21,4 @@ We do not hold thermal state constant during a run.
 We reach each target starting level through repeated captures or idle cooling and begin the run when the device reports that level.
 Thermal state then evolves without external intervention for the remainder of the run.
 An ADB loop provides a reproducible stress workload rather than emulating ordinary user interaction. 
-It issues each shutter input as soon as the application-facing \texttt{captureAvailable} path permits, thereby saturating the exposed request rate.
+It issues each shutter input as soon as the application receives the \texttt{captureAvailable} callback, thereby saturating the exposed request rate.

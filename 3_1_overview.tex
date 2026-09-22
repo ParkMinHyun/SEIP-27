@@ -3,11 +3,8 @@
 
 \begin{figure*}[!t]
   \centering
-  % Source PDF is 864.0 x 297.36 pt; measured ink box is x 21.1--854.9, y 12.5--285.8.
-  % Trim removes the empty top/bottom bands and the 12 pt of excess left slack so the
-  % remaining side margins match at 9.1 pt. Re-measure if the figure is re-exported.
   \includegraphics[trim=12 10 0 11,clip,width=\textwidth]{figures/fig_controller_interaction.pdf}
-  \caption{Overview of the Budget-Aware Draft Controller.}
+  \caption{Coordinated admission and pacing in the Budget-Aware Draft Controller.}
   \label{fig:controller-overview}
 \end{figure*}
 We introduce the \emph{Budget-Aware Draft Controller} to enable the draft sequence's lightweight multi-frame composition under parallel capture while meeting each capture's deadline.
@@ -18,7 +15,7 @@ The controller coordinates optional-stage execution on the single draft worker w
 It compares the estimated time for the remaining sequence with the capture's remaining timeout budget to decide whether to execute the stage.
 \emph{Capture-Availability Pacing} controls delivery of \texttt{captureAvailable}, which exposes the next capture opportunity to the application.
 It uses estimated worker occupancy and the remaining deadline window to decide whether to deliver the callback immediately or delay it.
-Both modules use duration estimates learned from completed draft sequences.
+Both modules use duration estimates based on observations from completed draft sequences.
 Pacing accounts for admission decisions when estimating how long upcoming draft sequences will take.
 
 \smallskip\noindent\textbf{Control objective.}
@@ -39,4 +36,4 @@ The controller does not maintain \(\mu_i\) as state; at each decision, it compar
 
 Within this deadline constraint, the controller prioritizes user-perceived responsiveness.
 Capture delay lengthens the shot-to-shot interval and cannot be recovered, whereas the fidelity cost of a skipped stage ends when the final image replaces the draft image.
-The controller therefore implements a deadline-constrained, responsiveness-dominant trade-off rather than a global cost optimization.
+The controller therefore implements a deadline-constrained, responsiveness-dominant trade-off between optional-stage execution and shot-to-shot delay rather than a global cost optimization.

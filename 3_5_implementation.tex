@@ -6,17 +6,17 @@ Neither attachment restructures the draft pipeline or changes the HAL and applic
 Unchanged interfaces limit cross-component coordination and revalidation.
 
 \smallskip\noindent\textbf{Ownership and attachment.}
-The framework component that owns the single draft worker also hosts the shared estimator.
-Admission therefore runs in the same lifecycle as the estimator and queries remaining-sequence estimates directly.
+The framework component that owns the single draft worker hosts both admission and the shared estimator, so admission can query remaining-sequence estimates directly.
 In contrast, the component that delivers \texttt{captureAvailable} has a separate lifecycle and does not hold the estimator.
 The draft pipeline therefore provides the pacing decision to that component through a single-method internal interface over the framework's existing event channel.
 
 The integration adds two dedicated threads: a callback-delivery thread and a watchdog-fallback thread.
 Pacing posts the \texttt{captureAvailable} callback to the callback-delivery thread for release after \(d_i\).
 The watchdog-fallback thread provides the fallback path because an admitted optional stage cannot be cancelled once it enters native image processing.
-On expiration, the fallback thread processes the preserved original input independently of the in-flight optional stage; resources owned by the latter are released only when that processing completes.
+When the watchdog expires, the fallback thread encodes and saves the preserved original input while the optional stage continues independently.
+Resources used by the optional stage are released only after that stage finishes.
 
 \smallskip\noindent\textbf{Deployment scope.}
 Because each workload key declares whether its stage is optional, an additional optional stage can reuse the estimation, admission, watchdog, and pacing logic once its key is defined and assigned to an admission group.
-Both modules learn durations from execution on the current device instead of using per-model timing tables or device-state signals such as thermal level.
+Both modules estimate durations from measurements collected on the current device instead of using per-model timing tables or device-state signals such as thermal level.
 The controller has been integrated into the product branch and is undergoing release validation for a forthcoming Galaxy flagship smartphone line.

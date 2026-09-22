@@ -1,12 +1,13 @@
 \section{Evaluation}\label{sec:evaluation}
 
-We evaluate whether the Budget-Aware Draft Controller prevents Capture Timeout while retaining optional stages and capture responsiveness on the production-derived camera stack.
+We evaluate whether coordinated admission and pacing enable the draft sequence's lightweight multi-frame composition under parallel capture while meeting capture deadlines and limiting pacing delay on the production-derived camera stack.
+These outcomes assess the deadline-constrained, responsiveness-dominant trade-off between optional-stage execution and shot-to-shot delay introduced in Section~\ref{sec:objective}.
 We address four research questions:
 
 \begin{enumerate}[label=\textbf{RQ\arabic*:}, leftmargin=4.8em]
   \item \textbf{End-to-end effectiveness.}
-  Does joint control prevent Capture Timeout while retaining optional stages
-  with limited capture delay?
+  Does joint control retain optional stages while avoiding Capture Timeout
+  with limited pacing delay?
 
   \item \textbf{Component contribution.}
   How does each component contribute to the end-to-end outcome?

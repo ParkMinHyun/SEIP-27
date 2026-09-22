@@ -1,0 +1,448 @@
+<title>최근 N개 평균 비교 리플레이</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+:root {
+  color-scheme: light;
+  --ground: #f4f6f9;
+  --surface: #ffffff;
+  --ink: #141820;
+  --ink-2: #454d5c;
+  --ink-3: #6b7383;
+  --rule: #dde2ea;
+  --grid: #e8ecf1;
+  --tint: #eaf1fb;
+  --s1: #2a78d6;
+  --s2: #eb6834;
+  --s3: #1baf7a;
+  --warn-bg: #fdf3e7;
+  --warn-ink: #7a4510;
+  --sans: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --ground: #111419;
+    --surface: #191d24;
+    --ink: #eef1f6;
+    --ink-2: #b9c0cc;
+    --ink-3: #8b93a1;
+    --rule: #2b313b;
+    --grid: #252a33;
+    --tint: #1a2635;
+    --s1: #3987e5;
+    --s2: #d95926;
+    --s3: #199e70;
+    --warn-bg: #2a2117;
+    --warn-ink: #f0c38e;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ground: #111419;
+  --surface: #191d24;
+  --ink: #eef1f6;
+  --ink-2: #b9c0cc;
+  --ink-3: #8b93a1;
+  --rule: #2b313b;
+  --grid: #252a33;
+  --tint: #1a2635;
+  --s1: #3987e5;
+  --s2: #d95926;
+  --s3: #199e70;
+  --warn-bg: #2a2117;
+  --warn-ink: #f0c38e;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.7;
+  padding-inline: 16px;
+  padding-block: 40px 72px;
+}
+.wrap { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 44px; }
+header { display: flex; flex-direction: column; gap: 10px; }
+.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .06em; color: var(--ink-3); text-transform: uppercase; }
+h1 { font-size: 30px; line-height: 1.3; margin: 0; font-weight: 700; text-wrap: balance; }
+h2 { font-size: 21px; line-height: 1.4; margin: 0; font-weight: 600; text-wrap: balance; }
+h3 { font-size: 16px; line-height: 1.5; margin: 0; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+.lede { font-size: 16.5px; color: var(--ink-2); }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 18px; font-family: var(--mono); font-size: 12.5px; color: var(--ink-3); }
+section { display: flex; flex-direction: column; gap: 16px; }
+.answer { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 22px 24px; display: flex; flex-direction: column; gap: 14px; }
+.answer ol { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: 10px; }
+.answer li { max-width: 70ch; }
+.answer li::marker { font-family: var(--mono); color: var(--ink-3); }
+.tag { display: inline-block; font-family: var(--mono); font-size: 11.5px; padding: 1px 7px; border-radius: 4px; background: var(--tint); color: var(--ink-2); margin-right: 6px; vertical-align: 1px; }
+.note { background: var(--warn-bg); color: var(--warn-ink); border-radius: 8px; padding: 14px 16px; font-size: 14px; }
+.note p { max-width: none; }
+code, .num { font-family: var(--mono); font-size: .92em; }
+.num { font-variant-numeric: tabular-nums; }
+strong { font-weight: 600; }
+ul.plain { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 6px; max-width: 70ch; }
+.tablebox { overflow-x: auto; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { padding: 8px 12px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
+th { font-weight: 500; color: var(--ink-3); font-size: 12px; background: var(--surface); }
+td:first-child, th:first-child { text-align: left; }
+td.num { font-family: var(--mono); font-size: 13px; }
+tr.cur td { background: var(--tint); font-weight: 600; }
+tr.grp td { color: var(--ink-3); font-family: var(--mono); font-size: 12px; background: var(--surface); padding-top: 12px; }
+tbody tr:last-child td { border-bottom: 0; }
+.caption { font-size: 13px; color: var(--ink-3); max-width: 72ch; }
+.chartcard { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 18px 18px 14px; display: flex; flex-direction: column; gap: 12px; position: relative; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.sw { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.sw.sq { border-radius: 2px; }
+.panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
+.panel h4 { margin: 0 0 4px; font-size: 13px; font-weight: 600; color: var(--ink-2); font-family: var(--mono); }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { font-family: var(--mono); font-size: 11px; fill: var(--ink-3); }
+svg .lbl { fill: var(--ink-2); font-size: 11px; }
+.tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--surface); font-size: 12px; line-height: 1.5; padding: 7px 10px; border-radius: 6px; font-family: var(--mono); white-space: nowrap; z-index: 5; }
+.case { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.case div { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 12px 14px; font-size: 13.5px; }
+.case b { display: block; font-family: var(--mono); font-size: 12px; color: var(--ink-3); font-weight: 500; margin-bottom: 2px; }
+details { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 14px; }
+details summary { cursor: pointer; font-size: 13.5px; color: var(--ink-2); }
+details[open] summary { margin-bottom: 10px; }
+a { color: var(--s1); }
+:focus-visible { outline: 2px solid var(--s1); outline-offset: 2px; }
+@media (max-width: 520px) { h1 { font-size: 25px; } .answer { padding: 18px; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Budget-Aware Draft Controller · naive baseline replay · 2026-09-22</div>
+    <h1>최근 N개 draft 평균으로는 왜 안 되는가</h1>
+    <p class="lede">교수님 질문: “최근 draft sequence N개의 평균 수행 시간을 쓰는 naive 방식과 비교하면, 무엇이 문제여서 지금 방법론이 필요한가?” 수집된 full-controller 워크북 4개를 그대로 리플레이해서, 추정기만 naive로 바꿨을 때 무슨 일이 생기는지 확인했습니다.</p>
+    <div class="meta">
+      <span>S26 Ultra 12MP normal 0906</span><span>S26 Ultra 24MP memory 0906</span><span>S26 12MP normal 0906</span><span>S26 24MP memory 0829</span>
+      <span>폐루프 리플레이: 226 runs · 6,780 captures · 예산 7,000 ms</span>
+    </div>
+  </header>
+
+  <section>
+    <div class="answer">
+      <h2>한 줄 답과 근거</h2>
+      <ol>
+        <li><span class="tag">admission</span><strong>어떤 naive 설정도 현재 방식의 결과에 도달하지 못합니다.</strong> 현재 방식은 deadline miss 0건에 S(single-frame) 실행 90.8% / 68.2%(12MP / 24MP)입니다. naive는 N=1–10, 평균·최대, 고정 마진 50–300 ms를 모두 시도해도 miss가 남고, 가장 보수적인 “평균+300 ms”도 miss 1건 / 2건에 S 실행이 66.3% / 48.8%로 떨어집니다.</li>
+        <li><span class="tag">원인</span>naive가 실패하는 이유는 세 가지입니다. (a) <strong>평균은 거의 절반을 과소예측</strong>합니다. (b) <strong>“평균 − 경과 시간”은 앞 stage의 overrun을 진행으로 오인</strong>해서, 가장 위험한 순간에 오히려 더 허용적이 됩니다. (c) draft 전체 시간의 이력에는 <strong>stage 구성 정보가 없어서</strong>, M만 끄면 S는 들어갈 수 있다는 사실을 알 수 없습니다. 그래서 M과 S를 항상 함께 끕니다.</li>
+        <li><span class="tag">구성요소</span>현재 방식에서 잔차 보정 상한 U를 빼고 점추정 P̂만 쓰면 miss가 17건 / 87건입니다. <strong>stage별 남은 sequence 모델과 잔차 보정 상한이 둘 다 있어야</strong> 이 결과가 나옵니다.</li>
+        <li><span class="tag">pacing</span><strong>pacing 쪽은 이 데이터로 naive 대비 우위를 보이지 못했습니다.</strong> 같은 결정 시점에서 비교하면 “대기 개수 × 최근 평균” backlog 추정이 현재 backlog clock보다 오히려 정확합니다. 폐루프 pacing 비교는 현재 export로는 식별이 불가능합니다(아래 4절). 따라서 추정기 우위는 admission 쪽에서만 주장하는 것이 안전합니다.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section>
+    <h2>1. 무엇을 어떻게 비교했나</h2>
+    <p>비교 대상은 <strong>추정기 하나뿐</strong>입니다. admission 규칙(예측 남은 시간 ≤ 남은 budget이면 실행), group 단위 sticky demotion, 세션 경계, 이력이 없을 때 허용하는 cold start는 모든 방식에 똑같이 적용했습니다.</p>
+    <div class="tablebox"><table>
+      <thead><tr><th>방식</th><th style="text-align:left">admission 시점의 남은 시간 예측</th></tr></thead>
+      <tbody>
+        <tr class="cur"><td>현재 방식</td><td style="text-align:left;white-space:normal">남은 stage sequence의 stage별 추정 합 P̂ × 잔차 보정 계수 → 상한 U</td></tr>
+        <tr><td>현재 모델, 점추정만</td><td style="text-align:left;white-space:normal">같은 stage별 모델에서 P̂만 사용(U 제거). 구성요소 확인용</td></tr>
+        <tr><td>naive 평균-N</td><td style="text-align:left;white-space:normal">같은 run에서 이미 완료된 최근 N개 draft sequence 실행 시간(draft start → end)의 평균 − 현재 draft에서 이미 지난 시간</td></tr>
+        <tr><td>naive 최대-N</td><td style="text-align:left;white-space:normal">위와 같되 평균 대신 최댓값</td></tr>
+        <tr><td>naive 평균-3 + 마진</td><td style="text-align:left;white-space:normal">평균-3에 고정 마진 50 / 100 / 150 / 200 / 300 ms 추가</td></tr>
+        <tr><td>naive 구성 일치 평균-3</td><td style="text-align:left;white-space:normal">실행될 stage 구성이 같은 draft만 골라 평균(없으면 전체 평균)</td></tr>
+      </tbody>
+    </table></div>
+    <h3>리플레이를 믿을 수 있는가</h3>
+    <ul class="plain">
+      <li>ML 코드의 predictor를 Python으로 포팅한 뒤 기록된 예측값과 대조했습니다. 결정 49,093건에서 P̂와 U의 오차 중앙값이 0 ms였습니다.</li>
+      <li>시뮬레이터에 포팅한 현재 방식을 넣으면 <strong>실제 trace가 그대로 재현</strong>됩니다. M/S 실행 결정의 일치율은 99.9–100%, 캡처별 margin 오차는 0 ms이고, 최소 margin 11 / 77 / 41 / 4 ms도 실측과 같습니다.</li>
+      <li>따라서 아래 차이는 시뮬레이터 오차가 아니라 추정기를 바꾼 효과입니다. 다만 캡처 도착 시각과 pacing 지연은 기록값으로 고정했습니다. 현재 방식이 건너뛴 stage의 실행 시간은 같은 run에서 가장 가까운 실측값으로 대체했습니다(5절 한계 참고).</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>2. 결과: naive 설정을 어떻게 바꿔도 현재 방식에 못 미칩니다</h2>
+    <div class="chartcard" id="c1card">
+      <div class="legend">
+        <span><i class="sw" style="background:var(--s1)"></i>현재 방식</span>
+        <span><i class="sw" style="background:var(--s2)"></i>naive 변형(평균·최대·마진·구성 일치)</span>
+      </div>
+      <div class="panels">
+        <div class="panel"><h4>12MP normal · 114 runs</h4><svg id="c1a" viewBox="0 0 360 250" role="img" aria-label="12MP: deadline miss versus S execution rate"></svg></div>
+        <div class="panel"><h4>24MP memory · 112 runs</h4><svg id="c1b" viewBox="0 0 360 250" role="img" aria-label="24MP: deadline miss versus S execution rate"></svg></div>
+      </div>
+      <p class="caption">가로축: S(single-frame) stage 실행률. 세로축: deadline을 넘긴 캡처 수. 좋은 방식일수록 오른쪽 아래에 놓입니다. 오른쪽 아래 구석에는 현재 방식만 있습니다. 점에 마우스를 올리면 값이 보입니다. 현재 모델의 점추정만 쓴 결과(17건 / 87건)는 세로축 범위를 벗어나 표에만 넣었습니다.</p>
+    </div>
+    <div class="tablebox"><table>
+      <thead><tr><th>방식</th><th>miss 캡처</th><th>miss run</th><th>대체값 5 seeds</th><th>margin &lt; 70 ms</th><th>최소 margin</th><th>M 실행</th><th>S 실행</th></tr></thead>
+      <tbody id="t1"></tbody>
+    </table></div>
+    <p class="caption">miss 캡처는 deadline 초과 캡처 수이고, miss run은 miss가 1건 이상 있는 run 수입니다. 대체값 5 seeds 열은 건너뛴 stage의 실행 시간을 가까운 5개 실측값 중 무작위로 골라 5번 반복했을 때 miss 캡처 수의 범위입니다. 70 ms는 예산의 1%이고, M·S 실행률은 전체 캡처 대비 비율입니다. 한 캡처라도 Capture Timeout이 나면 배포가 막히므로 run 수도 함께 봐야 합니다.</p>
+    <div class="note"><p><strong>naive에 유리하게 바꿔도 결론은 같습니다.</strong> 대체 실행 시간을 가까운 5개 중 최솟값(가장 짧은 값)으로 두어도 miss가 남습니다. 평균-3은 7 / 20건, 최대-5는 3 / 12건, 평균-3+300 ms는 1 / 1건입니다(12MP / 24MP). 반대로 ready 시각 가정을 빠른 쪽으로 바꿔도 결과는 거의 같습니다.</p></div>
+  </section>
+
+  <section>
+    <h2>3. 왜 실패하는가</h2>
+
+    <h3>(a) 평균은 거의 절반을 과소예측합니다</h3>
+    <p>기록된 trace의 admission 시점에서, 실제로 draft가 끝날 때까지 걸린 시간을 각 예측이 덮었는지 확인했습니다(반사실 없음, 실제 실행된 결정만). 현재 방식 U는 약 83–85%를 덮습니다. naive 평균-3은 55–61%, 점추정 P̂는 37–44%만 덮습니다. deadline 근처에서 이 차이는 곧 “들어가지 않는 stage를 허용”하는 실수가 됩니다.</p>
+    <div class="tablebox"><table>
+      <thead><tr><th>admission 시점</th><th>현재 U</th><th>현재 P̂</th><th>naive 평균-3</th><th>naive 평균-10</th><th>naive 최대-5</th></tr></thead>
+      <tbody id="t2"></tbody>
+    </table></div>
+    <p class="caption">각 칸은 coverage(실제 소요 ≤ 예측인 비율)와, 괄호 안의 과소예측 P95(ms)입니다. 여기서 최대-5는 U와 비슷해 보입니다. 하지만 이 표는 구성이 안정적인 평상시 결정이 대부분입니다. 최대-5가 무너지는 곳은 아래 (b), (c)입니다.</p>
+
+    <h3>(b) “평균 − 경과 시간”은 overrun을 진행으로 착각합니다</h3>
+    <p>draft 전체 평균만 아는 방식은 남은 시간을 “평균에서 이미 지난 시간을 뺀 값”으로밖에 셀 수 없습니다. 그래서 앞의 Bokeh(M)가 평소보다 오래 걸리면 남은 시간을 <em>더 짧게</em> 예측합니다. 실제로는 남은 stage가 그대로 남아 있는데도 그렇습니다. Filter(S) 시점의 naive 예측 오차는 Bokeh overrun과 상관계수 0.70으로 움직였고, 현재 방식은 0.02였습니다.</p>
+    <div class="chartcard">
+      <div class="legend">
+        <span><i class="sw sq" style="background:var(--s1)"></i>현재 방식 U</span>
+        <span><i class="sw sq" style="background:var(--s2)"></i>naive 평균-3</span>
+        <span><i class="sw sq" style="background:var(--s3)"></i>naive 최대-5</span>
+      </div>
+      <div class="panels">
+        <div class="panel"><h4>12MP normal</h4><svg id="c2a" viewBox="0 0 360 230" role="img" aria-label="12MP Filter-point coverage by Bokeh overrun"></svg></div>
+        <div class="panel"><h4>24MP memory</h4><svg id="c2b" viewBox="0 0 360 230" role="img" aria-label="24MP Filter-point coverage by Bokeh overrun"></svg></div>
+      </div>
+      <p class="caption">Filter admission 시점의 coverage를 같은 캡처의 Bokeh가 최근 3회 평균보다 얼마나 오래 걸렸는지로 나누어 보았습니다. Bokeh가 150 ms 넘게 overrun하면 naive 평균-3의 coverage는 0%(과소예측 P95 554 / 774 ms)이고, 최대-5도 12% / 26%입니다. 현재 방식은 82% / 66%를 유지합니다.</p>
+    </div>
+    <div class="case">
+      <div><b>사례 · S26 Ultra 12MP, run 47, 24번째 캡처</b>Bokeh가 1,495 ms 걸렸습니다(직전 세 캡처는 318–448 ms). 첫 decoration stage 시점에 남은 budget은 449 ms였습니다.</div>
+      <div><b>현재 방식</b>남은 sequence 상한 U = 635 ms &gt; 449 ms이므로 decoration(S)을 건너뛰었습니다. 결과 margin은 <span class="num">+135 ms</span>입니다.</div>
+      <div><b>naive(모든 변형)</b>최근 평균 약 860 − 경과 1,534 &lt; 0이므로 “남은 일이 없다”고 보고 S를 실행했습니다. 결과 margin은 <span class="num">−63 ms</span>, deadline miss입니다. 고정 마진이 약 1.1 s 미만이면 모두 같은 결과가 됩니다.</div>
+    </div>
+
+    <h3>(c) 이력에 stage 구성이 없어서 M과 S를 함께 끕니다</h3>
+    <p>naive 이력은 draft 전체 시간뿐이므로 “M을 끄면 남은 sequence가 얼마나 짧아지는가”를 계산할 수 없습니다. M을 끈 직후에도 예측은 M을 포함한 draft들의 평균입니다. 그래서 S까지 함께 끄게 되고, 모든 naive 변형에서 <strong>S 실행률이 M 실행률과 정확히 같아집니다</strong>. 현재 방식은 남은 sequence를 stage 단위로 다시 계산하므로 M만 끄고 S는 유지합니다(12MP: M 68.8%, S 90.8%). 구성 일치 평균을 써도 결과는 평균-3과 완전히 같았습니다. “M 없이 S만 실행한” draft가 이력에 한 번도 생기지 않으니, 그 구성의 비용을 배울 기회가 없기 때문입니다.</p>
+
+    <h3>(d) 현재 방식의 두 요소는 모두 필요합니다</h3>
+    <p>stage별 모델만 쓰고 잔차 보정 상한을 빼면(P̂만 사용) miss가 17건(14 runs) / 87건(35 runs)으로 naive보다도 나쁩니다. P̂에는 draft 오버헤드와 upper tail이 빠져 있기 때문입니다. 정리하면 <strong>stage 단위 남은 sequence 모델</strong>은 (b)와 (c)를 해결하고, <strong>잔차 보정 상한</strong>은 (a)를 해결합니다.</p>
+  </section>
+
+  <section>
+    <h2>4. Pacing: naive 대비 우위가 보이지 않습니다</h2>
+    <p>pacing 결정 시점마다 “실행 중인 draft의 남은 평균 + 대기 draft 수 × 최근 평균”을 계산해, 실측 backlog(trace에서 재구성)와 비교했습니다.</p>
+    <div class="tablebox"><table>
+      <thead><tr><th>backlog 추정</th><th>12MP coverage</th><th>12MP MAE</th><th>24MP coverage</th><th>24MP MAE</th></tr></thead>
+      <tbody>
+        <tr class="cur"><td>현재 backlog clock</td><td class="num">37.1%</td><td class="num">348 ms</td><td class="num">43.0%</td><td class="num">510 ms</td></tr>
+        <tr><td>naive 대기 수 × 평균-3</td><td class="num">48.0%</td><td class="num">258 ms</td><td class="num">55.7%</td><td class="num">439 ms</td></tr>
+        <tr><td>naive 대기 수 × 최대-5</td><td class="num">80.1%</td><td class="num">440 ms</td><td class="num">84.8%</td><td class="num">908 ms</td></tr>
+      </tbody>
+    </table></div>
+    <p>원고의 지연 식(eq:pacing)에 입력만 바꿔 넣고, 실측값을 넣었을 때의 결과와 비교했습니다(한 단계 비교).</p>
+    <div class="tablebox"><table>
+      <thead><tr><th>입력</th><th>필요했는데 미개입</th><th>부족 지연 합</th><th>초과 지연 합</th></tr></thead>
+      <tbody>
+        <tr class="grp"><td colspan="4">12MP · 결정 2,947건 · 실측 기준 개입 465건</td></tr>
+        <tr class="cur"><td>현재 방식 입력</td><td class="num">39 (8.4%)</td><td class="num">23.3 s</td><td class="num">206.8 s</td></tr>
+        <tr><td>naive 평균-3</td><td class="num">52 (11.2%)</td><td class="num">26.8 s</td><td class="num">117.8 s</td></tr>
+        <tr><td>naive 최대-5</td><td class="num">21 (4.5%)</td><td class="num">9.2 s</td><td class="num">383.9 s</td></tr>
+        <tr class="grp"><td colspan="4">24MP · 결정 3,002건 · 실측 기준 개입 439건</td></tr>
+        <tr class="cur"><td>현재 방식 입력</td><td class="num">70 (15.9%)</td><td class="num">53.5 s</td><td class="num">313.2 s</td></tr>
+        <tr><td>naive 평균-3</td><td class="num">93 (21.2%)</td><td class="num">55.8 s</td><td class="num">181.7 s</td></tr>
+        <tr><td>naive 최대-5</td><td class="num">18 (4.1%)</td><td class="num">19.2 s</td><td class="num">803.3 s</td></tr>
+      </tbody>
+    </table></div>
+    <ul class="plain">
+      <li>현재 방식은 naive 평균-3보다 개입을 약간 덜 놓치지만, 지연은 더 많이 줍니다. 최대-5는 더 적게 놓치는 대신 지연이 훨씬 큽니다. 어느 쪽이 우월하다고 말할 수 없습니다.</li>
+      <li>admission이 M을 끈 직후 세 캡처에서, 현재 reserve Ĉ는 실제 다음 두 draft 평균보다 중앙값 기준 +544 / +822 ms 높았습니다. naive 평균-3은 +391 / +421 ms였습니다. 원고 3.4절의 “제외된 stage를 빼 준다”는 효과는 이 trace에서는 작습니다.</li>
+      <li>이 표는 모두 기록된 상태에서 한 번 결정했을 때의 비교입니다. pacing은 폐루프여서 지연이 이후 도착·backlog·admission을 바꿉니다. 앱의 캡처 cadence와 captureAvailable gate를 export에서 분리할 수 없으므로, naive pacing의 폐루프 결과는 추정할 수 없습니다. 이를 보려면 동일 조건의 하드웨어 matched run이 필요합니다.</li>
+    </ul>
+    <div class="note"><p><strong>원고에 주는 함의.</strong> pacing이 <em>필요하다</em>는 근거는 추정기 비교가 아니라 RQ2 ablation(pacing 유무)에서 가져와야 합니다. 3.4절의 “queue depth alone does not reflect their processing-time backlog”는 문자 그대로는 맞습니다. 하지만 이를 “대기 수 × 최근 평균보다 정확하다”로 확장하면 이 데이터와 충돌합니다.</p></div>
+  </section>
+
+  <section>
+    <h2>5. 한계</h2>
+    <ul class="plain">
+      <li><strong>폐루프 admission 리플레이는 trace-conditioned 추정입니다</strong>(워크북 ReplayNotes의 TRACE_CONDITIONED_ESTIMATE). 실제 naive arm의 측정값이 아닙니다.</li>
+      <li>캡처 도착과 pacing 지연은 기록값으로 고정했습니다. 이 지연은 현재 방식의 workload에 맞춰 계산된 것입니다. naive가 더 많은 stage를 실행했다면 실제 pacer는 더 지연했을 수 있고, 따라서 naive miss 수는 “naive admission + 고정 pacing”의 값입니다.</li>
+      <li>열 피드백(더 많이 실행하면 더 뜨거워짐)과 watchdog fallback은 모델링하지 않았습니다. 현재 방식이 건너뛴 stage의 실행 시간은 대체값이며, 민감도 분석으로 범위를 보였습니다.</li>
+      <li>폐루프 리플레이는 COMPLETE_30 run만 사용했습니다. 3(a)절 예측 정확도 표는 CAPTURE_TIMEOUT(운영자 테스트 캡처)만 제외한 모집단입니다.</li>
+      <li>논문 수치로 쓰려면 이 분석을 evidence layer(docs/exhibits 규칙)에 맞춰 정리해야 합니다. 현재는 교수님 질문에 대한 내부 분석입니다.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>6. 재현</h2>
+    <p>스크립트와 결과 CSV는 저장소의 <code>output/naive-replay/</code>에 있습니다(README에 실행 순서). predictor 포팅은 <code>ML@b6712a0</code> 기준이며, 기록된 예측값 재현으로 검증했습니다.</p>
+  </section>
+</div>
+<div class="tip" id="tip" hidden></div>
+
+<script>
+const B = [
+ {c:"12MP",a:"DEP",miss:0,runs:0,rng:"",thin:11,mn:11,M:68.8,S:90.8},
+ {c:"12MP",a:"DEP_P",miss:17,runs:14,rng:"10–15",thin:47,mn:-1090,M:72.8,S:85.5},
+ {c:"12MP",a:"mean1",miss:6,runs:6,rng:"6–9",thin:29,mn:-103,M:70.8,S:70.8},
+ {c:"12MP",a:"mean3",miss:6,runs:6,rng:"6–13",thin:30,mn:-103,M:70.9,S:70.9},
+ {c:"12MP",a:"mean5",miss:12,runs:9,rng:"6–14",thin:34,mn:-114,M:70.8,S:70.8},
+ {c:"12MP",a:"mean10",miss:8,runs:8,rng:"7–17",thin:29,mn:-70,M:70.6,S:70.6},
+ {c:"12MP",a:"max3",miss:3,runs:3,rng:"3–7",thin:23,mn:-70,M:70.4,S:70.4},
+ {c:"12MP",a:"max5",miss:3,runs:3,rng:"2–3",thin:16,mn:-70,M:70.0,S:70.0},
+ {c:"12MP",a:"max10",miss:1,runs:1,rng:"1–2",thin:9,mn:-63,M:69.2,S:69.2},
+ {c:"12MP",a:"cmean3",miss:6,runs:6,rng:"6–13",thin:30,mn:-103,M:70.9,S:70.9},
+ {c:"12MP",a:"mean3+50",miss:3,runs:3,rng:"2–7",thin:17,mn:-103,M:70.4,S:70.4},
+ {c:"12MP",a:"mean3+100",miss:1,runs:1,rng:"1–2",thin:6,mn:-63,M:69.2,S:69.2},
+ {c:"12MP",a:"mean3+150",miss:1,runs:1,rng:"1–1",thin:5,mn:-63,M:68.5,S:68.5},
+ {c:"12MP",a:"mean3+200",miss:1,runs:1,rng:"1–2",thin:2,mn:-63,M:68.0,S:68.0},
+ {c:"12MP",a:"mean3+300",miss:1,runs:1,rng:"1–1",thin:1,mn:-63,M:66.3,S:66.3},
+ {c:"24MP",a:"DEP",miss:0,runs:0,rng:"",thin:7,mn:4,M:49.3,S:68.2},
+ {c:"24MP",a:"DEP_P",miss:87,runs:35,rng:"70–103",thin:129,mn:-677,M:54.4,S:67.6},
+ {c:"24MP",a:"mean1",miss:16,runs:11,rng:"19–31",thin:33,mn:-368,M:53.0,S:53.0},
+ {c:"24MP",a:"mean3",miss:16,runs:13,rng:"17–32",thin:34,mn:-368,M:53.1,S:53.1},
+ {c:"24MP",a:"mean5",miss:29,runs:14,rng:"20–39",thin:48,mn:-390,M:53.3,S:53.3},
+ {c:"24MP",a:"mean10",miss:23,runs:13,rng:"24–38",thin:42,mn:-672,M:53.0,S:53.0},
+ {c:"24MP",a:"max3",miss:10,runs:7,rng:"10–23",thin:19,mn:-368,M:52.0,S:52.0},
+ {c:"24MP",a:"max5",miss:7,runs:5,rng:"4–10",thin:13,mn:-368,M:50.8,S:50.8},
+ {c:"24MP",a:"max10",miss:5,runs:3,rng:"1–6",thin:10,mn:-368,M:49.6,S:49.6},
+ {c:"24MP",a:"cmean3",miss:16,runs:13,rng:"17–32",thin:34,mn:-368,M:53.1,S:53.1},
+ {c:"24MP",a:"mean3+50",miss:13,runs:10,rng:"9–26",thin:29,mn:-368,M:52.6,S:52.6},
+ {c:"24MP",a:"mean3+100",miss:9,runs:7,rng:"2–18",thin:19,mn:-368,M:52.0,S:52.0},
+ {c:"24MP",a:"mean3+150",miss:7,runs:5,rng:"6–12",thin:17,mn:-368,M:51.6,S:51.6},
+ {c:"24MP",a:"mean3+200",miss:3,runs:2,rng:"0–6",thin:12,mn:-113,M:50.9,S:50.9},
+ {c:"24MP",a:"mean3+300",miss:2,runs:1,rng:"1–3",thin:8,mn:-59,M:48.8,S:48.8}
+];
+const NAME = {DEP:"현재 방식", DEP_P:"현재 모델, 점추정만", cmean3:"naive 구성 일치 평균-3"};
+const nm = a => NAME[a] || ("naive " + a.replace("mean","평균-").replace("max","최대-").replace("+"," + ") + (a.includes("+")?" ms":""));
+const A = [
+ ["12MP · Bokeh(M)", [84.6,73.8],[40.7,171.1],[55.2,155.1],[57.8,230.9],[82.0,73.7]],
+ ["12MP · Filter(S)", [84.9,48.8],[36.5,131.0],[56.7,130.1],[65.5,196.8],[84.3,55.0]],
+ ["24MP · Bokeh(M)", [82.0,160.4],[42.2,293.7],[58.8,230.3],[67.6,242.9],[83.9,123.0]],
+ ["24MP · Filter(S)", [83.4,102.4],[43.5,213.8],[60.9,215.2],[72.8,209.4],[85.5,103.0]]
+];
+const F = {
+ "12MP": {bins:["빨라짐\n(<−50)","평소\n(±50)","overrun\n50–150","overrun\n>150"], n:[268,1807,145,33],
+   U:[75.4,85.8,81.4,81.8], m3:[97.4,54.2,2.1,0.0], x5:[100.0,85.0,29.7,12.1]},
+ "24MP": {bins:["빨라짐\n(<−50)","평소\n(±50)","overrun\n50–150","overrun\n>150"], n:[377,982,179,55],
+   U:[78.0,83.3,82.1,65.5], m3:[92.8,57.5,13.4,0.0], x5:[97.3,87.2,57.0,25.5]}
+};
+
+const SVGNS = "http://www.w3.org/2000/svg";
+const el = (tag, attrs, parent) => { const e = document.createElementNS(SVGNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+const tip = document.getElementById("tip");
+function showTip(evt, html) {
+  const card = evt.target.closest(".chartcard"); if (!card) return;
+  if (tip.parentElement !== card) card.appendChild(tip);
+  tip.innerHTML = html; tip.hidden = false;
+  const r = card.getBoundingClientRect();
+  let x = evt.clientX - r.left + 12, y = evt.clientY - r.top - 12;
+  const w = tip.offsetWidth; if (x + w > r.width - 8) x = evt.clientX - r.left - w - 12;
+  tip.style.left = Math.max(8, x) + "px"; tip.style.top = Math.max(8, y - tip.offsetHeight) + "px";
+}
+const hideTip = () => { tip.hidden = true; };
+
+// Table 1
+(function () {
+  const tb = document.getElementById("t1");
+  const keep = ["DEP","DEP_P","mean1","mean3","mean5","mean10","max3","max5","max10","cmean3","mean3+100","mean3+300"];
+  for (const c of ["12MP","24MP"]) {
+    const g = document.createElement("tr"); g.className = "grp"; g.innerHTML = `<td colspan="8">${c === "12MP" ? "12MP normal · 114 runs · 3,420 captures" : "24MP memory · 112 runs · 3,360 captures"}</td>`; tb.appendChild(g);
+    for (const a of keep) {
+      const d = B.find(r => r.c === c && r.a === a);
+      const tr = document.createElement("tr"); if (a === "DEP") tr.className = "cur";
+      tr.innerHTML = `<td>${nm(a)}</td><td class="num">${d.miss}</td><td class="num">${d.runs}</td><td class="num">${d.rng || "—"}</td><td class="num">${d.thin}</td><td class="num">${d.mn.toLocaleString()} ms</td><td class="num">${d.M.toFixed(1)}%</td><td class="num">${d.S.toFixed(1)}%</td>`;
+      tb.appendChild(tr);
+    }
+  }
+})();
+
+// Table 2
+(function () {
+  const tb = document.getElementById("t2");
+  for (const row of A) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${row[0]}</td>` + row.slice(1).map((v, i) => `<td class="num"${i === 0 ? ' style="font-weight:600"' : ""}>${v[0].toFixed(1)}% <span style="color:var(--ink-3)">(${Math.round(v[1])})</span></td>`).join("");
+    tb.appendChild(tr);
+  }
+})();
+
+// Chart 1: miss vs S execution
+function chart1(id, cond) {
+  const svg = document.getElementById(id);
+  const W = 360, H = 250, m = {l: 38, r: 14, t: 12, b: 36};
+  const x0 = 45, x1 = 95, y0 = 0, y1 = 30;
+  const X = v => m.l + (v - x0) / (x1 - x0) * (W - m.l - m.r);
+  const Y = v => H - m.b - (v - y0) / (y1 - y0) * (H - m.t - m.b);
+  for (const t of [0, 10, 20, 30]) {
+    el("line", {x1: m.l, x2: W - m.r, y1: Y(t), y2: Y(t), stroke: "var(--grid)", "stroke-width": 1}, svg);
+    el("text", {x: m.l - 6, y: Y(t) + 4, "text-anchor": "end"}, svg).textContent = t;
+  }
+  for (const t of [50, 60, 70, 80, 90]) {
+    el("text", {x: X(t), y: H - m.b + 16, "text-anchor": "middle"}, svg).textContent = t + "%";
+  }
+  el("text", {x: (m.l + W - m.r) / 2, y: H - 4, "text-anchor": "middle"}, svg).textContent = "S 실행률";
+  el("text", {x: 10, y: m.t + 2, "text-anchor": "start"}, svg).textContent = "miss";
+  const pts = B.filter(r => r.c === cond && r.a !== "DEP_P");
+  // label spec per panel: [text, absolute x or null, dx, dy, anchor]
+  const LAB = {
+    "12MP": {DEP: ["현재 방식", null, -6, -12, "end"], mean3: ["평균-3", 215, 0, 4, "start"],
+             max5: ["최대-5", 215, 0, 4, "start"], "mean3+300": ["평균-3+300ms", null, -9, 4, "end"]},
+    "24MP": {DEP: ["현재 방식", null, 8, -8, "start"], mean3: ["평균-3", 102, 0, 4, "start"],
+             max5: ["최대-5", 102, 0, 4, "start"], "mean3+300": ["평균-3+300ms", 102, 0, 4, "start"]}
+  }[cond];
+  pts.sort((p, q) => (p.a === "DEP") - (q.a === "DEP"));
+  for (const p of pts) {
+    const cur = p.a === "DEP";
+    const cx = X(p.S), cy = Y(p.miss);
+    const spec = LAB[p.a];
+    if (spec && spec[1] !== null) {
+      el("line", {x1: cx + 6, x2: spec[1] - 4, y1: cy, y2: cy, stroke: "var(--ink-3)", "stroke-width": 1, opacity: 0.6}, svg);
+    }
+    const g = el("g", {tabindex: 0}, svg);
+    el("circle", {cx, cy, r: 13, fill: "transparent"}, g);
+    el("circle", {cx, cy, r: cur ? 6.5 : 4.5, fill: cur ? "var(--s1)" : "var(--s2)", stroke: "var(--surface)", "stroke-width": 2}, g);
+    const html = `<b>${nm(p.a)}</b><br>miss ${p.miss} captures / ${p.runs} runs<br>S ${p.S.toFixed(1)}% · M ${p.M.toFixed(1)}%<br>min margin ${p.mn} ms`;
+    g.addEventListener("mousemove", e => showTip(e, html)); g.addEventListener("mouseleave", hideTip);
+    g.addEventListener("focus", e => { const r = e.target.getBoundingClientRect(); showTip({target: e.target, clientX: r.left + r.width / 2, clientY: r.top}, html); });
+    g.addEventListener("blur", hideTip);
+    if (spec) {
+      const [txt, ax, dx, dy, anc] = spec;
+      el("text", {x: (ax !== null ? ax : cx) + dx, y: cy + dy, "text-anchor": anc, class: "lbl"}, svg).textContent = txt;
+    }
+  }
+}
+chart1("c1a", "12MP"); chart1("c1b", "24MP");
+
+// Chart 2: grouped columns
+function chart2(id, cond) {
+  const svg = document.getElementById(id);
+  const d = F[cond];
+  const W = 360, H = 230, m = {l: 38, r: 8, t: 10, b: 44};
+  const Y = v => H - m.b - v / 100 * (H - m.t - m.b);
+  for (const t of [0, 25, 50, 75, 100]) {
+    el("line", {x1: m.l, x2: W - m.r, y1: Y(t), y2: Y(t), stroke: "var(--grid)", "stroke-width": 1}, svg);
+    el("text", {x: m.l - 6, y: Y(t) + 4, "text-anchor": "end"}, svg).textContent = t + "%";
+  }
+  const band = (W - m.l - m.r) / 4, bw = 18, gap = 2;
+  const series = [["U", "var(--s1)", "현재 U"], ["m3", "var(--s2)", "naive 평균-3"], ["x5", "var(--s3)", "naive 최대-5"]];
+  d.bins.forEach((b, i) => {
+    const cx = m.l + band * i + band / 2;
+    const lines = b.split("\n");
+    lines.forEach((ln, k) => { el("text", {x: cx, y: H - m.b + 15 + k * 13, "text-anchor": "middle"}, svg).textContent = ln; });
+    series.forEach(([key, col, lab], j) => {
+      const v = d[key][i];
+      const x = cx + (j - 1) * (bw + gap) - bw / 2;
+      const y = Y(v), h = Math.max(0, Y(0) - y);
+      const g = el("g", {tabindex: 0}, svg);
+      el("rect", {x: x - 1, y: m.t, width: bw + 2, height: Y(0) - m.t, fill: "transparent"}, g);
+      if (h > 0) {
+        const r = Math.min(4, h);
+        el("path", {d: `M${x},${Y(0)} V${y + r} Q${x},${y} ${x + r},${y} H${x + bw - r} Q${x + bw},${y} ${x + bw},${y + r} V${Y(0)} Z`, fill: col}, g);
+      } else {
+        el("line", {x1: x, x2: x + bw, y1: Y(0) - 0.5, y2: Y(0) - 0.5, stroke: col, "stroke-width": 2}, g);
+      }
+      const html = `<b>${lab}</b> · Bokeh ${b.replace("\n", " ")}<br>coverage ${v.toFixed(1)}% · n=${d.n[i]}`;
+      g.addEventListener("mousemove", e => showTip(e, html)); g.addEventListener("mouseleave", hideTip);
+      g.addEventListener("focus", e => { const r2 = e.target.getBoundingClientRect(); showTip({target: e.target, clientX: r2.left + r2.width / 2, clientY: r2.top}, html); });
+      g.addEventListener("blur", hideTip);
+    });
+  });
+  const iLast = 3, cxL = m.l + band * iLast + band / 2;
+  el("text", {x: cxL - (bw + gap), y: Y(d.m3[iLast]) - 6, "text-anchor": "middle", class: "lbl"}, svg).textContent = d.m3[iLast].toFixed(0) + "%";
+}
+chart2("c2a", "12MP"); chart2("c2b", "24MP");
+</script>
