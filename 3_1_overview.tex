@@ -19,8 +19,9 @@ Both modules use duration estimates based on observations from completed draft s
 Pacing accounts for admission decisions when estimating how long upcoming draft sequences will take.
 
 \smallskip\noindent\textbf{Control objective.}
-Capture Timeout is a hard product constraint on enabling optional stages.
-Each accepted capture starts its own timeout clock, but its draft sequence may wait behind earlier captures on the shared worker.
+The controller must complete every draft sequence before its Capture Timeout, because a single violation blocks the release.
+Within this constraint, it aims to retain optional stages when the remaining timeout budget permits and to limit delay to the next capture.
+Under parallel capture, each accepted capture starts its own timeout clock, but its draft sequence may wait behind earlier captures on the shared worker.
 Let the deadline margin \(\mu_i\) denote the time left before capture \(i\)'s deadline when its draft sequence completes.
 For successive captures, let \(\delta_i\) be the interval between requests \(i-1\) and \(i\), and \(\pi_i\) the interval between their draft sequence completions.
 With a fixed timeout duration,
@@ -34,6 +35,6 @@ Pacing can lengthen \(\delta_{i+1}\) by delaying the next capture opportunity, b
 Equation~\eqref{eq:margin-recursion} is an accounting identity, not a control law.
 The controller does not maintain \(\mu_i\) as state; at each decision, it compares a duration estimate with the remaining timeout budget.
 
-Within this deadline constraint, the controller prioritizes user-perceived responsiveness.
-Capture delay lengthens the shot-to-shot interval and cannot be recovered, whereas the fidelity cost of a skipped stage ends when the final image replaces the draft image.
+When the two aims conflict, the controller prioritizes user-perceived responsiveness.
+Capture delay lengthens the shot-to-shot interval and cannot be recovered, whereas a skipped stage lowers the draft image's quality but leaves the final image unaffected.
 The controller therefore implements a deadline-constrained, responsiveness-dominant trade-off between optional-stage execution and shot-to-shot delay rather than a global cost optimization.
