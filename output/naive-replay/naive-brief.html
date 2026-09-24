@@ -1,0 +1,300 @@
+<title>Naive 추정 요약</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+:root {
+  color-scheme: light;
+  --ground: #f4f6f9; --surface: #ffffff; --ink: #141820; --ink-2: #454d5c; --ink-3: #6b7383;
+  --rule: #dde2ea; --grid: #e8ecf1; --tint: #eaf1fb; --track: #edf0f4;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a;
+  --bad: #c2410c; --bad-tint: #fdebe3; --good-tint: #e3eefb; --neutral-bar: #c3cad5;
+  --sans: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --ground: #111419; --surface: #191d24; --ink: #eef1f6; --ink-2: #b9c0cc; --ink-3: #8b93a1;
+    --rule: #2b313b; --grid: #252a33; --tint: #1a2635; --track: #242a33;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --bad: #f08a5d; --bad-tint: #3a2118; --good-tint: #1a2a3f; --neutral-bar: #4a5260;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ground: #111419; --surface: #191d24; --ink: #eef1f6; --ink-2: #b9c0cc; --ink-3: #8b93a1;
+  --rule: #2b313b; --grid: #252a33; --tint: #1a2635; --track: #242a33;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --bad: #f08a5d; --bad-tint: #3a2118; --good-tint: #1a2a3f; --neutral-bar: #4a5260;
+}
+* { box-sizing: border-box; }
+body { background: var(--ground); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.65; padding-inline: 16px; padding-block: 36px 60px; margin: 0; }
+.wrap { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px; }
+header { display: flex; flex-direction: column; gap: 10px; }
+.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .05em; color: var(--ink-3); }
+h1 { font-size: 27px; line-height: 1.3; margin: 0; font-weight: 700; text-wrap: balance; }
+h2 { font-size: 20px; line-height: 1.4; margin: 0; font-weight: 600; }
+h3 { font-size: 15px; margin: 0; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+.sub { color: var(--ink-2); }
+section { display: flex; flex-direction: column; gap: 14px; }
+code { font-family: var(--mono); font-size: .92em; }
+
+.strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr)); gap: 12px; }
+.sfact { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
+.sfact .no { font-family: var(--mono); font-size: 12px; color: var(--ink-3); }
+.sfact b { font-size: 18px; font-weight: 600; line-height: 1.35; }
+.sfact span { font-size: 13px; color: var(--ink-2); }
+
+.case-h { display: flex; align-items: center; gap: 10px; }
+.badge { flex: none; width: 26px; height: 26px; border-radius: 999px; background: var(--ink); color: var(--ground); font-family: var(--mono); font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; }
+.key { font-size: 17px; font-weight: 600; line-height: 1.5; max-width: none; }
+.key em { font-style: normal; color: var(--bad); }
+.takeaway { font-size: 14px; color: var(--ink-2); max-width: 74ch; }
+.caption { font-size: 12.5px; color: var(--ink-3); max-width: 74ch; }
+
+.tablebox { overflow-x: auto; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { padding: 8px 12px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
+th { font-weight: 500; color: var(--ink-3); font-size: 12px; }
+th.grp { text-align: center; border-bottom: 1px solid var(--rule); }
+td:first-child, th:first-child { text-align: left; }
+td.n { font-family: var(--mono); font-size: 13px; }
+td.zero { color: var(--s1); font-weight: 600; }
+td.pos { color: var(--bad); font-weight: 600; }
+tr.cur td { background: var(--tint); }
+tr.cur td:first-child { font-weight: 600; }
+tbody tr:last-child td { border-bottom: 0; }
+.kind { display: block; font-size: 12px; color: var(--ink-3); font-weight: 400; }
+
+.chartcard { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 16px 18px 12px; display: flex; flex-direction: column; gap: 10px; position: relative; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.sw { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(290px, 100%), 1fr)); gap: 18px; }
+.panel { min-width: 0; }
+.panel h4 { margin: 0 0 4px; font-size: 13px; font-weight: 600; color: var(--ink-2); font-family: var(--mono); }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { font-family: var(--mono); font-size: 11px; fill: var(--ink-3); }
+.tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--surface); font-size: 12px; line-height: 1.5; padding: 7px 10px; border-radius: 6px; font-family: var(--mono); white-space: nowrap; z-index: 5; }
+
+.card { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.card .tag { font-family: var(--mono); font-size: 12px; color: var(--ink-3); }
+.casebox { min-width: 0; background: var(--ground); border: 1px solid var(--rule); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.case-label { font-family: var(--mono); font-size: 12px; color: var(--ink-3); }
+.case-claim { font-size: 16px; font-weight: 600; line-height: 1.5; max-width: none; }
+.case-claim em { font-style: normal; color: var(--bad); }
+.casechart { overflow-x: auto; }
+.casechart svg { min-width: 560px; }
+.casechart .ax line { stroke: var(--grid); stroke-width: 1; }
+.casechart .ax text { text-anchor: middle; }
+.casechart .nm { font-family: var(--sans); font-size: 12.5px; fill: var(--ink-2); }
+.casechart .vl { font-family: var(--mono); font-size: 12px; fill: var(--ink); }
+.b-draft { fill: var(--s2); } .b-stage { fill: var(--s3); } .b-cur { fill: var(--s1); }
+.b-act { fill: var(--neutral-bar); } .b-over { fill: var(--bad); }
+.budget { stroke: var(--ink); stroke-width: 2; }
+.budget-t { font-family: var(--sans); font-size: 12px; font-weight: 600; fill: var(--ink); text-anchor: middle; }
+.chip text { font-family: var(--sans); font-size: 12px; font-weight: 600; text-anchor: middle; }
+.chip.bad rect { fill: var(--bad-tint); } .chip.bad text { fill: var(--bad); }
+.chip.good rect { fill: var(--good-tint); } .chip.good text { fill: var(--s1); }
+.case-notes { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 5px; font-size: 14px; max-width: 74ch; }
+.stat { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; border-top: 2px solid var(--rule); padding-top: 12px; }
+.stat b { font-family: var(--mono); font-size: 22px; font-weight: 500; color: var(--s1); }
+.stat span { font-size: 14px; color: var(--ink-2); max-width: 60ch; }
+
+.verdict { background: var(--tint); border-radius: 12px; padding: 20px 22px; display: flex; flex-direction: column; gap: 12px; }
+.verdict ul { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 8px; font-size: 14.5px; max-width: 72ch; }
+.notes { font-size: 12.5px; color: var(--ink-3); display: flex; flex-direction: column; gap: 6px; }
+.notes ul { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 4px; max-width: 76ch; }
+@media (max-width: 520px) { h1 { font-size: 23px; } .key { font-size: 16px; } .card, .verdict { padding: 16px; } }
+.def { font-size: 14px; color: var(--ink-3); font-family: var(--mono); }
+.strip .sfact b { font-size: 19px; }
+.key { font-size: 19px; font-weight: 700; line-height: 1.45; }
+.tiny { font-size: 12.5px; color: var(--ink-3); margin-top: -8px; }
+.good-dir { margin-left: auto; font-size: 12px; color: var(--ink-3); font-family: var(--mono); }
+.pairs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.pairs li { display: grid; grid-template-columns: 92px 1fr; gap: 12px; align-items: baseline; font-size: 15px; }
+.pairs li span { font-family: var(--mono); font-size: 12.5px; color: var(--ink-3); }
+.pairs li b { font-weight: 600; }
+.pairs li i { font-style: normal; color: var(--s1); font-weight: 600; }
+details.notes { font-size: 12.5px; color: var(--ink-3); }
+details.notes summary { cursor: pointer; font-family: var(--mono); }
+details.notes ul { margin: 8px 0 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 4px; max-width: 76ch; }
+.lead { font-size: 15px; color: var(--ink-2); }
+.design { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.design .pairs li { grid-template-columns: 104px 1fr; }
+.design .pairs li b { font-weight: 500; color: var(--ink); }
+.arrow { font-size: 16px; font-weight: 700; color: var(--s1); }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">NAIVE 추정 비교 · 12MP normal · 24MP memory</div>
+    <h1>naive는 잔차를 못 봐서<br>deadline을 넘긴다</h1>
+    <p class="def">naive = 최근 N개 draft 소요의 평균·최대로 남은 시간 추정</p>
+  </header>
+
+  <div class="strip">
+    <div class="sfact"><span class="no">naive admission</span><b>miss 0 → 6–60건</b></div>
+    <div class="sfact"><span class="no">잔차 상한 U가 막은 naive 실책</span><b>40 / 42</b></div>
+    <div class="sfact"><span class="no">pacing</span><b>admission을 믿고 절반만 늦춘다</b></div>
+  </div>
+
+  <section>
+    <div class="case-h"><span class="badge">1</span><h2>admission — 잔차가 핵심</h2></div>
+    <p class="key">잔차를 안 보니 <em>deadline을 넘긴다</em></p>
+    <div class="tablebox"><table>
+      <thead>
+        <tr><th rowspan="2"></th><th class="grp" colspan="2">12MP normal</th><th class="grp" colspan="2">24MP memory</th></tr>
+        <tr><th>miss</th><th>M · S 실행</th><th>miss</th><th>M · S 실행</th></tr>
+      </thead>
+      <tbody>
+        <tr class="cur"><td>현재 방식<span class="kind">stage별 모델 + 잔차 상한 U</span></td><td class="n zero">0</td><td class="n">68.8 · 90.8%</td><td class="n zero">0</td><td class="n">49.3 · 68.2%</td></tr>
+        <tr><td>naive · draft 평균-3</td><td class="n pos">6</td><td class="n">70.9 · <span style="color:var(--bad)">70.9%</span></td><td class="n pos">16</td><td class="n">53.1 · <span style="color:var(--bad)">53.1%</span></td></tr>
+        <tr><td>naive · stage 평균-3</td><td class="n pos">10</td><td class="n">71.2 · 89.1%</td><td class="n pos">60</td><td class="n">53.9 · 65.7%</td></tr>
+        <tr><td>현재 방식 − 잔차 보정</td><td class="n pos">17</td><td class="n">72.8 · 85.5%</td><td class="n pos">87</td><td class="n">54.4 · 67.6%</td></tr>
+      </tbody>
+    </table></div>
+    <div class="chartcard">
+      <div class="legend">
+        <span><i class="sw" style="background:var(--s1)"></i>현재 방식</span>
+        <span><i class="sw" style="background:var(--s2)"></i>naive · draft 단위</span>
+        <span><i class="sw" style="background:var(--s3)"></i>naive · stage 단위</span>
+        <span class="good-dir">↘ 좋음</span>
+      </div>
+      <div class="panels">
+        <div class="panel"><h4>12MP normal</h4><svg id="a12" viewBox="0 0 360 250" role="img" aria-label="12MP: S 실행률 대 deadline miss"></svg></div>
+        <div class="panel"><h4>24MP memory</h4><svg id="a24" viewBox="0 0 360 250" role="img" aria-label="24MP: S 실행률 대 deadline miss"></svg></div>
+      </div>
+    </div>
+    <p class="lead">평균·최대·N·여유 마진을 어떻게 바꿔도 miss 0에 닿지 못한다.</p>
+
+    <div class="card">
+      <span class="tag">왜</span>
+      <h3>최근 overrun(잔차)을 봤다면 막을 수 있었다</h3>
+      <div class="casebox">
+        <div class="case-label">사례 · S26 Ultra 24MP, run 24 · 12번째 캡처</div>
+        <p class="case-claim">naive “65–89 ms 남음” → 실행 → 실제 <em>111–127 ms 초과</em></p>
+        <div class="casechart">
+          <svg viewBox="0 0 700 214" role="img" aria-label="12번째 캡처: 남은 budget 925 ms 대비 각 예측과 실제 소요">
+            <g class="ax">
+              <line x1="200" x2="200" y1="24" y2="182"/><line x1="290" x2="290" y1="24" y2="182"/><line x1="380" x2="380" y1="24" y2="182"/><line x1="470" x2="470" y1="24" y2="182"/><line x1="560" x2="560" y1="24" y2="182"/>
+              <text x="200" y="200">0</text><text x="290" y="200">300</text><text x="380" y="200">600</text><text x="470" y="200">900</text><text x="560" y="200">1,200 ms</text>
+            </g>
+            <text class="nm" x="0" y="40">naive · draft 예측</text><text class="vl" x="0" y="59">860 ms</text>
+            <path class="b-draft" d="M200,32 H454 Q458,32 458,36 V52 Q458,56 454,56 H200 Z"/>
+            <text class="nm" x="0" y="78">naive · stage 예측</text><text class="vl" x="0" y="97">836 ms</text>
+            <path class="b-stage" d="M200,70 H447 Q451,70 451,74 V90 Q451,94 447,94 H200 Z"/>
+            <text class="nm" x="0" y="116">실제 소요 (M 실행 시)</text><text class="vl" x="0" y="135">1,036–1,052 ms</text>
+            <rect class="b-act" x="200" y="108" width="276.5" height="24"/>
+            <path class="b-over" d="M478.5,108 H507 Q511,108 511,112 V128 Q511,132 507,132 H478.5 Z"/>
+            <text class="nm" x="0" y="154">현재 방식 U</text><text class="vl" x="0" y="173">951 ms</text>
+            <path class="b-cur" d="M200,146 H481 Q485,146 485,150 V166 Q485,170 481,170 H200 Z"/>
+            <line class="budget" x1="477.5" x2="477.5" y1="20" y2="182"/>
+            <text class="budget-t" x="477.5" y="13">남은 budget 925 ms</text>
+            <g class="chip bad"><rect x="580" y="33" width="112" height="22" rx="4"/><text x="636" y="48">허용 · 실책</text></g>
+            <g class="chip bad"><rect x="580" y="71" width="112" height="22" rx="4"/><text x="636" y="86">허용 · 실책</text></g>
+            <g class="chip bad"><rect x="580" y="109" width="112" height="22" rx="4"/><text x="636" y="124">111–127 ms 초과</text></g>
+            <g class="chip good"><rect x="580" y="147" width="112" height="22" rx="4"/><text x="636" y="162">거절 → +181 ms</text></g>
+          </svg>
+        </div>
+      </div>
+      <div class="stat"><b>40 / 42</b><span>naive가 허용해 넘긴 캡처 중, 같은 순간 잔차 상한 U가 거절한 수</span></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="case-h"><span class="badge">2</span><h2>pacing — admission을 믿고 설계</h2></div>
+    <p class="key">지연은 <em>절반만</em> 걸고, 나머지는 admission에 맡긴다</p>
+    <div class="design">
+      <ul class="pairs">
+        <li><span>같은 예측기</span><b>admission이 demote한 stage 구성으로 backlog를 잡고, 빠진 몫은 예약에서 뺀다</b></li>
+        <li><span>절반만 지연</span><b>사용자가 느끼는 지연을 줄이려고 예상 결손의 절반만 콜백을 늦춘다</b></li>
+        <li><span>남는 압력</span><b>admission이 자기 budget 판단(U)으로 optional stage를 건너뛰어 대응한다</b></li>
+      </ul>
+      <p class="arrow">→ admission이 잔차를 봐야 성립하는 분담</p>
+    </div>
+  </section>
+
+  <section class="verdict">
+    <h2>그래서 현재 방식</h2>
+    <ul class="pairs">
+      <li><span>admission</span><b>최근 overrun 반영 → <i>잔차 상한 U</i></b></li>
+      <li><span>pacing</span><b>같은 예측기 + 절반 분담 → <i>admission을 믿고 지연 최소화</i></b></li>
+      <li><span>naive</span><b>잔차가 없어 admission부터 깨지고, 분담도 성립하지 않는다</b></li>
+    </ul>
+  </section>
+
+  <details class="notes">
+    <summary>측정 방법 · 참고</summary>
+    <ul>
+      <li>① 기록된 trace 재생, admission 추정기만 교체 · pacing 지연은 기록값 고정 · 완주 run 12MP 114 · 24MP 112</li>
+      <li>M · S: multi-frame · single-frame stage 실행률 · 산점도의 점 하나가 naive 설정 하나(평균·최대, N, 여유 마진)</li>
+      <li>40 / 42: naive가 그 캡처에서 직접 허용한 stage 때문에 deadline을 넘긴 캡처(draft 평균-3 18건, stage 평균-3 24건) 중 같은 순간 U가 거절한 수</li>
+      <li>pacing 설명은 수집 당시 구현(<code>CaptureAvailablePacer</code>) 기준 · 절반 분담은 설계 의도이며, 두 모듈 사이에 넘어가는 값은 없음</li>
+      <li>pacing 추정기만 비교하면, 역할을 나눈 naive(draft 평균 backlog + draft 최대-5 예약)가 1-step 계산에서 현재 방식과 비슷함 → 차이를 만드는 건 admission · 상세는 <code>naive-summary.html</code>, README</li>
+    </ul>
+  </details>
+</div>
+<div class="tip" id="tip" hidden></div>
+
+<script>
+const NS = "http://www.w3.org/2000/svg";
+const el = (t, a, p) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e; };
+const tip = document.getElementById("tip");
+function showTip(evt, html) {
+  const card = evt.target.closest(".chartcard"); if (!card) return;
+  if (tip.parentElement !== card) card.appendChild(tip);
+  tip.innerHTML = html; tip.hidden = false;
+  const r = card.getBoundingClientRect();
+  let x = evt.clientX - r.left + 12, y = evt.clientY - r.top - 12;
+  if (x + tip.offsetWidth > r.width - 8) x = evt.clientX - r.left - tip.offsetWidth - 12;
+  tip.style.left = Math.max(8, x) + "px"; tip.style.top = Math.max(8, y - tip.offsetHeight) + "px";
+}
+const hideTip = () => { tip.hidden = true; };
+const COL = {cur: "var(--s1)", draft: "var(--s2)", stage: "var(--s3)"};
+
+function scatter(id, pts, o) {
+  const svg = document.getElementById(id);
+  const W = 360, H = 250, m = {l: 44, r: 16, t: 14, b: 40};
+  const X = v => m.l + (v - o.x0) / (o.x1 - o.x0) * (W - m.l - m.r);
+  const Y = v => H - m.b - (v - o.y0) / (o.y1 - o.y0) * (H - m.t - m.b);
+  for (const t of o.yt) {
+    el("line", {x1: m.l, x2: W - m.r, y1: Y(t), y2: Y(t), stroke: "var(--grid)", "stroke-width": 1}, svg);
+    el("text", {x: m.l - 6, y: Y(t) + 4, "text-anchor": "end"}, svg).textContent = t;
+  }
+  for (const t of o.xt) el("text", {x: X(t), y: H - m.b + 18, "text-anchor": "middle"}, svg).textContent = t + o.xu;
+  el("text", {x: (m.l + W - m.r) / 2, y: H - 4, "text-anchor": "middle"}, svg).textContent = o.xl;
+  const yc = (m.t + H - m.b) / 2;
+  el("text", {x: 11, y: yc, "text-anchor": "middle", transform: `rotate(-90 11 ${yc})`}, svg).textContent = o.yl;
+  for (const g of ["draft", "stage", "cur"]) for (const d of pts.filter(p => p.g === g)) {
+    const cx = X(d.x), cy = Y(d.y);
+    const gg = el("g", {tabindex: 0}, svg);
+    el("circle", {cx, cy, r: 12, fill: "transparent"}, gg);
+    el("circle", {cx, cy, r: g === "cur" ? 6.5 : 4.5, fill: COL[g], stroke: "var(--surface)", "stroke-width": 2}, gg);
+    const html = `<b>${g === "cur" ? "" : "naive · "}${d.a}</b><br>${o.tip(d)}`;
+    gg.addEventListener("mousemove", e => showTip(e, html)); gg.addEventListener("mouseleave", hideTip);
+    gg.addEventListener("focus", e => { const r = e.target.getBoundingClientRect(); showTip({target: e.target, clientX: r.left + r.width / 2, clientY: r.top}, html); });
+    gg.addEventListener("blur", hideTip);
+  }
+}
+
+// ① admission: [label, group, miss, M, S]
+const ADM = {
+ "12MP": [["현재 방식","cur",0,68.8,90.8],
+  ["draft 평균-1","draft",6,70.8,70.8],["draft 평균-3","draft",6,70.9,70.9],["draft 평균-5","draft",12,70.8,70.8],["draft 평균-10","draft",8,70.6,70.6],
+  ["draft 최대-3","draft",3,70.4,70.4],["draft 최대-5","draft",3,70.0,70.0],["draft 최대-10","draft",1,69.2,69.2],
+  ["draft 평균-3 + 50 ms","draft",3,70.4,70.4],["draft 평균-3 + 100 ms","draft",1,69.2,69.2],["draft 평균-3 + 150 ms","draft",1,68.5,68.5],["draft 평균-3 + 200 ms","draft",1,68.0,68.0],["draft 평균-3 + 300 ms","draft",1,66.3,66.3],
+  ["stage 평균-1","stage",11,71.1,87.4],["stage 평균-3","stage",10,71.2,89.1],["stage 평균-5","stage",8,71.6,88.5],["stage 평균-10","stage",12,71.5,88.5],
+  ["stage 최대-3","stage",3,70.0,90.9],["stage 최대-5","stage",2,69.6,91.4],["stage 최대-10","stage",2,68.7,90.6]],
+ "24MP": [["현재 방식","cur",0,49.3,68.2],
+  ["draft 평균-1","draft",16,53.0,53.0],["draft 평균-3","draft",16,53.1,53.1],["draft 평균-5","draft",29,53.3,53.3],["draft 평균-10","draft",23,53.0,53.0],
+  ["draft 최대-3","draft",10,52.0,52.0],["draft 최대-5","draft",7,50.8,50.8],["draft 최대-10","draft",5,49.6,49.6],
+  ["draft 평균-3 + 50 ms","draft",13,52.6,52.6],["draft 평균-3 + 100 ms","draft",9,52.0,52.0],["draft 평균-3 + 150 ms","draft",7,51.6,51.6],["draft 평균-3 + 200 ms","draft",3,50.9,50.9],["draft 평균-3 + 300 ms","draft",2,48.8,48.8],
+  ["stage 평균-1","stage",83,53.4,67.6],["stage 평균-3","stage",60,53.9,65.7],["stage 평균-5","stage",72,53.8,66.3],["stage 평균-10","stage",70,53.4,67.1],
+  ["stage 최대-3","stage",44,52.2,67.7],["stage 최대-5","stage",31,50.4,67.3],["stage 최대-10","stage",25,48.9,64.5]]
+};
+const adm = c => ADM[c].map(r => ({a: r[0], g: r[1], x: r[4], y: r[2], M: r[3]}));
+const tipA = d => `miss ${d.y} captures<br>S ${d.x.toFixed(1)}% · M ${d.M.toFixed(1)}%`;
+scatter("a12", adm("12MP"), {x0: 45, x1: 95, xt: [50, 60, 70, 80, 90], xu: "%", y0: 0, y1: 15, yt: [0, 5, 10, 15], xl: "S 실행률", yl: "miss (캡처 수)", tip: tipA});
+scatter("a24", adm("24MP"), {x0: 45, x1: 95, xt: [50, 60, 70, 80, 90], xu: "%", y0: 0, y1: 90, yt: [0, 30, 60, 90], xl: "S 실행률", yl: "miss (캡처 수)", tip: tipA});
+</script>

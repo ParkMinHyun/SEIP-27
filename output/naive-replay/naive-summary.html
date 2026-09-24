@@ -122,11 +122,12 @@ svg .lbl { fill: var(--ink-2); }
 <div class="wrap">
   <header>
     <h1>최근 N개 평균으로 추정하면 무엇이 문제인가</h1>
-    <p class="sub">추정기만 naive로 바꿔 수집 trace(226 runs)를 리플레이했습니다. 현재 방식을 넣으면 실측 결과가 그대로 재현되는 리플레이입니다.</p>
+    <p class="sub">추정기만 naive로 바꿔 수집 trace(226 runs)를 리플레이했습니다. 현재 방식을 넣으면 실측 결과가 그대로 재현되는 리플레이입니다. 같은 추정기는 admission의 입력이자 pacing의 입력이므로, 두 모듈을 차례로 봅니다. 각 결과는 한 모듈만 바꾸고 다른 모듈은 기록된 배포 동작으로 고정한 것이며, 둘을 함께 바꾼 결과는 없습니다.</p>
   </header>
 
   <section>
-    <h2>결과</h2>
+    <h2>결과 · admission</h2>
+    <p class="sub">admission 추정기만 바꿨습니다. pacing 지연은 기록된 값으로 고정돼 있어서, naive admission이 draft를 길게 만들어도 pacing은 다시 결정하지 않습니다.</p>
     <div class="tablebox"><table>
       <thead>
         <tr><th rowspan="2">추정 방식</th><th class="grp" colspan="2">12MP normal</th><th class="grp" colspan="2">24MP memory</th></tr>
@@ -238,6 +239,129 @@ svg .lbl { fill: var(--ink-2); }
 
     </div>
   </section>
+
+  <section>
+    <h2>결과 · pacing</h2>
+    <p class="sub">같은 추정기는 pacing 규칙의 입력이기도 합니다. 기록된 모든 pacing 결정(12MP 2,947건 · 24MP 3,000건)에서 <code>eq:pacing</code>의 백로그 <i>B</i>와 예약 <i>C</i>만 naive 통계로 바꿔 다시 계산했습니다. admission은 배포 컨트롤러가 실제로 내린 결정 그대로이고, 다시 계산한 지연은 적용되지 않습니다.</p>
+    <div class="tablebox"><table>
+      <thead>
+        <tr><th rowspan="2">입력</th><th class="grp" colspan="3">12MP normal</th><th class="grp" colspan="3">24MP memory</th></tr>
+        <tr><th>개입</th><th>run당 지연</th><th>놓친 개입</th><th>개입</th><th>run당 지연</th><th>놓친 개입</th></tr>
+      </thead>
+      <tbody>
+        <tr class="cur"><td>현재 방식<span class="kind">구간 시계 + 세션 최대 예약</span></td>
+          <td class="n">29.5%</td><td class="n">2.6 s</td><td class="n zero">8.4%</td>
+          <td class="n">33.2%</td><td class="n">3.6 s</td><td class="n zero">15.9%</td></tr>
+        <tr><td>naive · draft 평균-3<span class="kind">최근 3개 draft sequence 평균</span></td>
+          <td class="n">25.1%</td><td class="n">1.8 s</td><td class="n pos">11.2%</td>
+          <td class="n">24.0%</td><td class="n">2.4 s</td><td class="n pos">21.2%</td></tr>
+        <tr><td>naive · draft 최대-5<span class="kind">최근 5개 중 최대</span></td>
+          <td class="n">37.9%</td><td class="n pos">4.3 s</td><td class="n">4.5%</td>
+          <td class="n">48.1%</td><td class="n pos">8.1 s</td><td class="n">4.1%</td></tr>
+        <tr><td>naive · draft 최대-10<span class="kind">최근 10개 중 최대</span></td>
+          <td class="n">45.4%</td><td class="n pos">7.0 s</td><td class="n">3.2%</td>
+          <td class="n">65.1%</td><td class="n pos">16.0 s</td><td class="n">1.8%</td></tr>
+        <tr><td>naive · stage 평균-3<span class="kind">계획 체인의 stage별 평균 합</span></td>
+          <td class="n">27.6%</td><td class="n pos">2.7 s</td><td class="n pos">28.4%</td>
+          <td class="n">39.1%</td><td class="n pos">6.8 s</td><td class="n pos">30.8%</td></tr>
+        <tr><td>naive · stage 최대-5<span class="kind">계획 체인의 stage별 최대 합</span></td>
+          <td class="n">46.2%</td><td class="n pos">6.5 s</td><td class="n">4.3%</td>
+          <td class="n">67.9%</td><td class="n pos">18.5 s</td><td class="n">3.4%</td></tr>
+      </tbody>
+    </table></div>
+    <p class="caption">개입: 규칙이 지연을 내놓은 결정의 비율 · run당 지연: 30캡처 run 하나에 누적되는 지연의 합 · 놓친 개입: 같은 규칙에 실측 입력을 넣으면 걸렸는데(12MP 465건 · 24MP 439건) 이 입력으로는 걸리지 않은 비율</p>
+    <p class="takeaway">admission에서 miss를 만들던 <strong>draft 평균</strong>은 pacing에서도 같은 방향으로 틀립니다. 지연 총량은 현재 방식보다 작아 보이지만, 그 싼 값은 걸려야 할 순간을 놓쳐서 나온 값입니다(11.2%·21.2%). 반대로 admission miss를 줄이려고 <strong>최대</strong>로 올리면 지연이 현재 방식의 1.6배·2.3배로 뜁니다. admission에서 S 실행률을 되살렸던 <strong>stage 단위</strong>는 여기서 도움이 되지 않습니다 — 평균-3끼리 비교하면 지연을 더 쓰면서(2.7·6.8 s) 놓친 개입도 더 많습니다(28.4%·30.8%).</p>
+
+    <div class="chartcard">
+      <div class="legend">
+        <span><i class="sw" style="background:var(--s1)"></i>현재 방식</span>
+        <span><i class="sw" style="background:var(--s2)"></i>naive · draft 단위 (평균·최대)</span>
+        <span><i class="sw" style="background:var(--s3)"></i>naive · stage 단위 (평균·최대)</span>
+      </div>
+      <div class="panels">
+        <div class="panel"><h4>12MP normal</h4><svg id="pa" viewBox="0 0 360 250" role="img" aria-label="12MP: run당 pacing 지연 대 admission deadline miss"></svg></div>
+        <div class="panel"><h4>24MP memory</h4><svg id="pb" viewBox="0 0 360 250" role="img" aria-label="24MP: run당 pacing 지연 대 admission deadline miss"></svg></div>
+      </div>
+      <p class="caption">왼쪽 아래일수록 좋습니다. 두 패널은 축 범위가 크게 다릅니다(24MP는 가로 28 s·세로 85까지). 두 축은 서로 다른 층에서 나옵니다(세로축: 폐루프 admission 리플레이 114·112 runs, 가로축: 1-step pacing 입력 교체 116·116 runs). 각 축은 다른 모듈을 기록된 배포 동작으로 고정한 값이라, 이 그림은 두 모듈을 동시에 naive로 둔 결과가 아닙니다.</p>
+    </div>
+    <p class="takeaway">naive는 손잡이가 하나뿐인데 두 모듈이 서로 반대 방향으로 잡아당깁니다. 12MP에서 miss를 1건까지 낮추려면 run당 지연이 7.0 s가 되고, 24MP에서는 5건을 남긴 채 16.0 s가 됩니다. 현재 방식은 miss 0을 2.6 s·3.6 s로 지킵니다. stage 단위는 24MP에서 아예 두 축 바깥에 있습니다 — 가장 싼 설정인 평균-3이 이미 run당 6.8 s를 쓰면서 admission miss는 60건입니다.</p>
+
+    <h3>stage 합은 어떤 구성을 가정하느냐에 갈립니다</h3>
+    <p class="sub">위 표와 산점도의 stage 점은 계획 체인을 가정한 값입니다. stage 합은 draft 벽이 아니어서, 아직 실행되지 않은 시퀀스에 어떤 구성을 가정할지와 비stage 시간을 어떻게 할지를 먼저 정해야 합니다. 그 두 선택이 결과를 양쪽으로 벌립니다.</p>
+    <div class="tablebox"><table>
+      <thead>
+        <tr><th rowspan="2">입력</th><th class="grp" colspan="3">12MP normal</th><th class="grp" colspan="3">24MP memory</th></tr>
+        <tr><th>개입</th><th>run당 지연</th><th>놓친 개입</th><th>개입</th><th>run당 지연</th><th>놓친 개입</th></tr>
+      </thead>
+      <tbody>
+        <tr class="cur"><td>현재 방식</td>
+          <td class="n">29.5%</td><td class="n">2.6 s</td><td class="n zero">8.4%</td>
+          <td class="n">33.2%</td><td class="n">3.6 s</td><td class="n zero">15.9%</td></tr>
+        <tr><td>naive · draft 평균-3<span class="kind">draft sequence 소요의 평균</span></td>
+          <td class="n">25.1%</td><td class="n">1.8 s</td><td class="n pos">11.2%</td>
+          <td class="n">24.0%</td><td class="n">2.4 s</td><td class="n pos">21.2%</td></tr>
+        <tr><td>naive · stage 평균-3<span class="kind">계획 체인의 stage별 평균 합</span></td>
+          <td class="n">27.6%</td><td class="n pos">2.7 s</td><td class="n pos">28.4%</td>
+          <td class="n">39.1%</td><td class="n pos">6.8 s</td><td class="n pos">30.8%</td></tr>
+        <tr><td>naive · stage 평균-3<span class="kind">직전 실행 구성 기준</span></td>
+          <td class="n">17.3%</td><td class="n">1.0 s</td><td class="n pos">31.2%</td>
+          <td class="n">18.0%</td><td class="n">1.6 s</td><td class="n pos">33.7%</td></tr>
+        <tr><td>naive · stage 평균-3 + 비stage 시간<span class="kind">직전 실행 구성 기준</span></td>
+          <td class="n">24.7%</td><td class="n">1.8 s</td><td class="n pos">11.2%</td>
+          <td class="n">23.5%</td><td class="n">2.4 s</td><td class="n pos">21.9%</td></tr>
+      </tbody>
+    </table></div>
+    <p class="caption">계획 체인: 그 캡처에 설정된 전체 stage 열 · 직전 실행 구성: 직전에 완료된 draft가 실제로 실행한 stage 열 · 비stage 시간: draft 안에서 stage에 속하지 않는 시간의 최근 3회 평균</p>
+    <p class="takeaway">구성 가정이 결과를 양쪽으로 벌립니다. 계획 체인은 지연을 draft 평균-3의 2.8배까지 늘리고(24MP 2.4 → 6.8 s), 직전 실행 구성은 1.6 s로 줄입니다. 그런데 <strong>놓친 개입은 양쪽 다 28–34%로 남습니다</strong>.</p>
+    <div class="why">
+      <ul>
+        <li><span class="dot" style="background:var(--s2)"></span><strong>구성을 가정해야 하는 것이 문제입니다.</strong> pacing이 예약하는 대상은 아직 admission이 결정하지 않은 다음 시퀀스들입니다. 계획 체인을 쓰면 admission이 건너뛸 stage까지 값을 매겨 백로그가 중앙값 +457 ms 부풀고, 직전 실행 구성을 쓰면 이미 일어난 skip을 그대로 물려받아 −135 ms 모자랍니다.</li>
+        <li><span class="dot" style="background:var(--s3)"></span><strong>겨냥이 틀린 것이지 수준이 틀린 것이 아닙니다.</strong> 두 방향 모두 놓친 개입이 28–34%에 머뭅니다. 반대 부호로 치우쳤는데도 놓치는 비율이 같이 높다는 것은, 상수 margin이나 배율로는 옮길 수 없는 오차라는 뜻입니다.</li>
+        <li><span class="dot" style="background:var(--s1)"></span><strong>고치면 draft 단위가 됩니다.</strong> 비stage 시간을 되돌리고 직전 실행 구성을 쓰면 세 지표가 draft 평균-3과 거의 겹칩니다(12MP 1.8 s·11.2% 대 1.8 s·11.2%). stage로 분해했다가 draft 벽을 다시 조립한 셈이라, 분해에서 얻는 것이 없습니다.</li>
+      </ul>
+    </div>
+    <p class="takeaway">두 모듈이 묻는 질문이 다르기 때문입니다. admission은 “지금 이 draft의 남은 stage가 얼마나 걸리나”를 묻고, 그 단위는 stage가 맞습니다. pacing은 “다음 두 시퀀스가 얼마나 걸리나”를 묻는데, 그 구성 자체가 아직 미지입니다. 여기에 필요한 것은 분해가 아니라 전체 시퀀스 위의 예약이고, 현재 방식은 그것을 이번 세션에서 관측한 draft 소요의 최대값으로 잡습니다.</p>
+  </section>
+
+  <section>
+    <div class="cause">
+      <div class="rank">pacing이 무너지는 구조</div>
+      <h2><i>B</i>는 측정이고 <i>C</i>는 예약인데, naive는 통계 하나로 두 항을 모두 만듭니다</h2>
+      <p><code>eq:pacing</code>의 결손은 <i>B</i>&#8201;+&#8201;2<i>C</i>&#8201;&minus;&#8201;<i>T</i>입니다. <i>B</i>는 지금 밀려 있는 작업이 끝날 때까지의 구간이므로 정확해야 하고, <i>C</i>는 앞으로 올 두 시퀀스를 위한 예약이므로 보수적이어야 합니다. 현재 방식은 <i>B</i>를 완료 시점마다 rebase되는 구간 시계로 측정하고, <i>C</i>를 이번 세션에서 관측한 draft 소요의 최대값 계열 통계로 예약합니다(demote로 빠진 stage만큼 빼고, draft 전체 추정치를 하한으로). naive는 최근 N개 통계 하나가 두 자리에 동시에 들어가서, 한쪽을 맞추면 다른 쪽이 틀어집니다.</p>
+      <div class="tablebox"><table>
+        <thead>
+          <tr><th rowspan="2">입력</th><th class="grp" colspan="2">12MP normal</th><th class="grp" colspan="2">24MP memory</th></tr>
+          <tr><th>예약 C 분위</th><th>백로그 B 중앙오차</th><th>예약 C 분위</th><th>백로그 B 중앙오차</th></tr>
+        </thead>
+        <tbody>
+          <tr class="cur"><td>현재 방식</td><td class="n">86%</td><td class="n">−56 ms</td><td class="n">91%</td><td class="n">−78 ms</td></tr>
+          <tr><td>naive · 평균-3</td><td class="n pos">62%</td><td class="n">−6 ms</td><td class="n pos">71%</td><td class="n">+54 ms</td></tr>
+          <tr><td>naive · 최대-5</td><td class="n">83%</td><td class="n pos">+142 ms</td><td class="n">90%</td><td class="n pos">+624 ms</td></tr>
+          <tr><td>naive · 최대-10</td><td class="n">88%</td><td class="n pos">+304 ms</td><td class="n">95%</td><td class="n pos">+1,251 ms</td></tr>
+        </tbody>
+      </table></div>
+      <p class="caption">예약 C 분위: 그 결정에서의 C가 실측 2-시퀀스 평균 소요를 덮은 비율 · 백로그 B 중앙오차: 추정 − 실측의 중앙값(양수면 과대)</p>
+      <div class="why">
+        <ul>
+          <li><span class="dot" style="background:var(--s2)"></span><strong>평균:</strong> <i>B</i>는 오히려 현재 방식보다 실측에 가깝습니다(−6 · +54 ms). 그런데 <i>C</i>가 62·71분위에 머물러 예약이 되지 못합니다. 평균은 중심값이지 예약이 아니고, 결손에는 2<i>C</i>로 두 배 들어가기 때문에 규칙이 늦게, 덜 걸립니다.</li>
+          <li><span class="dot" style="background:var(--s3)"></span><strong>최대:</strong> <i>C</i>는 83·90분위까지 올라와 현재 방식과 비슷한 예약이 됩니다. 하지만 같은 통계가 <i>B</i>에도 쓰여, 밀려 있는 draft 수만큼 최대값이 곱해집니다. <i>B</i>가 중앙값 기준 +142 · +624 ms 부풀고 지연이 그대로 따라 오릅니다.</li>
+          <li><span class="dot" style="background:var(--s1)"></span><strong>현재 방식:</strong> 두 항의 역할이 달라서 따로 맞춥니다. <i>C</i>는 세션 최대값 계열이라 86·91분위에 놓이는데, naive 최대-5와 같은 종류의 예약입니다. 차이는 <i>B</i>에서 납니다 — 현재 방식의 <i>B</i>는 측정이라 중앙오차 −56 · −78 ms로 실측을 좇고, naive는 밀린 draft 수만큼 최대값을 곱합니다. 그래서 비슷한 예약 수준에서 지연은 최대-5의 61%·44%에 그칩니다.</li>
+        </ul>
+      </div>
+      <div class="facts">
+        <div class="fact"><b>2.6 s / 3.6 s</b><span>현재 방식이 miss 0에서 쓰는 run당 지연 (12MP / 24MP)</span></div>
+        <div class="fact"><b>7.0 s / 16.0 s</b><span>naive가 miss를 1건 / 5건까지 낮추는 설정(최대-10)의 run당 지연</span></div>
+      </div>
+    </div>
+    <div class="foot">
+      <p><strong>이 층이 무엇이고 무엇이 아닌가.</strong> 도착 시각, 실제 draft 소요, 기록된 지연은 trace에 고정한 채 규칙의 입력만 바꾼 1-step 비교입니다. pacing은 폐루프여서 “naive pacing을 실제로 배포했다면”의 결과가 아닙니다. 지연을 바꾸면 이후 백로그·admission·발열이 함께 바뀌므로, 그 질문에는 새 매칭 실험이나 검증된 폐루프 시뮬레이터가 필요합니다.</p>
+      <p>규칙은 manuscript의 <code>eq:pacing</code> 형태입니다. 수집 시점의 배포 구현은 여기에 backlog 성장항을 더하고 상한은 두지 않아서, 현재 입력으로도 기록된 지연(run당 3.8 · 5.7 s)보다 작게 재현되고 개입 여부는 94.7% · 91.2% 일치합니다. 성장항까지 넣은 배포 공식은 기록된 <i>B</i>·<i>C</i>·<i>T</i>에서 기록된 지연을 6,135개 결정 전부 정확히 재현합니다. 모든 arm을 같은 규칙에 통과시켰으므로 arm 사이 비교는 동일 조건입니다.</p>
+      <p>24MP 열은 서로 다른 두 배포 지연 공식을 섞습니다 — S26U 24MP는 성장항을 결손과 함께 반감하고, S26 24MP는 반감 뒤에 더합니다. 12MP는 두 장비가 같은 공식입니다. 규칙은 모든 arm에 같으므로 arm 비교는 유지되지만, 24MP의 ‘현재 방식’ 행은 한 시스템의 기록이 아닙니다.</p>
+      <p>‘놓친 개입’의 기준선은 같은 규칙에 실측 백로그와 실측 2-시퀀스 소요를 넣은 retrospective matched-policy 기준이며, 필요한·최소·최적 지연이 아닙니다. 그 입력 자체가 배포된 pacing 아래에서 측정된 값이라, 지연 없이 같은 캡처가 흘러갔을 경우의 counterfactual은 아닙니다. arm 사이 순위를 매기는 용도로만 씁니다.</p>
+      <p>이 절의 표와 산점도 수치는 한 모집단에서 계산했습니다(12MP 2,947 · 24MP 3,000 결정, 116·116 runs). 산점도와 표의 stage 점은 admission arm과 같은 정의인 계획 체인 기준이고, 구성 가정과 비stage 시간 처리를 함께 쓸어본 전체 그리드(평균·최대 × N × 두 구성 × 비stage 시간 유무)는 CSV에 있습니다.</p>
+      <p>생성: <code>python partA.py &amp;&amp; python partC_pacing_arms.py</code> → <code>results/C_pacing_arms.csv</code> · <code>python partC_pacing_stage.py</code> → <code>results/C_pacing_stage.csv</code></p>
+    </div>
+  </section>
 </div>
 <div class="tip" id="tip" hidden></div>
 <script>
@@ -307,4 +431,66 @@ function chart(id, cond, ymax, ticks) {
 }
 chart("ca", "12MP", 15, [0, 5, 10, 15]);
 chart("cb", "24MP", 90, [0, 30, 60, 90]);
+
+// ---- pacing: one-step input swap (delay per run) vs closed-loop admission miss ----
+const PD = [
+ {c:"12MP",g:"cur",a:"현재 방식",d:2.61,miss:0,eng:29.5,mis:8.4},
+ {c:"12MP",g:"draft",a:"draft 평균-1",d:1.93,miss:6,eng:22.9,mis:16.8},
+ {c:"12MP",g:"draft",a:"draft 평균-3",d:1.81,miss:6,eng:25.1,mis:11.2},
+ {c:"12MP",g:"draft",a:"draft 평균-5",d:1.84,miss:12,eng:26.2,mis:15.3},
+ {c:"12MP",g:"draft",a:"draft 평균-10",d:2.04,miss:8,eng:27.7,mis:22.6},
+ {c:"12MP",g:"draft",a:"draft 최대-3",d:3.11,miss:3,eng:32.2,mis:6.5},
+ {c:"12MP",g:"draft",a:"draft 최대-5",d:4.26,miss:3,eng:37.9,mis:4.5},
+ {c:"12MP",g:"draft",a:"draft 최대-10",d:7.04,miss:1,eng:45.4,mis:3.2},
+ {c:"12MP",g:"stage",a:"stage 평균-1",d:3.17,miss:11,eng:27.2,mis:31.2},
+ {c:"12MP",g:"stage",a:"stage 평균-3",d:2.74,miss:10,eng:27.6,mis:28.4},
+ {c:"12MP",g:"stage",a:"stage 평균-5",d:2.68,miss:8,eng:28.2,mis:28.0},
+ {c:"12MP",g:"stage",a:"stage 평균-10",d:2.7,miss:12,eng:27.3,mis:33.3},
+ {c:"12MP",g:"stage",a:"stage 최대-3",d:5.1,miss:3,eng:40.5,mis:8.4},
+ {c:"12MP",g:"stage",a:"stage 최대-5",d:6.45,miss:2,eng:46.2,mis:4.3},
+ {c:"12MP",g:"stage",a:"stage 최대-10",d:9.31,miss:2,eng:51.3,mis:3.0},
+ {c:"24MP",g:"cur",a:"현재 방식",d:3.58,miss:0,eng:33.2,mis:15.9},
+ {c:"24MP",g:"draft",a:"draft 평균-1",d:2.86,miss:16,eng:22.9,mis:23.5},
+ {c:"24MP",g:"draft",a:"draft 평균-3",d:2.43,miss:16,eng:24.0,mis:21.2},
+ {c:"24MP",g:"draft",a:"draft 평균-5",d:2.58,miss:29,eng:26.8,mis:17.1},
+ {c:"24MP",g:"draft",a:"draft 평균-10",d:3.02,miss:23,eng:31.5,mis:16.2},
+ {c:"24MP",g:"draft",a:"draft 최대-3",d:5.08,miss:10,eng:36.8,mis:9.6},
+ {c:"24MP",g:"draft",a:"draft 최대-5",d:8.1,miss:7,eng:48.1,mis:4.1},
+ {c:"24MP",g:"draft",a:"draft 최대-10",d:16.0,miss:5,eng:65.1,mis:1.8},
+ {c:"24MP",g:"stage",a:"stage 평균-1",d:7.81,miss:83,eng:38.9,mis:34.2},
+ {c:"24MP",g:"stage",a:"stage 평균-3",d:6.83,miss:60,eng:39.1,mis:30.8},
+ {c:"24MP",g:"stage",a:"stage 평균-5",d:6.81,miss:72,eng:41.0,mis:29.8},
+ {c:"24MP",g:"stage",a:"stage 평균-10",d:6.96,miss:70,eng:43.3,mis:27.1},
+ {c:"24MP",g:"stage",a:"stage 최대-3",d:13.68,miss:44,eng:57.1,mis:9.8},
+ {c:"24MP",g:"stage",a:"stage 최대-5",d:18.47,miss:31,eng:67.9,mis:3.4},
+ {c:"24MP",g:"stage",a:"stage 최대-10",d:26.25,miss:25,eng:76.0,mis:1.1},
+];
+const PCOL = {cur: "var(--s1)", draft: "var(--s2)", stage: "var(--s3)"};
+function pchart(id, cond, xmax, xt, ymax, yt) {
+  const svg = document.getElementById(id);
+  const W = 360, H = 250, m = {l: 44, r: 18, t: 14, b: 40};
+  const X = v => m.l + v / xmax * (W - m.l - m.r);
+  const Y = v => H - m.b - v / ymax * (H - m.t - m.b);
+  for (const t of yt) {
+    el("line", {x1: m.l, x2: W - m.r, y1: Y(t), y2: Y(t), stroke: "var(--grid)", "stroke-width": 1}, svg);
+    el("text", {x: m.l - 6, y: Y(t) + 4, "text-anchor": "end"}, svg).textContent = t;
+  }
+  for (const t of xt) el("text", {x: X(t), y: H - m.b + 18, "text-anchor": "middle"}, svg).textContent = t + " s";
+  el("text", {x: (m.l + W - m.r) / 2, y: H - 4, "text-anchor": "middle"}, svg).textContent = "run당 pacing 지연";
+  const yc = (m.t + H - m.b) / 2;
+  el("text", {x: 11, y: yc, "text-anchor": "middle", transform: `rotate(-90 11 ${yc})`}, svg).textContent = "admission deadline miss (캡처 수)";
+  const pts = PD.filter(d => d.c === cond);
+  for (const g of ["draft", "stage", "cur"]) for (const d of pts.filter(p => p.g === g)) {
+    const cx = X(d.d), cy = Y(d.miss);
+    const gg = el("g", {tabindex: 0}, svg);
+    el("circle", {cx, cy, r: 12, fill: "transparent"}, gg);
+    el("circle", {cx, cy, r: g === "cur" ? 6.5 : 4.5, fill: PCOL[g], stroke: "var(--surface)", "stroke-width": 2}, gg);
+    const html = `<b>${d.g === "cur" ? "" : "naive · "}${d.a}</b><br>run당 지연 ${d.d.toFixed(1)} s · 개입 ${d.eng.toFixed(1)}%<br>놓친 개입 ${d.mis.toFixed(1)}% · admission miss ${d.miss}`;
+    gg.addEventListener("mousemove", e => showTip(e, html)); gg.addEventListener("mouseleave", hideTip);
+    gg.addEventListener("focus", e => { const r = e.target.getBoundingClientRect(); showTip({target: e.target, clientX: r.left + r.width / 2, clientY: r.top}, html); });
+    gg.addEventListener("blur", hideTip);
+  }
+}
+pchart("pa", "12MP", 10, [0, 2, 4, 6, 8, 10], 13, [0, 4, 8, 12]);
+pchart("pb", "24MP", 28, [0, 7, 14, 21, 28], 90, [0, 30, 60, 90]);
 </script>
