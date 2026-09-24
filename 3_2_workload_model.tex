@@ -1,7 +1,8 @@
 \subsection{Workload Model and Online Duration Estimation}
 \label{sec:model}
-Both control modules require online estimates of remaining draft work.
-The controller therefore estimates stage durations from observations of completed draft sequences and combines these estimates for the sequence being considered.
+Both control modules require estimates of remaining draft work.
+Draft processing time varies with resolution, memory pressure, stage configuration, and thermal state (Section~\ref{sec:guard-limit}), which neither per-model timing tables nor the thermal level alone can capture.
+The controller therefore estimates stage durations online from completed draft sequences and combines these estimates for the sequence being considered.
 
 \smallskip\noindent\textbf{Modeled workload sequence.}
 Each workload key \(k\) identifies a processing stage and its configuration.

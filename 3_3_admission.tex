@@ -60,13 +60,13 @@ Applying the selected factor gives
 \end{equation}
 
 \smallskip\noindent\textbf{Watchdog fallback.}
-An admitted stage may still run longer than predicted.
-The watchdog therefore limits how long the draft sequence waits for that stage before starting fallback:
+An admitted stage may still run longer than predicted, and it cannot be cancelled once it enters native image processing.
+The watchdog therefore limits how long the draft sequence waits for that stage:
 \begin{equation}
   W_{i,j}=\max\{0,T_{i,j}-U(\mathcal{E}_i)\},
   \label{eq:watchdog}
 \end{equation}
 where \(\mathcal{E}_i=(k_m)\) contains only the last key, the mandatory processing from encoding through draft image saving.
 Subtracting \(U(\mathcal E_i)\) reserves its estimated duration within \(T_{i,j}\).
-If the watchdog expires, the framework proceeds to encoding and saving from the preserved original input.
+If the watchdog expires, the framework falls back to encoding and saving the preserved original input while the optional stage continues independently.
 Already queued draft sequences follow the same fallback until the queue drains.

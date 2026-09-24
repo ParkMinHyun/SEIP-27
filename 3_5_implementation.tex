@@ -12,11 +12,9 @@ The draft pipeline therefore provides the pacing decision to that component thro
 
 The integration adds two dedicated threads: a callback-delivery thread and a watchdog-fallback thread.
 Pacing posts the \texttt{captureAvailable} callback to the callback-delivery thread for release after \(d_i\).
-The watchdog-fallback thread provides the fallback path because an admitted optional stage cannot be cancelled once it enters native image processing.
-When the watchdog expires, the fallback thread encodes and saves the preserved original input while the optional stage continues independently.
+When the watchdog expires, the watchdog-fallback thread performs the fallback in Section~\ref{sec:admission}.
 Resources used by the optional stage are released only after that stage finishes.
 
 \smallskip\noindent\textbf{Deployment scope.}
 Because each workload key declares whether its stage is optional, an additional optional stage can reuse the estimation, admission, watchdog, and pacing logic once its key is defined and assigned to an admission group.
-Both modules estimate durations from measurements collected on the current device instead of using per-model timing tables or device-state signals such as thermal level.
 The controller has been integrated into the product branch and is undergoing release validation for a forthcoming Galaxy flagship smartphone line.
