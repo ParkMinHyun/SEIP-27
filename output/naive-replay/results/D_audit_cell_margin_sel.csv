@@ -1,0 +1,21 @@
+arm,cell,U_FS,U_UA,margin,FS_at_margin,pop
+P-hat only,12MP Multi-frame,16,4,120,12,sel
+P-hat only,12MP Single-frame,5,0,40,0,sel
+P-hat only,24MP Multi-frame,50,1,390,78,sel
+P-hat only,24MP Single-frame,27,3,70,8,sel
+draft mean-3,12MP Multi-frame,16,4,70,11,sel
+draft mean-3,12MP Single-frame,5,0,660,117,sel
+draft mean-3,24MP Multi-frame,50,1,350,76,sel
+draft mean-3,24MP Single-frame,27,3,170,35,sel
+draft max-5,12MP Multi-frame,16,4,30,14,sel
+draft max-5,12MP Single-frame,5,0,640,128,sel
+draft max-5,24MP Multi-frame,50,1,90,60,sel
+draft max-5,24MP Single-frame,27,3,50,56,sel
+stage mean-3,12MP Multi-frame,16,4,70,8,sel
+stage mean-3,12MP Single-frame,5,0,30,0,sel
+stage mean-3,24MP Multi-frame,50,1,380,78,sel
+stage mean-3,24MP Single-frame,27,3,70,16,sel
+stage max-5,12MP Multi-frame,16,4,0,13,sel
+stage max-5,12MP Single-frame,5,0,0,4,sel
+stage max-5,24MP Multi-frame,50,1,70,59,sel
+stage max-5,24MP Single-frame,27,3,0,23,sel

@@ -93,6 +93,97 @@ a naive pacer matches the deployed inputs on the one-step comparison
   whole table shares one population (2,947 / 3,000 decisions; 2 decisions fewer
   at 24MP than `C_pacing_arms.csv`, which lacks node rows).
 
+## Part D: naive estimators on the RQ3 always-admit audit (2026-09-24)
+
+```
+python audit_load.py       # 0729 PacingOnly + 0803 pacing_only workbooks -> audit_wb.pkl
+python audit_rescore.py    # arms and margin/scale frontier -> results/D_audit_arms.csv, D_audit_frontier.csv
+python audit_transfer.py   # per-cell margins, cross-condition transfer -> results/D_audit_{cell_margin,transfer}_*.csv
+```
+
+Open-loop and factual: every optional stage executed in these runs, so each
+capture-level Bokeh / Filter decision has a realized remaining duration and
+its live budget, scored with RQ3's feasible/unsafe rule. Nothing is imputed
+and pacing is not frozen, which removes both Part B caveats. The population is
+the RQ3 pool, rebuilt with the level-selection rule of the deleted
+`scripts/rq2_audit_pool.py` (recovered from `d135b2e^`): 3,746 decisions,
+feasible columns identical to the printed table. The unselected union of the
+same two sources (4,634 decisions) is the sensitivity check, because at 24MP
+the level rule removes every run in which U admitted an unsafe decision.
+
+Findings on the RQ3 pool (178 unsafe decisions):
+
+| arm, untuned | unsafe admitted | feasible skipped |
+|---|---|---|
+| U (recorded) | 8 | 98 |
+| P-hat only | 47 | 3 |
+| draft mean-3 | 50 | 24 |
+| stage mean-3 | 42 | 14 |
+| draft max-5 | 20 | 112 |
+| stage max-5 | 10 | 83 |
+
+- The point estimate and recent-N statistics admit 5-6x more unsafe decisions
+  than U. Draft max-5 is dominated by U on both columns.
+- A draft-level statistic makes the same decision at the M and S points of a
+  capture by construction (forecast <= B reduces to mean wall <= deadline -
+  draft start), so it cannot keep S while skipping M.
+- **A fixed margin on P-hat matches U when tuned in hindsight on the pooled
+  audit**: +170 ms gives 7 unsafe / 88 feasible skips (x1.26 gives 8 / 98).
+  Stage mean-3 +150 ms is also about level (8 / 100); draft mean-3 needs 132
+  feasible skips to reach 8. So this audit does not show that residual
+  calibration beats a tuned constant margin.
+- What it does show is that the margin does not transfer: the per-cell margin
+  P-hat needs to reach U's unsafe count ranges 40-390 ms, and a margin tuned
+  on 12MP (120 ms) admits 9 unsafe decisions at 24MP against U's 4, while one
+  tuned on 24MP (180 ms) skips 32 feasible decisions at 12MP against U's 21.
+  This is the claim `3_3_admission.tex` already makes ("without separate
+  additive margins for each device or stage"), and no stronger one.
+- AUC of (forecast - B) is 0.98-0.995 for every arm: the live budget dominates
+  the ranking, so arms differ only near the boundary and must be compared at
+  operating points.
+
+Limits: one device (S26 Ultra), the 0729/0803 builds; margins tuned in
+hindsight favor the naive arms; transfer is across conditions, not devices.
+
+**Discrepancy.** U's unsafe admits come out as 8 (12MP M 4, 24MP M 1, 24MP S
+3), the same as the deleted pool script, against 5 in the printed table and
+`fig_rq3_unsafe_spike_anatomy`; `inferredBeforeModelAdmit` also gives 8. This
+is the open discrepancy the deleted `docs/exhibits.md` recorded. The `after*`
+columns are recomputed by the exporter at export time, so the printed cells
+probably come from an earlier export. All arms here are scored against 8.
+
+### Against the printed 5 (`audit_table_ref.py`, used by `4_4_rq3_admission.tex`)
+
+At the author's direction (2026-09-24) the manuscript takes U's unsafe admits
+as the table's 5 (12MP M 2, 12MP S 0, 24MP M 1, 24MP S 2) with the same 98
+feasible skips. The naive arms do not read the disputed field, so only the
+reference moves (`results/D_audit_table_ref.csv`):
+
+| arm | margin for <= 5 unsafe | feasible skips there | best unsafe at <= 98 skips |
+|---|---|---|---|
+| U | -- | 98 | 5 |
+| P-hat only | +200 ms | 106 | 7 |
+| stage mean-3 | +210 ms | 123 | 11 |
+| draft mean-3 | +400 ms (gives 4) | 276 | 14 |
+
+P-hat +200 ms is the strongest fixed baseline across every family and both
+knobs searched (additive 0-2,000 ms at 10 ms; multiplicative 1.00-3.00 at
+0.01, from `results/D_audit_frontier.csv`): the next best reach five unsafe
+admits with 114 (stage+r mean-3 x1.24), 116 (stage mean-3 x1.26) and 120
+(P-hat x1.31) feasible skips. The RQ3 paragraph "Value of residual
+calibration" cites 200 ms / 106 against U's 98 and this ordering.
+
+Per-cell margin P-hat needs to reach U's cell count: 200 / 40 / 390 / 100 ms
+(12MP M, 12MP S, 24MP M, 24MP S), hence the prose's 40-390 ms.
+
+**The fixed-margin sentence depends on the reference.** Against 8, P-hat +170
+ms gives 7 unsafe / 88 feasible skips and beats U, and stage mean-3 +150 ms is
+level with it (8 / 100). If the table moves to 8, the RQ3 sentence "reducing
+unsafe admits to five or fewer required 106 ... 123 ... 276 ... compared with
+98 under U" no longer holds for P-hat or the per-stage estimator; only the
+draft-level result (132 vs 98) and the 40-390 ms per-cell range survive. The
+raw counts (47 / 50 / 42 against U) hold either way.
+
 ## Pacer port (added for the joint naive arm)
 
 `port_pacer.py` ports CaptureAvailablePacer and CaptureAvailablePacingSession;

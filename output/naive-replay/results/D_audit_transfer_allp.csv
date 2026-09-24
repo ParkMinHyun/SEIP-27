@@ -1,0 +1,11 @@
+arm,tuned_on,margin,applied_to,FS,UA,U_FS,U_UA,pop
+P-hat only,12MP,120,24MP,52,16,110,9,allp
+P-hat only,24MP,180,12MP,39,3,31,4,allp
+draft mean-3,12MP,210,24MP,124,6,110,9,allp
+draft mean-3,24MP,170,12MP,52,6,31,4,allp
+draft max-5,12MP,130,24MP,210,2,110,9,allp
+draft max-5,24MP,50,12MP,37,8,31,4,allp
+stage mean-3,12MP,80,24MP,45,26,110,9,allp
+stage mean-3,24MP,480,12MP,163,2,31,4,allp
+stage max-5,12MP,0,24MP,86,18,110,9,allp
+stage max-5,24MP,280,12MP,110,2,31,4,allp

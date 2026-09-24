@@ -1,0 +1,36 @@
+arm,UA,FS,margin_for_UA_le_5,FS_at_that_margin,UA_at_that_margin,best_UA_with_FS_le_98,block,cell,U_FS,U_UA,margin,tuned_on,applied_to
+P-hat only,47,3,200.0,106.0,5.0,7.0,global,,,,,,
+draft mean-3,50,24,400.0,276.0,4.0,14.0,global,,,,,,
+draft max-5,20,112,130.0,184.0,4.0,,global,,,,,,
+stage mean-3,42,14,210.0,123.0,5.0,11.0,global,,,,,,
+stage max-5,10,83,90.0,144.0,5.0,10.0,global,,,,,,
+P-hat only,2,19,,,,,per cell,12MP Multi-frame,16.0,2.0,200.0,,
+P-hat only,0,0,,,,,per cell,12MP Single-frame,5.0,0.0,40.0,,
+P-hat only,1,78,,,,,per cell,24MP Multi-frame,50.0,1.0,390.0,,
+P-hat only,2,16,,,,,per cell,24MP Single-frame,27.0,2.0,100.0,,
+draft mean-3,2,24,,,,,per cell,12MP Multi-frame,16.0,2.0,210.0,,
+draft mean-3,0,117,,,,,per cell,12MP Single-frame,5.0,0.0,660.0,,
+draft mean-3,1,76,,,,,per cell,24MP Multi-frame,50.0,1.0,350.0,,
+draft mean-3,2,35,,,,,per cell,24MP Single-frame,27.0,2.0,170.0,,
+draft max-5,2,24,,,,,per cell,12MP Multi-frame,16.0,2.0,130.0,,
+draft max-5,0,128,,,,,per cell,12MP Single-frame,5.0,0.0,640.0,,
+draft max-5,1,60,,,,,per cell,24MP Multi-frame,50.0,1.0,90.0,,
+draft max-5,2,58,,,,,per cell,24MP Single-frame,27.0,2.0,70.0,,
+stage mean-3,2,24,,,,,per cell,12MP Multi-frame,16.0,2.0,210.0,,
+stage mean-3,0,0,,,,,per cell,12MP Single-frame,5.0,0.0,30.0,,
+stage mean-3,1,78,,,,,per cell,24MP Multi-frame,50.0,1.0,380.0,,
+stage mean-3,2,22,,,,,per cell,24MP Single-frame,27.0,2.0,90.0,,
+stage max-5,2,27,,,,,per cell,12MP Multi-frame,16.0,2.0,130.0,,
+stage max-5,0,4,,,,,per cell,12MP Single-frame,5.0,0.0,0.0,,
+stage max-5,1,59,,,,,per cell,24MP Multi-frame,50.0,1.0,70.0,,
+stage max-5,2,29,,,,,per cell,24MP Single-frame,27.0,2.0,30.0,,
+P-hat only,3,69,,,,,transfer,,77.0,3.0,200.0,12MP,24MP
+P-hat only,2,37,,,,,transfer,,21.0,2.0,200.0,24MP,12MP
+draft mean-3,0,274,,,,,transfer,,77.0,3.0,570.0,12MP,24MP
+draft mean-3,4,80,,,,,transfer,,21.0,2.0,350.0,24MP,12MP
+draft max-5,0,338,,,,,transfer,,77.0,3.0,540.0,12MP,24MP
+draft max-5,8,38,,,,,transfer,,21.0,2.0,90.0,24MP,12MP
+stage mean-3,3,79,,,,,transfer,,77.0,3.0,210.0,12MP,24MP
+stage mean-3,3,38,,,,,transfer,,21.0,2.0,180.0,24MP,12MP
+stage max-5,1,118,,,,,transfer,,77.0,3.0,130.0,12MP,24MP
+stage max-5,4,31,,,,,transfer,,21.0,2.0,60.0,24MP,12MP
