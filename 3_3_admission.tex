@@ -51,6 +51,7 @@ It determines \(\tau\) from the Kish effective sample size \(n_{\mathrm{eff}}\) 
 The selector is motivated by the expected CDF position \(n/(n+1)\) of the maximum of \(n\) i.i.d. continuous samples~\cite{david-order-statistics}, with \(n_{\mathrm{eff}}\) substituting for the sample count.
 As the effective sample size grows, the selected quantile moves further into the observed upper tail.
 The selector avoids a separately tuned target percentile, while recency weighting reduces the influence of older observations.
+We set the decay to 0.90, the knee of the rate at which remaining sequences overran \(U\).
 Applying the selected factor gives
 \begin{equation}
   U(\mathcal{K})
