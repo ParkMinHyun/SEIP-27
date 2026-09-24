@@ -16,7 +16,7 @@ An optional stage in an enabled group is admitted when
   \label{eq:admission}
 \end{equation}
 A zero point estimate permits execution to obtain the initial duration observations needed by the model.
-This cold-start decision has no prior timing evidence; any Capture Timeout observed during its validation remains a release blocker.
+This case arises only at cold start, such as the first capture of an application session.
 
 Once an \(M\) or \(S\) stage is rejected, the controller disables that group until the queue drains: it skips the group's stages and removes them from subsequent remaining sequences.
 The two groups are tracked independently, so rejecting one does not disable the other.
@@ -57,7 +57,6 @@ Applying the selected factor gives
   =\hat P(\mathcal{K})\,\phi_{\tau}(\mathcal{K}).
   \label{eq:upper-estimate}
 \end{equation}
-The resulting \(U\) is empirical; it provides neither a worst-case time bound nor a statistical coverage guarantee.
 
 \smallskip\noindent\textbf{Watchdog fallback.}
 An admitted stage may still run longer than predicted.

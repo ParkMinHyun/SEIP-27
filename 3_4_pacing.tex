@@ -23,7 +23,7 @@ Using this budget as a reference for queue pressure, pacing computes the callbac
 \end{equation}
 The deficit \(\hat B_i+2\hat C-T^{\mathrm{end}}_i\) is positive when the draft work predicted through capture \(i+1\) exceeds this budget.
 Pacing converts only half of the positive deficit into callback delay, sharing the response to deadline pressure with admission rather than absorbing the entire deficit as user-perceived delay.
-This sizing rule is a coordination heuristic, not a fixed-point derivation or an optimality claim.
+This sizing rule is a coordination heuristic, not an optimality claim.
 
 \smallskip\noindent\textbf{Backlog accounting.}
 Because queued draft sequences differ in their stages and processing cost, queue depth alone does not reflect their processing-time backlog.
@@ -61,4 +61,3 @@ At each draft sequence start, pacing recomputes the reserve from that sequence's
 \end{equation}
 The bracketed difference subtracts the predicted duration of disabled stages because the historical measurements may include their processing time.
 The outer maximum keeps \(\hat P(\mathcal K^{\mathrm{eff}})\) as a floor.
-This reserve is empirical rather than an execution-time bound.

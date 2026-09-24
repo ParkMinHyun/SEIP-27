@@ -32,8 +32,7 @@ With a fixed timeout duration,
 When completions fall farther apart than requests, \(\pi_i>\delta_i\), and successive captures lose deadline margin.
 Admission can shorten \(\pi_i\) by skipping optional stages, but it cannot recover time already spent waiting.
 Pacing can lengthen \(\delta_{i+1}\) by delaying the next capture opportunity, but it cannot change work already in progress.
-Equation~\eqref{eq:margin-recursion} is an accounting identity, not a control law.
-The controller does not maintain \(\mu_i\) as state; at each decision, it compares a duration estimate with the remaining timeout budget.
+Equation~\eqref{eq:margin-recursion} is an accounting identity rather than a control law: the controller does not track \(\mu_i\) but compares a duration estimate with the remaining timeout budget at each decision.
 
 When the two aims conflict, the controller prioritizes user-perceived responsiveness.
 Capture delay lengthens the shot-to-shot interval and cannot be recovered, whereas a skipped stage lowers the draft image's quality but leaves the final image unaffected.
