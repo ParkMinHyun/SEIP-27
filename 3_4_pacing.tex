@@ -1,8 +1,8 @@
-\subsection{Admission-Aware Capture-Availability Pacing}
+\subsection{Capture-Availability Pacing}
 \label{sec:pacing}
 
-Pacing runs when the framework becomes ready to deliver \texttt{captureAvailable}, using predicted draft-worker occupancy to decide whether to expose the next capture opportunity immediately or delay it.
-It delays the callback when the predicted backlog and additional draft work exceed the live remaining timeout budget.
+Pacing runs when the framework becomes ready to deliver \texttt{captureAvailable}, using the predicted draft backlog to decide whether to expose the next capture opportunity immediately or delay it.
+It delays the callback when the predicted backlog and additional draft work exceed the remaining timeout budget.
 
 \smallskip\noindent\textbf{Backlog tracking.}
 While a draft sequence is executing, subsequent capture requests can continue to arrive.
@@ -19,11 +19,11 @@ At that decision, pacing estimates the backlog as
 \smallskip\noindent\textbf{Delay sizing.}
 The backlog alone does not include the draft sequence for capture \(i\), which enters the queue after the decision, or the capture enabled by the callback.
 Pacing reserves a duration \(\hat C\) for each of these two sequences.
-At \(t_i\), \(T_i\) is the remaining timeout window of the capture whose draft sequence is predicted to finish at \(t^{\mathrm{end}}\).
-Using this window as a reference for queue pressure, pacing computes the callback delay in milliseconds as
+At \(t_i\), \(T^{\mathrm{end}}_i\) is the remaining timeout budget of the capture whose draft sequence is predicted to finish at \(t^{\mathrm{end}}\).
+Using this budget as a reference for queue pressure, pacing computes the callback delay in milliseconds as
 \begin{equation}
   d_i=\left\lceil
-    \frac{\max\{0,\hat B_i+2\hat C-T_i\}}{2}
+    \frac{\max\{0,\hat B_i+2\hat C-T^{\mathrm{end}}_i\}}{2}
   \right\rceil.
   \label{eq:pacing}
 \end{equation}
@@ -41,12 +41,12 @@ It then computes
   \right).
   \label{eq:reserve}
 \end{equation}
-The bracketed difference subtracts the predicted duration of excluded stages because the historical measurements may include their processing time.
+The bracketed difference subtracts the predicted duration of disabled stages because the historical measurements may include their processing time.
 The outer maximum keeps \(\hat P(\mathcal K^{\mathrm{eff}})\) as a floor.
 This reserve is empirical rather than an execution-time bound.
 
 \smallskip\noindent\textbf{Provisional backlog accounting.}
-For Equation~\ref{eq:backlog} to reflect the actual queue, \(t^{\mathrm{end}}\) must account for every draft sequence that is running or waiting in the queue.
+For Equation~\eqref{eq:backlog} to reflect the actual queue, \(t^{\mathrm{end}}\) must account for every draft sequence that is running or waiting in the queue.
 However, the effective sequence used for prediction is resolved when each draft sequence starts, whereas pacing decisions for later captures may occur while that sequence is still queued.
 Pacing therefore adds each draft sequence to \(t^{\mathrm{end}}\) at its capture's decision, using a provisional estimate \(\hat P^{\mathrm{last}}\).
 At each draft sequence start, pacing sets \(\hat P^{\mathrm{last}}\) to \(\hat P(\mathcal K^{\mathrm{eff}})\), the point estimate for the stages currently enabled for that sequence.

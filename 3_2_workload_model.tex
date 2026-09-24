@@ -13,7 +13,7 @@ Including this processing lets admission account for the time needed to produce 
 \smallskip\noindent\textbf{Online point estimation.}
 The controller maintains a baseline duration \(\hat b(k)\) for each key.
 A shared factor \(\gamma\) adjusts these baselines to recent execution conditions.
-Multiplying them gives the predicted duration \(\hat p(k)\), and summing these predictions gives the duration estimate for a modeled sequence \(\mathcal K\):
+Multiplying a key's baseline by \(\gamma\) gives its predicted duration \(\hat p(k)\), and summing these predictions gives the point estimate for a key sequence \(\mathcal K\):
 \begin{equation}
   \hat P(\mathcal{K})
   =\sum_{k\in\mathcal{K}}\hat p(k),
