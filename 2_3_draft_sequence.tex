@@ -10,9 +10,9 @@ Executing multiple draft sequences concurrently would require buffering out-of-o
 
 \smallskip\noindent\textbf{Extending the draft sequence.}
 The original draft sequence saved an image without additional image processing.
-To reduce visual differences between draft and final images, the framework later added lightweight single-frame stages, such as Filter and Watermark.
+To reduce visual differences between draft and final images, we later added single-frame stages, such as Filter and Watermark.
 
-As post-processing became more resource-intensive, the framework deferred its start for selected shot modes until the application entered the background to preserve foreground responsiveness.
+As post-processing became more resource-intensive, we deferred its start for selected shot modes until the application entered the background to preserve foreground responsiveness.
 In these modes, the draft image remains the user-visible result throughout the foreground session, making its visual quality more important.
 The draft--final visual gap is particularly pronounced in Portrait mode, as shown in Figure~\ref{fig:draft-final-gap}.
 To reduce this gap, we implemented lightweight multi-frame composition in the draft sequence.

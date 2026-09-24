@@ -2,41 +2,42 @@
 
 \label{sec:introduction}
 
-% Samsung Galaxy camera capture pipelines publish an initial image before post-processing produces the final image.
-% We refer to the pipeline that produces this initial image as the draft sequence.
-% For selected modes, post-processing begins only after the application enters the background, prolonging the period for which the initial image remains visible.
-% We therefore added lightweight multi-frame composition to the draft sequence to reduce the visible gap to the final image.
+The Samsung Galaxy camera publishes an initial user-visible image, the \emph{draft image}, for each capture and later replaces it with the final image from post-processing.
+We call the processing stages that produce the draft image the \emph{draft sequence}.
+For selected shot modes, post-processing is deferred until the application enters the background, so the draft image remains the user-visible result throughout the foreground session, making its visual quality more important.
+To narrow the draft--final visual gap, we implemented lightweight multi-frame composition in the draft sequence.
 
-% Each capture must produce its initial image within a fixed deadline.
-% A violation of this deadline is referred to as a Capture Timeout.
-% Parallel capture turns this per-capture deadline into a cross-capture control problem.
-% The application may accept a new shutter request before the preceding initial image is produced, while draft sequences execute in capture order on a single worker.
-% Work admitted for one capture therefore increases the waiting time of subsequent captures and reduces their remaining deadline budgets.
+However, we have not deployed this feature on any device model because its added processing can violate the \emph{Capture Timeout}, a fixed deadline for producing each draft image whose violation crashes the application by design and blocks the release.
+Parallel capture lets the application accept the next shutter input before the preceding draft image is produced, shortening the shot-to-shot interval.
+Draft sequences still execute one at a time on a single draft worker, so processing added to one capture also consumes the timeout budget of every capture queued behind it.
 
-% The production system limits this risk by disabling optional processing in the draft sequence at a fixed overheat level.
-% Thermal level, however, does not reflect queueing time, remaining work, or remaining deadline budget.
-% The cutoff can suppress feasible work at or above the threshold while leaving timeout risk below it unaddressed.
+We introduced a static thermal guard during pre-release validation to mitigate this risk, but it cannot distinguish safe captures from unsafe ones.
+The guard skips the optional stages of the draft sequence once the device's overheat level reaches 4 on a 0--6 scale, but this level reflects neither how long a capture has waited nor how much draft work remains.
+Consequently, in our motivating experiment with the guard bypassed, the earliest Capture Timeout at the same starting level varied with resolution, memory pressure, and enabled stages (Section~\ref{sec:guard-limit}).
 
-% Workload adaptation and request-release control are established responses to latency and queueing pressure~\cite{approxdet-sensys,timecard-sosp,seda-sosp,breakwater-osdi}.
-% In our pipeline, neither is sufficient alone: workload control cannot prevent the next capture from joining a busy worker, while release control cannot reduce work already admitted for the current capture.
-% We therefore present the Budget-Aware Draft Controller, which coordinates \emph{Remaining-Sequence Admission} with \emph{Capture-Availability Pacing}.
-% Admission allows an optional stage only when an upper estimate of the work remaining before initial-image publication, including mandatory encoding and saving, fits within the capture's remaining deadline budget.
-% Pacing delays the next capture opportunity when projected worker occupancy would leave too little deadline budget for the next capture.
-% Both decisions use observed processing durations rather than per-model timing tables or thermal-state signals.
+Our pipeline can counter this risk only by skipping optional stages or delaying the next capture, and the two carry different user-facing costs.
+Workload adaptation and request-release control are established responses to latency and queueing pressure~\cite{approxdet-sensys,timecard-sosp,seda-sosp,breakwater-osdi}, but our pipeline can neither reject an accepted capture nor preempt a running stage.
+Skipping optional stages cannot recover time spent waiting, but it leaves the final image unaffected.
+Delaying the next capture can prevent waiting, but it lengthens the shot-to-shot interval, a user-perceived cost that is never recovered.
+This difference motivates prioritizing responsiveness while retaining optional stages when the remaining timeout budget permits.
 
-% The two controls incur different costs.
-% Pacing directly lengthens the shot-to-shot interval, whereas skipping an optional stage affects only the initial image until the final image replaces it.
-% The controller therefore prioritizes responsiveness while preserving optional processing when the remaining deadline budget permits.
+We therefore present the Budget-Aware Draft Controller, which coordinates both levers at run time.
+A major challenge is that both levers act on draft work not yet executed, so underestimation risks Capture Timeout while overestimation causes needless skips or delays.
+To address this challenge, the controller estimates stage durations online from completed draft sequences.
+\emph{Remaining-Sequence Admission} executes an optional stage when a high-side estimate of the remaining draft sequence fits within the capture's remaining timeout budget.
+\emph{Capture-Availability Pacing} delays the capture-availability callback, and thus the next capture, when predicted draft work exceeds the remaining timeout window.
 
-% Across 28 combinations of two devices, two capture conditions, and seven starting overheat levels, every run with the full controller completed the 30-capture horizon without an observed Capture Timeout.
-% The unguarded baseline reached Capture Timeout in 26 of the 28 cells.
-% The controller continued to execute lightweight multi-frame composition even at or above the production thermal cutoff.
-% Only the full controller completed every requested capture on time in all evaluated ablation cells.
+Experimental results on two commercial devices show that the controller enables lightweight multi-frame composition without Capture Timeout.
+Across 28 combinations of device, capture condition, and starting overheat level, no controller run of 30 captures reached Capture Timeout, whereas running every optional stage without the guard did so in 26 combinations.
+In combinations starting at overheat level 4 or higher, where the guard would skip optional stages, lightweight multi-frame composition still executed on an average of 5.2--22.2 of 30 captures per run.
+In the production-default 12MP configuration without memory pressure, pacing added no delay during the first five captures at any starting overheat level below 4.
+In an ablation at starting overheat level 4, neither admission nor pacing alone completed every capture on time.
+The controller is now undergoing release validation for a forthcoming Galaxy flagship smartphone line.
 
-% \smallskip\noindent\textbf{Contributions.}
-% We summarize our contributions below:
-% \begin{itemize}[leftmargin=1.2em]
-%   \item We characterize how serialized Draft execution under parallel capture creates a cross-capture deadline problem for lightweight multi-frame composition, and show why a static thermal cutoff does not reflect per-capture deadline safety.
-%   \item We present the Budget-Aware Draft Controller, which coordinates remaining-sequence admission with next-capture pacing using runtime duration observations. To our knowledge, this is the first production camera controller to combine these controls under a hard per-capture deadline.
-%   \item We evaluate the controller on two commercial devices across 28 device--condition--thermal combinations, examining end-to-end effectiveness, control-loop contribution, admission quality, and pacing-delay sizing.
-% \end{itemize}
+\smallskip\noindent\textbf{Contributions.}
+We summarize our contributions below:
+\begin{itemize}[leftmargin=1.2em]
+  \item We characterize how serialized draft execution under parallel capture creates a cross-capture deadline problem for lightweight multi-frame composition, and why a static thermal guard does not reflect per-capture deadline safety.
+  \item We present the Budget-Aware Draft Controller, which coordinates remaining-sequence admission with capture-availability pacing. To our knowledge, this is the first work to combine these controls in a production camera system under a hard per-capture deadline.
+  \item We evaluate the controller on two commercial devices, examining end-to-end effectiveness, component contribution, admission decision quality, and pacing under queue pressure.
+\end{itemize}

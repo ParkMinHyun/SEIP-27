@@ -1,10 +1,11 @@
 \begin{abstract}
-% We present the Budget-Aware Draft Controller, which enables lightweight multi-frame composition in the initial-image pipeline of Samsung Galaxy cameras under parallel capture and a fixed per-capture deadline.
-% Under parallel capture, initial-image processing shares a serialized worker, so work admitted for one capture can consume the deadline budget of subsequent captures.
-% The production system limits this risk with a fixed thermal cutoff, which does not account for the live deadline state of individual captures.
-% Our controller coordinates remaining-sequence admission with capture-availability pacing using observed processing durations.
-% We evaluate the controller across 28 combinations of two devices, two capture conditions, and seven starting overheat levels.
-% Every controller run completed 30 captures without an observed deadline violation, whereas the unguarded baseline reached Capture Timeout in 26 of the 28 cells.
-% The controller also continued to execute lightweight multi-frame composition at or above the thermal cutoff.
-% These results show that coordinated admission and pacing can enable lightweight multi-frame composition in the initial-image pipeline without relying on static feature suppression under per-capture deadlines.
+% We present the Budget-Aware Draft Controller, which enables lightweight multi-frame composition in the draft pipeline of Samsung Galaxy cameras under parallel capture and a hard per-capture deadline, the Capture Timeout.
+% For selected shot modes, post-processing is deferred until the application enters the background, so the initial draft image remains the user-visible result throughout the foreground session, making its visual quality more important.
+% However, lightweight multi-frame composition can violate the Capture Timeout, and under parallel capture, where draft sequences execute one at a time, its added processing also consumes the timeout budget of every capture queued behind it.
+% The production thermal guard skips optional stages at a fixed overheat level and therefore cannot separate safe captures from unsafe ones.
+% Our controller coordinates two runtime decisions: remaining-sequence admission decides whether to execute each optional stage, and capture-availability pacing decides whether to delay the next capture.
+% One major challenge is that both decisions depend on draft work not yet executed; to address this, the controller estimates stage durations online from completed draft sequences.
+% Across 28 combinations of two devices, two capture conditions, and seven starting overheat levels, no controller run of 30 captures reached Capture Timeout, whereas running every optional stage without the guard did so in 26 combinations.
+% In combinations starting at overheat level 4 or higher, where the guard would skip optional stages, lightweight multi-frame composition still executed on an average of 5.2--22.2 of 30 captures per run.
+% The controller is undergoing release validation for a forthcoming Galaxy flagship smartphone line.
 \end{abstract}

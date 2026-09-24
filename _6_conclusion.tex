@@ -2,9 +2,10 @@
 
 \label{sec:conclusion}
 
-% Under parallel capture, lightweight multi-frame composition in the draft sequence creates a cross-capture deadline problem. 
-% Work admitted for one capture reduces the budget available to subsequent captures on the serialized, non-preemptible Draft worker.
-% This paper presents the Budget-Aware Draft Controller, which coordinates remaining-sequence admission with capture-availability pacing using runtime duration observations.
-% Across 28 evaluated cells, every full-controller run completed the 30-capture horizon without an observed Capture Timeout, whereas the unguarded baseline timed out in 26 cells. 
-% The controller also retained optional processing above the production thermal cutoff.
+% This paper addressed the deployment of lightweight multi-frame composition in the draft sequence of the Samsung Galaxy camera, whose draft image remains the user-visible result throughout the foreground session in selected shot modes.
+% Under parallel capture, processing added to one capture consumes the timeout budget of every capture queued behind it on the single draft worker, and the existing thermal guard cannot tell which captures can afford that processing.
+% We presented the Budget-Aware Draft Controller, which coordinates remaining-sequence admission with capture-availability pacing using stage durations estimated online from completed draft sequences.
+% The controller favors shot-to-shot responsiveness while retaining optional stages when the remaining timeout budget permits.
+% On two commercial devices, no controller run reached Capture Timeout, whereas running every optional stage without the guard did so in 26 of 28 combinations, and lightweight multi-frame composition executed even in runs starting at overheat levels where the guard would skip it.
+% The controller is now undergoing release validation for a forthcoming Galaxy flagship smartphone line.
 % These results support coordinated workload and arrival control as a practical alternative to static feature suppression in deadline-constrained, serialized pipelines.
