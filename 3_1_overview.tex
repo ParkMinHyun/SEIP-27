@@ -16,7 +16,7 @@ It compares the estimated duration of the remaining sequence with the capture's 
 \emph{Capture-Availability Pacing} controls delivery of \texttt{captureAvailable}, which exposes the next capture opportunity to the application.
 It uses the estimated draft backlog and the remaining timeout budget to decide whether to deliver the callback immediately or delay it.
 Both modules use duration estimates based on observations from completed draft sequences.
-Pacing accounts for admission decisions when estimating how long upcoming draft sequences will take.
+Pacing accounts for admission decisions when estimating upcoming draft work.
 
 \smallskip\noindent\textbf{Control objective.}
 The controller must complete every draft sequence before its Capture Timeout, because a single violation blocks the release.
@@ -32,8 +32,8 @@ With a fixed timeout duration,
 When completions fall farther apart than requests, \(\pi_i>\delta_i\), and successive captures lose deadline margin.
 Admission can shorten \(\pi_i\) by skipping optional stages, but it cannot recover time already spent waiting.
 Pacing can lengthen \(\delta_{i+1}\) by delaying the next capture opportunity, but it cannot change work already in progress.
-Equation~\eqref{eq:margin-recursion} is an accounting identity rather than a control law: the controller does not track \(\mu_i\) but compares a duration estimate with the remaining timeout budget at each decision.
+Equation~\eqref{eq:margin-recursion} is an accounting identity rather than a control law.
 
 When the two aims conflict, the controller prioritizes user-perceived responsiveness.
 Capture delay lengthens the shot-to-shot interval and cannot be recovered, whereas a skipped stage lowers the draft image's quality but leaves the final image unaffected.
-The controller therefore implements a deadline-constrained, responsiveness-dominant trade-off between optional-stage execution and shot-to-shot delay rather than a global cost optimization.
+The controller therefore implements a deadline-constrained, responsiveness-dominant trade-off between optional-stage execution and shot-to-shot delay.

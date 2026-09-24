@@ -3,7 +3,7 @@
 
 Pacing decides whether to deliver \texttt{captureAvailable} immediately or delay it, and thus when the application can accept the next capture.
 It delays the callback when the draft work predicted through the next capture exceeds the remaining timeout budget of the last capture in the backlog.
-These predictions account for the optional stages that admission has disabled.
+These predictions account for stages that admission has disabled.
 
 \smallskip\noindent\textbf{Delay rule.}
 For capture \(i\), pacing decides at \(t_i\), when the framework becomes ready to deliver the callback that enables capture \(i+1\); capture \(i\)'s draft sequence enters the queue only after this decision.
@@ -14,7 +14,7 @@ Pacing maintains \(t^{\mathrm{end}}\), the predicted queue-drain time, and estim
 \end{equation}
 The backlog therefore excludes the draft sequences of captures \(i\) and \(i+1\), and pacing reserves a duration \(\hat C\) for each.
 At \(t_i\), \(T^{\mathrm{end}}_i\) is the remaining timeout budget of the capture whose draft sequence is predicted to finish at \(t^{\mathrm{end}}\).
-Using this budget as a reference for queue pressure, pacing computes the callback delay in milliseconds as
+Pacing computes the callback delay in milliseconds as
 \begin{equation}
   d_i=\left\lceil
     \frac{\max\{0,\hat B_i+2\hat C-T^{\mathrm{end}}_i\}}{2}
@@ -27,11 +27,11 @@ This sizing rule is a coordination heuristic, not an optimality claim.
 
 \smallskip\noindent\textbf{Backlog accounting.}
 Because queued draft sequences differ in their stages and processing cost, queue depth alone does not reflect their processing-time backlog.
-Pacing therefore obtains \(t^{\mathrm{end}}\) by accumulating the sequence-level point estimates \(\hat P\) of every draft sequence that is running or waiting in the queue.
+Pacing therefore obtains \(t^{\mathrm{end}}\) by accumulating the point estimates \(\hat P\) of every draft sequence running or waiting in the queue.
 A draft sequence's point estimate depends on which of its stages admission has disabled, and this set is resolved only when the sequence starts.
-At that point, pacing removes the disabled stages from the configured sequence \(\mathcal K\), obtaining the effective sequence \(\mathcal K^{\mathrm{eff}}\).
-Because pacing decisions for later captures may occur while the sequence is still queued, pacing adds each draft sequence to \(t^{\mathrm{end}}\) at its capture's decision, using a provisional estimate \(\hat P^{\mathrm{last}}\).
-At each draft sequence start, pacing sets \(\hat P^{\mathrm{last}}\) to \(\hat P(\mathcal K^{\mathrm{eff}})\), the point estimate for the stages currently enabled for that sequence.
+Pacing then removes the disabled stages from the configured sequence \(\mathcal K\), obtaining the effective sequence \(\mathcal K^{\mathrm{eff}}\).
+Because pacing decisions for later captures may occur while it is still queued, pacing adds each draft sequence to \(t^{\mathrm{end}}\) at its capture's decision, using a provisional estimate \(\hat P^{\mathrm{last}}\).
+At each draft sequence start, pacing sets \(\hat P^{\mathrm{last}}\) to \(\hat P(\mathcal K^{\mathrm{eff}})\).
 Starting from an empty queue, pacing has no \(\hat P^{\mathrm{last}}\) and therefore releases callbacks without delay until a draft sequence starts.
 Thereafter, each decision provisionally extends \(t^{\mathrm{end}}\):
 \begin{equation}
@@ -41,11 +41,9 @@ Thereafter, each decision provisionally extends \(t^{\mathrm{end}}\):
   +\lceil\hat P^{\mathrm{last}}\rceil.
   \label{eq:clock-update}
 \end{equation}
-The callback release time \(t_i+d_i\) is a forecasting anchor, not a constraint on when capture \(i\) can start.
 
 Because \(\hat P^{\mathrm{last}}\) comes from the most recently started draft sequence, these provisional extensions can accumulate error while draft sequences wait in the queue.
-To correct this error, pacing reconstructs \(t^{\mathrm{end}}\) at each draft sequence completion, after the controller updates the duration model.
-The reconstruction starts from the current time and adds the updated estimates for the stages recorded with each draft sequence still queued.
+Pacing therefore reconstructs \(t^{\mathrm{end}}\) at each draft sequence completion, starting from the current time and adding updated estimates for the stages recorded with each queued draft sequence.
 
 \smallskip\noindent\textbf{Admission-aware reserve.}
 The reserve \(\hat C\) covers draft sequences that have not yet started, so pacing derives it from completed draft sequence durations and adjusts it for the stages admission has disabled.

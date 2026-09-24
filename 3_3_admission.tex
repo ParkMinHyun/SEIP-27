@@ -2,12 +2,12 @@
 \label{sec:admission}
 
 A capture's remaining timeout budget decreases while it waits for the draft worker and executes earlier stages.
-\emph{Remaining-Sequence Admission} therefore runs immediately before each optional stage and compares the estimated duration of the entire remaining sequence, including mandatory encoding and saving, with the remaining timeout budget.
+\emph{Remaining-Sequence Admission} therefore runs immediately before each optional stage and compares the estimated duration of the entire remaining sequence with this budget.
 
 \smallskip\noindent\textbf{Admission rule.}
 The controller tracks \(M\) and \(S\) as separate admission groups.
 At admission point \(j\), let \(T_{i,j}\) be capture \(i\)'s remaining timeout budget, the time left until its Capture Timeout deadline.
-Let \(U(\mathcal K_{i,j})\) be an empirical upper estimate of its remaining processing time, obtained by correcting \(\hat P\) with observed prediction errors as described below.
+Let \(U(\mathcal K_{i,j})\) be an empirical upper estimate of its remaining processing time, obtained by correcting \(\hat P\) with observed prediction errors.
 An optional stage in an enabled group is admitted when
 \begin{equation}
   U(\mathcal{K}_{i,j})\leq T_{i,j}
@@ -15,11 +15,10 @@ An optional stage in an enabled group is admitted when
   \hat P(\mathcal{K}_{i,j})=0.
   \label{eq:admission}
 \end{equation}
-A zero point estimate permits execution to obtain the initial duration observations needed by the model.
+A zero point estimate permits execution to obtain the model's initial duration observations.
 This case arises only at cold start, such as the first capture of an application session.
 
 Once an \(M\) or \(S\) stage is rejected, the controller disables that group until the queue drains: it skips the group's stages and removes them from subsequent remaining sequences.
-The two groups are tracked independently, so rejecting one does not disable the other.
 Keeping a group disabled until the drain prevents its processing from appearing and disappearing across consecutive draft images.
 
 \smallskip\noindent\textbf{Residual-calibrated upper estimate.}
@@ -66,7 +65,7 @@ The watchdog therefore limits how long the draft sequence waits for that stage:
   W_{i,j}=\max\{0,T_{i,j}-U(\mathcal{E}_i)\},
   \label{eq:watchdog}
 \end{equation}
-where \(\mathcal{E}_i=(k_m)\) contains only the last key, the mandatory processing from encoding through draft image saving.
+where \(\mathcal{E}_i=(k_m)\) contains only the mandatory last key.
 Subtracting \(U(\mathcal E_i)\) reserves its estimated duration within \(T_{i,j}\).
 If the watchdog expires, the framework falls back to encoding and saving the preserved original input while the optional stage continues independently.
 Already queued draft sequences follow the same fallback until the queue drains.
