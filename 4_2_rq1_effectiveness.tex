@@ -14,8 +14,7 @@ By contrast, Baseline timed out in 26 of the 28 cells, and in 17 of them every r
 
 \smallskip\noindent\textbf{Stage execution.}
 The controller retained substantial optional stage execution rather than broadly suppressing it.
-Over the first five consecutive captures, \(M\) and \(S\) executed on at least 4.5 and 4.6 captures per run in every cell.
-Both stages executed in all five consecutive captures in 23 of the 28 cells.
+Over the first five consecutive captures, \(M\) and \(S\) executed on at least 4.5 and 4.6 captures per run in every cell, and on all five in 23 of the 28 cells.
 In the twelve cells starting at overheat level 4 or higher, where the production guard would disable optional stages, \(M\) still executed on 5.2--22.2 of 30 captures per run.
 Within the same device and capture condition, stage execution generally decreased at higher starting overheat levels.
 Rather than disabling all optional stages at a fixed level, the controller adapted stage execution across thermal conditions.
@@ -23,6 +22,6 @@ Rather than disabling all optional stages at a fixed level, the controller adapt
 \smallskip\noindent\textbf{Pacing cost.}
 Pacing was infrequent during the first five consecutive captures.
 It activated on none of the four eligible transitions in 14 cells and on at most 1.8 transitions per run in any cell.
-Across cells with pacing during the first five captures, \(d\)~P50 reached a maximum of 737~ms, about 55\% of the corresponding delay with parallel capture disabled under the same condition.
+Across cells with pacing during the first five captures, \(d\)~P50 reached a maximum of 737~ms, about 55\% of the corresponding delay with parallel capture disabled.
 Over all 30 captures, pacing activated on as many as 17.7 of the 29 eligible transitions per run, while \(d\)~P50 remained at 127--538~ms in cells with positive delays.
 Thus, pacing's responsiveness cost remained limited during early consecutive captures.

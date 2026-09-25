@@ -4,11 +4,10 @@
 \input{tables/tab_rq4_pacing_sizing.tex}
 
 Table~\ref{tab:rq4_pacing_sizing} evaluates 3{,}050 pacing decisions from 116 \emph{Full} runs in the 12MP normal condition, pooled over both devices.
-We include recorded pacing decisions with a backlog reconstructed from the completed trace.
-Panel~(a) groups decisions by this measured backlog \(B_i\) as a fraction of the Capture Timeout budget.
+Panel~(a) groups decisions by the backlog \(B_i\) measured from the completed trace, as a fraction of the Capture Timeout budget.
 Because backlog is also the pacing rule's dominant term, these bands describe its response rather than test it independently.
 Panel~(b) reports pacing coverage for captures whose slack, the deadline margin left at draft sequence completion, fell below 20\%, 10\%, and 5\% of the budget.
-For paced decisions, \(d_i/B_i\) expresses the pacing delay relative to the backlog.
+For paced decisions, \(d_i/B_i\) is the pacing delay relative to the backlog.
 
 \smallskip\noindent\textbf{Queue response.}
 Pacing activation increased sharply with backlog, from 0\% below 10\% of the budget to 8.2\%, 45.0\%, and 83.4\% in successively higher bands.
