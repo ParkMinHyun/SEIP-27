@@ -3,22 +3,20 @@
 
 \input{tables/tab_rq1_end_to_end_summary.tex}
 
-Table~\ref{tab:rq1_controller_behavior} evaluates the full controller across 28 cells, each defined by a device, a capture condition, and a starting overheat level.
+Table~\ref{tab:rq1_controller_behavior} evaluates the full controller across 28 cells, one for each combination of device, capture condition, and starting overheat level.
 The \emph{Baseline} column provides a failure reference by executing \(M\) and \(S\) on every capture with the thermal guard bypassed.
 Because Baseline runs were collected separately, the comparison is at the cell level rather than between paired runs.
 We therefore assess the full controller along three dimensions: deadline safety, stage execution, and pacing cost.
 
 \smallskip\noindent\textbf{Deadline safety.}
-Baseline reached Capture Timeout in 26 of the 28 cells.
-In 17 of these cells, all ten runs timed out, with the earliest failure occurring at the third capture.
-By contrast, no Capture Timeout was observed in any controller run over the full 30-capture horizon.
+Every controller run completed all 30 captures without Capture Timeout.
+By contrast, Baseline timed out in 26 of the 28 cells, and in 17 of them every run did, some as early as the third capture.
 
 \smallskip\noindent\textbf{Stage execution.}
 The controller retained substantial optional stage execution rather than broadly suppressing it.
 Over the first five consecutive captures, \(M\) and \(S\) executed on at least 4.5 and 4.6 captures per run in every cell.
 Both stages executed in all five consecutive captures in 23 of the 28 cells.
-Even in the twelve cells starting at overheat level 4 or higher, \(M\) executed on 5.2--22.2 captures per run over the full horizon, while \(S\) generally executed more often than \(M\).
-At these levels, the production thermal guard begins suppressing optional stages.
+In the twelve cells starting at overheat level 4 or higher, where the production guard would disable optional stages, \(M\) still executed on 5.2--22.2 of 30 captures per run.
 Within the same device and capture condition, stage execution generally decreased at higher starting overheat levels.
 Rather than disabling all optional stages at a fixed level, the controller adapted stage execution across thermal conditions.
 

@@ -4,18 +4,15 @@
 Table~\ref{tab:rq3_admission_audit} evaluates admission decisions rather than deployed stage execution.
 We audited 3{,}746 decisions under an always-admit configuration.
 Optional stages always executed with the watchdog suppressed; admission decisions were recorded but not enforced.
-Each decision is thus scored against its realized outcome: feasible if its remaining sequence completed within the timeout budget read at that decision, and unsafe otherwise.
+Each decision is thus scored against its realized outcome: feasible if its remaining sequence completed within the remaining timeout budget at that decision, and unsafe otherwise.
 
 \smallskip\noindent\textbf{Decision accuracy.}
-Admission recommended execution for 97.3\% of feasible decisions and skipping for 97.2\% of unsafe ones.
-Among feasible decisions, 2.7\% received conservative skip recommendations; their median remaining-sequence margins were only 0.7--2.6\% of the timeout budget across the condition--stage groups.
-Among unsafe decisions, 2.8\% received incorrect admit recommendations.
-In contrast, correct skip recommendations identified remaining sequences that exceeded the budget by a median of 3.0--3.5\% across those groups.
-Admission errors therefore occurred close to the decision boundary, whereas correct skips identified sequences already beyond the timeout budget.
+Admission was accurate on both sides of the budget boundary: it recommended execution for 97.3\% of feasible decisions and skipping for 97.2\% of unsafe ones.
+Its conservative skips, 2.7\% of feasible decisions, were marginal cases whose median remaining-sequence margins were only 0.7--2.6\% of the timeout budget across the condition--stage groups.
+Its correct skips caught remaining sequences that exceeded the budget by a median of only 3.0--3.5\%.
 
 \smallskip\noindent\textbf{Unsafe admits and safeguards.}
-Five unsafe decisions received admit recommendations.
-With the watchdog disabled, each overran its deadline in the audit.
+Five unsafe decisions (2.8\%) received admit recommendations.
 Figure~\ref{fig:rq3_unsafe_spike_anatomy} compares the remaining-sequence latency and CPU time of these five decisions with those of the preceding capture in the same run.
 M1--M3 label the multi-frame decisions, and S1--S2 label the single-frame decisions.
 For M1 and M2, latency rose to 2.32\(\times\) and 1.95\(\times\), whereas CPU time rose only to 1.41\(\times\) and 1.15\(\times\).
