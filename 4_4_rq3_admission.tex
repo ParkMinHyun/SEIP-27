@@ -13,8 +13,8 @@ Its correct skips caught remaining sequences that exceeded the budget by a media
 
 \smallskip\noindent\textbf{Unsafe admits and safeguards.}
 Five unsafe decisions (2.8\%) received admit recommendations.
-Figure~\ref{fig:rq3_unsafe_spike_anatomy} compares the remaining-sequence latency and CPU time of these five decisions with those of the preceding capture in the same run.
-M1--M3 label the multi-frame decisions, and S1--S2 label the single-frame decisions.
+Figure~\ref{fig:rq3_unsafe_spike_anatomy} compares the remaining-sequence latency and CPU time of these five decisions with those of the preceding capture.
+M1--M3 and S1--S2 label the multi-frame and single-frame decisions, respectively.
 For M1 and M2, latency rose to 2.32\(\times\) and 1.95\(\times\), whereas CPU time rose only to 1.41\(\times\) and 1.15\(\times\).
 The busy-core proxy, defined as CPU time per unit of wall time, consequently fell to 0.60\(\times\) and 0.59\(\times\).
 These misses coincided with latency increases that were not captured by the decision-time estimates.

@@ -19,5 +19,5 @@ Before each run, we force-stop and relaunch the camera application, resetting th
 
 We do not hold thermal state constant during a run.
 We reach each target starting level through repeated captures or idle cooling and begin the run when the device reports that level.
-Thermal state then evolves without external intervention for the remainder of the run.
-A reproducible ADB loop issues each shutter input as soon as the application receives the \texttt{captureAvailable} callback, saturating the exposed request rate.
+Thermal state then evolves without external intervention for the rest of the run.
+A reproducible ADB loop issues each shutter input as soon as the application receives \texttt{captureAvailable}, saturating the exposed request rate.
