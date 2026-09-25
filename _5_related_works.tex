@@ -1,6 +1,10 @@
 \section{Related Work}
 \label{sec:related_work}
 
+\smallskip\noindent\textbf{Mobile camera pipelines.}
+Mobile camera pipelines merge bursts of frames to improve the final image~\cite{hdrplus-burst-tog,handheld-superres-tog,lowlight-mobile-tog} and synthesize shallow depth of field for portrait photos~\cite{synthetic-dof-tog}.
+These works target final-image quality, whereas we decide when lightweight multi-frame composition can run for the draft image within its Capture Timeout.
+
 \smallskip\noindent\textbf{Workload control.}
 Our admission module relates to work that adapts per-input computation at run time under latency, resource, or thermal constraints.
 Imprecise computation splits a task into mandatory and optional parts and runs the optional part only when time permits~\cite{liu-imprecise-computation,shih-imprecise-siam}, much like our optional stages.
@@ -22,6 +26,7 @@ In our pipeline, the arrival-control lever is the release timing of the next cap
 \smallskip\noindent\textbf{Coordinating workload and arrivals.}
 Prior systems have combined the two control dimensions discussed above.
 Feedback-control systems regulate incoming load through request admission and adjust the service level of admitted requests from deadline-miss or response-time feedback~\cite{lu-feedback-control-edf,lu-feedback-control-scheduling,welsh-overload-control}.
+Control-theoretic self-adaptive software applies the same feedback principle to software parameters~\cite{filieri-selfadaptive-icse,shevtsov-control-tse}.
 QoS negotiation similarly reduces service quality to accept requests that might otherwise be rejected~\cite{abdelzaher-qos-negotiation}.
 
 What differs in our capture pipeline is how a deadline miss is handled and how the two controls are coupled.
