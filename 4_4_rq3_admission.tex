@@ -2,7 +2,7 @@
 \label{sec:rq3}
 
 Table~\ref{tab:rq3_admission_audit} evaluates admission decisions rather than deployed stage execution.
-We audited 3{,}746 decisions under an always-admit configuration.
+We audited 3{,}746 decisions on the S26 Ultra under an always-admit configuration.
 Optional stages always executed with the watchdog suppressed; admission decisions were recorded but not enforced.
 Each decision is thus scored against its realized outcome: feasible if its remaining sequence completed within the remaining timeout budget at that decision, and unsafe otherwise.
 

@@ -20,5 +20,4 @@ Before each run, we force-stop and relaunch the camera application, resetting th
 We do not hold thermal state constant during a run.
 We reach each target starting level through repeated captures or idle cooling and begin the run when the device reports that level.
 Thermal state then evolves without external intervention for the remainder of the run.
-An ADB loop provides a reproducible stress workload rather than emulating ordinary user interaction. 
-It issues each shutter input as soon as the application receives the \texttt{captureAvailable} callback, thereby saturating the exposed request rate.
+A reproducible ADB loop issues each shutter input as soon as the application receives the \texttt{captureAvailable} callback, saturating the exposed request rate.
