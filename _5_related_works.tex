@@ -2,7 +2,9 @@
 \label{sec:related_work}
 
 \smallskip\noindent\textbf{Workload control.}
-Our admission module relates to work that adapts per-input computation at run time under latency, resource, or thermal constraints~\cite{liu-imprecise-computation,shih-imprecise-siam,zilberstein-anytime,loop-perforation-fse,apnet-rtss,branchynet-icpr,msdnet-iclr,mcdnn-mobisys,nestdnn-mobicom,reducto-sigcomm}.
+Our admission module relates to work that adapts per-input computation at run time under latency, resource, or thermal constraints.
+Imprecise computation splits a task into mandatory and optional parts and runs the optional part only when time permits~\cite{liu-imprecise-computation,shih-imprecise-siam}, much like our optional stages.
+Anytime algorithms, approximate computing, and adaptive inference likewise trade result quality for time or resources~\cite{zilberstein-anytime,loop-perforation-fse,apnet-rtss,branchynet-icpr,msdnet-iclr,mcdnn-mobisys,nestdnn-mobicom,reducto-sigcomm}.
 ApproxDet and Chanakya select execution configurations according to input content, resource contention, and latency--accuracy objectives~\cite{approxdet-sensys,chanakya-neurips}.
 Recent mobile and embedded systems similarly adapt execution under device constraints: Agile3D selects 3D-detection branches under changing scenes and GPU contention~\cite{agile3d-mobisys}, ARIA coordinates vision inference across heterogeneous mobile processors~\cite{aria-mobisys}, and Phoenix adjusts processor placement and DNN exit depth under thermal throttling~\cite{phoenix-tecs}.
 Content adaptation and brownout reduce per-request work under resource pressure~\cite{abdelzaher-content-adaptation,klein-brownout}, while Timecard uses the remaining end-to-end budget to adjust how much processing the current request receives~\cite{timecard-sosp}.
@@ -11,7 +13,7 @@ In our pipeline, the workload-control lever is optional-stage admission for the 
 
 \smallskip\noindent\textbf{Arrival control.}
 Our pacing module relates to systems that control request admission or release timing to limit queueing delay~\cite{cruz-network-calculus}.
-Networking limits queue growth through active queue management and pacing~\cite{red-floyd-jacobson,codel-cacm,rfc8289,rfc8033,rfc8290,bufferbloat-cacm,tcp-pacing-infocom,bbr-queue}, while server systems admit, reject, or shed requests according to load or deadline signals~\cite{seda-sosp,dagor-socc,breakwater-osdi,aurora-load-shedding,deadline-aware-d3}.
+Networking limits queue growth through active queue management~\cite{red-floyd-jacobson,codel-cacm,bufferbloat-cacm} and pacing~\cite{tcp-pacing-infocom,bbr-queue}, while server systems admit, reject, or shed requests according to load or deadline signals~\cite{seda-sosp,dagor-socc,breakwater-osdi,aurora-load-shedding,deadline-aware-d3}.
 Real-time schedulers similarly regulate job releases by stretching task periods or skipping job instances~\cite{buttazzo-elastic-task,koren-skip-over}.
 Preemptive systems can instead interrupt running work to serve short or urgent requests~\cite{shinjuku-nsdi}.
 Across these systems, overload can be controlled by rejecting, shedding, delaying, or preempting work.
