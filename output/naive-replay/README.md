@@ -166,6 +166,11 @@ reference moves (`results/D_audit_table_ref.csv`):
 | stage mean-3 | +210 ms | 123 | 11 |
 | draft mean-3 | +400 ms (gives 4) | 276 | 14 |
 
+`tables/tab_rq3_naive_comparison.tex` (Table V, 2026-09-26) prints the RQ3-pool
+overall rows of `results/D_audit_arms.csv` for `stage mean-3` ("Mean of last 3
+stage times"), `stage max-3` ("Max of last 3 stage times") and `P-hat only`
+("Point estimate"), against U at the printed 3,470 / 98 / 5 / 173.
+
 P-hat +200 ms is the strongest fixed baseline across every family and both
 knobs searched (additive 0-2,000 ms at 10 ms; multiplicative 1.00-3.00 at
 0.01, from `results/D_audit_frontier.csv`): the next best reach five unsafe
