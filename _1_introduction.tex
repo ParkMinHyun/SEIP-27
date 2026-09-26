@@ -13,10 +13,11 @@ Draft sequences still execute one at a time on a single draft worker, so process
 
 We introduced a static thermal guard during pre-release validation to mitigate this risk, but it cannot distinguish safe captures from unsafe ones.
 The guard skips the optional stages of the draft sequence once the device's overheat level reaches 4 on a 0--6 scale, but this level reflects neither how long a capture has waited nor how much draft work remains.
-Consequently, in our motivating experiment with the guard bypassed, the earliest Capture Timeout at the same starting level varied with resolution, memory pressure, and enabled stages (Section~\ref{sec:guard-limit}).
+Indeed, in our motivating experiment with the guard bypassed, the earliest Capture Timeout at the same starting level varied with resolution, memory pressure, and enabled stages (Section~\ref{sec:guard-limit}).
 
-Our pipeline can counter this risk only by skipping optional stages or delaying the next capture, and the two carry different user-facing costs.
-Workload adaptation and request-release control are established responses to latency and queueing pressure~\cite{approxdet-sensys,timecard-sosp,seda-sosp,breakwater-osdi}, but our pipeline can neither reject an accepted capture nor preempt a running stage.
+Workload adaptation and request-release control are established responses to latency and queueing pressure~\cite{approxdet-sensys,timecard-sosp,seda-sosp,breakwater-osdi}.
+Our pipeline, however, can neither reject an accepted capture nor preempt a running stage, leaving only two levers: skipping optional stages and delaying the next capture.
+These levers carry different user-facing costs.
 Skipping optional stages cannot recover time spent waiting, but it leaves the final image unaffected.
 Delaying the next capture can prevent waiting, but it lengthens the shot-to-shot interval, a user-perceived cost that is never recovered.
 This difference motivates prioritizing responsiveness while retaining optional stages when the remaining timeout budget permits.
@@ -28,7 +29,7 @@ To address this challenge, the controller estimates stage durations online from 
 \emph{Capture-Availability Pacing} delays the capture-availability callback, and thus the next capture, when predicted draft work exceeds the remaining timeout budget.
 
 Experimental results on two commercial devices show that the controller enables lightweight multi-frame composition without Capture Timeout.
-Across 28 combinations of device, capture condition, and starting overheat level, no controller run of 30 captures reached Capture Timeout, whereas running every optional stage without the guard did so in 26 combinations.
+Across 28 combinations of device, capture condition, and starting overheat level, every controller run completed all 30 captures without Capture Timeout, whereas running every optional stage without the guard timed out in 26 combinations.
 In combinations starting at overheat level 4 or higher, where the guard would skip optional stages, lightweight multi-frame composition still executed on an average of 5.2--22.2 of 30 captures per run.
 In the production-default 12MP configuration without memory pressure, pacing added no delay during the first five captures at any starting overheat level below 4.
 In an ablation at starting overheat level 4, only the full controller completed every capture on time in all three combinations tested.
