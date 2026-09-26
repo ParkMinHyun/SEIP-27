@@ -31,7 +31,8 @@ Experimental results on two commercial devices show that the controller enables 
 Across 28 combinations of device, capture condition, and starting overheat level, no controller run of 30 captures reached Capture Timeout, whereas running every optional stage without the guard did so in 26 combinations.
 In combinations starting at overheat level 4 or higher, where the guard would skip optional stages, lightweight multi-frame composition still executed on an average of 5.2--22.2 of 30 captures per run.
 In the production-default 12MP configuration without memory pressure, pacing added no delay during the first five captures at any starting overheat level below 4.
-In an ablation at starting overheat level 4, neither admission nor pacing alone completed every capture on time.
+In an ablation at starting overheat level 4, only the full controller completed every capture on time in all three combinations tested.
+It also executed optional stages more often than admission alone.
 The controller is now undergoing release validation for a forthcoming Galaxy flagship smartphone line.
 
 \smallskip\noindent\textbf{Contributions.}
