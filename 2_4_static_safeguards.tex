@@ -29,8 +29,8 @@ Even on the same device, the earliest timeout varied with resolution, memory pre
 Using \(M\) alone delayed the earliest timeout or resulted in no observed timeout within 30 captures, so which optional stages execute also affects deadline safety.
 
 \smallskip\noindent\textbf{Need for runtime control.}
-The thermal cutoff does not capture how earlier draft sequences consume a later capture's time budget.
+The thermal cutoff does not capture how earlier draft sequences consume a later capture's timeout budget.
 Skipping optional stages shortens that capture's processing but cannot recover time already spent waiting.
-Executing those stages can also lengthen the wait for subsequent captures.
-Delaying new requests can limit queue growth, but lengthens the shot-to-shot interval.
-These constraints motivate joint runtime control of optional stages and capture arrivals.
+Executing them can also lengthen the wait for later captures.
+Delaying the next capture can limit queue growth, but lengthens the shot-to-shot interval.
+These constraints motivate coordinated runtime control of optional stages and capture arrivals.

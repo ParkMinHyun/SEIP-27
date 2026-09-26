@@ -5,8 +5,8 @@ The draft sequence comprises the processing stages that produce each capture's i
 It was introduced together with the post-processing pipeline, which produces the final image.
 When post-processing completes, the final image replaces the draft image if one has been published.
 
-The draft pipeline uses a single worker to publish images in capture order and limit resource demand.
-Executing multiple draft sequences concurrently would require buffering out-of-order results and increase peak compute and memory demand.
+The draft pipeline uses a single draft worker to publish images in capture order and limit resource demand.
+Running draft sequences concurrently would require buffering out-of-order results and increase peak compute and memory demand.
 
 \input{figures/fig_draft_final_gap.tex}
 
