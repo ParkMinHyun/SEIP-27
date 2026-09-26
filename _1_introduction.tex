@@ -23,8 +23,9 @@ Delaying the next capture can prevent waiting, but it lengthens the shot-to-shot
 This difference motivates prioritizing responsiveness while retaining optional stages when the remaining timeout budget permits.
 
 We therefore present the Budget-Aware Draft Controller, which coordinates both levers at run time.
-A major challenge is that both levers act on draft work not yet executed, so underestimation risks Capture Timeout while overestimation causes needless skips or delays.
-To address this challenge, the controller estimates stage durations online from completed draft sequences.
+A major challenge is that both levers act on draft work not yet executed.
+A single Capture Timeout blocks the release, so the controller cannot rely on deadline-miss feedback: underestimation risks a timeout, while overestimation causes needless skips or delays.
+The controller therefore estimates stage durations online from completed draft sequences.
 \emph{Remaining-Sequence Admission} executes an optional stage when an upper estimate of the remaining draft sequence fits within the capture's remaining timeout budget.
 \emph{Capture-Availability Pacing} delays the capture-availability callback, and thus the next capture, when predicted draft work exceeds the remaining timeout budget.
 
