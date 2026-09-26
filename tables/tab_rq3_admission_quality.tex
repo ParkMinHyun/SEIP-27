@@ -1,25 +1,29 @@
-% Notes: docs/exhibits.md#tab_rq3_admission_quality
 \begin{table}[t]
   \centering
   \setlength{\abovecaptionskip}{2pt}%
   \setlength{\belowcaptionskip}{3pt}%
-  \caption{RQ3: Admission decision quality.}
+  \caption{RQ3: Admission decision quality against naive approaches.}
   \label{tab:rq3_admission_audit}
 
   {\scriptsize
   \renewcommand{\arraystretch}{1.12}%
-  \newlength{\rqauditwidth}%
-  \settowidth{\rqauditwidth}{97.3\% (3{,}470)}%
-  \newcommand{\rqauditcell}[1]{\makebox[\rqauditwidth][r]{#1}}%
-  \newsavebox{\rqtwobox}%
+  \newlength{\rqnfawidth}\settowidth{\rqnfawidth}{99.9\% (3{,}565)}%
+  \newlength{\rqnfswidth}\settowidth{\rqnfswidth}{2.7\% (98)}%
+  \newlength{\rqnuawidth}\settowidth{\rqnuawidth}{26.4\% (47)}%
+  \newlength{\rqnuswidth}\settowidth{\rqnuswidth}{97.2\% (173)}%
+  \newcommand{\rqnfa}[1]{\makebox[\rqnfawidth][r]{#1}}%
+  \newcommand{\rqnfs}[1]{\makebox[\rqnfswidth][r]{#1}}%
+  \newcommand{\rqnua}[1]{\makebox[\rqnuawidth][r]{#1}}%
+  \newcommand{\rqnus}[1]{\makebox[\rqnuswidth][r]{#1}}%
+  \newsavebox{\rqnbox}%
 
-  \newcommand{\rqtwotabular}{%
+  \newcommand{\rqntabular}{%
   \begin{tabular}{@{}%
-      >{\raggedright\arraybackslash}p{50pt}|%
+      >{\raggedright\arraybackslash}p{78pt}|%
       cc|cc%
     @{\hspace{\tabcolsep}}}
     \toprule
-    \multirow[c]{3}{=}[-1.6pt]{\centering\textbf{Group}}
+    \multirow[c]{3}{=}[-1.6pt]{\centering\textbf{Approach}}
       & \multicolumn{4}{c}{\textbf{Admission audit, \% (\(n\))}} \\
     \cmidrule(l){2-5}
       & \multicolumn{2}{c|}{\textbf{Feasible decisions}}
@@ -31,19 +35,23 @@
       & \multicolumn{1}{c}{\textbf{Skipped}} \\
     \midrule
 
-    \multicolumn{5}{@{}l}{\textbf{12MP, normal}} \\
+    \multicolumn{5}{@{}l}{\textbf{Naive approaches}} \\
     \addlinespace[1pt]
-    Multi-frame  & \rqauditcell{98.1\% (831)} & \rqauditcell{1.9\% (16)} & \rqauditcell{\textbf{5.7\% (2)}} & \rqauditcell{94.3\% (33)} \\
-    Single-frame & \rqauditcell{99.4\% (842)} & \rqauditcell{0.6\% (5)} & \rqauditcell{\textbf{0.0\% (0)}} & \rqauditcell{100.0\% (35)} \\
+    Mean of last 3 stage times & \rqnfa{99.6\% (3{,}554)} & \rqnfs{0.4\% (14)} & \rqnua{23.6\% (42)} & \rqnus{76.4\% (136)} \\
+    Max of last 3 stage times  & \rqnfa{98.2\% (3{,}505)} & \rqnfs{1.8\% (63)} & \rqnua{7.9\% (14)} & \rqnus{92.1\% (164)} \\
+    Point estimate \(\hat P\)  & \rqnfa{99.9\% (3{,}565)} & \rqnfs{0.1\% (3)} & \rqnua{26.4\% (47)} & \rqnus{73.6\% (131)} \\
     \midrule
 
-    \multicolumn{5}{@{}l}{\textbf{24MP, memory\ pressure}} \\
+    \multicolumn{5}{@{}l}{\textbf{Our approach}} \\
     \addlinespace[1pt]
-    Multi-frame  & \rqauditcell{94.7\% (892)} & \rqauditcell{5.3\% (50)} & \rqauditcell{\textbf{1.9\% (1)}} & \rqauditcell{98.1\% (53)} \\
-    Single-frame & \rqauditcell{97.1\% (905)} & \rqauditcell{2.9\% (27)} & \rqauditcell{\textbf{3.7\% (2)}} & \rqauditcell{96.3\% (52)} \\
+    Residual calibration \(U\) & \rqnfa{97.3\% (3{,}470)} & \rqnfs{2.7\% (98)} & \rqnua{\textbf{2.8\% (5)}} & \rqnus{97.2\% (173)} \\
+    \hspace{8pt}12MP normal, \(M\)       & \rqnfa{98.1\% (831)} & \rqnfs{1.9\% (16)} & \rqnua{\textbf{5.7\% (2)}} & \rqnus{94.3\% (33)} \\
+    \hspace{8pt}12MP normal, \(S\)       & \rqnfa{99.4\% (842)} & \rqnfs{0.6\% (5)} & \rqnua{\textbf{0.0\% (0)}} & \rqnus{100.0\% (35)} \\
+    \hspace{8pt}24MP memory, \(M\)       & \rqnfa{94.7\% (892)} & \rqnfs{5.3\% (50)} & \rqnua{\textbf{1.9\% (1)}} & \rqnus{98.1\% (53)} \\
+    \hspace{8pt}24MP memory, \(S\)       & \rqnfa{97.1\% (905)} & \rqnfs{2.9\% (27)} & \rqnua{\textbf{3.7\% (2)}} & \rqnus{96.3\% (52)} \\
     \bottomrule
   \end{tabular}}%
-  \fittabcolsep{\rqtwobox}{\rqtwotabular}{\columnwidth}{10}%
-  \rqtwotabular
+  \fittabcolsep{\rqnbox}{\rqntabular}{\columnwidth}{10}%
+  \rqntabular
   }
 \end{table}
