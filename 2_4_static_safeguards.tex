@@ -24,9 +24,9 @@ The table reports the earliest timeout capture index across the ten trials, grou
 
 \input{tables/tab_timeout_index.tex}
 
-With \(M+S\), timeouts occurred across the full range of starting overheat levels.
+With \(M+S\), timeouts occurred across the full range of starting overheat levels, including runs that started below the guard's cutoff.
 Even on the same device, the earliest timeout varied with resolution, memory pressure, and draft sequence configuration.
-Using \(M\) alone delayed the earliest timeout or resulted in no observed timeout within 30 captures.
+Using \(M\) alone delayed the earliest timeout or resulted in no observed timeout within 30 captures, so which optional stages execute also affects deadline safety.
 
 \smallskip\noindent\textbf{Need for runtime control.}
 The thermal cutoff does not capture how earlier draft sequences consume a later capture's time budget.
