@@ -7,10 +7,10 @@
 
   {\scriptsize
   \renewcommand{\arraystretch}{1.12}%
-  \newlength{\rqnfawidth}\settowidth{\rqnfawidth}{99.9\% (3{,}565)}%
-  \newlength{\rqnfswidth}\settowidth{\rqnfswidth}{2.7\% (98)}%
+  \newlength{\rqnfawidth}\settowidth{\rqnfawidth}{\textbf{97.3\% (3{,}470)}}%
+  \newlength{\rqnfswidth}\settowidth{\rqnfswidth}{\textbf{2.7\% (98)}}%
   \newlength{\rqnuawidth}\settowidth{\rqnuawidth}{26.4\% (47)}%
-  \newlength{\rqnuswidth}\settowidth{\rqnuswidth}{97.2\% (173)}%
+  \newlength{\rqnuswidth}\settowidth{\rqnuswidth}{\textbf{97.2\% (173)}}%
   \newcommand{\rqnfa}[1]{\makebox[\rqnfawidth][r]{#1}}%
   \newcommand{\rqnfs}[1]{\makebox[\rqnfswidth][r]{#1}}%
   \newcommand{\rqnua}[1]{\makebox[\rqnuawidth][r]{#1}}%
@@ -44,7 +44,9 @@
 
     \multicolumn{5}{@{}l}{\textbf{Our approach}} \\
     \addlinespace[1pt]
-    Residual calibration \(U\) & \rqnfa{97.3\% (3{,}470)} & \rqnfs{2.7\% (98)} & \rqnua{\textbf{2.8\% (5)}} & \rqnus{97.2\% (173)} \\
+    \textbf{Residual calibration \mbox{\boldmath$U$}}
+      & \rqnfa{\textbf{97.3\% (3{,}470)}} & \rqnfs{\textbf{2.7\% (98)}}
+      & \cellcolor{gray!20}\rqnua{\textbf{2.8\% (5)}} & \rqnus{\textbf{97.2\% (173)}} \\
     \hspace{8pt}12MP normal, \(M\)       & \rqnfa{98.1\% (831)} & \rqnfs{1.9\% (16)} & \rqnua{\textbf{5.7\% (2)}} & \rqnus{94.3\% (33)} \\
     \hspace{8pt}12MP normal, \(S\)       & \rqnfa{99.4\% (842)} & \rqnfs{0.6\% (5)} & \rqnua{\textbf{0.0\% (0)}} & \rqnus{100.0\% (35)} \\
     \hspace{8pt}24MP memory, \(M\)       & \rqnfa{94.7\% (892)} & \rqnfs{5.3\% (50)} & \rqnua{\textbf{1.9\% (1)}} & \rqnus{98.1\% (53)} \\

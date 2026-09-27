@@ -9,12 +9,11 @@ Because no decision was enforced, every approach is scored on the same decisions
 
 \smallskip\noindent\textbf{Decision accuracy.}
 Table~\ref{tab:rq3_admission_audit} shows that our approach admitted 97.3\% of feasible decisions but only 5 of the 178 unsafe ones, far fewer than the naive approaches.
-It admitted at least 94.7\% of feasible decisions and skipped at least 94.3\% of unsafe ones in every condition--stage group.
-The naive approaches, which use the mean or the maximum of each remaining stage's last three observed durations or the point estimate \(\hat P\) alone, admitted 42, 14, and 47 unsafe decisions, respectively.
-They skipped fewer feasible decisions, 0.1--1.8\% against 2.7\%, but the feasible decisions our approach skipped were marginal, with median remaining margins of only 0.7--2.6\% of the timeout budget.
-In particular, \(\hat P\) shares our stage-duration model, so residual calibration alone rejected 42 of the 47 unsafe decisions that \(\hat P\) admitted.
-Nor can the safeguards absorb this gap: the watchdog bounds only the admitted stage, leaving later overruns to later skips made with the same naive estimate, and its budget in Equation~\ref{eq:watchdog} itself reserves the calibrated \(U(\mathcal E_i)\).
-Admission must therefore account not only for estimated stage durations but also for how far those estimates have been exceeded.
+Residual calibration rejected 42 of the 47 unsafe decisions admitted by \(\hat P\) alone, which uses the same stage-duration model.
+Recent stage durations did not close the gap either: summing the mean or maximum of each remaining stage's last three observed durations admitted 42 and 14 unsafe decisions.
+These results demonstrate the value of accounting for past underestimation when making admission decisions.
+In exchange, our approach skipped 2.7\% of feasible decisions, against 0.1--1.8\% for the naive approaches, and these skipped decisions had median margins of only 0.7--2.6\% of the timeout budget.
+Its accuracy held in every condition--stage group, admitting at least 94.7\% of feasible decisions and skipping at least 94.3\% of unsafe ones.
 
 \smallskip\noindent\textbf{Unsafe admits and safeguards.}
 Five unsafe decisions (2.8\%) received admit recommendations.
@@ -30,6 +29,9 @@ For M1 and M2, the admitted stage exceeded its watchdog budget, 1{,}460~ms again
 For M3, a later decision would skip \(S\), reducing the remaining processing time.
 For S1 and S2, an earlier decision would skip \(M\), leaving more budget when execution reached \(S\).
 With these skips applied to the recorded durations, the remaining sequence fit within the adjusted budget in all three cases.
+The same safeguards cannot be relied on for the naive approaches.
+The watchdog bounds only the admitted stage, so later overruns depend on later skips made with the same naive estimate.
+Even the watchdog budget (Equation~\ref{eq:watchdog}) reserves the calibrated \(U(\mathcal E_i)\), so the safeguards themselves rely on residual calibration.
 
 \input{tables/tab_rq3_admission_quality.tex}
 \input{figures/fig_rq3_unsafe_spike_anatomy.tex}
