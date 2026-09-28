@@ -26,8 +26,8 @@ These misses coincided with latency increases that were not captured by the deci
 In trace replay, the layered safeguards covered all five admission misses.
 The replay re-applied the safeguard logic to the recorded stage durations, budgets, upper estimates, and admission decisions.
 For M1 and M2, the admitted stage exceeded its watchdog budget, 1{,}460~ms against 1{,}202~ms and 1{,}648~ms against 889~ms, respectively, so fallback would trigger before the stage returned.
-For M3, a later decision would skip \(S\), reducing the remaining processing time.
-For S1 and S2, an earlier decision would skip \(M\), leaving more budget when execution reached \(S\).
+For M3, the \(S\) decision later in the same capture would skip \(S\), reducing the remaining processing time.
+For S1 and S2, the \(M\) decision earlier in the same capture would skip \(M\), leaving more budget when execution reached \(S\).
 With these skips applied to the recorded durations, the remaining sequence fit within the adjusted budget in all three cases.
 The same safeguards cannot be relied on for the naive approaches.
 The watchdog bounds only the admitted stage, so later overruns depend on later skips made with the same naive estimate.
