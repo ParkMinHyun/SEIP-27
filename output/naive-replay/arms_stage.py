@@ -10,6 +10,10 @@ for N in (1, 3, 5, 10):
     ARMS.append((f'st_mean{N}', dict(arm='STAGE', N=N, stat='mean')))
 for N in (3, 5, 10):
     ARMS.append((f'st_max{N}', dict(arm='STAGE', N=N, stat='max')))
+# all-prior arms: N larger than any run's history, so [-N:] keeps every prior completed capture
+ALL = 10**6
+ARMS.append(('st_meanAll', dict(arm='STAGE', N=ALL, stat='mean')))
+ARMS.append(('st_maxAll', dict(arm='STAGE', N=ALL, stat='max')))
 ARMS.append(('st_mean3+ovh', dict(arm='STAGE', N=3, stat='mean', ovh=True)))
 ARMS.append(('st_max5+ovh', dict(arm='STAGE', N=5, stat='max', ovh=True)))
 for m in (50, 100, 150, 200, 300):
