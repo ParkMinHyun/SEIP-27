@@ -17,20 +17,17 @@ Draft sequences still execute one at a time on a single draft worker, so process
 Samsung introduced a static thermal guard during pre-release validation to mitigate this risk, but it cannot distinguish safe captures from unsafe ones.
 The guard skips the optional stages of the draft sequence once the device's overheat level reaches 4 on a 0--6 scale, but this level reflects neither how long a capture has waited nor how much draft work remains.
 Indeed, in our motivating experiment with the guard bypassed, the earliest Capture Timeout at the same starting level varied with resolution, memory pressure, and enabled stages (Section~\ref{sec:guard-limit}).
+Deploying lightweight multi-frame composition therefore requires deciding at run time whether each capture's remaining draft work fits within the remaining timeout budget.
 
-Workload adaptation and request-release control are established responses to latency and queueing pressure~\cite{approxdet-sensys,timecard-sosp,seda-sosp,breakwater-osdi}.
-The draft pipeline, however, can neither reject an accepted capture nor preempt a running stage, leaving only two levers: skipping optional stages and delaying the next capture.
-These levers carry different user-facing costs.
-Skipping optional stages cannot recover time spent waiting, but it leaves the final image unaffected.
-Delaying the next capture can prevent waiting, but it lengthens the shot-to-shot interval, a user-perceived cost that is never recovered.
-This difference motivates prioritizing responsiveness while retaining optional stages when the remaining timeout budget permits.
+The draft pipeline can neither reject an accepted capture nor preempt a running stage.
+Skipping optional stages can shorten processing but cannot recover time already spent waiting, so the next capture must sometimes be delayed as well.
+These two levers correspond to workload control~\cite{approxdet-sensys,timecard-sosp} and arrival control~\cite{seda-sosp,breakwater-osdi}, respectively.
+Because waiting and processing consume the same per-capture timeout budget, these levers must be coordinated.
 
-We therefore present the Budget-Aware Draft Controller, which coordinates both levers at run time.
-A major challenge is that both levers act on draft work not yet executed.
-A single Capture Timeout blocks the release, so the controller cannot rely on deadline-miss feedback: underestimation risks a timeout, while overestimation causes needless skips or delays.
-The controller therefore estimates stage durations online from completed draft sequences.
-\emph{Remaining-Sequence Admission} executes an optional stage when an upper estimate of the remaining draft sequence fits within the capture's remaining timeout budget.
-\emph{Capture-Availability Pacing} delays the capture-availability callback, and thus the next capture, when predicted draft work exceeds the remaining timeout budget.
+We therefore present the Budget-Aware Draft Controller.
+A major challenge is determining how much time to reserve for execution overruns without relying on deadline-miss feedback: even a single Capture Timeout blocks the release.
+\emph{Remaining-Sequence Admission} admits an optional stage when the capture's remaining timeout budget covers the estimated duration of the entire remaining draft sequence together with a safety margin calibrated from recent stage overruns.
+\emph{Capture-Availability Pacing} delays the next capture when the draft work predicted through that capture, adjusted for admission decisions, exceeds the remaining timeout budget.
 
 Experimental results on two commercial devices show that the controller enables lightweight multi-frame composition without Capture Timeout.
 Across 28 combinations of device, capture condition, and starting overheat level, every controller run completed all 30 captures without Capture Timeout, whereas running every optional stage without the guard timed out in 26 combinations.
