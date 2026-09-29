@@ -29,14 +29,11 @@ A major challenge is determining how much time to reserve for execution overruns
 \emph{Remaining-Sequence Admission} admits an optional stage when the capture's remaining timeout budget covers the estimated duration of the entire remaining draft sequence together with a safety margin calibrated from recent stage overruns.
 \emph{Capture-Availability Pacing} delays the next capture when the draft work predicted through that capture, adjusted for admission decisions, exceeds the remaining timeout budget.
 
-Experimental results on two commercial devices show that the controller enables lightweight multi-frame composition without Capture Timeout.
-Across 28 combinations of device, capture condition, and starting overheat level, every controller run completed all 30 captures without Capture Timeout, whereas running every optional stage without the guard timed out in 26 combinations.
-In combinations starting at overheat level 4 or higher, where the guard would skip optional stages, lightweight multi-frame composition still executed on an average of 5.2--22.2 of 30 captures per run.
-In the production-default 12MP configuration without memory pressure, pacing added no delay during the first five captures at any starting overheat level below 4.
-In an ablation at starting overheat level 4, only the full controller completed every capture on time in all three combinations tested.
-It also executed optional stages more often than admission alone.
-In an audit of admission decisions, the controller admitted only 5 of 178 unsafe decisions, whereas naive duration estimates admitted 14--42 or skipped 60\% more feasible decisions.
-The controller is now undergoing release validation for a forthcoming Galaxy flagship smartphone line.
+Across 28 conditions on two commercial devices, the controller completed all 280 runs without Capture Timeout, whereas unguarded execution of all optional stages timed out in 225 of 280 runs.
+Lightweight multi-frame composition ran on an average of at least 4.5 of the first five captures in every condition, even at overheat levels that would trigger the thermal guard.
+Under production-default 12MP configuration, pacing did not delay the first five captures at starting overheat levels below 4.
+Only the controller with both admission and pacing completed all captures on time in all three ablation conditions, while executing multi-frame composition 1.3--2.0 times as often as admission alone.
+The controller is undergoing release validation for a forthcoming Galaxy flagship line.
 
 \smallskip\noindent\textbf{Contributions.}
 \begin{itemize}[leftmargin=1.2em]
