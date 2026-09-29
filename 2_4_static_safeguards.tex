@@ -5,7 +5,7 @@ The goal is to enable lightweight multi-frame composition under parallel capture
 \smallskip\noindent\textbf{Production thermal guard.}
 Samsung's overheat level is an ordinal thermal indicator on a 0--6 scale, where larger values denote stronger throttling.
 During pre-release validation, throttling at level 4 delayed a single-frame draft stage and caused a Capture Timeout.
-The failure recurred despite optimization, so we introduced a thermal guard that skips optional stages at level 4 or higher.
+The failure recurred despite optimization, so Samsung introduced a thermal guard that skips optional stages at level 4 or higher.
 Because the draft sequence is implemented in framework code shared across device models, the same cutoff applies to all supported models.
 
 The overheat level does not indicate a capture's waiting time or remaining draft work.

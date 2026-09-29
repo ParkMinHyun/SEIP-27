@@ -3,23 +3,23 @@
 \label{sec:introduction}
 
 The Samsung Galaxy camera publishes an initial user-visible image, the \emph{draft image}, for each capture and later replaces it with the final image from post-processing.
-We call the processing stages that produce the draft image the \emph{draft sequence}.
+Samsung refers to the processing stages that produce the draft image as the \emph{draft sequence}.
 For selected shot modes, post-processing is deferred until the application enters the background.
 The draft image then remains the user-visible result throughout the foreground session, making its visual quality more important.
-To narrow the draft--final visual gap, we implemented lightweight multi-frame composition in the draft sequence.
+To narrow the draft--final visual gap, Samsung implemented lightweight multi-frame composition in the draft sequence.
 
-However, we have not deployed this feature on any device model because its added processing can violate the \emph{Capture Timeout}, a fixed deadline for producing each draft image.
+However, Samsung has not deployed this feature on any device model because its added processing can violate the \emph{Capture Timeout}, a fixed deadline for producing each draft image.
 A violation crashes the application by design and blocks the release.
 Parallel capture makes this risk worse.
 It lets the application accept the next shutter input before the preceding draft image is produced, shortening the shot-to-shot interval.
 Draft sequences still execute one at a time on a single draft worker, so processing added to one capture also consumes the timeout budget of every capture queued behind it.
 
-We introduced a static thermal guard during pre-release validation to mitigate this risk, but it cannot distinguish safe captures from unsafe ones.
+Samsung introduced a static thermal guard during pre-release validation to mitigate this risk, but it cannot distinguish safe captures from unsafe ones.
 The guard skips the optional stages of the draft sequence once the device's overheat level reaches 4 on a 0--6 scale, but this level reflects neither how long a capture has waited nor how much draft work remains.
 Indeed, in our motivating experiment with the guard bypassed, the earliest Capture Timeout at the same starting level varied with resolution, memory pressure, and enabled stages (Section~\ref{sec:guard-limit}).
 
 Workload adaptation and request-release control are established responses to latency and queueing pressure~\cite{approxdet-sensys,timecard-sosp,seda-sosp,breakwater-osdi}.
-Our pipeline, however, can neither reject an accepted capture nor preempt a running stage, leaving only two levers: skipping optional stages and delaying the next capture.
+The draft pipeline, however, can neither reject an accepted capture nor preempt a running stage, leaving only two levers: skipping optional stages and delaying the next capture.
 These levers carry different user-facing costs.
 Skipping optional stages cannot recover time spent waiting, but it leaves the final image unaffected.
 Delaying the next capture can prevent waiting, but it lengthens the shot-to-shot interval, a user-perceived cost that is never recovered.
