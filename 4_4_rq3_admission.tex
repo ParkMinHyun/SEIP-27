@@ -20,7 +20,7 @@ Five unsafe decisions (2.8\%) received admit recommendations.
 Figure~\ref{fig:rq3_unsafe_spike_anatomy} compares the remaining-sequence latency and CPU time of these five decisions with those of the preceding capture.
 M1--M3 and S1--S2 label the multi-frame and single-frame decisions, respectively.
 For M1 and M2, latency rose to 2.32\(\times\) and 1.95\(\times\), whereas CPU time rose only to 1.41\(\times\) and 1.15\(\times\).
-The busy-core proxy, defined as CPU time per unit of wall time, consequently fell to 0.60\(\times\) and 0.59\(\times\).
+The number of busy cores, measured as CPU time per unit of wall time, consequently fell to 0.60\(\times\) and 0.59\(\times\).
 These misses coincided with latency increases that were not captured by the decision-time estimates.
 
 In trace replay, the layered safeguards covered all five admission misses.
