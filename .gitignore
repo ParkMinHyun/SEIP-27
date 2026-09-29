@@ -21,6 +21,9 @@ _minted-*/
 # Generated paper PDF. Do not ignore figures/*.pdf.
 /paper.pdf
 
+# Office lock files created while a workbook or document is open
+~$*
+
 # Python bytecode from scripts/
 __pycache__/
 *.pyc
