@@ -1,40 +1,40 @@
-% Notes: docs/exhibits.md#alg_admission
+% Algorithm 1: Remaining-Sequence Admission.
+% Use $...$ inside this float; \(...\) breaks in \Procedure/\Function arguments.
 \begin{algorithm}[t]
-\caption{Remaining-Sequence Admission and Calibration}
+\caption{Remaining-Sequence Admission}
 \label{alg:admission}
-\small
+\footnotesize
 \renewcommand{\algorithmicrequire}{\textbf{Input:}}
 \renewcommand{\algorithmicensure}{\textbf{Output:}}
+\algtext*{EndProcedure}\algtext*{EndIf}\algtext*{EndFor}
 \begin{algorithmic}[1]
-\Require $\mathcal{K}_{i,j}$ and $T_{i,j}$ per decision; $p(k)$ per capture
-\Ensure \textsc{skip} or \textsc{admit} with $W_{i,j}$; updated histories
-\Procedure{DecideAdmission}{$\mathcal{K}_{i,j}$, $T_{i,j}$}
-  \State $g \gets$ the optional stage's group \Comment{$M$ or $S$}
-  \If{$g \in \mathit{demoted}$}
+\Require Remaining sequence ($\mathcal K_{i,j}$), remaining timeout budget ($T_{i,j}$)
+\Ensure \textsc{admit} or \textsc{skip}
+\Procedure{DecideAdmission}{$\mathcal K_{i,j},T_{i,j}$}
+  \State $g\gets\textsf{Group}(k_j)$ \Comment{$g\in\{M,S\}$}
+  \State \textbf{if} $g$ is disabled \textbf{then} \Return \textsc{skip}
+  \State
+  \State \textbf{/* Step 1. Estimation */}
+  \State $\hat P\gets\textsf{EstimateDuration}(\mathcal K_{i,j})$ \label{alg:line:first}
+  \State $\phi_\tau\gets\textsf{SelectResidualQuantile}(\mathcal K_{i,j})$ \Comment{$\tau=n_{\mathrm{eff}}/(n_{\mathrm{eff}}+1)$}
+  \State $U\gets\hat P\cdot\phi_\tau$ \label{alg:line:last}
+  \State
+  \State \textbf{/* Step 2. Decision */}
+  \If{$U\le T_{i,j}$ \textbf{or} $\hat P=0$}
+    \State \Return \textsc{admit}
+  \Else
+    \State $\textsf{Disable}(g)$
     \State \Return \textsc{skip}
   \EndIf
-  \State record $\hat p(k)$ for $k \in \mathcal{K}_{i,j}$
-  \If{$\hat P(\mathcal{K}_{i,j})>0$ \textbf{and} $U(\mathcal{K}_{i,j})>T_{i,j}$}
-    \Comment{Eqs.~\ref{eq:upper-estimate},~\ref{eq:admission}}
-    \State $\mathit{demoted} \gets \mathit{demoted} \cup \{g\}$
-    \State \Return \textsc{skip}
-  \EndIf
-  \State $W_{i,j} \gets \max\{0,T_{i,j}-U(\mathcal{E}_i)\}$
-    \Comment{Eq.~\ref{eq:watchdog}}
-  \State \Return \textsc{admit} with watchdog $W_{i,j}$
 \EndProcedure
-
-\Statex
-\Procedure{UpdateFromCapture}{$i$} \Comment{at completion}
-  \ForAll{measured parts priced in capture $i$}
-    \State form $\phi(\mathcal{K})$ once per distinct part, if $\hat P>0$
-      \Comment{Eq.~\ref{eq:residual-factor}}
+\State
+\Procedure{CompleteDraftSequence}{$\mathcal K_i,p$}
+  \State \textbf{/* Step 3. Calibration */}
+  \For{each measured $\mathcal K$}
+    \State $\phi(\mathcal K)\gets\textsf{ComputeResidual}(\mathcal K,p)$
   \EndFor
-  \If{any factor was formed}
-    \State $w_l \gets 0.90\,w_l$ for every stored $l$
-    \State insert each into its history with unit weight
-  \EndIf
-  \State update $\hat b(k)$ and $\gamma$ \Comment{Section~\ref{sec:model}}
+  \State $\textsf{UpdateResidualHistories}(\phi)$ \Comment{decay 0.90}
+  \State $\textsf{UpdateDurationModel}(\mathcal K_i,p)$
 \EndProcedure
 \end{algorithmic}
 \end{algorithm}
