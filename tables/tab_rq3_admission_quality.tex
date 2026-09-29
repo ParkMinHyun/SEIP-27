@@ -9,7 +9,7 @@
   \renewcommand{\arraystretch}{1.12}%
   \newlength{\rqnfawidth}\settowidth{\rqnfawidth}{\textbf{97.3\% (3{,}470)}}%
   \newlength{\rqnfswidth}\settowidth{\rqnfswidth}{\textbf{4.4\% (157)}}%
-  \newlength{\rqnuawidth}\settowidth{\rqnuawidth}{26.4\% (47)}%
+  \newlength{\rqnuawidth}\settowidth{\rqnuawidth}{23.6\% (42)}%
   \newlength{\rqnuswidth}\settowidth{\rqnuswidth}{\textbf{97.2\% (173)}}%
   \newcommand{\rqnfa}[1]{\makebox[\rqnfawidth][r]{#1}}%
   \newcommand{\rqnfs}[1]{\makebox[\rqnfswidth][r]{#1}}%
@@ -40,12 +40,11 @@
     Mean of last 3 stage times & \rqnfa{99.6\% (3{,}554)} & \rqnfs{0.4\% (14)} & \rqnua{23.6\% (42)} & \rqnus{76.4\% (136)} \\
     Max of last 3 stage times  & \rqnfa{98.2\% (3{,}505)} & \rqnfs{1.8\% (63)} & \rqnua{7.9\% (14)} & \rqnus{92.1\% (164)} \\
     Max of all prior stage times & \rqnfa{95.6\% (3{,}411)} & \rqnfs{4.4\% (157)} & \rqnua{2.2\% (4)} & \rqnus{97.8\% (174)} \\
-    Point estimate \(\hat P\)  & \rqnfa{99.9\% (3{,}565)} & \rqnfs{0.1\% (3)} & \rqnua{26.4\% (47)} & \rqnus{73.6\% (131)} \\
     \midrule
 
     \multicolumn{5}{@{}l}{\textbf{Our approach}} \\
     \addlinespace[1pt]
-    \textbf{Residual calibration \mbox{\boldmath$U$}}
+    \textbf{Residual-calibrated \mbox{\boldmath$U$}}
       & \rqnfa{\textbf{97.3\% (3{,}470)}} & \rqnfs{\textbf{2.7\% (98)}}
       & \cellcolor{gray!20}\rqnua{\textbf{2.8\% (5)}} & \rqnus{\textbf{97.2\% (173)}} \\
     \hspace{8pt}12MP normal, \(M\)       & \rqnfa{98.1\% (831)} & \rqnfs{1.9\% (16)} & \rqnua{\textbf{5.7\% (2)}} & \rqnus{94.3\% (33)} \\
