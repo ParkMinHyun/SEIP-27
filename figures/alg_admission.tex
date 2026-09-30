@@ -11,31 +11,31 @@
 \Require Remaining sequence ($\mathcal K_{i,j}$), remaining timeout budget ($T_{i,j}$)
 \Ensure \textsc{admit} or \textsc{skip}
 \Procedure{DecideAdmission}{$\mathcal K_{i,j},T_{i,j}$}
-  \State $g\gets\textsf{Group}(k_j)$ \Comment{$g\in\{M,S\}$}
-  \State \textbf{if} $g$ is disabled \textbf{then} \Return \textsc{skip}
+  \State $g\gets\textsf{Group}(k_j)$ \label{alg:ad:group} \Comment{$g\in\{M,S\}$}
+  \State \textbf{if} $g$ is disabled \textbf{then} \Return \textsc{skip} \label{alg:ad:skip}
   \State
   \State \textbf{/* Step 1. Estimation */}
-  \State $\hat P\gets\Call{ComputePointEstimate}{\mathcal K_{i,j}}$ \label{alg:line:first}
-  \State $\phi_\tau\gets\textsf{SelectResidualQuantile}(\mathcal K_{i,j})$ \Comment{$\tau=n_{\mathrm{eff}}/(n_{\mathrm{eff}}+1)$}
-  \State $U\gets\hat P\cdot\phi_\tau$ \label{alg:line:last}
+  \State $\hat P\gets\Call{ComputePointEstimate}{\mathcal K_{i,j}}$ \label{alg:ad:estimate}
+  \State $\phi_\tau\gets\textsf{SelectResidualFactor}(\mathcal K_{i,j})$ \label{alg:ad:select} \Comment{$\tau=n_{\mathrm{eff}}/(n_{\mathrm{eff}}+1)$}
+  \State $U\gets\hat P\cdot\phi_\tau$ \label{alg:ad:upper}
   \State
   \State \textbf{/* Step 2. Decision */}
-  \If{$U\le T_{i,j}$ \textbf{or} $\hat P=0$}
+  \If{$U\le T_{i,j}$ \textbf{or} $\hat P=0$} \label{alg:ad:decide}
     \State \Return \textsc{admit}
   \Else
-    \State $\textsf{Disable}(g)$
-    \State \Return \textsc{skip}
+    \State $\textsf{Disable}(g)$ \label{alg:ad:disable}
+    \State \Return \textsc{skip} \label{alg:ad:reject}
   \EndIf
 \EndProcedure
 \State
 \Procedure{CompleteDraftSequence}{$\mathcal K_i,p$}
   \State \textbf{/* Step 3. Calibration */}
-  \For{$j\gets1$ \textbf{to} $m$}
+  \For{$j\gets1$ \textbf{to} $m$} \label{alg:ad:measured}
     \State $\mathcal K\gets[\,k\in\mathcal K_{i,j}\mid p(k)>0\,]$
-    \State $\phi(\mathcal K)\gets\textsf{ComputeResidual}(\mathcal K,p)$
+    \State $\phi(\mathcal K)\gets\textsf{ComputeResidualFactor}(\mathcal K,p)$ \label{alg:ad:residual}
   \EndFor
-  \State $\textsf{UpdateResidualHistories}(\phi)$ \Comment{decay 0.90}
-  \State $\Call{UpdatePointEstimator}{\mathcal K_i,p}$
+  \State $\textsf{UpdateResidualHistories}(\phi)$ \label{alg:ad:histories} \Comment{decay 0.90}
+  \State $\Call{UpdatePointEstimator}{\mathcal K_i,p}$ \label{alg:ad:update}
 \EndProcedure
 \end{algorithmic}
 \end{algorithm}

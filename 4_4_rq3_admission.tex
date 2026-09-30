@@ -29,7 +29,7 @@ For S1 and S2, the \(M\) decision earlier in the same capture would skip \(M\), 
 With these skips applied to the recorded durations, the remaining sequence fit within the adjusted budget in all three cases.
 The same safeguards cannot be relied on for the naive approaches.
 The watchdog bounds only the admitted stage, so later overruns depend on later skips made with the same naive estimate.
-Even the watchdog budget (Equation~\ref{eq:watchdog}) reserves the calibrated \(U(\mathcal E_i)\), so the safeguards themselves rely on residual calibration.
+Even the watchdog budget (Equation~\ref{eq:watchdog}) reserves the calibrated \(U(\mathcal K_{i,m})\), so the safeguards themselves rely on residual calibration.
 
 \input{tables/tab_rq3_admission_quality.tex}
 \input{figures/fig_rq3_unsafe_spike_anatomy.tex}
