@@ -14,7 +14,7 @@ Including this processing lets admission account for the time needed to produce 
 \smallskip\noindent\textbf{Online point estimation.}
 The controller maintains a baseline duration \(\hat b(k)\) for each key.
 A shared factor \(\gamma\) adjusts these baselines to recent execution conditions.
-Multiplying a key's baseline by \(\gamma\) gives its predicted duration \(\hat p(k)\), and their sum gives the point estimate for a key sequence \(\mathcal K\):
+Multiplying a key's baseline by \(\gamma\) gives its predicted duration \(\hat p(k)\), and their sum gives the point estimate for a workload sequence \(\mathcal K\):
 \begin{equation}
   \hat P(\mathcal{K})
   =\sum_{k\in\mathcal{K}}\hat p(k),
@@ -22,7 +22,7 @@ Multiplying a key's baseline by \(\gamma\) gives its predicted duration \(\hat p
   \hat p(k)=\hat b(k)\,\gamma .
   \label{eq:point-estimate}
 \end{equation}
-At draft sequence completion, the controller divides each observed duration by the previous \(\gamma\) and incorporates the result into the key's cumulative average \(\hat b(k)\).
-When prior baselines are available, the controller updates \(\gamma\) to the median ratio of observed durations to those baselines.
+At draft sequence completion, the controller divides each measured duration \(p(k)\) by the previous \(\gamma\) and incorporates the result into the key's cumulative average \(\hat b(k)\).
+When prior baselines are available, the controller updates \(\gamma\) to the median ratio of measured durations to those baselines.
 The median limits the influence of isolated stage slowdowns.
 An unobserved key has a zero estimate until its first positive duration is recorded at draft sequence completion.

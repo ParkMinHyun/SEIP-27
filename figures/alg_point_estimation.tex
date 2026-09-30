@@ -1,0 +1,32 @@
+% Algorithm 1: Shared Point Estimation.
+% Use $...$ inside this float; \(...\) breaks in \Procedure/\Function arguments.
+\begin{algorithm}[t]
+\caption{Shared Point Estimation}
+\label{alg:point-estimation}
+\footnotesize
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+\algtext*{EndProcedure}\algtext*{EndIf}\algtext*{EndFor}
+\begin{algorithmic}[1]
+\Require Workload sequence ($\mathcal K$), measured durations ($p$)
+\Ensure Point estimate ($\hat P$)
+\State $\hat b(k)\gets0\ (\forall k),\quad \gamma\gets1$
+\State
+\Procedure{ComputePointEstimate}{$\mathcal K$}
+  \State $\mathit{total}\gets0$
+  \For{each workload key $k\in\mathcal K$}
+    \State $\hat p(k)\gets\hat b(k)\cdot\gamma$
+    \State $\mathit{total}\gets\mathit{total}+\hat p(k)$
+  \EndFor
+  \State \Return $\mathit{total}$
+\EndProcedure
+\State
+\Procedure{UpdatePointEstimator}{$\mathcal K_i,p$}
+  \State $\mathit{ratios}\gets[\,p(k)/\hat b(k)\mid k\in\mathcal K_i,\ p(k)>0,\ \hat b(k)>0\,]$
+  \For{each workload key $k\in\mathcal K_i$ with $p(k)>0$}
+    \State $\hat b(k)\gets$ cumulative average of $p(k)/\gamma$
+  \EndFor
+  \State \textbf{if} $\mathit{ratios}\neq[\,]$ \textbf{then} $\gamma\gets\operatorname{median}(\mathit{ratios})$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}

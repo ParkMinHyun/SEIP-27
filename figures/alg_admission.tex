@@ -1,4 +1,4 @@
-% Algorithm 1: Remaining-Sequence Admission.
+% Algorithm 2: Remaining-Sequence Admission.
 % Use $...$ inside this float; \(...\) breaks in \Procedure/\Function arguments.
 \begin{algorithm}[t]
 \caption{Remaining-Sequence Admission}
@@ -15,7 +15,7 @@
   \State \textbf{if} $g$ is disabled \textbf{then} \Return \textsc{skip}
   \State
   \State \textbf{/* Step 1. Estimation */}
-  \State $\hat P\gets\textsf{EstimateDuration}(\mathcal K_{i,j})$ \label{alg:line:first}
+  \State $\hat P\gets\Call{ComputePointEstimate}{\mathcal K_{i,j}}$ \label{alg:line:first}
   \State $\phi_\tau\gets\textsf{SelectResidualQuantile}(\mathcal K_{i,j})$ \Comment{$\tau=n_{\mathrm{eff}}/(n_{\mathrm{eff}}+1)$}
   \State $U\gets\hat P\cdot\phi_\tau$ \label{alg:line:last}
   \State
@@ -30,11 +30,12 @@
 \State
 \Procedure{CompleteDraftSequence}{$\mathcal K_i,p$}
   \State \textbf{/* Step 3. Calibration */}
-  \For{each measured $\mathcal K$}
+  \For{$j\gets1$ \textbf{to} $m$}
+    \State $\mathcal K\gets[\,k\in\mathcal K_{i,j}\mid p(k)>0\,]$
     \State $\phi(\mathcal K)\gets\textsf{ComputeResidual}(\mathcal K,p)$
   \EndFor
   \State $\textsf{UpdateResidualHistories}(\phi)$ \Comment{decay 0.90}
-  \State $\textsf{UpdateDurationModel}(\mathcal K_i,p)$
+  \State $\Call{UpdatePointEstimator}{\mathcal K_i,p}$
 \EndProcedure
 \end{algorithmic}
 \end{algorithm}
