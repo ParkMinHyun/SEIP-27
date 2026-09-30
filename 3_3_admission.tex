@@ -7,7 +7,7 @@ A capture's remaining timeout budget decreases while it waits for the draft work
 Because the remaining sequence ends with the mandatory key \(k_m\), admission accounts for the time needed to produce the draft image after the optional stages finish.
 Algorithm~\ref{alg:admission} takes the remaining sequence (\(\mathcal K_{i,j}\)) and the remaining timeout budget (\(T_{i,j}\)) and returns \textsc{admit} or \textsc{skip}.
 Here, \(T_{i,j}\) is the time left until capture \(i\)'s Capture Timeout deadline just before the stage of key \(k_j\) runs.
-The controller tracks \(M\) and \(S\) as separate admission groups (line~\ref{alg:ad:group}) and skips every stage of a disabled group (line~\ref{alg:ad:skip}); a group becomes disabled when one of its stages is rejected (line~\ref{alg:ad:disable}).
+The controller tracks \(M\) and \(S\) as separate admission groups (line~\ref{alg:ad:group}) and skips every stage of a disabled group (line~\ref{alg:ad:skip}).
 
 % Naive approaches: set aside until the algorithm-driven skeleton of Sections 3.2-3.4 is complete; reconnect afterwards.
 % \smallskip\noindent\textbf{Naive approaches.}
@@ -20,7 +20,7 @@ The controller tracks \(M\) and \(S\) as separate admission groups (line~\ref{al
 At lines~\ref{alg:ad:estimate}--\ref{alg:ad:upper}, Algorithm~\ref{alg:admission} estimates how long the remaining sequence may take.
 It starts from the point estimate \(\hat P(\mathcal K_{i,j})\) (line~\ref{alg:ad:estimate}), computed by Algorithm~\ref{alg:point-estimation}.
 Because stages can run longer than predicted, it scales \(\hat P\) by a residual factor derived from recent stage overruns (line~\ref{alg:ad:upper}).
-The \textsf{SelectResidualFactor} function (line~\ref{alg:ad:select}) selects this factor \(\phi_\tau(\mathcal K)\) as the weighted \(\tau\)-quantile of the sequence's residual history, which is updated at draft sequence completion (line~\ref{alg:ad:histories}).
+The \textsf{SelectResidualFactor} function (line~\ref{alg:ad:select}) selects this factor \(\phi_\tau(\mathcal K)\) as the weighted \(\tau\)-quantile of the sequence's residual history.
 If the history is empty, it uses the global pool, which collects factors from all sequences; if both are empty, it sets \(\phi_\tau(\mathcal K)=1\).
 It determines \(\tau\) from the Kish effective sample size \(n_{\mathrm{eff}}\) of the current weights \(w_l\) in the selected history~\cite{kish-survey-sampling}:
 \[
@@ -32,7 +32,7 @@ It determines \(\tau\) from the Kish effective sample size \(n_{\mathrm{eff}}\) 
 The selector is motivated by the expected CDF position \(n/(n+1)\) of the maximum of \(n\) i.i.d. continuous samples~\cite{david-order-statistics}, with \(n_{\mathrm{eff}}\) substituting for the sample count.
 As the effective sample size grows, the selected quantile moves further into the observed upper tail.
 The selector avoids a separately tuned target percentile, while the recency weighting applied at completion reduces the influence of older observations.
-Applying the selected factor to \(\hat P\) gives the upper estimate
+The resulting upper estimate is
 \begin{equation}
   U(\mathcal{K})
   =\hat P(\mathcal{K})\,\phi_{\tau}(\mathcal{K}).
@@ -40,21 +40,20 @@ Applying the selected factor to \(\hat P\) gives the upper estimate
 \end{equation}
 
 \smallskip\noindent\textbf{Decision.}
-At line~\ref{alg:ad:decide}, Algorithm~\ref{alg:admission} admits the optional stage when the upper estimate of its remaining sequence fits within \(T_{i,j}\) or, at cold start, the point estimate is zero:
+For an optional stage in an enabled group, the admission rule (line~\ref{alg:ad:decide}) includes a cold-start case:
 \begin{equation}
   U(\mathcal{K}_{i,j})\leq T_{i,j}
   \quad\text{or}\quad
   \hat P(\mathcal{K}_{i,j})=0.
   \label{eq:admission}
 \end{equation}
-A zero point estimate permits execution to obtain the estimator's initial duration measurements, such as at the first capture of an application session.
+This case permits execution to obtain the estimator's initial duration measurements, such as at the first capture of an application session.
 If neither condition holds, the controller skips the stage and disables its group until the queue drains (lines~\ref{alg:ad:disable}--\ref{alg:ad:reject}), removing the group's stages from subsequent remaining sequences.
 Keeping a group disabled until the drain prevents its processing from appearing and disappearing across consecutive draft images.
 
 \smallskip\noindent\textbf{Calibration.}
-At draft sequence completion, \textsc{CompleteDraftSequence} (lines~\ref{alg:ad:measured}--\ref{alg:ad:update}) updates the residual histories and the point estimator.
-For each remaining sequence \(\mathcal K_{i,j}\), it keeps only the stages that ran in this draft sequence, forming a measured sequence \(\mathcal K\) (line~\ref{alg:ad:measured}).
-If any of these stages ran before, the residual factor (line~\ref{alg:ad:residual}) is
+At draft sequence completion, \textsc{CompleteDraftSequence} (lines~\ref{alg:ad:measured}--\ref{alg:ad:update}) forms a measured sequence \(\mathcal K\) from each remaining sequence \(\mathcal K_{i,j}\), retaining only the stages that ran in this draft sequence (line~\ref{alg:ad:measured}).
+If any of these stages ran in an earlier draft sequence, the residual factor (line~\ref{alg:ad:residual}) is
 \begin{equation}
   \phi(\mathcal{K})
   =\frac{\sum_{k\in\mathcal{K}}\max\{\hat p(k),p(k)\}}
@@ -76,7 +75,6 @@ The watchdog therefore limits how long the draft sequence waits for that stage:
   W_{i,j}=\max\{0,T_{i,j}-U(\mathcal{K}_{i,m})\},
   \label{eq:watchdog}
 \end{equation}
-where \(\mathcal{K}_{i,m}=(k_m)\) contains only the mandatory last key.
-Subtracting \(U(\mathcal K_{i,m})\) reserves its estimated duration within \(T_{i,j}\).
+where \(\mathcal{K}_{i,m}=(k_m)\), so \(U(\mathcal K_{i,m})\) reserves time for mandatory encoding and saving.
 If the watchdog expires, the draft pipeline falls back to encoding and saving the preserved original input while the optional stage continues independently.
-Until the queue drains, every queued draft sequence takes the same fallback, so the backlog clears instead of cascading into further timeouts.
+Until the queue drains, queued draft sequences take the same fallback, so the backlog clears without cascading timeouts.
