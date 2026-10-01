@@ -4,30 +4,34 @@
 
 The Samsung Galaxy camera publishes an initial user-visible image, the \emph{draft image}, for each capture and later replaces it with the final image from post-processing.
 Samsung refers to the processing stages that produce the draft image as the \emph{draft sequence}.
-For selected shot modes, post-processing is deferred until the application enters the background.
+For selected shot modes, post-processing is deferred until the user switches away from the camera application.
 The draft image then remains the user-visible result throughout the foreground session, making its visual quality more important.
-To narrow the draft--final visual gap, Samsung implemented lightweight multi-frame composition in the draft sequence.
+In the draft sequence, Samsung has already deployed single-frame stages to narrow the draft--final visual gap and implemented lightweight multi-frame composition to reduce it further.
 
 However, Samsung has not deployed this feature on any device model because its added processing can violate the \emph{Capture Timeout}, a fixed deadline for producing each draft image.
 A violation crashes the application by design and blocks the release.
 Parallel capture makes this risk worse.
-It lets the application accept the next shutter input before the preceding draft image is produced, shortening the shot-to-shot interval.
-Draft sequences still execute one at a time on a single draft worker, so processing added to one capture also consumes the timeout budget of every capture queued behind it.
+To shorten the shot-to-shot interval, it lets the application accept the next shutter input before the preceding draft image is produced.
+However, draft sequences still execute one at a time on a single draft worker, so later captures may have to wait for earlier draft sequences to finish.
+Each capture has its own timeout clock, which starts when its request is accepted.
+Time spent executing the active draft sequence therefore consumes the timeout budgets of all active and queued captures.
 
-Samsung introduced a static thermal guard during pre-release validation to mitigate this risk, but it cannot distinguish safe captures from unsafe ones.
-The guard skips the optional stages of the draft sequence once the device's overheat level reaches 4 on a 0--6 scale, but this level reflects neither how long a capture has waited nor how much draft work remains.
-Indeed, in our motivating experiment with the guard bypassed, the earliest Capture Timeout at the same starting level varied with resolution, memory pressure, and enabled stages (Section~\ref{sec:guard-limit}).
+Samsung already uses a static thermal guard to mitigate timeout risk from the deployed single-frame stages.
+The guard skips the optional stages of the draft sequence whenever the device's overheat level is 4 or higher on a 0--6 scale.
+However, this cutoff alone cannot determine whether lightweight multi-frame composition is safe to execute.
+Indeed, in our motivating experiment with the guard bypassed, the earliest Capture Timeout varied with resolution, memory pressure, and enabled draft stages, even at the same starting overheat level.
+The overheat level reflects neither how much timeout budget a capture has left nor how much draft work remains.
 Deploying lightweight multi-frame composition therefore requires deciding at run time whether each capture's remaining draft work fits within the remaining timeout budget.
 
 The draft pipeline can neither reject an accepted capture nor preempt a running stage.
-Skipping optional stages can shorten processing but cannot recover time already spent waiting, so the next capture must sometimes be delayed as well.
+Within these constraints, it can skip optional stages to reduce remaining draft work and delay the next capture opportunity to limit queue growth.
 These two levers correspond to workload control~\cite{approxdet-sensys,timecard-sosp} and arrival control~\cite{seda-sosp,breakwater-osdi}, respectively.
-Because waiting and processing consume the same per-capture timeout budget, these levers must be coordinated.
+These controls must be coordinated because the optional work retained in the draft sequence affects how much delay is needed for the next capture.
 
 We therefore present the Budget-Aware Draft Controller.
 A major challenge is deciding how much time to reserve for remaining draft work without deadline-miss feedback: too little risks a Capture Timeout, whereas too much needlessly skips optional stages or delays the next capture.
 \emph{Remaining-Sequence Admission} admits an optional stage when the capture's remaining timeout budget covers the estimated duration of the entire remaining draft sequence together with a safety margin calibrated from recent stage overruns.
-\emph{Capture-Availability Pacing} delays the next capture when the draft work predicted through that capture, adjusted for admission decisions, exceeds the remaining timeout budget.
+\emph{Capture-Availability Pacing} delays the next capture when the draft work predicted through that capture exceeds the remaining timeout budget.
 
 Across 28 conditions on two commercial devices, the controller completed all 280 runs without Capture Timeout, whereas unguarded execution of all optional stages timed out in 225 of 280 runs.
 Lightweight multi-frame composition ran on an average of at least 4.5 of the first five captures in every condition, even at overheat levels that would trigger the thermal guard.
