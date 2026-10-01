@@ -33,4 +33,4 @@ What differs in our capture pipeline is how a deadline miss is handled and how t
 Because a single Capture Timeout crashes the application and blocks the release, the controller cannot rely on deadline-miss feedback and must act on predicted draft work.
 The current capture's optional stages also occupy the single draft worker, and the next capture's release timing determines how long that capture waits.
 Our controller therefore coordinates the two controls across consecutive captures: admission selects the current capture's optional stages, and pacing times the next capture's release.
-To our knowledge, this is the first work to combine per-capture remaining-budget stage admission with next-capture pacing in a production camera system under a hard per-capture deadline.
+To our knowledge, this is the first work to combine per-capture remaining-budget stage admission with next-capture pacing in production camera software under a hard per-capture deadline.

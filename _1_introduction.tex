@@ -25,7 +25,7 @@ These two levers correspond to workload control~\cite{approxdet-sensys,timecard-
 Because waiting and processing consume the same per-capture timeout budget, these levers must be coordinated.
 
 We therefore present the Budget-Aware Draft Controller.
-A major challenge is determining how much time to reserve for execution overruns without relying on deadline-miss feedback: even a single Capture Timeout blocks the release.
+A major challenge is deciding how much time to reserve for remaining draft work without deadline-miss feedback: too little risks a Capture Timeout, whereas too much needlessly skips optional stages or delays the next capture.
 \emph{Remaining-Sequence Admission} admits an optional stage when the capture's remaining timeout budget covers the estimated duration of the entire remaining draft sequence together with a safety margin calibrated from recent stage overruns.
 \emph{Capture-Availability Pacing} delays the next capture when the draft work predicted through that capture, adjusted for admission decisions, exceeds the remaining timeout budget.
 
@@ -38,6 +38,6 @@ The controller is undergoing release validation for a forthcoming Galaxy flagshi
 \smallskip\noindent\textbf{Contributions.}
 \begin{itemize}[leftmargin=1.2em]
   \item We characterize how serialized draft execution under parallel capture creates a cross-capture deadline problem for lightweight multi-frame composition, and why a static thermal guard does not reflect per-capture deadline safety.
-  \item We present the Budget-Aware Draft Controller, which coordinates remaining-sequence admission with capture-availability pacing. To our knowledge, this is the first work to combine these controls in a production camera system under a hard per-capture deadline.
+  \item We present the Budget-Aware Draft Controller, which coordinates remaining-sequence admission with capture-availability pacing. To our knowledge, this is the first work to combine these controls in production camera software under a hard per-capture deadline.
   \item We evaluate the controller on two commercial devices, examining end-to-end effectiveness, component contribution, admission decision quality against naive approaches, and pacing under queue pressure.
 \end{itemize}
