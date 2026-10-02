@@ -7,7 +7,7 @@ A capture's remaining timeout budget decreases while it waits for the draft work
 Because the remaining sequence ends with the mandatory key \(k_m\), admission accounts for the time needed to produce the draft image after the optional stages finish.
 Algorithm~\ref{alg:admission} takes the remaining sequence (\(\mathcal K_{i,j}\)) and the remaining timeout budget (\(T_{i,j}\)) and returns \textsc{admit} or \textsc{skip}.
 Here, \(T_{i,j}\) is the time left until capture \(i\)'s Capture Timeout deadline just before the stage of key \(k_j\) runs.
-The controller tracks \(M\) and \(S\) as separate admission groups (line~\ref{alg:ad:group}) and skips every stage of a disabled group (line~\ref{alg:ad:skip}).
+The controller treats \(M\) and \(S\) as separate admission groups, keeps the disabled groups in \(\mathcal D\) (line~\ref{alg:ad:init}), and immediately skips stage \(k_j\) if its group \(g(k_j)\) is in \(\mathcal D\) (line~\ref{alg:ad:skip}).
 
 % Naive approaches: set aside until the algorithm-driven skeleton of Sections 3.2-3.4 is complete; reconnect afterwards.
 % \smallskip\noindent\textbf{Naive approaches.}
