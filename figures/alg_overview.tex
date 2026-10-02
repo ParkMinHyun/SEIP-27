@@ -1,0 +1,42 @@
+\begin{algorithm}[t]
+\caption{Capture Workflow with Our Controller}
+\label{alg:overview}
+\footnotesize
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+\algtext*{EndProcedure}\algtext*{EndIf}\algtext*{EndFor}
+\begin{algorithmic}[1]
+\Require User shutter input for capture $i$
+\Ensure Capture ID of capture $i$
+\Procedure{Capture}{$i$}
+  \State $\mathit{captureId}\gets\textsf{SubmitCaptureRequest}(i)$
+  \State \textbf{upon} \texttt{captureAvailable} \textbf{do} \Call{OnCaptureAvailable}{$i$}
+  \State \textbf{upon} captured frame $x$ \textbf{do} \Call{OnPictureTaken}{$i,x$}
+  \State \textbf{upon} draft image saved \textbf{do} \Call{CompleteDraftSequence}{$\mathcal K_i,p_i$}
+  \State $\textsf{StartTimeoutClock}(i)$
+  \State \Return $\mathit{captureId}$
+\EndProcedure
+\State
+\Procedure{OnCaptureAvailable}{$i$}
+  \State $t_{\mathrm{tail}}\gets\textsf{Deadline}(\textsf{Tail}(\mathit{draftQueue}))$
+  \State $d_i\gets\Call{DecidePacingDelay}{t_{\mathrm{tail}}}$
+  \State $\textsf{ScheduleCaptureAvailable}(i,d_i)$ \Comment{enables capture $i+1$}
+\EndProcedure
+\State
+\Procedure{OnPictureTaken}{$i,x$}
+  \If{$\textsf{CollectDraftFrames}(i,x)=\textsc{complete}$}
+    \State $\textsf{Enqueue}(\mathit{draftQueue},\textsf{CreateDraftSequence}(i))$
+  \EndIf
+\EndProcedure
+\State
+\Procedure{ProcessDraftSequence}{$\mathcal K_i$} \Comment{single worker, FIFO}
+  \For{each optional stage $k_j\in\mathcal K_i$}
+    \State $T_{i,j}\gets\textsf{Deadline}(i)-\mathit{now}$
+    \If{$\Call{DecideAdmission}{\mathcal K_{i,j},T_{i,j}}=\textsc{admit}$}
+      \State $\textsf{ExecuteStage}(k_j)$
+    \EndIf
+  \EndFor
+  \State \Return $\textsf{Save}(i)$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
