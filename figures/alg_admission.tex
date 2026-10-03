@@ -8,13 +8,13 @@
 \begin{algorithmic}[1]
 \Require Remaining sequence ($\mathcal K_{i,j}$), remaining timeout budget ($T_{i,j}$)
 \Ensure \textsc{admit} or \textsc{skip}
-\State $\mathcal D\gets\emptyset$ \label{alg:ad:init} \Comment{disabled admission groups}
+\State $\mathcal D\gets\emptyset$ \label{alg:ad:init} \Comment{cleared when draft queue drains}
 \State
-\Procedure{DecideAdmission}{$\mathcal K_{i,j},T_{i,j}$}
+\Procedure{DecideExecution}{$\mathcal K_{i,j},T_{i,j}$}
   \State \textbf{if} $g(k_j)\in\mathcal D$ \textbf{then} \Return \textsc{skip} \label{alg:ad:skip} \Comment{$g(k_j)\in\{M,S\}$}
   \State
   \State \textbf{/* Step 1. Estimation */}
-  \State $\hat P\gets\Call{ComputePointEstimate}{\mathcal K_{i,j}}$ \label{alg:ad:estimate}
+  \State $\hat P\gets\mathit{predictor}.\Call{ComputePointEstimate}{\mathcal K_{i,j}}$ \label{alg:ad:estimate}
   \State $\phi_\tau\gets\textsf{SelectResidualFactor}(\mathcal K_{i,j})$ \label{alg:ad:select} \Comment{$\tau=n_{\mathrm{eff}}/(n_{\mathrm{eff}}+1)$}
   \State $U\gets\hat P\cdot\phi_\tau$ \label{alg:ad:upper}
   \State
@@ -27,15 +27,13 @@
   \EndIf
 \EndProcedure
 \State
-\Procedure{CompleteDraftSequence}{$\mathcal K_i,p_i$}
+\Procedure{Update}{$\mathcal K_i$}
   \State \textbf{/* Step 3. Calibration */}
-  \For{$j\gets1$ \textbf{to} $m$} \label{alg:ad:measured}
-    \State $\mathcal K\gets[\,k\in\mathcal K_{i,j}\mid p_i(k)>0\,]$
-    \State $\phi(\mathcal K)\gets\textsf{ComputeResidualFactor}(\mathcal K,p_i)$ \label{alg:ad:residual}
+  \State $\phi\gets\emptyset$
+  \For{$j\gets1$ \textbf{to} $m$}
+    \State $(\mathcal K,\phi(\mathcal K))\gets\textsf{ComputeResidualFactor}(\mathcal K_{i,j})$ \label{alg:ad:residual}
   \EndFor
   \State $\textsf{UpdateResidualHistories}(\phi)$ \label{alg:ad:histories} \Comment{decay 0.90}
-  \State $\Call{UpdatePointEstimator}{\mathcal K_i,p_i}$ \label{alg:ad:update}
-  \State \textbf{if} draft queue is empty \textbf{then} $\mathcal D\gets\emptyset$ \label{alg:ad:reset}
 \EndProcedure
 \end{algorithmic}
 \end{algorithm}

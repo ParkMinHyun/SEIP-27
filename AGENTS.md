@@ -30,3 +30,8 @@ This repository is a LaTeX paper project for SEIP 2027.
 - Prefer small, reviewable edits over sweeping rewrites.
 - For writing tasks, summarize what changed and name the edited files.
 - For research-content tasks, distinguish clearly between facts found in the manuscript, in references, and in inference.
+
+## Camera Workflow Context
+
+- The configured draft-stage sequence remains unchanged during continuous capture. Mode, filter, and watermark settings that alter it can change only after all draft sequences in the draft queue have completed.
+- Runtime admission may skip configured optional stages. Distinguish the configured stage sequence from the stages actually executed.
