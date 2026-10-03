@@ -8,17 +8,27 @@
 
   {\scriptsize
   \renewcommand{\arraystretch}{1.05}%
-  \newcolumntype{V}{!{\hspace{1.5pt}\vrule}}%
+  % Shaded rows: fill the gap before each rule with the row color, and
+  % keep the shading inside the outer edges of the first and last columns.
+  \makeatletter
+  \newcommand{\rqablgap}{\ifx\CT@row@color\relax\hspace{1.5pt}%
+    \else{\let\CT@color\color\CT@row@color\vrule\@width1.5pt}\fi}%
+  \newcommand{\rqablclipL}{\gdef\CT@cell@color{\@tempdimb\z@
+    \global\let\CT@cell@color\relax}}%
+  \newcommand{\rqablclipR}{\gdef\CT@cell@color{\@tempdimc\z@
+    \global\let\CT@cell@color\relax}}%
+  \makeatother
+  \newcolumntype{V}{!{\rqablgap\vrule}}%
   \newsavebox{\rqablbox}%
   \newcommand{\rqabltabular}{%
   \begin{tabular}{@{}%
-      >{\raggedright\arraybackslash}p{60pt}V%
+      >{\rqablclipL\raggedright\arraybackslash}p{60pt}V%
       >{\raggedleft\arraybackslash}p{32pt}%
       >{\raggedleft\arraybackslash}p{33pt}V%
       >{\raggedleft\arraybackslash}p{23pt}%
       >{\raggedleft\arraybackslash}p{23pt}V%
       >{\raggedleft\arraybackslash}p{34pt}%
-      >{\raggedleft\arraybackslash}p{26pt}%
+      >{\rqablclipR\raggedleft\arraybackslash}p{33pt}%
     @{}}
     \toprule
     \multirow[c]{2}{=}{\centering\textbf{Configuration}}
@@ -31,7 +41,7 @@
       & \multicolumn{1}{c}{\makecell[c]{\mbox{\boldmath$M$}\\\textbf{(\%)}}}
       & \multicolumn{1}{cV}{\makecell[c]{\mbox{\boldmath$S$}\\\textbf{(\%)}}}
       & \multicolumn{1}{c}{\makecell[c]{\textbf{Activated}\\\textbf{(\%)}}}
-      & \multicolumn{1}{c}{\makecell[c]{\mbox{\boldmath$\mathit{delay}$}\textbf{ P50}\\\textbf{(ms)}}} \\
+      & \multicolumn{1}{c@{}}{\makecell[c]{\mbox{\boldmath$\mathit{delay}$}\textbf{ P50}\\\textbf{(ms)}}} \\
     \midrule
 
     \multicolumn{7}{@{}l}{\textbf{S26 Ultra, 12MP normal, Lv4}} \\
@@ -39,6 +49,7 @@
     No control     & 0/10   & 29.0  & 29.0 & 29.0 & 0 & -- \\
     Admission only & 10/10  & 100.0 & 29.3 & 33.7 & 0 & -- \\
     Pacing only    & 0/10   & 44.3  & 44.3 & 44.3 & 51.1 & 242 \\
+    \rowcolor{gray!20}
     \textbf{Full}  & \textbf{10/10} & \textbf{100.0}
                    & \textbf{58.0} & \textbf{95.7} & \textbf{37.9} & \textbf{437} \\
     \midrule
@@ -48,6 +59,7 @@
     No control     & 0/10   & 24.3  & 24.3 & 24.3 & 0 & -- \\
     Admission only & 8/10   & 87.3  & 24.3 & 51.0 & 0 & -- \\
     Pacing only    & 0/10   & 28.1  & 28.1 & 28.1 & 58.4 & 483 \\
+    \rowcolor{gray!20}
     \textbf{Full}  & \textbf{10/10} & \textbf{100.0}
                    & \textbf{44.5} & \textbf{77.0} & \textbf{36.7} & \textbf{400} \\
     \midrule
@@ -57,6 +69,7 @@
     No control     & 0/10   & 42.3  & 42.3 & 42.3 & 0 & -- \\
     Admission only & 7/10   & 90.7  & 44.3 & 51.3 & 0 & -- \\
     Pacing only    & 1/10   & 61.4  & 61.4 & 61.4 & 44.7 & 387 \\
+    \rowcolor{gray!20}
     \textbf{Full}  & \textbf{10/10} & \textbf{100.0}
                    & \textbf{56.0} & \textbf{74.7} & \textbf{53.1} & \textbf{297} \\
     \bottomrule
