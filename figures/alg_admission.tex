@@ -27,11 +27,12 @@
   \EndIf
 \EndProcedure
 \State
-\Procedure{Update}{$\mathcal K_i$}
+\Procedure{Update}{$\mathcal K_i,p_i$}
   \State \textbf{/* Step 3. Calibration */}
   \State $\phi\gets\emptyset$
   \For{$j\gets1$ \textbf{to} $m$}
-    \State $(\mathcal K,\phi(\mathcal K))\gets\textsf{ComputeResidualFactor}(\mathcal K_{i,j})$ \label{alg:ad:residual}
+    \State $\mathcal K\gets[\,k\in\mathcal K_{i,j}\mid p_i(k)>0\,]$ \label{alg:ad:measured}
+    \State $\phi(\mathcal K)\gets\textsf{ComputeResidualFactor}(\mathcal K,p_i)$ \label{alg:ad:residual}
   \EndFor
   \State $\textsf{UpdateResidualHistories}(\phi)$ \label{alg:ad:histories} \Comment{decay 0.90}
 \EndProcedure

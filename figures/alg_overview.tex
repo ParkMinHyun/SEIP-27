@@ -39,7 +39,7 @@
 \State
 \Upon{OnDraftSequenceCompleted}{$\mathcal K_i,C_i,p_i$}
   \State $\mathit{predictor}.\Call{Observe}{\mathcal K_i,p_i}$ \label{alg:ov:update}
-  \State $\mathit{admission}.\Call{Update}{\mathcal K_i}$ \label{alg:ov:ad-update}
+  \State $\mathit{admission}.\Call{Update}{\mathcal K_i,p_i}$ \label{alg:ov:ad-update}
   \State $\mathit{pacing}.\Call{Update}{\mathcal K_i,C_i}$ \label{alg:ov:pa-update}
 \EndUpon
 \end{algorithmic}

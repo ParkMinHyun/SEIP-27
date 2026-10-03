@@ -22,4 +22,5 @@ At draft completion, \(\mathit{predictor}.\textsc{Observe}\) (Algorithm~\ref{alg
 To estimate the runtime factor, it first compares measurements with their keys' previous base durations, recording \(p_i(k)/\hat b(k)\) only for keys with prior timing measurements.
 It then normalizes each measured duration by the previous shared factor \(\gamma\), incorporating \(p_i(k)/\gamma\) into that key's cumulative average \(\hat b(k)\).
 Finally, it sets \(\gamma\) to the median of the recorded ratios; if no ratios exist, \(\gamma\) remains unchanged.
-The cumulative averages retain each key's timing history, while the shared factor reflects recent runtime changes and the median limits the influence of isolated slowdowns.
+Each cumulative average combines new measurements with the key's timing history, reducing the effect of isolated spikes on its base duration.
+The shared factor tracks recent runtime changes, while the median helps limit the influence of a slowdown confined to a single stage.

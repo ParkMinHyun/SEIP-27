@@ -43,9 +43,10 @@ If neither condition holds, the controller skips the stage and disables its grou
 Keeping a group disabled prevents its visual effects from appearing and disappearing across consecutive draft images.
 
 \smallskip\noindent\textbf{Calibration.}
-At draft sequence completion, admission updates its residual histories using the completed sequence's measured stage durations \(p_i(k)\) recorded by the shared predictor (lines~\ref{alg:ad:residual}--\ref{alg:ad:histories}).
-Since skipped stages have no measured durations, \mbox{\textsf{ComputeResidualFactor}} excludes them from each remaining sequence \(\mathcal K_{i,j}\), yielding \(\mathcal K\) (line~\ref{alg:ad:residual}).
-For sequences with prior timing estimates, it computes the residual factor from the measured durations \(p(k)\) and predictions \(\hat p(k)\) retained by admission before execution:
+At draft sequence completion, admission updates its residual histories using the completed sequence's measured stage durations \(p_i(k)\) (lines~\ref{alg:ad:measured}--\ref{alg:ad:histories}).
+Since skipped stages have no measured durations, admission excludes them from each remaining sequence \(\mathcal K_{i,j}\), yielding a measured sequence \(\mathcal K\) (line~\ref{alg:ad:measured}).
+Admission compares these measurements with the predictions \(\hat p(k)\) it retained before execution.
+If any of these stages ran in an earlier draft sequence, the residual factor is
 \begin{equation}
   \phi(\mathcal{K})
   =\frac{\sum_{k\in\mathcal{K}}\max\{\hat p(k),p(k)\}}
