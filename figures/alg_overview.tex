@@ -12,13 +12,13 @@
 \State $\mathit{admission}\gets\textsf{Admission}(\mathit{predictor})$, $\mathit{pacing}\gets\textsf{Pacing}(\mathit{predictor})$
 \State
 \Procedure{Capture}{$i$}
-  \State $\mathit{timeout}_i\gets\mathit{now}+\textsc{TIMEOUT}$ \label{alg:ov:timeout}
+  \State $\mathit{timeout}_i\gets\mathit{now}+\textsc{TIMEOUT}$ \label{alg:ov:timeout} \Comment{retained per capture}
   \State $\textsf{RequestCaptureBurst}(i)$
 \EndProcedure
 \State
 \Upon{OnCaptureAvailable}{$i$}
   \State $\mathit{delay}_i\gets\mathit{pacing}.\Call{DecideDelay()}{}$ \label{alg:ov:pacing}
-  \State $\textsf{ReleaseCaptureAvailable}(i)$ after $\mathit{delay}_i$ \Comment{enables capture $i+1$}
+  \State $\textsf{NotifyCaptureAvailable}(i)$ after $\mathit{delay}_i$ \Comment{enables capture $i+1$}
 \EndUpon
 \State
 \Upon{OnDraftFramesCollected}{$i,\mathit{frames}$}

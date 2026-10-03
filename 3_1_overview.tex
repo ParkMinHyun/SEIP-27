@@ -9,33 +9,33 @@
   \caption{Coordinated admission and pacing in the Budget-Aware Draft Controller.}
   \label{fig:controller-overview}
 \end{figure*}
-We introduce the \emph{Budget-Aware Draft Controller} to enable the draft sequence's lightweight multi-frame composition under parallel capture while meeting each capture's deadline.
+Figure~\ref{fig:controller-overview} illustrates how the \emph{Budget-Aware Draft Controller} coordinates optional-stage execution and capture arrivals to enable lightweight multi-frame composition under per-capture deadlines.
+The controller consists of \emph{Remaining-Sequence Admission} and \emph{Capture-Availability Pacing}, both initialized with the same shared predictor in Algorithm~\ref{alg:overview}.
 
-\smallskip\noindent\textbf{Controller architecture.}
-The controller coordinates optional-stage execution on the single draft worker with capture arrivals, as shown in Figure~\ref{fig:controller-overview}.
-\emph{Remaining-Sequence Admission} runs immediately before an optional stage in the active draft sequence.
-It compares the estimated duration of the remaining sequence with the capture's remaining timeout budget to decide whether to execute the stage.
-\emph{Capture-Availability Pacing} controls delivery of \texttt{captureAvailable}, which exposes the next capture opportunity to the application.
-It uses the estimated draft backlog and the remaining timeout budget to decide whether to deliver the callback immediately or delay it.
-Both modules use duration estimates based on observations from completed draft sequences.
+Given a shutter request for capture \(i\), \textsc{Capture} records its deadline \(\mathit{timeout}_i\) (line~\ref{alg:ov:timeout}) before requesting capture frames.
+When the \texttt{captureAvailable} callback is ready for delivery, the original workflow notifies the application immediately (\(\mathit{delay}_i=0\)).
+At this same decision point, pacing computes \(\mathit{delay}_i\) from the predicted draft backlog and remaining timeout budget (line~\ref{alg:ov:pacing}).
+The callback is delivered after this delay, exposing the next capture opportunity, \(i+1\), to the application.
+Once draft frames are collected, a draft sequence is created and enqueued for the single draft worker, which processes sequences in FIFO order.
+
+At sequence start, \textsf{ConfigureStages} produces the ordered workload sequence \(\mathcal K_i=(k_1,\ldots,k_m)\) (line~\ref{alg:ov:configure}), where each key identifies a stage and its configuration.
+The original workflow excludes optional stages from \(\mathcal K_i\) at overheat level~4 or higher; the controller can replace this fixed cutoff with runtime admission.
+Before each optional stage \(k_j\), admission compares the estimated duration of the remaining sequence \(\mathcal K_{i,j}=(k_j,\ldots,k_m)\) with the remaining timeout budget \(T_{i,j}\) (line~\ref{alg:ov:admission}).
+After executing admitted stages, the worker performs mandatory encoding and saving, represented by the final key \(k_m\), to publish the draft image (line~\ref{alg:ov:publish}).
+
+At completion, the measured sequence duration \(C_i\) and stage durations \(p_i(k)\) update the shared predictor (line~\ref{alg:ov:update}).
+Admission and pacing then update their respective states for subsequent decisions (lines~\ref{alg:ov:ad-update}--\ref{alg:ov:pa-update}).
 Pacing accounts for admission decisions when estimating upcoming draft work.
 
 \smallskip\noindent\textbf{Control objective.}
-The controller must complete every draft sequence before its Capture Timeout, because a single violation blocks the release.
-Within this constraint, it aims to retain optional stages when the remaining timeout budget permits and to limit delay to the next capture.
-Under parallel capture, each accepted capture starts its own timeout clock, but its draft sequence may wait behind earlier captures on the shared worker.
-Let the deadline margin \(\mu_i\) denote the time left before capture \(i\)'s deadline when its draft sequence completes.
-For successive captures, let \(\delta_i\) be the interval between requests \(i-1\) and \(i\), and \(\pi_i\) the interval between their draft sequence completions.
+Deadline safety takes precedence: a single Capture Timeout violation blocks the release.
+Let \(\mu_i\) be the time left before capture \(i\)'s deadline at draft completion, \(\delta_i\) the interval between requests \(i-1\) and \(i\), and \(\pi_i\) the interval between their draft completions.
 With a fixed timeout duration,
 \begin{equation}
   \mu_i=\mu_{i-1}+\delta_i-\pi_i .
   \label{eq:margin-recursion}
 \end{equation}
-When completions fall farther apart than requests, \(\pi_i>\delta_i\), and successive captures lose deadline margin.
-Admission can shorten \(\pi_i\) by skipping optional stages, but it cannot recover time already spent waiting.
-Pacing can lengthen \(\delta_{i+1}\) by delaying the next capture opportunity, but it cannot change work already in progress.
-Equation~\eqref{eq:margin-recursion} is an accounting identity rather than a control law.
-
-When the two aims conflict, the controller prioritizes user-perceived responsiveness.
-Capture delay lengthens the shot-to-shot interval and cannot be recovered, whereas a skipped stage lowers the draft image's quality but leaves the final image unaffected.
-The controller therefore implements a deadline-constrained, responsiveness-dominant trade-off between optional-stage execution and shot-to-shot delay.
+When \(\pi_i>\delta_i\), deadline margin shrinks.
+Admission can shorten \(\pi_i\) by skipping optional stages; pacing can lengthen \(\delta_{i+1}\) by delaying the next capture opportunity.
+Admission cannot recover time already spent waiting, while pacing cannot change work in progress.
+Within the deadline constraint, responsiveness takes priority over optional-stage retention: added shot-to-shot delay is irreversible, whereas skipping stages lowers draft quality but leaves the final image unaffected.
