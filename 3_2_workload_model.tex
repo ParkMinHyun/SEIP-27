@@ -1,22 +1,14 @@
-\subsection{Workload Model and Shared Point Estimation}
+\subsection{Shared Predictor}
 \label{sec:model}
-\input{figures/alg_point_estimation.tex}
-Both control modules require estimates of remaining draft work.
-Draft processing time varies with resolution, memory pressure, stage configuration, and thermal state (Section~\ref{sec:guard-limit}), which neither per-model timing tables nor the thermal level alone can capture.
-The controller therefore estimates stage durations online from completed draft sequences with a point estimator that both modules share (Algorithm~\ref{alg:point-estimation}).
-
-\smallskip\noindent\textbf{Workload key and sequence.}
-For estimation, each processing stage and its configuration are identified by a workload key \(k\).
-Capture \(i\)'s draft sequence is represented as a workload sequence of these keys in execution order, \(\mathcal{K}_i=(k_1,\ldots,k_m)\).
-From key \(k_j\) onward, the remaining sequence is \(\mathcal{K}_{i,j}=(k_j,\ldots,k_m)\).
-The last key \(k_m\) covers mandatory processing from encoding start through draft image saving, so estimates include the time needed to produce the draft image.
+Draft processing time varies with stage configuration and runtime conditions (Section~\ref{sec:guard-limit}).
+To account for this variation, the shared predictor in Algorithm~\ref{alg:overview} estimates stage durations online from completed draft sequences.
+Admission uses these estimates for the remaining sequence \(\mathcal K_{i,j}\), while pacing uses them to predict queued and upcoming draft work.
 
 \smallskip\noindent\textbf{Point estimate.}
-Algorithm~\ref{alg:point-estimation} computes the point estimate (\(\hat P\)) of a workload sequence (\(\mathcal K\)).
-The algorithm models a stage's duration as a key-specific base duration \(\hat b(k)\) scaled by a factor \(\gamma\) shared across keys.
+For a workload key \(k\) defined in Section~\ref{sec:objective}, the predictor models the stage's duration as a key-specific base duration \(\hat b(k)\) scaled by a factor \(\gamma\) shared across keys.
 The base duration captures timing differences among stages and configurations, while \(\gamma\) provides a shared adjustment for changes in runtime conditions.
-Initially, every base duration is zero and \(\gamma\) is one (line~\ref{alg:pe:init}).
-\textsc{ComputePointEstimate} (lines~\ref{alg:pe:compute-first}--\ref{alg:pe:compute-last}) returns the sum of the predicted durations:
+Initially, every base duration is zero and \(\gamma\) is one.
+The point estimate \(\hat P(\mathcal K)\) of a workload sequence is the sum of its predicted stage durations:
 \begin{equation}
   \hat P(\mathcal{K})
   =\sum_{k\in\mathcal{K}}\hat p(k),
@@ -25,9 +17,10 @@ Initially, every base duration is zero and \(\gamma\) is one (line~\ref{alg:pe:i
   \label{eq:point-estimate}
 \end{equation}
 
-\smallskip\noindent\textbf{Point-estimator update.}
-At draft sequence completion, \textsc{UpdatePointEstimator} (lines~\ref{alg:pe:ratios}--\ref{alg:pe:condition}) uses measured stage durations (\(p\)) to update the estimator.
-It divides each duration \(p(k)\) by the previous \(\gamma\) to put it on the base-duration scale.
-It then incorporates the result into the key's cumulative average \(\hat b(k)\), which also reflects the key's earlier processing times.
-If any of these keys ran before, it sets \(\gamma\) to the median ratio of the current durations to the previous base durations for those keys.
-This lets predictions reflect recent runtime changes, while the median limits the effect of isolated stage slowdowns.
+\smallskip\noindent\textbf{Update.}
+At draft completion, \(\mathit{predictor}.\textsc{Update}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:update}) uses the measured durations \(p_i(k)\) of stages executed in capture \(i\) to update the per-key base durations \(\hat b(k)\) and the shared runtime factor \(\gamma\).
+To estimate the runtime factor, it first compares measurements with their keys' previous base durations, recording \(p_i(k)/\hat b(k)\) only for keys with prior timing measurements.
+It then normalizes each measured duration by the previous shared factor \(\gamma\), incorporating \(p_i(k)/\gamma\) into that key's cumulative average \(\hat b(k)\).
+Finally, it sets \(\gamma\) to the median of the recorded ratios; if no ratios exist, \(\gamma\) remains unchanged.
+The cumulative averages retain each key's timing history, while the shared factor reflects recent runtime changes and the median limits the influence of isolated slowdowns.
+The measured draft sequence duration \(C_i\) contributes to the history used for pacing's duration reserve (Section~\ref{sec:pacing}).
