@@ -8,7 +8,7 @@
 \renewcommand{\algorithmicensure}{\textbf{Output:}}
 \algtext*{EndProcedure}\algtext*{EndIf}\algtext*{EndFor}
 \begin{algorithmic}[1]
-\Ensure \texttt{captureAvailable} callback delay ($d_i$)
+\Ensure \texttt{captureAvailable} callback delay ($\mathit{delay}_i$)
 \State $\hat t_{\mathrm{drain}}\gets0,\ \ \hat P^{\mathrm{eff}}\gets0,\ \ \hat C\gets0$ \label{alg:pa:init}
 \State
 \Procedure{DecideDelay()}{}
@@ -21,9 +21,9 @@
   \State $\mathit{deficit}\gets\textsf{ComputeDeficit}(\hat B_i,\hat C,T_i^{\mathrm{tail}})$ \label{alg:pa:deficit}
   \State
   \State \textbf{/* Step 2. Decision */}
-  \State $d_i\gets\lceil\mathit{deficit}/2\rceil$ \label{alg:pa:delay}
-  \State $\hat t_{\mathrm{drain}}\gets\textsf{ExtendBacklog}(\hat t_{\mathrm{drain}},\mathit{now}+d_i,\hat P^{\mathrm{eff}})$ \label{alg:pa:extend}
-  \State \Return $d_i$
+  \State $\mathit{delay}_i\gets\lceil\mathit{deficit}/2\rceil$ \label{alg:pa:delay}
+  \State $\hat t_{\mathrm{drain}}\gets\textsf{ExtendBacklog}(\hat t_{\mathrm{drain}},\mathit{now}+\mathit{delay}_i,\hat P^{\mathrm{eff}})$ \label{alg:pa:extend}
+  \State \Return $\mathit{delay}_i$
 \EndProcedure
 \State
 \Procedure{RebaseBacklog}{$\mathcal K_i$}

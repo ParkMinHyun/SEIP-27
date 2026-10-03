@@ -9,8 +9,7 @@
 \begin{algorithmic}[1]
 \Require User shutter input for capture $i$
 \State $\mathit{predictor}\gets\textsf{SharedPredictor}()$
-\State $\mathit{admission}\gets\textsf{Admission}(\mathit{predictor})$
-\State $\mathit{pacing}\gets\textsf{Pacing}(\mathit{predictor})$
+\State $\mathit{admission}\gets\textsf{Admission}(\mathit{predictor})$, $\mathit{pacing}\gets\textsf{Pacing}(\mathit{predictor})$
 \State
 \Procedure{Capture}{$i$}
   \State $\mathit{timeout}_i\gets\mathit{now}+\textsc{TIMEOUT}$ \label{alg:ov:timeout}
@@ -18,8 +17,8 @@
 \EndProcedure
 \State
 \Upon{OnCaptureAvailable}{$i$}
-  \State $delay_i\gets\mathit{pacing}.\Call{DecideDelay()}{}$ \label{alg:ov:pacing}
-  \State $\textsf{ReleaseCaptureAvailable}(i)$ after $delay_i$ \Comment{enables capture $i+1$}
+  \State $\mathit{delay}_i\gets\mathit{pacing}.\Call{DecideDelay()}{}$ \label{alg:ov:pacing}
+  \State $\textsf{ReleaseCaptureAvailable}(i)$ after $\mathit{delay}_i$ \Comment{enables capture $i+1$}
 \EndUpon
 \State
 \Upon{OnDraftFramesCollected}{$i,\mathit{frames}$}

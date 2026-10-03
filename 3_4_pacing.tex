@@ -1,6 +1,8 @@
 \subsection{Capture-Availability Pacing}
 \label{sec:pacing}
 
+\input{figures/alg_pacing.tex}
+
 Pacing decides whether to deliver \texttt{captureAvailable} immediately or delay it, and thus when the application can accept the next capture.
 It delays the callback when the draft work predicted through the next capture exceeds the remaining timeout budget of the last capture in the backlog.
 These predictions account for stages that admission has disabled.
@@ -16,7 +18,7 @@ The backlog therefore excludes the draft sequences of captures \(i\) and \(i+1\)
 At \(t_i\), \(T^{\mathrm{end}}_i\) is the remaining timeout budget of the capture whose draft sequence is predicted to finish at \(t^{\mathrm{end}}\).
 Pacing computes the callback delay in milliseconds as
 \begin{equation}
-  d_i=\left\lceil
+  \mathit{delay}_i=\left\lceil
     \frac{\max\{0,\hat B_i+2\hat C-T^{\mathrm{end}}_i\}}{2}
   \right\rceil.
   \label{eq:pacing}
@@ -37,7 +39,7 @@ Thereafter, each decision provisionally extends \(t^{\mathrm{end}}\):
 \begin{equation}
   t^{\mathrm{end}}
   \gets
-  \max\{t^{\mathrm{end}},t_i+d_i\}
+  \max\{t^{\mathrm{end}},t_i+\mathit{delay}_i\}
   +\lceil\hat P^{\mathrm{last}}\rceil.
   \label{eq:clock-update}
 \end{equation}

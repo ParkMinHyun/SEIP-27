@@ -11,7 +11,7 @@ In contrast, the component that delivers \texttt{captureAvailable} has a separat
 The draft pipeline therefore provides the pacing decision to that component over the framework's existing event channel.
 
 The integration adds two dedicated threads: a callback-delivery thread and a watchdog-fallback thread.
-Pacing posts the \texttt{captureAvailable} callback to the callback-delivery thread for release after \(d_i\).
+Pacing posts the \texttt{captureAvailable} callback to the callback-delivery thread for release after \(\mathit{delay}_i\).
 When the watchdog expires, the watchdog-fallback thread performs the fallback.
 Resources used by the optional stage are released only after that stage finishes.
 
