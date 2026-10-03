@@ -27,11 +27,12 @@
   \State \textbf{/* Step 3. Reconciliation */}
   \State $\mathcal K^{\mathrm{eff}}\gets[\,k\in\mathcal K_i\mid g(k)\notin\mathcal D\,]$ \label{alg:pa:effective}
   \State $\hat P^{\mathrm{eff}}\gets\mathit{predictor}.\Call{ComputePointEstimate}{\mathcal K^{\mathrm{eff}}}$ \label{alg:pa:point}
+  \State $\hat P\gets\mathit{predictor}.\Call{ComputePointEstimate}{\mathcal K_i}$ \label{alg:pa:configured}
   \State $\hat t_{\mathrm{queue}}\gets\textsf{RebaseBacklog}(\hat P^{\mathrm{eff}})$ \label{alg:pa:rebuild}
   \State
   \State $\textsf{UpdateDraftDurationHistory}(C_i)$ \label{alg:pa:history} \Comment{decay 0.90}
   \State $C_\tau\gets\textsf{SelectDraftReserveDuration}()$ \label{alg:pa:quantile} \Comment{$\tau=n_{\mathrm{eff}}/(n_{\mathrm{eff}}+1)$}
-  \State $\hat C\gets\hat P^{\mathrm{eff}}+\max\{0,\,C_\tau-\hat P(\mathcal K_i)\}$ \label{alg:pa:reserve}
+  \State $\hat C\gets\hat P^{\mathrm{eff}}+\max\{0,\,C_\tau-\hat P\}$ \label{alg:pa:reserve}
 \EndProcedure
 \end{algorithmic}
 \end{algorithm}
