@@ -1,42 +1,61 @@
 \subsection{Capture-Availability Pacing}
 \label{sec:pacing}
 
-\input{figures/alg_pacing.tex}
+Pacing decides whether to deliver \texttt{captureAvailable} immediately or delay it, and thus when the application can accept the next capture.
+It delays the callback when the draft work predicted through the next capture exceeds the remaining timeout budget of the last capture in the backlog.
+These predictions account for stages that admission has disabled.
 
-\emph{Capture-Availability Pacing} decides whether to deliver \texttt{captureAvailable} immediately or delay it, controlling when the application can accept the next capture.
-Algorithm~\ref{alg:pacing} returns the callback delay \(\mathit{delay}_i\) based on projected draft work and the remaining timeout budget, then updates its estimates at draft completion.
-
-\smallskip\noindent\textbf{Projection.}
-For capture \(i\), pacing decides at \(\mathit{now}\), before its draft sequence enters the queue; delivering the callback enables capture \(i+1\).
-Pacing maintains \(\hat t_{\mathrm{queue}}\), the predicted completion time of outstanding draft work, and computes the remaining backlog \(\hat B_i\) as the nonnegative difference between this timestamp and \(\mathit{now}\) (line~\ref{alg:pa:backlog}).
-The retained deadline \(\mathit{timeout}_{\mathrm{queue}}\) belongs to the newest queued capture; subtracting \(\mathit{now}\) gives its remaining timeout budget \(T_i^{\mathrm{queue}}\) (line~\ref{alg:pa:budget}).
-Before any capture is queued, pacing uses a full Capture Timeout window.
-Because this backlog excludes the draft sequences of captures \(i\) and \(i+1\), pacing reserves a duration \(\hat C\) for each, yielding the projected workload \(\hat B_i+2\hat C\) (line~\ref{alg:pa:deficit}).
-
-\smallskip\noindent\textbf{Decision.}
-Pacing delays the callback when the projected workload exceeds \(T_i^{\mathrm{queue}}\).
-At line~\ref{alg:pa:delay}, pacing computes the delay in milliseconds as
+\smallskip\noindent\textbf{Delay rule.}
+For capture \(i\), pacing decides at \(t_i\), when the framework becomes ready to deliver the callback that enables capture \(i+1\); capture \(i\)'s draft sequence enters the queue only after this decision.
+Pacing maintains \(t^{\mathrm{end}}\), the predicted queue-drain time, and estimates the backlog at \(t_i\) as
+\begin{equation}
+  \hat B_i=\max\{0,t^{\mathrm{end}}-t_i\}.
+  \label{eq:backlog}
+\end{equation}
+The backlog therefore excludes the draft sequences of captures \(i\) and \(i+1\), and pacing reserves a duration \(\hat C\) for each.
+At \(t_i\), \(T^{\mathrm{end}}_i\) is the remaining timeout budget of the capture whose draft sequence is predicted to finish at \(t^{\mathrm{end}}\).
+Pacing computes the callback delay in milliseconds as
 \begin{equation}
   \mathit{delay}_i=\left\lceil
-    \frac{\max\{0,\hat B_i+2\hat C-T_i^{\mathrm{queue}}\}}{2}
+    \frac{\max\{0,\hat B_i+2\hat C-T^{\mathrm{end}}_i\}}{2}
   \right\rceil.
   \label{eq:pacing}
 \end{equation}
-This half-deficit rule is a coordination heuristic that shares the response to deadline pressure with admission while limiting callback delay.
-\textsf{ExtendBacklog} then accounts for capture \(i\)'s provisional work using \(\hat P^{\mathrm{eff}}\), the latest point estimate with disabled groups excluded (line~\ref{alg:pa:extend}).
-It advances \(\hat t_{\mathrm{queue}}\) from the later of its current value and the delayed callback time by this estimated duration.
+The deficit \(\hat B_i+2\hat C-T^{\mathrm{end}}_i\) is positive when the draft work predicted through capture \(i+1\) exceeds this budget.
+Pacing converts only half of the positive deficit into callback delay, sharing the response to deadline pressure with admission rather than absorbing the entire deficit as user-perceived delay.
+This sizing rule is a coordination heuristic, not an optimality claim.
 
-\smallskip\noindent\textbf{Reconciliation.}
-At draft completion, pacing receives the configured sequence \(\mathcal K_i\), the measured duration \(C_i\), and admission's updated set of disabled groups \(\mathcal D\).
-It excludes stages whose groups are in \(\mathcal D\) to form \(\mathcal K^{\mathrm{eff}}\), then obtains its point estimate \(\hat P^{\mathrm{eff}}\) from the updated shared predictor (lines~\ref{alg:pa:effective}--\ref{alg:pa:point}).
-To correct accumulated error in these provisional extensions, \textsf{RebaseBacklog} recomputes the predicted queue completion time from the current completion time using the updated estimate for remaining work (line~\ref{alg:pa:rebuild}).
+\smallskip\noindent\textbf{Backlog accounting.}
+Because queued draft sequences differ in their stages and processing cost, queue depth alone does not reflect their processing-time backlog.
+Pacing therefore obtains \(t^{\mathrm{end}}\) by accumulating the point estimates \(\hat P\) of every draft sequence running or waiting in the queue.
+A draft sequence's point estimate depends on which of its stages admission has disabled, and this set is resolved only when the sequence starts.
+Pacing then removes the disabled stages from the configured sequence \(\mathcal K\), obtaining the effective sequence \(\mathcal K^{\mathrm{eff}}\).
+Because pacing decisions for later captures may occur while it is still queued, pacing adds each draft sequence to \(t^{\mathrm{end}}\) at its capture's decision, using a provisional estimate \(\hat P^{\mathrm{last}}\).
+At each draft sequence start, pacing sets \(\hat P^{\mathrm{last}}\) to \(\hat P(\mathcal K^{\mathrm{eff}})\).
+Starting from an empty queue, pacing has no \(\hat P^{\mathrm{last}}\) and therefore releases callbacks without delay until a draft sequence starts.
+Thereafter, each decision provisionally extends \(t^{\mathrm{end}}\):
+\begin{equation}
+  t^{\mathrm{end}}
+  \gets
+  \max\{t^{\mathrm{end}},t_i+\mathit{delay}_i\}
+  +\lceil\hat P^{\mathrm{last}}\rceil.
+  \label{eq:clock-update}
+\end{equation}
 
-Pacing also updates \(\hat C\) from measured draft durations to account for variation beyond the point estimate.
-\textsf{UpdateDraftDurationHistory} adds \(C_i\) to the duration history \(\mathcal C\), decaying existing weights by \(0.90\) (line~\ref{alg:pa:history}).
-\textsf{SelectDraftReserveDuration} returns its weighted \(\tau\)-quantile \(C_\tau\), with \(\tau\) determined from this history by the effective-sample-size rule in Section~\ref{sec:admission} (line~\ref{alg:pa:quantile}); \(C_\tau=0\) when the history is empty.
-Pacing sets \(\hat C\) to \(\hat P^{\mathrm{eff}}\) plus any positive excess of \(C_\tau\) over \(\hat P(\mathcal K_i)\) (line~\ref{alg:pa:reserve}).
-The history may still include measurements collected before groups were disabled.
-Using the full configured sequence as the baseline removes the predicted cost of disabled stages from the historical reserve, while retaining \(\hat P^{\mathrm{eff}}\) as a floor.
+Because \(\hat P^{\mathrm{last}}\) comes from the most recently started draft sequence, these provisional extensions can accumulate error while draft sequences wait in the queue.
+Pacing therefore reconstructs \(t^{\mathrm{end}}\) at each draft sequence completion, starting from the current time and adding updated estimates for the stages recorded with each queued draft sequence.
 
-% Initially and after each queue drain, pacing clears \(\hat t_{\mathrm{queue}}\), \(\hat P^{\mathrm{eff}}\), and \(\hat C\) to zero (line~\ref{alg:pa:init}).
-% Until a draft completion supplies a duration estimate, it releases callbacks without delay.
+\smallskip\noindent\textbf{Admission-aware reserve.}
+The reserve \(\hat C\) covers draft sequences that have not yet started, so pacing derives it from completed draft sequence durations and adjusts it for the stages admission has disabled.
+Let \(C_\tau\) be the recency-weighted \(\tau\)-quantile of completed draft sequence durations.
+The controller computes \(\tau\) from this duration history using the effective-sample-size rule in Section~\ref{sec:admission}; \(C_\tau=0\) when the history is empty.
+At each draft sequence start, pacing recomputes the reserve from that sequence's \(\mathcal K\) and \(\mathcal K^{\mathrm{eff}}\):
+\begin{equation}
+  \hat C = \max\!\left(
+    C_\tau-\left[\hat P(\mathcal K)-\hat P(\mathcal K^{\mathrm{eff}})\right],\;
+    \hat P(\mathcal K^{\mathrm{eff}})
+  \right).
+  \label{eq:reserve}
+\end{equation}
+The bracketed difference subtracts the predicted duration of disabled stages because the historical measurements may include their processing time.
+The outer maximum keeps \(\hat P(\mathcal K^{\mathrm{eff}})\) as a floor.

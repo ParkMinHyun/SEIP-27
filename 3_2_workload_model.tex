@@ -21,6 +21,6 @@ The point estimate \(\hat P(\mathcal K)\) of a workload sequence is the sum of i
 At draft completion, \(\mathit{predictor}.\textsc{Observe}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:update}) records the measured durations \(p_i(k)\) of stages executed in capture \(i\) and uses them to update the per-key base durations \(\hat b(k)\) and the shared runtime factor \(\gamma\).
 To estimate the runtime factor, it first compares measurements with their keys' previous base durations, recording \(p_i(k)/\hat b(k)\) only for keys with prior timing measurements.
 It then normalizes each measured duration by the previous shared factor \(\gamma\), incorporating \(p_i(k)/\gamma\) into that key's cumulative average \(\hat b(k)\).
-Finally, it sets \(\gamma\) to the median of the recorded ratios; if no ratios exist, \(\gamma\) remains unchanged.
+Finally, it sets \(\gamma\) to the median of the currently recorded ratios; if no ratios exist, \(\gamma\) remains unchanged.
 Each cumulative average combines new measurements with the key's timing history, reducing the effect of isolated spikes on its base duration.
-The shared factor tracks recent runtime changes, while the median helps limit the influence of a slowdown confined to a single stage.
+The shared factor tracks recent runtime changes, while the median limits the influence of a slowdown confined to a single stage.
