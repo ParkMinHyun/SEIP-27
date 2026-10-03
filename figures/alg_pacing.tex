@@ -9,28 +9,29 @@
 \algtext*{EndProcedure}\algtext*{EndIf}\algtext*{EndFor}
 \begin{algorithmic}[1]
 \Ensure \texttt{captureAvailable} callback delay ($\mathit{delay}_i$)
-\State $\hat t_{\mathrm{drain}}\gets0,\ \ \hat P^{\mathrm{eff}}\gets0,\ \ \hat C\gets0$ \label{alg:pa:init}
+\State $\langle\hat t_{\mathrm{queue}},\hat P^{\mathrm{eff}},\hat C\rangle\gets\langle0,0,0\rangle$ \label{alg:pa:init} \Comment{cleared when draft queue drains}
 \State
 \Procedure{DecideDelay()}{}
-  \State $t_{\mathrm{tail}}\gets\textsf{DraftQueueTailDeadline}()$ \label{alg:pa:tail}
-  \State \textbf{if} $t_{\mathrm{tail}}$ is none \textbf{then} \Return $0$ \label{alg:pa:empty}
-  \State $T_i^{\mathrm{tail}}\gets t_{\mathrm{tail}}-\mathit{now}$ \label{alg:pa:budget}
-  \State
   \State \textbf{/* Step 1. Projection */}
-  \State $\hat B_i\gets\max\{0,\hat t_{\mathrm{drain}}-\mathit{now}\}$ \label{alg:pa:backlog}
-  \State $\mathit{deficit}\gets\textsf{ComputeDeficit}(\hat B_i,\hat C,T_i^{\mathrm{tail}})$ \label{alg:pa:deficit}
+  \State $\hat B_i\gets\max\{0,\hat t_{\mathrm{queue}}-\mathit{now}\}$ \label{alg:pa:backlog}
+  \State $T_i^{\mathrm{queue}}\gets\mathit{timeout}_{\mathrm{queue}}-\mathit{now}$ \label{alg:pa:budget}
+  \State $\mathit{deficit}\gets\max\{0,\hat B_i+2\hat C-T_i^{\mathrm{queue}}\}$ \label{alg:pa:deficit}
   \State
   \State \textbf{/* Step 2. Decision */}
   \State $\mathit{delay}_i\gets\lceil\mathit{deficit}/2\rceil$ \label{alg:pa:delay}
-  \State $\hat t_{\mathrm{drain}}\gets\textsf{ExtendBacklog}(\hat t_{\mathrm{drain}},\mathit{now}+\mathit{delay}_i,\hat P^{\mathrm{eff}})$ \label{alg:pa:extend}
+  \State $\hat t_{\mathrm{queue}}\gets\textsf{ExtendBacklog}(\hat t_{\mathrm{queue}},\mathit{now}+\mathit{delay}_i,\hat P^{\mathrm{eff}})$ \label{alg:pa:extend}
   \State \Return $\mathit{delay}_i$
 \EndProcedure
 \State
-\Procedure{RebaseBacklog}{$\mathcal K_i$}
+\Procedure{Update}{$\mathcal K_i,C_i,\mathcal D$}
   \State \textbf{/* Step 3. Reconciliation */}
-  \State $\mathcal K^{\mathrm{eff}}\gets\textsf{RemoveDisabledStages}(\mathcal K_i)$ \label{alg:pa:effective}
-  \State $\hat P^{\mathrm{eff}}\gets\Call{ComputePointEstimate}{\mathcal K^{\mathrm{eff}}}$ \label{alg:pa:point}
-  \State $\hat t_{\mathrm{drain}}\gets\mathit{now}+\textsf{EstimateBacklog}(\hat P^{\mathrm{eff}})$ \label{alg:pa:rebuild}
+  \State $\mathcal K^{\mathrm{eff}}\gets[\,k\in\mathcal K_i\mid g(k)\notin\mathcal D\,]$ \label{alg:pa:effective}
+  \State $\hat P^{\mathrm{eff}}\gets\mathit{predictor}.\Call{ComputePointEstimate}{\mathcal K^{\mathrm{eff}}}$ \label{alg:pa:point}
+  \State $\hat t_{\mathrm{queue}}\gets\textsf{RebaseBacklog}(\hat P^{\mathrm{eff}})$ \label{alg:pa:rebuild}
+  \State
+  \State $\textsf{UpdateDraftDurationHistory}(C_i)$ \label{alg:pa:history} \Comment{decay 0.90}
+  \State $C_\tau\gets\textsf{SelectDraftReserveDuration}()$ \label{alg:pa:quantile} \Comment{$\tau=n_{\mathrm{eff}}/(n_{\mathrm{eff}}+1)$}
+  \State $\hat C\gets\hat P^{\mathrm{eff}}+\max\{0,\,C_\tau-\hat P(\mathcal K_i)\}$ \label{alg:pa:reserve}
 \EndProcedure
 \end{algorithmic}
 \end{algorithm}
