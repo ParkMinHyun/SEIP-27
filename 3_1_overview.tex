@@ -23,9 +23,10 @@ The original workflow excludes optional stages from \(\mathcal K_i\) at overheat
 Before each optional stage \(k_j\), admission compares the estimated duration of the remaining sequence \(\mathcal K_{i,j}=(k_j,\ldots,k_m)\) with the remaining timeout budget \(T_{i,j}\) (line~\ref{alg:ov:admission}).
 After executing admitted stages, the worker performs mandatory encoding and saving, represented by the final key \(k_m\), to publish the draft image (line~\ref{alg:ov:publish}).
 
-At completion, the measured sequence duration \(C_i\) and stage durations \(p_i(k)\) update the shared predictor (line~\ref{alg:ov:update}).
-Admission and pacing then update their respective states for subsequent decisions (lines~\ref{alg:ov:ad-update}--\ref{alg:ov:pa-update}).
-Pacing accounts for admission decisions when estimating upcoming draft work.
+At completion, \textsc{OnDraftSequenceCompleted} receives \(\mathcal K_i\) with each stage's execution outcome (executed or skipped).
+It also receives the measured draft sequence duration \(C_i\) and the measured durations \(p_i(k)\) of executed stages.
+The stage durations update the shared predictor (line~\ref{alg:ov:update}), after which admission and pacing update their respective states (lines~\ref{alg:ov:ad-update}--\ref{alg:ov:pa-update}).
+Pacing incorporates admission's workload reductions into future workload estimates, avoiding callback delays based on stages already disabled.
 
 \smallskip\noindent\textbf{Control objective.}
 Deadline safety takes precedence: a single Capture Timeout violation blocks the release.

@@ -18,9 +18,8 @@ The point estimate \(\hat P(\mathcal K)\) of a workload sequence is the sum of i
 \end{equation}
 
 \smallskip\noindent\textbf{Update.}
-At draft completion, \(\mathit{predictor}.\textsc{Update}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:update}) uses the measured durations \(p_i(k)\) of stages executed in capture \(i\) to update the per-key base durations \(\hat b(k)\) and the shared runtime factor \(\gamma\).
+At draft completion, \(\mathit{predictor}.\textsc{Observe}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:update}) records the measured durations \(p_i(k)\) of stages executed in capture \(i\) and uses them to update the per-key base durations \(\hat b(k)\) and the shared runtime factor \(\gamma\).
 To estimate the runtime factor, it first compares measurements with their keys' previous base durations, recording \(p_i(k)/\hat b(k)\) only for keys with prior timing measurements.
 It then normalizes each measured duration by the previous shared factor \(\gamma\), incorporating \(p_i(k)/\gamma\) into that key's cumulative average \(\hat b(k)\).
 Finally, it sets \(\gamma\) to the median of the recorded ratios; if no ratios exist, \(\gamma\) remains unchanged.
 The cumulative averages retain each key's timing history, while the shared factor reflects recent runtime changes and the median limits the influence of isolated slowdowns.
-The measured draft sequence duration \(C_i\) contributes to the history used for pacing's duration reserve (Section~\ref{sec:pacing}).
