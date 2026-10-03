@@ -1,0 +1,36 @@
+% Algorithm 3: Capture-Availability Pacing.
+% Use $...$ inside this float; \(...\) breaks in \Procedure/\Function arguments.
+\begin{algorithm}[t]
+\caption{Capture-Availability Pacing}
+\label{alg:pacing}
+\footnotesize
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+\algtext*{EndProcedure}\algtext*{EndIf}\algtext*{EndFor}
+\begin{algorithmic}[1]
+\Ensure \texttt{captureAvailable} callback delay ($d_i$)
+\State $\hat t_{\mathrm{drain}}\gets0,\ \ \hat P^{\mathrm{eff}}\gets0,\ \ \hat C\gets0$ \label{alg:pa:init}
+\State
+\Procedure{DecideDelay()}{}
+  \State $t_{\mathrm{tail}}\gets\textsf{DraftQueueTailDeadline}()$ \label{alg:pa:tail}
+  \State \textbf{if} $t_{\mathrm{tail}}$ is none \textbf{then} \Return $0$ \label{alg:pa:empty}
+  \State $T_i^{\mathrm{tail}}\gets t_{\mathrm{tail}}-\mathit{now}$ \label{alg:pa:budget}
+  \State
+  \State \textbf{/* Step 1. Projection */}
+  \State $\hat B_i\gets\max\{0,\hat t_{\mathrm{drain}}-\mathit{now}\}$ \label{alg:pa:backlog}
+  \State $\mathit{deficit}\gets\textsf{ComputeDeficit}(\hat B_i,\hat C,T_i^{\mathrm{tail}})$ \label{alg:pa:deficit}
+  \State
+  \State \textbf{/* Step 2. Decision */}
+  \State $d_i\gets\lceil\mathit{deficit}/2\rceil$ \label{alg:pa:delay}
+  \State $\hat t_{\mathrm{drain}}\gets\textsf{ExtendBacklog}(\hat t_{\mathrm{drain}},\mathit{now}+d_i,\hat P^{\mathrm{eff}})$ \label{alg:pa:extend}
+  \State \Return $d_i$
+\EndProcedure
+\State
+\Procedure{RebaseBacklog}{$\mathcal K_i$}
+  \State \textbf{/* Step 3. Reconciliation */}
+  \State $\mathcal K^{\mathrm{eff}}\gets\textsf{RemoveDisabledStages}(\mathcal K_i)$ \label{alg:pa:effective}
+  \State $\hat P^{\mathrm{eff}}\gets\Call{ComputePointEstimate}{\mathcal K^{\mathrm{eff}}}$ \label{alg:pa:point}
+  \State $\hat t_{\mathrm{drain}}\gets\mathit{now}+\textsf{EstimateBacklog}(\hat P^{\mathrm{eff}})$ \label{alg:pa:rebuild}
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
