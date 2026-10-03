@@ -8,19 +8,15 @@ These works target final-image quality, whereas we decide when lightweight multi
 \smallskip\noindent\textbf{Workload control.}
 Our admission module relates to work that adapts per-input computation at run time under latency, resource, or thermal constraints.
 Imprecise computation splits a task into mandatory and optional parts and runs the optional part only when time permits~\cite{liu-imprecise-computation,shih-imprecise-siam}, much like our optional stages.
-Anytime algorithms, approximate computing, and adaptive inference likewise trade result quality for time or resources~\cite{zilberstein-anytime,loop-perforation-fse,apnet-rtss,branchynet-icpr,msdnet-iclr,mcdnn-mobisys,nestdnn-mobicom,reducto-sigcomm}.
-ApproxDet and Chanakya select execution configurations according to input content, resource contention, and latency--accuracy objectives~\cite{approxdet-sensys,chanakya-neurips}.
-Recent mobile and embedded systems similarly adapt execution under device constraints: Agile3D selects 3D-detection branches under changing scenes and GPU contention~\cite{agile3d-mobisys}, ARIA coordinates vision inference across heterogeneous mobile processors~\cite{aria-mobisys}, and Phoenix adjusts processor placement and DNN exit depth under thermal throttling~\cite{phoenix-tecs}.
+Anytime algorithms, approximate computing, and adaptive inference likewise trade result quality for time or resources~\cite{zilberstein-anytime,loop-perforation-fse,apnet-rtss,branchynet-icpr,approxdet-sensys}, and Phoenix adapts on-device DNN inference to thermal throttling~\cite{phoenix-tecs}.
 Content adaptation and brownout reduce per-request work under resource pressure~\cite{abdelzaher-content-adaptation,klein-brownout}, while Timecard uses the remaining end-to-end budget to adjust how much processing the current request receives~\cite{timecard-sosp}.
-These systems adapt the amount or configuration of computation performed for the current input.
 In our pipeline, the workload-control lever is optional-stage admission for the current capture.
 
 \smallskip\noindent\textbf{Arrival control.}
-Our pacing module relates to systems that control request admission or release timing to limit queueing delay~\cite{cruz-network-calculus}.
-Networking limits queue growth through active queue management~\cite{red-floyd-jacobson,codel-cacm,bufferbloat-cacm} and pacing~\cite{tcp-pacing-infocom,bbr-queue}, while server systems admit, reject, or shed requests according to load or deadline signals~\cite{seda-sosp,dagor-socc,breakwater-osdi,aurora-load-shedding,deadline-aware-d3}.
+Our pacing module relates to systems that control request admission or release timing to limit queueing delay.
+Network senders pace packets to avoid queue buildup~\cite{tcp-pacing-infocom,bbr-queue}, and server systems admit, reject, or shed requests under overload~\cite{seda-sosp,dagor-socc,breakwater-osdi}.
 Real-time schedulers similarly regulate job releases by stretching task periods or skipping job instances~\cite{buttazzo-elastic-task,koren-skip-over}.
 Preemptive systems can instead interrupt running work to serve short or urgent requests~\cite{shinjuku-nsdi}.
-Across these systems, overload can be controlled by rejecting, shedding, delaying, or preempting work.
 In our pipeline, the arrival-control lever is the release timing of the next capture: an issued capture must be served, and a running stage cannot be preempted.
 
 \smallskip\noindent\textbf{Coordinating workload and arrivals.}
@@ -30,7 +26,7 @@ Control-theoretic self-adaptive software applies the same feedback principle to 
 QoS negotiation similarly reduces service quality to accept requests that might otherwise be rejected~\cite{abdelzaher-qos-negotiation}.
 
 What differs in our capture pipeline is how a deadline miss is handled and how the two controls are coupled.
-Because a single Capture Timeout crashes the application and blocks the release, the controller cannot rely on deadline-miss feedback and must act on predicted draft work.
-The current capture's optional stages also occupy the single draft worker, and the next capture's release timing determines how long that capture waits.
-Our controller therefore coordinates the two controls across consecutive captures: admission selects the current capture's optional stages, and pacing times the next capture's release.
+Because a single Capture Timeout crashes the application and blocks the release, the controller must prevent every miss in advance rather than correct misses through feedback.
+On the single draft worker, optional work that improves the draft image quality consumes the timeout budgets of captures queued behind it.
+Our controller therefore couples stage admission for the current capture with pacing of the next capture's release to manage this deadline pressure across captures.
 To our knowledge, this is the first work to combine per-capture remaining-budget stage admission with next-capture pacing in production camera software under a hard per-capture deadline.
