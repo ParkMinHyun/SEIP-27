@@ -1,14 +1,12 @@
 \subsection{Shared Predictor}
 \label{sec:model}
-Draft processing time varies with stage configuration and runtime conditions (Section~\ref{sec:guard-limit}).
-To account for this variation, the shared predictor in Algorithm~\ref{alg:overview} estimates stage durations online from completed draft sequences.
-Admission uses these estimates for the remaining sequence \(\mathcal K_{i,j}\), while pacing uses them to predict queued and upcoming draft work.
+The \emph{shared predictor} in Algorithm~\ref{alg:overview} provides the stage-duration estimates that both admission and pacing use.
+Because draft processing time varies with stage configuration and runtime conditions (Section~\ref{sec:guard-limit}), the predictor updates these estimates online from completed draft sequences.
+Admission applies them to the remaining sequence \(\mathcal K_{i,j}\), while pacing uses them to predict queued and upcoming draft work.
 
 \smallskip\noindent\textbf{Point estimate.}
-For a workload key \(k\) defined in Section~\ref{sec:objective}, the predictor models the stage's duration as a key-specific base duration \(\hat b(k)\) scaled by a factor \(\gamma\) shared across keys.
-The base duration captures timing differences among stages and configurations, while \(\gamma\) provides a shared adjustment for changes in runtime conditions.
-Initially, every base duration is zero and \(\gamma\) is one.
-The point estimate \(\hat P(\mathcal K)\) of a workload sequence is the sum of its predicted stage durations:
+The point estimate \(\hat P(\mathcal K)\) of a workload sequence (Section~\ref{sec:objective}) is the sum of its predicted stage durations.
+Each predicted stage duration \(\hat p(k)\) is a key-specific base duration \(\hat b(k)\) scaled by a factor \(\gamma\) shared across keys:
 \begin{equation}
   \hat P(\mathcal{K})
   =\sum_{k\in\mathcal{K}}\hat p(k),
@@ -16,11 +14,13 @@ The point estimate \(\hat P(\mathcal K)\) of a workload sequence is the sum of i
   \hat p(k)=\hat b(k)\,\gamma .
   \label{eq:point-estimate}
 \end{equation}
+The base duration captures timing differences among stages and configurations, while \(\gamma\) provides a shared adjustment for changes in runtime conditions.
+Initially, every base duration is zero and \(\gamma\) is one.
 
-\smallskip\noindent\textbf{Update.}
-At draft completion, \(\mathit{predictor}.\textsc{Observe}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:update}) records the measured durations \(p_i(k)\) of stages executed in capture \(i\) and uses them to update the per-key base durations \(\hat b(k)\) and the shared runtime factor \(\gamma\).
+\smallskip\noindent\textbf{Online update.}
+The predictor updates its estimates after each draft sequence so that each base duration reflects its key's timing history, while \(\gamma\) tracks recent runtime changes.
+At draft completion, \(\mathit{predictor}.\textsc{Observe}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:update}) records the measured durations \(p_i(k)\) of stages executed in capture \(i\).
 To estimate the runtime factor, it first compares measurements with their keys' previous base durations, recording \(p_i(k)/\hat b(k)\) only for keys with prior timing measurements.
 It then normalizes each measured duration by the previous shared factor \(\gamma\), incorporating \(p_i(k)/\gamma\) into that key's cumulative average \(\hat b(k)\).
 Finally, it sets \(\gamma\) to the median of the ratios recorded from this completed draft sequence; if this completion yields no ratios, \(\gamma\) remains unchanged.
-Each cumulative average combines new measurements with the key's timing history, reducing the effect of isolated spikes on its base duration.
-The shared factor tracks recent runtime changes, while the median limits the influence of a slowdown confined to a single stage.
+The cumulative average reduces the effect of isolated spikes on a base duration, while the median limits the influence of a slowdown confined to a single stage.

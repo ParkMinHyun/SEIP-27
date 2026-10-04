@@ -29,7 +29,9 @@ The stage durations update the shared predictor (line~\ref{alg:ov:update}), afte
 Pacing uses \(\mathit{enabledGroups}\) (Section~\ref{sec:admission}) to update future workload estimates, avoiding callback delays based on stages that admission skips.
 
 \smallskip\noindent\textbf{Control objective.}
-Deadline safety takes precedence: a single Capture Timeout violation blocks the release.
+The control objective is to complete each capture's draft sequence before its Capture Timeout deadline and, within that constraint, to favor capture responsiveness over optional-stage retention.
+Deadline safety comes first because a single Capture Timeout violation blocks the release.
+Responsiveness comes next because added shot-to-shot delay is irreversible, whereas skipping stages lowers draft quality but leaves the final image unaffected.
 Let \(\mu_i\) be the time left before capture \(i\)'s deadline at draft completion, \(\delta_i\) the interval between requests \(i-1\) and \(i\), and \(\pi_i\) the interval between their draft completions.
 With a fixed timeout duration,
 \begin{equation}
@@ -39,4 +41,3 @@ With a fixed timeout duration,
 When \(\pi_i>\delta_i\), deadline margin shrinks.
 Admission can shorten \(\pi_i\) by skipping optional stages; pacing can lengthen \(\delta_{i+1}\) by delaying the next capture opportunity.
 Admission cannot recover time already spent waiting, while pacing cannot change work in progress.
-Within the deadline constraint, responsiveness takes priority over optional-stage retention: added shot-to-shot delay is irreversible, whereas skipping stages lowers draft quality but leaves the final image unaffected.

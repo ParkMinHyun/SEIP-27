@@ -1,8 +1,9 @@
 \subsection{Remaining-Sequence Admission}
 \label{sec:admission}
 
-A capture's remaining timeout budget decreases while it waits for the draft worker and executes earlier stages.
-\emph{Remaining-Sequence Admission} therefore runs immediately before each optional stage and compares the estimated duration of the entire remaining sequence with this budget.
+\emph{Admission} decides whether to execute or skip each optional stage, running it only when the draft sequence can still finish before its capture's Capture Timeout deadline.
+Because a capture's remaining timeout budget decreases while it waits for the draft worker and executes earlier stages, admission makes this decision immediately before each optional stage.
+It compares this budget with the estimated duration of the entire remaining sequence, including mandatory encoding and saving.
 
 \smallskip\noindent\textbf{Admission rule.}
 The point estimate \(\hat P(\mathcal K_{i,j})\) may underestimate the time needed to finish the remaining sequence.
