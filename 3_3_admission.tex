@@ -5,10 +5,9 @@ A capture's remaining timeout budget decreases while it waits for the draft work
 \emph{Remaining-Sequence Admission} therefore runs immediately before each optional stage and compares the estimated duration of the entire remaining sequence with this budget.
 
 \smallskip\noindent\textbf{Admission rule.}
-The controller tracks \(M\) and \(S\) as separate admission groups.
-At admission point \(j\), let \(T_{i,j}\) be capture \(i\)'s remaining timeout budget, the time left until its Capture Timeout deadline.
-Let \(U(\mathcal K_{i,j})\) denote an empirical upper estimate of its remaining processing time.
-An optional stage in an enabled group is admitted when
+The point estimate \(\hat P(\mathcal K_{i,j})\) may underestimate the time needed to finish the remaining sequence.
+The controller therefore uses an empirical upper estimate \(U(\mathcal K_{i,j})\) of the remaining processing time for the budget comparison.
+\(\mathit{admission}.\textsc{DecideExecution}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:admission}) admits an optional stage \(k_j\) when
 \begin{equation}
   U(\mathcal{K}_{i,j})\leq T_{i,j}
   \quad\text{or}\quad
@@ -16,13 +15,17 @@ An optional stage in an enabled group is admitted when
   \label{eq:admission}
 \end{equation}
 When \(\hat P(\mathcal K_{i,j})=0\), the predictor has no prior timing measurement for any remaining stage, so the controller admits the optional stage to collect initial measurements.
-The controller assumes that each configuration can complete an isolated first capture within the Capture Timeout; a violation blocks release (Section~\ref{sec:release-process}).
+The controller assumes that each configuration can complete an isolated first capture within the Capture Timeout; a violation blocks release.
 
-Once an \(M\) or \(S\) stage is rejected, the controller disables that group until the queue drains: it skips the group's stages and removes them from subsequent remaining sequences.
-Keeping a group disabled until the drain prevents its processing from appearing and disappearing across consecutive draft images.
+The controller treats \(M\) and \(S\) as separate admission groups.
+Once an \(M\) or \(S\) stage is rejected, the controller removes its group from \(\mathit{enabledGroups}\), the set of groups whose optional stages may still be admitted.
+Until the queue drains, it skips that group's optional stages and omits them from the remaining sequences \(\mathcal K_{i,j}\) of later decisions.
+This prevents the group's visual effects from appearing and disappearing across consecutive draft images.
+When the queue drains, both groups are enabled again.
 
 \smallskip\noindent\textbf{Residual-calibrated upper estimate.}
-At draft sequence completion, the controller forms a measured sequence \(\mathcal K\) from the stages with recorded execution times \(p(k)\) in each remaining sequence \(\mathcal K_{i,j}\).
+At draft sequence completion, the controller calibrates \(U\) from observed stage overruns relative to their predictions.
+It forms a measured sequence \(\mathcal K\) from the stages with recorded execution times \(p(k)\) in each remaining sequence \(\mathcal K_{i,j}\).
 If \(\mathcal K\) contains a stage with a prior timing measurement, the controller computes the residual factor using the predictions \(\hat p(k)\) retained before execution:
 \begin{equation}
   \phi(\mathcal{K})
@@ -31,7 +34,7 @@ If \(\mathcal K\) contains a stage with a prior timing measurement, the controll
   \label{eq:residual-factor}
 \end{equation}
 The per-key maximum preserves each stage's overrun even when another stage finishes faster than predicted, ensuring \(\phi(\mathcal{K})\geq1\).
-Normalizing by the predicted duration makes the factor comparable across sequences.
+Normalizing by the predicted duration makes the resulting factor comparable across remaining sequences.
 
 When a completion yields factors, the controller multiplies the existing weights in all sequence histories and the cross-sequence pool by \(0.90\).
 It then inserts one factor per distinct measured sequence into the corresponding history and the pool, each with unit weight.
