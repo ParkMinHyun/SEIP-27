@@ -9,7 +9,9 @@
 \begin{algorithmic}[1]
 \Require User shutter input for capture $i$
 \State $\mathit{predictor}\gets\textsf{SharedPredictor}()$
-\State $\mathit{admission}\gets\textsf{Admission}(\mathit{predictor})$, $\mathit{pacing}\gets\textsf{Pacing}(\mathit{predictor})$
+\State $\mathit{enabledGroups}\gets\{M,S\}$ \Comment{reset when the draft queue drains}
+\State $\mathit{admission}\gets\textsf{Admission}(\mathit{predictor},\mathit{enabledGroups})$
+\State $\mathit{pacing}\gets\textsf{Pacing}(\mathit{predictor},\mathit{enabledGroups})$
 \State
 \Procedure{Capture}{$i$}
   \State $\mathit{timeout}_i\gets\mathit{now}+\textsc{TIMEOUT}$ \label{alg:ov:timeout} \Comment{retained per capture}
@@ -38,9 +40,9 @@
 \EndUpon
 \State
 \Upon{OnDraftSequenceCompleted}{$\mathcal K_i,C_i,p_i$}
-  \State $\mathit{predictor}.\Call{Observe}{\mathcal K_i,p_i}$ \label{alg:ov:update}
-  \State $\mathit{admission}.\Call{Update}{\mathcal K_i,p_i}$ \label{alg:ov:ad-update}
-  \State $\mathit{pacing}.\Call{Update}{\mathcal K_i,C_i,\mathit{admission}.\mathit{enabledGroups}}$ \label{alg:ov:pa-update}
+  \State $\mathit{predictor}.\Call{ObserveDuration}{\mathcal K_i,C_i,p_i}$ \label{alg:ov:update}
+  \State $\mathit{admission}.\Call{UpdateResidualHistories}{\mathcal K_i,p_i}$ \label{alg:ov:ad-residual}
+  \State $\mathit{pacing}.\Call{RebaseBacklog}{\mathcal K_i}$ \label{alg:ov:pa-rebase}
 \EndUpon
 \end{algorithmic}
 \end{algorithm}

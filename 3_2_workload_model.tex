@@ -19,7 +19,7 @@ Initially, every base duration is zero and \(\gamma\) is one.
 
 \smallskip\noindent\textbf{Online update.}
 The predictor updates its estimates after each draft sequence so that each base duration reflects its key's timing history, while \(\gamma\) tracks recent runtime changes.
-At draft completion, \(\mathit{predictor}.\textsc{Observe}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:update}) records the measured durations \(p_i(k)\) of stages executed in capture \(i\).
+At draft completion, \(\mathit{predictor}.\textsc{ObserveDuration}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:update}) records the measured durations \(p_i(k)\) of stages executed in capture \(i\).
 To estimate the runtime factor, it first compares measurements with their keys' previous base durations, recording \(p_i(k)/\hat b(k)\) only for keys with prior timing measurements.
 It then normalizes each measured duration by the previous shared factor \(\gamma\), incorporating \(p_i(k)/\gamma\) into that key's cumulative average \(\hat b(k)\).
 Finally, it sets \(\gamma\) to the median of the ratios recorded from this completed draft sequence; if this completion yields no ratios, \(\gamma\) remains unchanged.

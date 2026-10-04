@@ -25,8 +25,8 @@ This prevents the group's visual effects from appearing and disappearing across 
 When the queue drains, both groups are enabled again.
 
 \smallskip\noindent\textbf{Residual-calibrated upper estimate.}
-At draft sequence completion, the controller calibrates \(U\) from observed stage overruns relative to their predictions.
-It forms a measured sequence \(\mathcal K\) from the stages with recorded execution times \(p(k)\) in each remaining sequence \(\mathcal K_{i,j}\).
+At draft sequence completion, \(\mathit{admission}.\textsc{UpdateResidualHistories}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:ad-residual}) records observed stage overruns relative to their predictions, which calibrate \(U\) in later decisions.
+It forms a measured sequence \(\mathcal K\) from the stages with execution times \(p(k)\) in each remaining sequence \(\mathcal K_{i,j}\).
 If \(\mathcal K\) contains a stage with a prior timing measurement, the controller computes the residual factor using the predictions \(\hat p(k)\) retained before execution:
 \begin{equation}
   \phi(\mathcal{K})
