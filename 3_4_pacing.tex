@@ -16,7 +16,7 @@ Pacing maintains \(\hat t_{\mathrm{drain}}\), the predicted time at which all dr
 
 The backlog \(\hat B_i\) does not yet include capture \(i\)'s draft work or that of capture \(i+1\), which the current callback enables.
 Pacing therefore reserves a duration \(\hat R\) for each.
-Let \(\mathcal K^{\mathrm{enabled}}\) denote the configured sequence \(\mathcal K\) after applying the current \(\mathit{enabledGroups}\).
+Let \(\mathcal K^{\mathrm{adm}}\) denote the configured sequence \(\mathcal K\) after applying the current \(\mathit{enabledGroups}\).
 Pacing computes the sequence reserve from the latest predictor state as
 \begin{equation}
   \hat R
@@ -24,7 +24,7 @@ Pacing computes the sequence reserve from the latest predictor state as
   \max\!\left(C_\tau,\hat P(\mathcal K)\right)
   -
   \left[
-    \hat P(\mathcal K)-\hat P(\mathcal K^{\mathrm{enabled}})
+    \hat P(\mathcal K)-\hat P(\mathcal K^{\mathrm{adm}})
   \right],
   \label{eq:reserve}
 \end{equation}
@@ -65,11 +65,11 @@ Pacing records the stages represented by the extension so that their predicted c
 \smallskip\noindent\textbf{Backlog rebase.}
 Pacing rebases the backlog at each draft-sequence completion because provisional extensions use earlier predictions that can become stale as new durations are observed.
 After the shared predictor and admission update their states, \(\mathit{pacing}.\textsc{RebaseBacklog}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:pa-rebase}) refreshes the estimate used for future extensions.
-It forms \(\mathcal K^{\mathrm{enabled}}\) from the completed capture's configured sequence \(\mathcal K_i\) under the current \(\mathit{enabledGroups}\) and updates
+It forms \(\mathcal K^{\mathrm{adm}}\) from the completed capture's configured sequence \(\mathcal K_i\) under the current \(\mathit{enabledGroups}\) and updates
 \[
   \hat P^{\mathrm{last}}
   =
-  \hat P(\mathcal K^{\mathrm{enabled}}).
+  \hat P(\mathcal K^{\mathrm{adm}}).
 \]
 Pacing then rebuilds \(\hat t_{\mathrm{drain}}\) from \(\mathit{now}\) by re-estimating the stages recorded for captures whose pacing decisions have occurred but whose draft sequences have not yet started.
 Re-estimating the recorded stages preserves the workload represented by each provisional entry; rebase updates its predicted cost rather than retroactively changing which stages it represents.
