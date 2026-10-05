@@ -42,7 +42,7 @@ Pacing computes the sequence reserve from the latest timing state as
   \label{eq:reserve}
 \end{equation}
 where \(C_\tau\) is the recency-weighted \(\tau\)-quantile of completed draft-sequence durations.
-The controller computes \(\tau\) from this duration history using the effective-sample-size rule in Section~\ref{sec:admission}.
+The controller selects \(\tau\) from this duration history using the same ESS-based quantile rule as for the residual factors in Section~\ref{sec:admission}.
 Because \(C_\tau\) can still reflect sequences measured before optional work was disabled, the subtraction removes the predicted cost of such disabled work.
 This adjustment removes only the modeled cost of disabled work while retaining historical headroom above the configured-sequence point estimate.
 

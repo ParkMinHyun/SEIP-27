@@ -5,7 +5,7 @@ Because draft processing time varies with stage configuration and runtime condit
 Admission applies them to the remaining sequence \(\mathcal K_{i,j}\), while pacing uses them to predict queued and upcoming draft work.
 
 \smallskip\noindent\textbf{Point estimate.}
-The point estimate \(\hat P(\mathcal K)\) of a workload sequence (Section~\ref{sec:objective}) is the sum of its predicted stage durations.
+The point estimate \(\hat P(\mathcal K)\) of a workload sequence is the sum of its predicted stage durations.
 Each predicted stage duration \(\hat p(k)\) is a key-specific base duration \(\hat b(k)\) scaled by a factor \(\gamma\) shared across keys:
 \begin{equation}
   \hat P(\mathcal{K})
