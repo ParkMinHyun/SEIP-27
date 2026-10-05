@@ -25,8 +25,8 @@ Feedback-control systems regulate incoming load through request admission and ad
 Control-theoretic self-adaptive software applies the same feedback principle to software parameters~\cite{filieri-selfadaptive-icse,shevtsov-control-tse}.
 QoS negotiation similarly reduces service quality to accept requests that might otherwise be rejected~\cite{abdelzaher-qos-negotiation}.
 
-What differs in our capture pipeline is how a deadline miss is handled and how the two controls are coupled.
-Because a single Capture Timeout crashes the application and blocks the release, the controller must prevent every miss in advance rather than correct misses through feedback.
-On the single draft worker, optional work that improves the draft image quality consumes the timeout budgets of captures queued behind it.
-Our controller therefore couples stage admission for the current capture with pacing of the next capture's release to manage this deadline pressure across captures.
+What differs in our capture pipeline is how the two controls are coupled under per-capture deadlines.
+A single Capture Timeout crashes the application and blocks the release, so deadline violations are not an acceptable operating regime.
+On the single draft worker, optional work admitted for one capture consumes the timeout budgets of captures queued behind it.
+Our controller therefore couples remaining-sequence admission for the current capture with pacing of the next capture's release to manage this deadline pressure across captures.
 To our knowledge, this is the first work to combine per-capture remaining-budget stage admission with next-capture pacing in production camera software under a hard per-capture deadline.

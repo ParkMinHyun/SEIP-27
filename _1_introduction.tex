@@ -29,7 +29,7 @@ These two levers correspond to workload control~\cite{approxdet-sensys,timecard-
 These controls must be coordinated because the optional work retained in the draft sequence affects how much delay is needed for the next capture.
 
 We therefore present the Budget-Aware Draft Controller.
-A major challenge is deciding how much time to reserve for remaining draft work without deadline-miss feedback: too little risks a Capture Timeout, whereas too much needlessly skips optional stages or delays the next capture.
+A major challenge is deciding how much time to reserve for draft workload under shrinking per-capture budgets: too little risks a Capture Timeout, whereas too much needlessly suppressess optional processing or prolongs shot-to-shot intervals, sacrificing draft image quality or capture responsiveness.
 \emph{Remaining-Sequence Admission} admits an optional stage when the capture's remaining timeout budget covers the estimated duration of the entire remaining draft sequence together with a safety margin calibrated from recent stage overruns.
 \emph{Capture-Availability Pacing} delays the next capture when the draft work predicted through that capture exceeds the remaining timeout budget.
 
