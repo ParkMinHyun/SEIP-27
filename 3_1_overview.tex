@@ -16,7 +16,7 @@ Given a shutter request for capture \(i\), \textsc{Capture} records its deadline
 When the \texttt{captureAvailable} callback is ready for delivery, the original workflow notifies the application immediately (\(\mathit{delay}_i=0\)).
 At this same decision point, pacing computes \(\mathit{delay}_i\) from the predicted draft backlog and remaining timeout budget (line~\ref{alg:ov:pacing}).
 The callback is delivered after this delay, exposing the next capture opportunity, \(i+1\), to the application.
-Once draft frames are collected, a draft sequence is created and enqueued for the single draft worker, which processes sequences in FIFO order.
+    Once draft frames are collected, a draft sequence is created and enqueued for the single draft worker, which processes sequences in FIFO order.
 
 At sequence start, \textsf{ConfigureStages} produces the ordered workload sequence \(\mathcal K_i=(k_1,\ldots,k_m)\) (line~\ref{alg:ov:configure}), where each key identifies a stage and its configuration.
 The original workflow excludes optional stages from \(\mathcal K_i\) at overheat level~4 or higher; the controller can replace this fixed cutoff with runtime admission.
