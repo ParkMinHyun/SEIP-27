@@ -10,16 +10,16 @@ The Captures column reports the percentage of requested captures completed on ti
 The \(M\) and \(S\) columns use the same denominator and additionally require the corresponding stage to execute.
 
 \smallskip\noindent\textbf{Single-component control.}
-Only \emph{Full} completed all requested captures on time in every cell.
+Only \emph{Full} completed all requested captures on time in all three evaluated Lv4 cells.
 \emph{No control} completed \mbox{24.3--42.3\%} of requested captures, while \emph{Pacing only} completed \mbox{28.1--61.4\%}.
 \emph{Admission only} completed all requested captures in the S26 Ultra 12MP cell, but 87.3\% and 90.7\% elsewhere.
 
 \smallskip\noindent\textbf{Limits of admission alone.}
-Admission alone did not achieve both full completion and high optional-stage execution in the same cell.
+Admission alone achieved full completion in one cell, but skipped most optional-stage opportunities there.
 In the S26 Ultra 12MP cell, it completed all requested captures on time, but \(M\) and \(S\) executed on only 29.3\% and 33.7\%, close to the 29.0\% under \emph{No control}.
 In the S26 12MP cell, it executed \(M\) and \(S\) more often, on 44.3\% and 51.3\%, but completed only 90.7\% on time.
 
 \smallskip\noindent\textbf{Coordinated control.}
 Compared with \emph{Admission only}, \emph{Full} completed every requested capture on time in all three cells while executing both \(M\) and \(S\) more often in every cell.
-In the S26 Ultra 12MP cell, where both completed every capture, pacing shortened queueing waits and raised the median remaining budget at \(M\)'s admission decisions 1.7-fold.
-\emph{Full} therefore achieved both on-time completion and higher optional-stage execution in these conditions.
+Across the three cells, this broader retention came with a responsiveness cost: \emph{Full} activated pacing on 36.7--53.1\% of eligible transitions, with a median positive applied delay of 297--437~ms, equivalent to 37--45\% of the shot-to-shot delay observed when parallel capture was disabled.
+Thus, coordinated control combined on-time completion with higher optional-stage execution than admission alone, while retaining most of the responsiveness benefit of parallel capture.

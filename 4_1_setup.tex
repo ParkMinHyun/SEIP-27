@@ -3,21 +3,24 @@
 
 \input{tables/tab_setup.tex}
 
-Table~\ref{tab:setup} summarizes the two experimental platforms and their common run conditions.
+\smallskip\noindent\textbf{Platforms and control configurations.}
 The draft sequence's lightweight multi-frame composition targets Portrait mode and requires coordinated support from the HAL and image-processing components.
 We evaluate end-to-end binaries incorporating this support on the Galaxy S26 Ultra and Galaxy S26.
-The evaluation binaries bypass the production static thermal guard on both devices.
+Table~\ref{tab:setup} summarizes these platforms and their common run conditions.
+To expose controller behavior without suppression by the production restrictions, the evaluation binaries bypass the static thermal guard on both devices.
 The Exynos-based Galaxy S26 restricts parallel capture when either \(M\) or \(S\) is enabled; we disable this restriction for evaluation.
 For each experimental condition, all controller configurations use the same production-derived capture implementation and differ only in controller policy.
 Consequently, any skipped optional stage or applied pacing delay originates from the controller configuration rather than either production restriction.
 
+\smallskip\noindent\textbf{Workload conditions.}
 On each device, we evaluate two operating points: the production-default 12MP configuration under normal memory conditions and a 24MP-requested configuration under memory pressure.
 These conditions form the low- and high-load endpoints among the four collected resolution--memory combinations.
 We induce memory pressure by running AnTuTu Benchmark~11.1.4 alongside the camera application.
 The 24MP condition denotes the requested capture mode; at overheat level~5 and above, the production camera stack falls back to 12MP.
-Before each run, we force-stop and relaunch the camera application, resetting the process-local controller state and estimator history.
 
-We do not hold thermal state constant during a run.
+\smallskip\noindent\textbf{Run protocol.}
+Before each run, we force-stop and relaunch the camera application, resetting the process-local controller state and estimator history.
 We reach each target starting level through repeated captures or idle cooling and begin the run when the device reports that level.
 Thermal state then evolves without external intervention for the rest of the run.
 A reproducible ADB loop issues each shutter input as soon as the application receives \texttt{captureAvailable}, saturating the exposed request rate.
+Each run requests up to 30 consecutive captures; a Capture Timeout terminates the run.
