@@ -9,9 +9,8 @@
 \begin{algorithmic}[1]
 \Require User shutter input for capture $i$
 \State $\mathit{predictor}\gets\textsf{SharedPredictor}()$
-\State $\mathit{enabledGroups}\gets\{M,S\}$ \Comment{reset when the draft queue drains}
-\State $\mathit{admission}\gets\textsf{Admission}(\mathit{predictor},\mathit{enabledGroups})$
-\State $\mathit{pacing}\gets\textsf{Pacing}(\mathit{predictor},\mathit{enabledGroups})$
+\State $\mathit{admission}\gets\textsf{Admission}(\mathit{predictor})$
+\State $\mathit{pacing}\gets\textsf{Pacing}(\mathit{predictor})$
 \State
 \Procedure{Capture}{$i$}
   \State $\mathit{timeout}_i\gets\mathit{now}+\textsc{TIMEOUT}$ \label{alg:ov:timeout} \Comment{retained per capture}

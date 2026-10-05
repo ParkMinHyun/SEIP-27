@@ -19,8 +19,8 @@ When \(\hat P(\mathcal K_{i,j})=0\), the predictor has no prior timing measureme
 The controller assumes that each configuration can complete an isolated first capture within the Capture Timeout; a violation blocks release.
 
 The controller treats \(M\) and \(S\) as separate admission groups.
-Once an \(M\) or \(S\) stage is rejected, the controller removes its group from \(\mathit{enabledGroups}\), the set of groups whose optional stages may still be admitted.
-Until the queue drains, it skips that group's optional stages and omits them from the remaining sequences \(\mathcal K_{i,j}\) of later decisions.
+Once an \(M\) or \(S\) stage is rejected, the controller disables optional stages in that group.
+Until the queue drains, the controller skips those stages and excludes them from subsequent estimates of the remaining processing time.
 This prevents the group's visual effects from appearing and disappearing across consecutive draft images.
 When the queue drains, both groups are enabled again.
 

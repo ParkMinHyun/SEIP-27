@@ -26,7 +26,7 @@ After executing admitted stages, the worker performs mandatory encoding and savi
 At completion, \textsc{OnDraftSequenceCompleted} receives \(\mathcal K_i\) with each stage's execution outcome (executed or skipped).
 It also receives the measured draft sequence duration \(C_i\) and the measured durations \(p_i(k)\) of executed stages.
 The measured durations update the shared predictor (line~\ref{alg:ov:update}), after which admission and pacing update their respective states (lines~\ref{alg:ov:ad-residual}--\ref{alg:ov:pa-rebase}).
-Pacing uses \(\mathit{enabledGroups}\) (Section~\ref{sec:admission}) to update future workload estimates, avoiding callback delays based on stages that admission skips.
+Pacing accounts for optional stages disabled by admission (Section~\ref{sec:admission}) in the workload estimates used to determine callback delays.
 
 \smallskip\noindent\textbf{Control objective.}
 The control objective is to complete each capture's draft sequence before its Capture Timeout deadline and, within that constraint, to favor capture responsiveness over optional-stage retention.
