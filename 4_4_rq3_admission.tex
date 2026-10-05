@@ -11,7 +11,7 @@ Because no decision was enforced, every approach is scored on the same decisions
 Our approach balanced unsafe admits against feasible skips in the pooled audit (Table~\ref{tab:rq3_admission_audit}).
 It admitted 97.3\% of feasible decisions, skipping 98 of 3{,}568 (2.7\%), while admitting only 5 of the 178 unsafe decisions (2.8\%).
 The naive approaches that sum the mean or maximum of each remaining stage's last three durations admitted 42 and 14 unsafe decisions, respectively.
-The naive approach using the maximum over all prior captures admitted only 4 unsafe decisions but skipped 224 feasible decisions, 129\% more than our approach.
+The naive approach using the maximum over all prior captures admitted four unsafe decisions but skipped 224 feasible decisions, 2.3 times as many as our approach.
 Our approach was the only evaluated approach with both error rates below 3\% overall.
 
 \smallskip\noindent\textbf{Admission misses.}
@@ -27,11 +27,7 @@ The replay re-applied the safeguard logic to the recorded stage durations, budge
 For M1 and M2, the admitted stage exceeded its watchdog budget, 1{,}460~ms against 1{,}202~ms and 1{,}648~ms against 889~ms, respectively, so fallback would trigger before the stage returned.
 For M3, the \(S\) decision later in the same capture would skip \(S\), reducing the remaining processing time.
 For S1 and S2, the \(M\) decision earlier in the same capture would skip \(M\), leaving more budget when execution reached \(S\).
-With these skips applied to the recorded durations, the remaining sequence fit within the adjusted budget in all three cases.
-The safeguards themselves depend on calibrated estimates.
-The watchdog bounds only the admitted stage, so protection against later overruns still depends on subsequent admission decisions.
-Its budget (Equation~\ref{eq:watchdog}) also reserves the calibrated \(U(\mathcal K_{i,m})\) for mandatory processing.
-Thus, the replay supports coverage of these five recorded misses, but does not establish coverage for the naive estimates or recovery under enforced control.
+The replay therefore supports coverage of these five recorded misses, but does not establish end-to-end effectiveness when the safeguards are enforced during execution.
 
 \input{tables/tab_rq3_admission_quality.tex}
 \input{figures/fig_rq3_unsafe_spike_anatomy.tex}
