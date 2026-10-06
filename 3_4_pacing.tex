@@ -76,4 +76,5 @@ Using \(\mathcal K^{\mathrm{adm}}\) for the completed capture, it updates
 \]
 Pacing then rebuilds \(\hat t_{\mathrm{drain}}\) from \(\mathit{now}\) by re-estimating the stages recorded for captures whose pacing decisions have occurred but whose draft sequences have not yet started.
 Re-estimating the recorded stages preserves the workload represented by each provisional entry; rebase updates its predicted cost rather than retroactively changing which stages it represents.
-When the draft queue drains, pacing clears these queue-scoped estimates and decision records while retaining the shared timing history.
+Finally, pacing adds the measured draft sequence duration \(C_i\) to the duration history that determines \(C_\tau\) in Equation~\ref{eq:reserve}.
+When the draft queue drains, pacing clears these queue-scoped estimates and decision records while retaining this duration history and the shared predictor's estimates.

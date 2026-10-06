@@ -24,14 +24,14 @@ Until the queue drains, the controller skips those stages and excludes them from
 This prevents the group's visual effects from appearing and disappearing across consecutive draft images.
 When the queue drains, both groups are enabled again.
 
-\smallskip\noindent\textbf{Residual-calibrated upper estimate.}
-At draft sequence completion, \(\mathit{admission}.\textsc{UpdateResidualHistories}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:ad-residual}) records observed stage overruns relative to their predictions, which calibrate \(U\) in later decisions.
-It forms a measured sequence \(\mathcal K\) from the stages with execution times \(p(k)\) in each remaining sequence \(\mathcal K_{i,j}\).
-If \(\mathcal K\) contains a stage with a prior timing measurement, the controller computes the residual factor using the predictions \(\hat p(k)\) retained before execution:
+\smallskip\noindent\textbf{Upper-estimate calibration.}
+At draft sequence completion, \(\mathit{admission}.\textsc{CalibrateUpperEstimates}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:ad-calibrate}) calibrates the upper estimate \(U\) used in later decisions from observed stage overruns relative to their predictions.
+It forms a measured sequence \(\mathcal K\) from the stages with execution times \(p_i(k)\) in each remaining sequence \(\mathcal K_{i,j}\).
+If \(\mathcal K\) contains a stage with a prior timing measurement, the controller computes the residual factor using the predictions \(\hat p_i(k)\) retained before execution:
 \begin{equation}
   \phi(\mathcal{K})
-  =\frac{\sum_{k\in\mathcal{K}}\max\{\hat p(k),p(k)\}}
-         {\sum_{k\in\mathcal{K}}\hat p(k)}.
+  =\frac{\sum_{k\in\mathcal{K}}\max\{\hat p_i(k),p_i(k)\}}
+         {\sum_{k\in\mathcal{K}}\hat p_i(k)}.
   \label{eq:residual-factor}
 \end{equation}
 The per-key maximum preserves each stage's overrun even when another stage finishes faster than predicted, ensuring \(\phi(\mathcal{K})\geq1\).
@@ -39,9 +39,8 @@ Normalizing by the predicted duration makes the resulting factor comparable acro
 
 When a completion yields factors, the controller multiplies the existing weights in all sequence histories and the cross-sequence pool by \(0.90\).
 It then inserts one factor per distinct measured sequence into the corresponding history and the pool, each with unit weight.
-To calibrate a remaining sequence, it selects the weighted \(\tau\)-quantile from that sequence's history.
-If the history is empty, it uses the pool; if both are empty, it sets \(\phi_\tau(\mathcal K)=1\).
-It determines \(\tau\) from the Kish effective sample size \(n_{\mathrm{eff}}\) of the current weights \(w_l\) in the selected history~\cite{kish-survey-sampling}:
+Finally, it selects the weighted \(\tau\)-quantile of each history and of the pool as their residual factors \(\phi_\tau\).
+It determines \(\tau\) from the Kish effective sample size \(n_{\mathrm{eff}}\) of the current weights \(w_l\) in each history~\cite{kish-survey-sampling}:
 \[
   n_{\mathrm{eff}}
   =\frac{(\sum_l w_l)^2}{\sum_l w_l^2},
@@ -52,7 +51,8 @@ The selector is motivated by the expected CDF position \(n/(n+1)\) of the maximu
 As the effective sample size grows, the selected quantile moves further into the observed upper tail.
 The selector avoids a separately tuned target percentile, while recency weighting reduces the influence of older observations.
 We set the weight decay to 0.90, the knee of the overrun rate against the size of \(U\).
-Applying the selected factor to \(\hat P\) gives the upper estimate
+At each admission decision, the controller uses the factor of the remaining sequence's history, the pool's factor if that history is empty, and \(\phi_\tau(\mathcal K)=1\) if both are empty.
+Applying this factor to \(\hat P\) gives the upper estimate
 \begin{equation}
   U(\mathcal{K})
   =\hat P(\mathcal{K})\,\phi_{\tau}(\mathcal{K}).

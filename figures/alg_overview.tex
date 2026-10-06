@@ -39,9 +39,9 @@
 \EndUpon
 \State
 \Upon{OnDraftSequenceCompleted}{$\mathcal K_i,C_i,p_i$}
-  \State $\mathit{predictor}.\Call{ObserveDuration}{\mathcal K_i,C_i,p_i}$ \label{alg:ov:update}
-  \State $\mathit{admission}.\Call{UpdateResidualHistories}{\mathcal K_i,p_i}$ \label{alg:ov:ad-residual}
-  \State $\mathit{pacing}.\Call{RebaseBacklog}{\mathcal K_i}$ \label{alg:ov:pa-rebase}
+  \State $\mathit{predictor}.\Call{UpdatePointEstimator}{\mathcal K_i,p_i}$ \label{alg:ov:update}
+  \State $\mathit{admission}.\Call{CalibrateUpperEstimates}{\mathcal K_i,p_i}$ \label{alg:ov:ad-calibrate}
+  \State $\mathit{pacing}.\Call{RebaseBacklog}{\mathcal K_i,C_i}$ \label{alg:ov:pa-rebase}
 \EndUpon
 \end{algorithmic}
 \end{algorithm}

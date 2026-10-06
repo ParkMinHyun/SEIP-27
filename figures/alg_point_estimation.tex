@@ -4,27 +4,27 @@
 \footnotesize
 \renewcommand{\algorithmicrequire}{\textbf{Input:}}
 \renewcommand{\algorithmicensure}{\textbf{Output:}}
-\algtext*{EndProcedure}\algtext*{EndIf}\algtext*{EndFor}
+\algtext*{EndFunction}\algtext*{EndProcedure}\algtext*{EndIf}\algtext*{EndFor}
 \begin{algorithmic}[1]
-\Require Workload sequence ($\mathcal K$), measured stage durations ($p$)
+\Require Workload sequence ($\mathcal K$), measured stage durations ($p_i$)
 \Ensure Point estimate ($\hat P$)
 \State $\hat b(k)\gets0\ (\forall k),\quad \gamma\gets1$ \label{alg:pe:init}
 \State
-\Procedure{ComputePointEstimate}{$\mathcal K$}
-  \State $\mathit{total}\gets0$ \label{alg:pe:compute-first}
-  \For{each workload key $k\in\mathcal K$}
-    \State $\hat p(k)\gets\hat b(k)\cdot\gamma$ \label{alg:pe:predict}
-    \State $\mathit{total}\gets\mathit{total}+\hat p(k)$
-  \EndFor
-  \State \Return $\mathit{total}$ \label{alg:pe:compute-last}
-\EndProcedure
+\Function{ComputePointEstimate}{$\mathcal K$}
+  \State \Return $\sum_{k\in\mathcal K}\hat b(k)\cdot\gamma$ \label{alg:pe:compute}
+\EndFunction
 \State
-\Procedure{UpdatePointEstimator}{$\mathcal K_i,p$}
-  \State $\mathit{ratios}\gets[\,p(k)/\hat b(k)\mid k\in\mathcal K_i,\ p(k)>0,\ \hat b(k)>0\,]$ \label{alg:pe:ratios}
-  \For{each workload key $k\in\mathcal K_i$ with $p(k)>0$}
-    \State $\hat b(k)\gets$ cumulative average of $p(k)/\gamma$ \label{alg:pe:base}
+\Procedure{UpdatePointEstimator}{$\mathcal K_i,p_i$}
+  \State $\gamma_{\mathrm{old}}\gets\gamma,\quad \mathit{ratios}\gets\emptyset$ \label{alg:pe:snapshot}
+  \For{each workload key $k\in\mathcal K_i$ with $p_i(k)>0$} \label{alg:pe:loop}
+    \If{$\hat b(k)>0$} \label{alg:pe:observed}
+      \State $\mathit{ratios}\gets\mathit{ratios}\uplus\{p_i(k)/\hat b(k)\}$ \label{alg:pe:ratio}
+    \EndIf
+    \State $\hat b(k)\gets$ cumulative average of $p_i(k)/\gamma_{\mathrm{old}}$ \label{alg:pe:base}
   \EndFor
-  \State \textbf{if} $\mathit{ratios}\neq[\,]$ \textbf{then} $\gamma\gets\operatorname{median}(\mathit{ratios})$ \label{alg:pe:condition}
+  \If{$\mathit{ratios}\neq\emptyset$} \label{alg:pe:condition}
+    \State $\gamma\gets\operatorname{median}(\mathit{ratios})$ \label{alg:pe:gamma}
+  \EndIf
 \EndProcedure
 \end{algorithmic}
 \end{algorithm}

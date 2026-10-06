@@ -1,12 +1,16 @@
 \subsection{Shared Predictor}
 \label{sec:model}
+\input{figures/alg_point_estimation.tex}
 The \emph{shared predictor} in Algorithm~\ref{alg:overview} provides the stage-duration estimates that both admission and pacing use.
 Because draft processing time varies with stage configuration and runtime conditions (Section~\ref{sec:guard-limit}), the predictor updates these estimates online from completed draft sequences.
 Admission applies them to the remaining sequence \(\mathcal K_{i,j}\), while pacing uses them to predict queued and upcoming draft work.
+Algorithm~\ref{alg:point-estimation} shows how the predictor computes and updates these estimates.
 
 \smallskip\noindent\textbf{Point estimate.}
-The point estimate \(\hat P(\mathcal K)\) of a workload sequence is the sum of its predicted stage durations.
-Each predicted stage duration \(\hat p(k)\) is a key-specific base duration \(\hat b(k)\) scaled by a factor \(\gamma\) shared across keys:
+The predictor models each stage duration as a key-specific base duration \(\hat b(k)\) scaled by a factor \(\gamma\) shared across keys.
+The base duration captures timing differences among stages and configurations, while \(\gamma\) provides a shared adjustment for changes in runtime conditions.
+At line~\ref{alg:pe:init}, Algorithm~\ref{alg:point-estimation} initializes every base duration to zero and \(\gamma\) to one.
+For a workload sequence \(\mathcal K\), \textsc{ComputePointEstimate} (line~\ref{alg:pe:compute}) returns the point estimate \(\hat P(\mathcal K)\), the sum of the predicted stage durations \(\hat p(k)\):
 \begin{equation}
   \hat P(\mathcal{K})
   =\sum_{k\in\mathcal{K}}\hat p(k),
@@ -14,15 +18,14 @@ Each predicted stage duration \(\hat p(k)\) is a key-specific base duration \(\h
   \hat p(k)=\hat b(k)\,\gamma .
   \label{eq:point-estimate}
 \end{equation}
-The base duration captures timing differences among stages and configurations, while \(\gamma\) provides a shared adjustment for changes in runtime conditions.
-Initially, every base duration is zero and \(\gamma\) is one.
 
-\smallskip\noindent\textbf{Online update.}
-The predictor updates the key-specific base durations \(\hat b(k)\) and the shared factor \(\gamma\) separately after each draft sequence.
-At draft completion, \(\mathit{predictor}.\textsc{ObserveDuration}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:update}) receives the measured durations \(p_i(k)\) of the stages executed in capture \(i\).
-For each measured key that was observed in an earlier draft sequence, the predictor first computes \(p_i(k)/\hat b(k)\) from the base duration held before this update.
-This ratio is the scale factor that would make that base duration match the current measurement.
-It then divides each measured duration by the value of \(\gamma\) held before this update, so that the base duration does not double-count the runtime variation already represented by \(\gamma\).
-The resulting \(p_i(k)/\gamma\) is incorporated into that key's cumulative average \(\hat b(k)\).
-Finally, it replaces \(\gamma\) with the median of the \(p_i(k)/\hat b(k)\) ratios from the completed draft sequence.
-The cumulative average \(\hat b(k)\) dampens isolated spikes in a key's duration history, and setting \(\gamma\) to the median ratio across measured stages reduces the influence of a deviation confined to one stage.
+\smallskip\noindent\textbf{Online point-estimator update.}
+The online update keeps different histories for the two factors in Equation~\ref{eq:point-estimate}: \(\hat b(k)\) retains information across all past observations of its key, whereas \(\gamma\) is derived only from the latest completed draft sequence.
+\(\mathit{predictor}.\textsc{UpdatePointEstimator}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:update}) performs this update at each draft completion using the measured durations \(p_i(k)\) of the stages executed in capture \(i\).
+At line~\ref{alg:pe:snapshot} of Algorithm~\ref{alg:point-estimation}, it saves the value of \(\gamma\) held before this update as \(\gamma_{\mathrm{old}}\) and starts an empty multiset \(\mathit{ratios}\).
+Then, for each executed key (line~\ref{alg:pe:loop}), it adds \(p_i(k)/\hat b(k)\) to \(\mathit{ratios}\) if the key was observed in an earlier draft sequence (line~\ref{alg:pe:ratio}).
+Because the ratio is computed before line~\ref{alg:pe:base} updates \(\hat b(k)\), it compares the current measurement with the base duration estimated from prior observations.
+At line~\ref{alg:pe:base}, it incorporates \(p_i(k)/\gamma_{\mathrm{old}}\) into that key's cumulative average \(\hat b(k)\).
+Dividing by \(\gamma_{\mathrm{old}}\) keeps the base duration from double-counting the runtime variation already represented by \(\gamma\).
+Finally, if \(\mathit{ratios}\) is nonempty, it replaces \(\gamma\) with its median (line~\ref{alg:pe:gamma}).
+The cumulative average \(\hat b(k)\) dampens isolated spikes in a key's duration history, and when multiple ratios are available, their median limits the influence of a deviation confined to one stage.
