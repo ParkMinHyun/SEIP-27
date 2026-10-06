@@ -14,20 +14,20 @@
 \State
 \Procedure{Capture}{$i$}
   \State $\mathit{timeout}_i\gets\mathit{now}+\textsc{TIMEOUT}$ \label{alg:ov:timeout} \Comment{retained per capture}
-  \State $\textsf{RequestCaptureBurst}(i)$
+  \State $\textsf{RequestCaptureBurst}(i)$ \label{alg:ov:request}
 \EndProcedure
 \State
 \Upon{OnCaptureAvailable}{$i$}
   \State $\mathit{delay}_i\gets\mathit{pacing}.\Call{DecideDelay()}{}$ \label{alg:ov:pacing}
-  \State $\textsf{NotifyCaptureAvailable}(i)$ after $\mathit{delay}_i$ \Comment{enables capture $i+1$}
+  \State $\textsf{NotifyCaptureAvailable}(i)$ after $\mathit{delay}_i$ \Comment{enables capture $i+1$} \label{alg:ov:notify}
 \EndUpon
 \State
 \Upon{OnDraftFramesCollected}{$i,\mathit{frames}$}
-  \State $\mathit{draft}_i\gets\textsf{CreateDraftSequence}(i,\mathit{frames})$
-  \State $\textsf{Enqueue}(\mathit{draft}_i)$
+  \State $\mathit{draft}_i\gets\textsf{CreateDraftSequence}(i,\mathit{frames})$ \label{alg:ov:create}
+  \State $\textsf{Enqueue}(\mathit{draft}_i)$ \label{alg:ov:enqueue}
 \EndUpon
 \State
-\Upon{RunDraftSequence}{$\mathit{draft}_i$} \Comment{single worker, FIFO}
+\Upon{RunDraftSequence}{$\mathit{draft}_i$} \Comment{single worker, FIFO} \label{alg:ov:worker}
   \State $\mathcal K_i\gets\textsf{ConfigureStages}(\mathit{draft}_i)$ \label{alg:ov:configure}
   \For{each optional stage $k_j\in\mathcal K_i$}
     \State $T_{i,j}\gets\mathit{timeout}_i-\mathit{now}$

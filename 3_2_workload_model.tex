@@ -18,9 +18,13 @@ The base duration captures timing differences among stages and configurations, w
 Initially, every base duration is zero and \(\gamma\) is one.
 
 \smallskip\noindent\textbf{Online update.}
-The predictor updates its estimates after each draft sequence so that each base duration reflects its key's timing history, while \(\gamma\) tracks recent runtime changes.
-At draft completion, \(\mathit{predictor}.\textsc{ObserveDuration}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:update}) records the measured durations \(p_i(k)\) of stages executed in capture \(i\).
-To estimate the runtime factor, it first compares measurements with their keys' previous base durations, recording \(p_i(k)/\hat b(k)\) only for keys with prior timing measurements.
-It then normalizes each measured duration by the previous shared factor \(\gamma\), incorporating \(p_i(k)/\gamma\) into that key's cumulative average \(\hat b(k)\).
-Finally, it sets \(\gamma\) to the median of the ratios recorded from this completed draft sequence; if this completion yields no ratios, \(\gamma\) remains unchanged.
-The cumulative average reduces the effect of isolated spikes on a base duration, while the median limits the influence of a slowdown confined to a single stage.
+The predictor updates the key-specific base durations \(\hat b(k)\) and the shared factor \(\gamma\) separately after each draft sequence.
+At draft completion, \(\mathit{predictor}.\textsc{ObserveDuration}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:update}) receives the measured durations \(p_i(k)\) of the stages executed in capture \(i\).
+For each measured key that was observed in an earlier draft sequence, the predictor first computes \(p_i(k)/\hat b(k)\) from the base duration held before this update.
+This ratio is the scale factor that would make that base duration match the current measurement.
+It then divides each measured duration by the value of \(\gamma\) held before this update, so that the base duration does not double-count the runtime variation already represented by \(\gamma\).
+The resulting \(p_i(k)/\gamma\) is incorporated into that key's cumulative average \(\hat b(k)\).
+Finally, it replaces \(\gamma\) with the median of the \(p_i(k)/\hat b(k)\) ratios from the completed draft sequence.
+If no ratio is available, \(\gamma\) remains unchanged.
+The cumulative average dampens isolated spikes in a key's duration history.
+When multiple ratios are available, their median reduces the influence of a deviation confined to one stage.
