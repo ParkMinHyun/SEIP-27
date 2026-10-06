@@ -1,10 +1,10 @@
-\subsection{Shared Predictor}
+\subsection{Shared Duration Predictor}
 \label{sec:model}
-\input{figures/alg_point_estimation.tex}
-The \emph{shared predictor} in Algorithm~\ref{alg:overview} provides the stage-duration estimates that both admission and pacing use.
+\input{figures/alg_shared_predictor.tex}
+The \emph{shared duration predictor} in Algorithm~\ref{alg:overview} provides the stage-duration estimates that both admission and pacing use.
 Because draft processing time varies with stage configuration and runtime conditions (Section~\ref{sec:guard-limit}), the predictor updates these estimates online from completed draft sequences.
 Admission applies them to the remaining sequence \(\mathcal K_{i,j}\), while pacing uses them to predict queued and upcoming draft work.
-Algorithm~\ref{alg:point-estimation} shows how the predictor computes and updates these estimates.
+Algorithm~\ref{alg:shared-predictor} shows how the predictor computes and updates these estimates.
 
 \smallskip\noindent\textbf{Point estimate.}
 The predictor models each stage duration as a key-specific base duration \(\hat b(k)\) scaled by a factor \(\gamma\) shared across keys.
@@ -19,9 +19,9 @@ For a workload sequence \(\mathcal K\), \textsc{ComputePointEstimate} (line~\ref
   \label{eq:point-estimate}
 \end{equation}
 
-\smallskip\noindent\textbf{Online point-estimator update.}
+\smallskip\noindent\textbf{Online predictor update.}
 The online update keeps different histories for the two factors in Equation~\ref{eq:point-estimate}: \(\hat b(k)\) retains information across all past observations of its key, whereas \(\gamma\) is derived only from the latest completed draft sequence.
-\(\mathit{predictor}.\textsc{UpdatePointEstimator}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:update}) performs this update at each draft completion using the measured durations \(p_i(k)\) of the stages executed in capture \(i\).
+\(\mathit{predictor}.\textsc{Update}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:update}) performs this update at each draft completion using the measured durations \(p_i(k)\) of the stages executed in capture \(i\).
 At line~\ref{alg:pe:snapshot} of Algorithm~\ref{alg:point-estimation}, it saves the value of \(\gamma\) held before this update as \(\gamma_{\mathrm{old}}\) and starts an empty multiset \(\mathit{ratios}\).
 Then, for each executed key (line~\ref{alg:pe:loop}), it adds \(p_i(k)/\hat b(k)\) to \(\mathit{ratios}\) if the key was observed in an earlier draft sequence (line~\ref{alg:pe:ratio}).
 Because the ratio is computed before line~\ref{alg:pe:base} updates \(\hat b(k)\), it compares the current measurement with the base duration estimated from prior observations.

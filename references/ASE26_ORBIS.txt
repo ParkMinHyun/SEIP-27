@@ -1,0 +1,968 @@
+     Orbis: Guiding Symbolic Execution Techniques to Maximize
+                  Option-Related Branch Coverage
+                   Minjong Kim                                             Sungjae Hwang                                  Sooyoung Cha∗
+            Sungkyunkwan University                                  Sungkyunkwan University                         Sungkyunkwan University
+            Suwon, Republic of Korea                                 Suwon, Republic of Korea                        Suwon, Republic of Korea
+             minjong.kim@skku.edu                                       sungjaeh@skku.edu                             sooyoung.cha@skku.edu
+
+Abstract                                                                                1    Introduction
+We present Orbis, a complementary approach that guides symbolic                         Symbolic execution [5, 6, 20, 38] is a sophisticated software testing
+execution techniques toward maximizing option-related branch                            method that automatically generates test-cases, achieving high code
+(OB) coverage. Although state-of-the-art symbolic execution tech-                       coverage of the target program and uncovering diverse hidden bugs.
+niques have substantially improved code coverage and bug de-                            To generate such test-cases, this method maps program inputs into
+tection, existing techniques often fail to exercise core program                        symbolic variables and systematically explores each program path,
+functionalities, which are frequently exposed as program options.                       which consists of exercised symbolic branch conditions containing
+To quantify this limitation, we evaluate how effectively current                        these variables. Specifically, symbolic execution follows an iterative
+techniques cover option-related branches and find that they reach                       process that selects, executes, and forks a “state” from the total set of
+only 8.0% of the targeted OBs, which are accessible only through                        states, which are continuously updated during testing. In particular,
+specific options. Orbis overcomes this challenge by systematically                      due to this fork process, which splits a state into two separate states
+guiding symbolic execution to improve OB coverage. For a given                          when both sides of a symbolic branch condition are feasible using
+program, Orbis automatically identifies all defined options and                         the SMT solver [15, 17, 37], symbolic execution faces two notorious
+determines their associated branches by analyzing dynamic execu-                        challenges: the state-explosion problem [1, 3, 10, 22, 43] and the
+tion traces. It then iteratively constructs target option arguments                     high cost of SMT solving [24, 30, 34, 39, 42].
+by stochastically combining identified options according to their                          Although state-of-the-art techniques [8, 10, 22, 39, 41, 42] aim
+estimated potential, directs symbolic execution to explore states                       to address these challenges of symbolic execution and have re-
+influenced by these arguments, and refines their potential while                        markably enhanced its performance, we observed that these recent
+simultaneously reducing SMT-solver invocations using data accu-                         techniques still fail to effectively execute the core functionalities of
+mulated during symbolic execution. Experimental results on 15                           the program. Since a program’s core functionalities are typically
+open-source C programs show that integrating Orbis with four                            implemented as program options, we evaluate how effectively these
+independent state-of-the-art techniques significantly increases OB                      techniques cover branches related to program options. In this work,
+coverage to 323.0%, boosts total branch coverage by 112.1%, and                         we newly define option-related branches (OBs) as branches associ-
+detects five additional unique bugs on average compared to the                          ated with specific options, meaning they can be reached by utilizing
+standalone techniques.                                                                  these options. However, as demonstrated in Section 2, four inde-
+                                                                                        pendent state-of-the-art techniques for symbolic execution—search
+CCS Concepts                                                                            heuristic [22], state-pruning [10], SMT solving cost reduction [42],
+• Software and its engineering → Software testing and debug-                            and external parameter tuning [8]—exhibited unsatisfactory per-
+ging; • Computing methodologies → Machine learning.                                     formance. Despite their advancements, these techniques covered
+                                                                                        only 7.9% of the targeted total OBs across open-source C programs,
+Keywords                                                                                leaving a significant portion of program functionalities untested.
+                                                                                           In this paper, we present Orbis, a new complementary approach
+Symbolic execution, Program-option based testing, Software testing                      for existing symbolic execution techniques that guides their ex-
+ACM Reference Format:                                                                   ploration toward maximizing OB coverage without prior knowl-
+Minjong Kim, Sungjae Hwang, and Sooyoung Cha. 2026. Orbis: Guiding                      edge. By doing so, Orbis improves both total branch coverage and
+Symbolic Execution Techniques to Maximize Option-Related Branch Cover-                  bug-finding capability. First, Orbis automatically extracts useful
+age. In Proceedings of the 41st IEEE/ACM International Conference on Auto-              data (e.g., options, option-related branches) by comparing dynamic
+mated Software Engineering (ASE ’26), October 12–16, 2026, Munich, Germany.             execution traces with and without each option. It then iteratively
+ACM, New York, NY, USA, 13 pages. https://doi.org/10.1145/3832783.3837526               performs three stages: (1) Construct, which builds a target option ar-
+                                                                                        gument by estimating the potential of each option and stochastically
+∗ Corresponding author.
+                                                                                        combining them; (2) Guide, which sets the technique’s initial states
+                                                                                        to steer exploration toward branches influenced by the constructed
+                                                                                        argument; and (3) Update, which refines the argument’s potential
+                                                                                        based on generated test-cases and feeds back more promising ar-
+This work is licensed under a Creative Commons Attribution 4.0 International License.
+ASE ’26, Munich, Germany                                                                guments and states into symbolic execution. In addition, Orbis
+© 2026 Copyright held by the owner/author(s).                                           leverages this updated information to reduce SMT-solver calls, fur-
+ACM ISBN 979-8-4007-2882-2/2026/10                                                      ther enhancing efficiency.
+https://doi.org/10.1145/3832783.3837526
+ASE ’26, October 12–16, 2026, Munich, Germany                                                                            Minjong Kim, Sungjae Hwang, and Sooyoung Cha
+
+
+Algorithm 1 Symbolic Execution                                                              concrete variable to a symbolic variable, and (3) a path condition
+Input: Program (pgm), budget (time), arguments (Arg ), and promising states (SP ).          (Φ) capturing a sequence of exercised symbolic branch conditions.
+Output: Covered branches (B) and test-cases (T )                                                Algorithm 1 details the symbolic execution process. It accepts
+ 1: procedure Execute(pgm, time, Arg, SP )
+ 2:    if SP = ∅ then 𝑆 ← {s0 } else 𝑆 ← SP                  ⊲ s0 = (stmt0 , M0 , 𝑡𝑟𝑢𝑒 )    four inputs: the target program (pgm) to test, the time budget (time),
+ 3:    T←∅                                                                                  a set of concrete arguments (Arg), and a set of promising states (SP ).
+ 4:    repeat
+ 5:        s ← Choose(𝑆 )                                           ⊲ s = (stmt, M, Φ)      For now, we set aside the last two inputs, Arg and SP , which will be
+ 6:        if stmt is an if/else statement with a condition 𝜑 then                          explained later; general symbolic execution techniques [5, 7, 10, 22]
+ 7:                                                        ′
+               if Sat (Φ ∧ 𝜑 ) then 𝑆 ← 𝑆 ∪ { (stmt 1 , M , Φ ∧ 𝜑 ) }
+ 8:            if Sat (Φ ∧ ¬𝜑 ) then 𝑆 ← 𝑆 ∪ { (stmt 2 , M ′ , Φ ∧ ¬𝜑 ) }
+                                                                                            typically test the target program without taking Arg and SP as input
+ 9:        else if stmt is a halt statement then                                            (i.e., Arg=∅, SP =∅). At line 2, the algorithm first initializes the set 𝑆
+10:            Arg ′ = Solve (Φ)
+11:            T ← T ∪ {t }                                            ⊲ t = Arg · Arg ′
+                                                                                            of states based on SP . If SP is empty, 𝑆 is initialized as a singleton set
+12:        else                                                                             containing a state (stmt0 , M0 , 𝑡𝑟𝑢𝑒). Otherwise, Algorithm 1 replaces
+13:            𝑆 ← 𝑆 ∪ {s } ′                                       ′
+                                                                 ⊲ s = (stmt ′ , M ′ , Φ)
+14:    until time expires (or 𝑆 = ∅ )
+                                                                                            𝑆 with the set SP of promising states. At line 3, the set of test-cases
+15:    B ← Run (pgm, T )                                                                    (T ) is initialized as an empty set.
+16:    return B, T                                                                              After initialization, the algorithm repeatedly selects, forks, and
+                                                                                            updates a state in the set 𝑆 until the time budget is exhausted,
+   Experimental results demonstrate that Orbis effectively guides
+                                                                                            thereby accumulating test-cases T (lines 4–14). At line 5, the Choose
+four distinct state-of-the-art techniques for symbolic execution to-
+                                                                                            function selects a state from 𝑆, and the selected state s is removed
+ward maximizing OB coverage: search strategy (Learch) [22], state-
+                                                                                            from 𝑆 (i.e., 𝑆 ← 𝑆 \ {s}). If the next statement of the selected state,
+pruning strategy (Homi) [10], SMT-solving strategy (AAQC) [42],
+                                                                                            (stmt, M, Φ), is an if/else statement with condition 𝜑, Algorithm 1
+and parameter-tuning strategy (SymTuner) [8]. We integrated Orbis
+                                                                                            evaluates the satisfiability of the updated path-conditions, (Φ ∧
+with each technique and evaluated its effectiveness on 15 open-
+                                                                                            𝜑) and (Φ ∧ ¬𝜑), respectively. If both conditions are feasible, the
+source C programs ranging from 4K to 48K branches. In terms
+                                                                                            algorithm forks the state s into two separate states: (stmt 1, M ′, Φ ∧
+of coverage, the Orbis-guided techniques covered 323.0% more
+                                                                                            𝜑) and (stmt 2 , M ′, Φ ∧ ¬𝜑) at lines 7–8.
+option-related branches, leading to a 112.1% increase in total branch
+                                                                                                If the next statement of the state (stmt, M, Φ) is a halt statement,
+coverage compared to their standalone versions. For bug detection,
+                                                                                            Algorithm 1 invokes the SMT solver (the Solve function) at line 10
+Orbis enabled the pure techniques to discover an average of five
+                                                                                            to solve the accumulated path-condition Φ and obtain a satisfiable
+additional unique bugs while ensuring that none detected by the
+                                                                                            model, denoted as the symbolic input Arg ′ . At line 11, it then gener-
+pure techniques were missed. We further evaluated Orbis by com-
+                                                                                            ates a test-case t by concatenating the given concrete argument Arg
+paring it with three state-of-the-art fuzzers specialized in testing
+                                                                                            with Arg ′ . For example, if the concrete argument (Arg) is “-bc” and
+program options [26, 44, 45], and assessed its generality by inte-
+                                                                                            the SMT solver returns (Arg ′ = “-R”) as a model of Φ, the resulting
+grating it with concolic testing [9, 13], a widely used variant of
+                                                                                            test case (t) is “-bc -R”. Lastly, if the next statement of the state s is
+dynamic symbolic execution.
+                                                                                            another type of statement (e.g., load, store), the algorithm updates s
+Contributions. We summarize our contributions below:                                        into s′ accordingly. Once the time budget expires, the Run function
+• Underexplored problem: We show that state-of-the-art sym-                                 runs the target program (pgm) with all generated test-cases in T and
+  bolic execution techniques do not effectively cover option-related                        calculates the set B of branches covered by T . Finally, Algorithm 1
+  branches, motivating the need for techniques that systematically                          returns the set of generated test-cases and their branch coverage.
+  guide symbolic execution toward option-related branches.                                      Recent advancements in symbolic execution have significantly
+• New technique: We introduce Orbis, a novel technique that                                 improved its effectiveness based on Algorithm 1. For instance,
+  enables diverse symbolic execution methods to maximize OB                                 search strategies [22, 41], corresponding to the Choose function
+  coverage. Our core contribution is a specialized algorithm that                           at line 5, prioritize selecting the most promising states first from
+  iteratively constructs target option arguments, sets the symbolic                         the set 𝑆 based on predefined criteria. Conversely, state-pruning
+  executor’s initial states to focus on these arguments, and refines                        strategies [10, 11] aim to eliminate redundant states from 𝑆 by
+  their potential while simultaneously reducing SMT-solving invo-                           terminating them early. Some techniques—such as the Solve func-
+  cations based on data accumulated during testing.                                         tion at line 10—focus on efficiently reducing constraint solving
+• Extensive evaluation: We demonstrate the effectiveness of                                 costs [39, 42]. Additionally, an orthogonal technique [8] attempts to
+  Orbis by integrating it with four distinct symbolic execution                             automatically tune external parameters of the symbolic execution
+  techniques and comparing their performance with the pure tech-                            engine (the Execute procedure). These techniques significantly
+  niques across 15 open-source C programs. We make Orbis pub-                               improve code coverage and facilitate the discovery of subtle bugs,
+  licly available: https://doi.org/10.5281/zenodo.21767392.                                 compared to the generic symbolic execution (Algorithm 1).
+
+2 Preliminaries                                                                             2.2    Limitation of Symbolic Execution
+2.1 Symbolic Execution                                                                      Our key observation is that recent techniques [8, 10, 22, 42] for
+Symbolic execution [5] systematically generates test-cases likely to                        symbolic execution still struggle to effectively test the core func-
+increase code coverage by iteratively updating so-called “states”. We                       tionalities of the target program, despite their remarkable enhance-
+define a single state as a tuple of three elements: (1) the next state-                     ment. Specifically, since these core functionalities are typically im-
+ment to execute (stmt), (2) a symbolic memory (M) that maps each                            plemented as program options, we evaluate how effectively these
+Orbis: Guiding Symbolic Execution Techniques to Maximize Option-Related Branch Coverage                                        ASE ’26, October 12–16, 2026, Munich, Germany
+
+
+                                                                                                                               ORBIS
+Table 1: Symbolic execution on option-related code regions.                                                                            an option
+                                                                                                              data                     argument
+                                                                                                    Extract            Construct                     Guide
+              KLEE [5]       Homi [10]     Learch [22]    AAQC [42]    SymTuner [8]
+ Program                                                                                  program
+             Opt    OB      Opt     OB     Opt    OB      Opt   OB      Opt   OB                                     updated                            initial
+                                                                                                                        data                            states
+ xorriso     3.2%   0.8%    3.8%   0.9%    3.2%   1.0%    3.8%  0.8%    3.8%  1.1%
+ sqlite     21.2%   1.2%   63.6%   1.3%   57.6%   1.4%    3.0%  0.1%   60.6%  1.8%                                                                  Symbolic
+                                                                                                                         Update        test-cases
+ gcal        0.0%   0.0%    0.0%   0.0%    0.0%   0.0%    0.0%  0.0%   11.1% 16.0%                                                                  Executor
+                                                                                                                                                                  total coverage
+ patch      27.7% 25.7%    30.8% 24.4%     7.7% 13.9%    10.8% 23.6%   49.2% 34.2%
+ csplit     26.7% 13.3%    26.7% 17.3%    13.3% 12.7%    13.3% 10.7%   26.7% 18.0%
+ ls         18.1%   4.5%   14.5%   3.7%   43.4%   2.2%   10.8%  1.3%   53.0%  5.8%
+                                                                                                       Figure 2: The overview of Orbis.
+
+                                                                                         These limitations motivate our complementary approach, which
+                                                                                      guides symbolic execution techniques towards maximizing OB cov-
+                                                                                      erage from scratch, thereby improving total branch coverage and
+                                                                                      bug-finding capability. This is feasible because OB coverage and to-
+                                                                                      tal branch coverage are strongly correlated in our benchmark suite,
+                                                                                      with an average Pearson coefficient of 0.902, as demonstrated in
+                                                                                      Section 4.2. Our work thus tackles two key challenges: (1) automat-
+                                                                                      ically extracting OBs without prior knowledge, and (2) effectively
+                                                                                      guiding symbolic execution techniques toward these branches.
+           Figure 1: Example of option-related branches.
+                                                                                      3 Our Approach
+state-of-the-art techniques cover branches related to program op-
+                                                                                      3.1 Overview
+tions. In this work, we newly define option-related branches (OBs)
+as branches associated with a specific option and reachable by utiliz-                Figure 2 illustrates the interaction between Orbis and the symbolic
+ing that option. More precisely, an OB is a conditional branch whose                  executor. Given a target program, Orbis coordinates symbolic exe-
+condition contains a (variable, value) pair that is newly defined or                  cution through four stages: Extract, Construct, Guide, and Update.
+updated only when the corresponding option is enabled.                                In the Extract stage, Orbis gathers useful data (i.e., options, option-
+    Figure 1 illustrates an example of OBs using code snippets from                   related branches) by comparing dynamic execution traces with and
+the ls program. Suppose we execute ls with the option “-l” (e.g.,                     without each option. This information is then used to guide the
+./ls -l). In this case, the variable “c” is assigned the value “l”, which             symbolic executor toward maximizing OB coverage.
+is then used as a branch condition in the if statement at line 5.                        Using the extracted data, Orbis iteratively performs the remain-
+We classify this branch as an OB. Furthermore, since the “format”                     ing three stages while interacting with the symbolic executor. In
+variable is set to “long” in this execution, the true branch of the if                the Construct stage, Orbis generates a target option argument by
+statement at line 10 becomes reachable, and we also classify this                     estimating the potential of each option and stochastically combin-
+branch as an OB.                                                                      ing options, which the symbolic executor will then focus on. The
+    In terms of OBs, state-of-the-art techniques were largely ineffec-                Guide stage initializes the symbolic executor’s states through seed-
+tive across open-source C programs. Table 1 shows that KLEE [5],                      ing, enabling effective exploration of option-related branches near
+a widely-used symbolic executor, and four distinct state-of-the-art                   the formed option argument. After symbolic execution runs using
+techniques covered only 7.9% of the targeted total option-related                     both the option argument and the initialized states, the Update
+branches on average across the six programs. Specifically, these                      stage analyzes the generated test-cases and refines the data used in
+techniques include search strategy (Learch [22]), constraint-solving                  the Construct and Guide stages. Orbis also leverages this updated
+reduction strategy (AAQC [42]), state-pruning strategy (Homi [10]),                   data to reduce SMT-solver invocations, further improving efficiency.
+and parameter tuning strategy (SymTuner [8]) for symbolic execu-                      This process repeats until the entire budget is exhausted. Finally,
+tion. Surprisingly, all symbolic executors except SymTuner even                       Orbis returns the total set of covered branches across all iterations.
+failed to generate test cases containing a single valid option for the
+target program (gcal). The fundamental reason is that gcal defines                    3.2     Orbis
+particularly long options, with an average extracted-option length                    Algorithm 2 details how Orbis guides the symbolic executor to
+of 22 characters. Longer option arguments require solving more                        increase OB coverage from scratch. The algorithm takes as input
+complex path conditions, substantially increasing SMT-solving over-                   the target program (pgm) and the total testing budget (time), and
+head. Consequently, existing symbolic execution techniques strug-                     returns the total set of covered branches (TotalB) once the budget
+gle to generate even a single valid option within the given testing                   expires. Before the main stages, Algorithm 2 initializes two sets—the
+budget. The column “Opt” represents the proportion of program                         test-case set TotalT and the covered branch set TotalB—as empty.
+options exercised at least once by the test-cases generated by each                   It also divides the total budget (time) into smaller time segments,
+technique. Within a 24-hour budget, they included only 20.2% of                       referred to as times , to enable multiple interactions with the sym-
+the valid options defined across the six programs. Table 1 also                       bolic executor (Algorithm 1). These repeated interactions allow
+highlights that increasing OBs is non-trivial; merely using each                      Orbis to iteratively refine and provide increasingly effective option
+program option is insufficient. For sqlite, the five techniques exer-                 arguments and their associated states to the symbolic executor,
+cised valid options relatively well (41.2% on average), yet achieved                  thereby enhancing OB coverage. In our experiments, we set times
+only 1.2% OB coverage.                                                                to 120 seconds. At line 15, Orbis doubles times because repeated
+ASE ’26, October 12–16, 2026, Munich, Germany                                                                  Minjong Kim, Sungjae Hwang, and Sooyoung Cha
+
+
+Algorithm 2 Orbis                                                            To achieve this, Orbis employs the Trace function, which takes a
+Input: Program (pgm) and budget (time)                                       command (cmd) as input and collects trace information (Traces)
+Output: A total set of covered branches (TotalB)                             through concrete execution. Each element of Traces is a pair (var,
+ 1: ⟨TotalT, TotalB, times ⟩ ← ⟨ ∅, ∅, 120𝑠 ⟩
+ 2: /* Step 1: Extract Stage */                                              Val), where var is a variable that is defined or updated during exe-
+ 3: D ← Extract(pgm)                                         ⊲ (o, OB) ∈ D   cution, and Val is the set of values assigned to that variable:
+ 4: ArgD ← { ( {o}, OB, ∅ ) | (o, OB) ∈ D}
+ 5: repeat                                                                                           (var, Val) ∈ Trace(cmd) = Traces
+ 6:     for 𝑖 = 1 to |D| do
+ 7:         /* Step 2: Construct Stage */                                    For example, consider the code snippet in Figure 1. If the command
+ 8:         Argnew ← Construct(ArgD)                         ⊲ o ∈ Argnew
+                                                                             with the -l option is “./ls -l”, then the trace is as:
+ 9:        /* Step 3: Guide Stage */                                                            (                                                       )
+10:        SP ← Guide(pgm, Argnew , TotalT )                                                        (format, {NULL}), (style, {NULL}), (c, {“l”,-1}),
+11:        B, T ← Execute (pgm, times , Argnew , SP )                                Traces =
+12:        ⟨TotalB, TotalT ⟩ ← ⟨TotalB ∪ B, TotalT ∪ T ⟩                                            (format, {“long”}), (style, {“time_style”})
+13:         /* Step 4: Update Stage */
+14:         ArgD ← Update(ArgD, Argnew , B)                                   In this execution, the variable “c” is first assigned “l” when the
+15:    times ← times × 2                                                     loop begins, and later assigned -1 when the loop exits. Thus, the
+16: until time expires                                                       values of “c” are represented as the set {“l”, -1}. Similarly, by tracing
+17: return TotalB
+                                                                             the base command “./ls” without options, Orbis obtains another
+interactions progressively increase confidence in the constructed            trace (Traces′ ):
+option arguments and their associated symbolic states. If the dou-                     Traces′ = {(format, {NULL}), (style, {NULL}), (c, {-1})}
+bled value of times exceeds the remaining testing budget, Orbis
+sets times to the remaining budget before invoking the symbolic ex-              Now, Orbis collects the unique trace information for each option
+ecutor. Consequently, the cumulative execution time never exceeds            by computing the difference between Traces and Traces′ , which
+the total testing budget (time).                                             corresponds to the elements observed exclusively when the option
+                                                                             is included in the command. This approach effectively avoids false
+     Extract. In the Extract stage, Algorithm 2 (Orbis) collects the         positives because the compared commands are identical except for
+data D required to guide the symbolic executor (line 3). Each ele-           the option under analysis. For example, the unique trace associated
+ment of D is defined as a pair (o, OB), where o is an option defined         with the “–l” option of the ls program is as:
+in the target program and OB is the set of its corresponding option-
+related branches. This stage constructs D by extracting data for                           {(c, “l”), (format, “long”), (style, “time_style”)}
+individual options, such that each element corresponds to a single            Using the unique trace for each option, Orbis inspects the target
+option (e.g., “-b”, “-c”) and its option-related branches, rather than to    program’s source code and adds all conditional branches that refer-
+combined options (e.g., “-bc”). In addition, for options that require        ence any element in the trace to that option’s set of option-related
+parameters, Orbis identifies valid parameter values from the pro-            branches. This process produces the data D, where each element is a
+gram’s help output. For example, if the help output indicates that           pair (o, OB) of an option o and its corresponding branches OB. With
+the “--sort” option accepts parameter values such as {time, size},           this method, Orbis precisely extracts the true branches at lines 5
+Orbis extracts concrete option arguments such as “--sort=time”               and 10 in Figure 1 as those associated with the “-l” option. This
+and “--sort=size” and treats each option–value pair as an indepen-           trace-difference process captures dependencies that arise when an
+dent option argument. Consequently, the dependency between an                option-specific value propagates through variable assignments and
+option and its required parameter is naturally handled by represent-         is later used in a conditional branch. For instance, in Figure 1, the
+ing them as a single concrete option argument. To build D, Orbis             value “long” assigned to the “format” variable is later referenced at
+first exhaustively identifies all available options in the program’s         line 10, so this branch is identified as an OB of the “-l” option.
+help script. For example, the help output of the ls program yields               With the extracted data D, Algorithm 2 initializes the set ArgD
+candidate options, such as “–l” and “--sort=time”:                           at line 4, which will be utilized in the next step:
+      -l             use a long listing format                                               (Arg, OB, CovOB) ∈ ArgD, where B ∈ CovOB
+      --sort=WORD    sort by WORD instead of name: time(-t), size(-S)
+                                                                              Here, the first element in ArgD represents an option argument (Arg),
+We acknowledge that some hidden options may not appear in the
+                                                                             which consists of the set of program options. OB denotes the total
+help script. However, as discussed in Section 4.8, these constitute
+                                                                             set of option-related branches corresponding to Arg, while CovOB
+only 0.9% of all options across our benchmark suite, and even if ex-
+                                                                             represents the set of option-related branches covered during each
+tracted, their impact on improving symbolic execution performance
+                                                                             iteration between lines 5–18. For example, an element in ArgD can
+is negligible. Therefore, our approach adopts the cost-effective strat-
+                                                                             be defined as (Arg, {𝑏 1, 𝑏 2, 𝑏 3, 𝑏 4 }, {{𝑏 1 }, {𝑏 1, 𝑏 2 }}). This indicates
+egy of extracting options solely from the help script.
+                                                                             that the option argument Arg contains a total of four option-related
+   Once valid options are extracted, for each option, Orbis auto-
+                                                                             branches, ranging from b1 to b4 , while covering b1 in the first
+matically (1) generates two concrete inputs: one that includes the
+                                                                             iteration and b1 and b2 in the second iteration. We deliberately
+option (e.g., ./ls -l) and one that excludes it (e.g., ./ls); (2) compares
+                                                                             define CovOB as a set of sets to facilitate scoring the impact of each
+the execution traces obtained from concretely executing these two
+                                                                             option argument in the next Construct step.
+inputs; and (3) collects all variables directly associated with that op-
+tion. Specifically, Orbis considers variables that are newly defined             Construct. The goal of the Construct stage is to form a new
+or updated only when the input containing the option is executed.            option argument (Argnew ) from the set ArgD to guide the symbolic
+Orbis: Guiding Symbolic Execution Techniques to Maximize Option-Related Branch Coverage                                  ASE ’26, October 12–16, 2026, Munich, Germany
+
+
+executor’s state exploration by probabilistically combining argu-                   13.2 options). Through this iterative construction process, Orbis im-
+ments in ArgD based on their effectiveness (line 8). The newly gen-                 plicitly favors beneficial combinations of inter-dependent options.
+erated argument is then passed to the symbolic executor (line 11).                  Option combinations that work well together tend to cover more
+Recall that the symbolic executor (Algorithm 1) utilizes an option                  option-related branches, receive higher scores, and are therefore
+argument to generate each test-case by concatenating the option ar-                 sampled more frequently in subsequent iterations. In contrast, com-
+gument and symbolically generated arguments, which are produced                     binations that interact poorly typically contribute little additional
+by the SMT solver. This approach effectively forces the symbolic                    coverage, receive lower scores, and are consequently selected less
+executor to explore code regions related to the option argument.                    often. Finally, at line 11, Algorithm 2 (Orbis) delivers the newly
+    To construct a new option argument (Argnew ), the Construct                     constructed option argument (Argnew ) to the symbolic executor.
+function computes a score for each option argument (Arg) in ArgD
+                                                                                         Guide. The Guide stage initializes the symbolic executor’s ini-
+and then stochastically forms a new option argument based on
+                                                                                    tial states (Algorithm 1) to steer exploration toward option-related
+their scores. Specifically, to assign a score to each option argument,
+                                                                                    branches associated with the constructed option argument (Argnew )
+we transform it into a feature vector. In our approach, we define
+                                                                                    at line 10. We achieve this through seeding. Given seed inputs,
+three atomic features that estimate the effectiveness of an option
+                                                                                    seeding efficiently initializes symbolic executor states without re-
+argument in terms of OB coverage while keeping feature extraction
+                                                                                    quiring expensive satisfiability checks during seed regeneration.
+lightweight. A feature (feat) is a function that takes an option
+                                                                                    Thus, selecting seed inputs related to Argnew provides an effective
+argument as input and returns a real value: feat : O → R, where O
+                                                                                    starting point for exploring its associated branches.
+denotes the set of all possible option arguments. That is, each Arg
+                                                                                        We first explain how the Seeding procedure operates on a given
+is transformed as: ⟨feat1 (Arg), feat2 (Arg), feat3 (Arg)⟩.
+                                                                                    seed input. Let SatPC(seed) denote the set of satisfiable path con-
+    Finally, we normalize each value in the feature vector using Min-
+                                                                                    ditions encountered during symbolic execution of the program
+Max normalization and then compute the score of Arg by summing
+                                                                                    using the given seed input: SatPC(seed) = {Φ1, Φ2 , · · · , Φn }. To
+up all three normalized values. The three predefined features are
+                                                                                    construct SatPC(seed), symbolic inputs are concretized using the
+described in detail below:
+                                                                                    seed values, and each path condition that evaluates to true under
+(1) uncovered OB (feat1 ): This feature computes the ratio of                       the seed assignment is collected without invoking the SMT solver.
+    option-related branches that are not yet covered within the                     For example, consider an execution path with the branch conditions
+    total set OB corresponding to Arg, defined as:                                  𝑥 > 10 and 𝑥 = 20. Given a seed assigning 𝑥 = 20, the satisfiable
+                                                                                    path condition 𝑥 > 10 ∧ 𝑥 = 20 evaluates to 20 > 10 ∧ 20 = 20 and
+                            Ð
+                    |OB \     B∈CovOB B|
+    feat1 (Arg) =                          , where (Arg, OB, CovOB) ∈ ArgD
+                            |OB|                                                    is therefore included in SatPC(seed). Using this SatPC function,
+    Intuitively, this feature estimates the potential of Arg based on               the Seeding procedure is defined as:
+    how many of its associated branches remain uncovered.                             1: procedure Seeding(seed )
+                                                                                      2:    𝑆 ← {s0 }                                           ⊲ s0 = (stmt0 , M0 , 𝑡𝑟𝑢𝑒 )
+(2) number of attempts (feat2 ): This feature assigns higher scores                   3:    repeat
+    to arguments that have been selected less frequently in previ-                    4:       s ← Choose(𝑆 )                                          ⊲ s = (stmt, M, Φ)
+                                                                                      5:       if stmt is an if/else statement with a condition 𝜑 then
+    ous iterations, thereby promoting diversity in the selection of                   6:            if ( (Φ ∧ 𝜑 ) ∈ SatPC (seed ) ) then 𝑆 ← 𝑆 ∪ { (stmt 1 , M ′ , Φ ∧ 𝜑 ) }
+    option arguments. It is calculated as:                                            7:            if ( (Φ∧¬𝜑 ) ∈ SatPC (seed ) ) then 𝑆 ← 𝑆 ∪ { (stmt 2 , M ′ , Φ ∧¬𝜑 ) }
+                                                                                      8:       else
+                               1                                                      9:           𝑆 ← 𝑆 ∪ {s′ }                                    ⊲ s′ = (stmt ′ , M ′ , Φ)
+          feat2 (Arg) =             , where (Arg, _, CovOB) ∈ ArgD                   10:    until stmt is a halt statement
+                            |CovOB|
+                                                                                     11:    return 𝑆
+(3) average OB (feat3 ): This feature favors arguments that, on                     This procedure is similar to Algorithm 1 but avoids SMT solving
+    average, have covered more option-related branches in pre-                      during state forking. At lines 6–7, the state s is forked into two new
+    vious iterations, thereby enhancing the efficiency of newly                     states without solver calls if the satisfiability of (Φ∧𝜑) and (Φ∧¬𝜑)
+    constructed arguments. It is computed as:                                       has already been confirmed in SatPC(seed). This procedure repeats
+                        Í          |B|                                              until the next statement of the state reaches a halt statement, at
+      feat3 (Arg) =                        , where (Arg, _, CovOB) ∈ ArgD
+                      B∈CovOB |CovOB|                                               which point it returns the set of states 𝑆 (line 11). Consequently,
+   After scoring each option argument in ArgD, Orbis assigns a                      the Guide stage builds promising states SP by running the Seeding
+sampling probability to each argument proportional to its score.                    procedure with each seed in the carefully selected seed set (SD) and
+                                                                                                                                    Ð
+Orbis then samples the option arguments from ArgD according                         accumulating the resulting states as: SP = seed ∈SD Seeding(seed).
+to these probabilities and constructs a new option argument as                          To initialize these promising states, Algorithm 2 first splits the
+the union of the selected arguments. For example, consider three                    given option argument (Argnew ) into individual options (e.g., “-Rn”
+individual option arguments in ArgD: “{-R}”, “{-n}”, “{-w}”, with                   → {-R, -n}). For each divided option, it then selects a promising test-
+probabilities of 27.3%, 65.5%, and 7.2%, respectively. If the first two             case from those generated during the repeated symbolic execution
+arguments are sampled according to their probabilities, the result-                 runs (lines 5–18). In this work, a test-case is considered promising
+ing combined option argument becomes “{-Rn}”. Orbis adds this                       if it achieves the highest OB coverage while containing the divided
+newly constructed argument to ArgD, enabling increasingly com-                      option. The selected test-cases, together with Argnew , form the seed
+plex combined option arguments as it interacts with the symbol                      input set as: SD = {Argnew } ∪ {Select(o, To ) | o ∈ Argnew }, where
+executor. Empirically, across our benchmark suite, Orbis generated                  To denotes the set of test-cases containing each option o among all
+option arguments combining 4 individual options on average (up to                   the generated test-cases: To = {t | o ∈ t ∧ t ∈ TotalT }. Specifically,
+ASE ’26, October 12–16, 2026, Munich, Germany                                                            Minjong Kim, Sungjae Hwang, and Sooyoung Cha
+
+
+given the union of all option-related branches:                                Suppose the path-condition Φ of a halted state and a set of can-
+                                      Ð                                     didate option arguments are:
+                         UnionOB =        (_,OB) ∈D OB
+                                                                                        Φ = (𝛼[0]=“-”) ∧ (𝛼[1] ≠ “c”), Args = {“-a”, “-c”}
+the Select function chooses from To the test-case whose execution
+covers the largest number of branches in UnionOB:                            Substituting the first candidate (“-a”) yields: (“-” = “-”) ∧ (“a” ≠
+                                                                            “c”), which evaluates to true. Conversely, substituting the second
+            argmax |B ∩ UnionOB|, where B = Run(pgm, {t}).
+              t ∈To                                                         candidate (“-c”) yields: (“-” = “-”) ∧ (“c” ≠ “c”), which evaluates to
+                                                                            false. In this example, Orbis does not invoke the SMT solver to find
+By applying the Select function to each divided option, Algorithm 2
+                                                                            a model of Φ but instead uses the satisfied option argument (“-a”)
+constructs the seed input set SD and ultimately derives the promis-
+                                                                            directly as a test-case.
+ing states SP from it (line 10). Empirically, this procedure enables
+                                                                               Note that Orbis substitutes option arguments only for option-
+Orbis to derive effective initial states from the delicately selected
+                                                                            related path conditions. Path conditions involving other symbolic
+seeds within only 9.6% of the total time budget on average, resulting
+                                                                            inputs (e.g., file contents or directory structures) are not substituted
+in a 21.5% branch coverage improvement, as shown in Section 4.4.
+                                                                            with option arguments and are still handled by the SMT solver. Nev-
+     Update. The Update stage in Algorithm 2 improves the effi-             ertheless, because path conditions derived from different symbolic
+ciency of the iterative Construct and Guide stages by updating              input sources (e.g., option arguments and file contents) are solved
+the ArgD set, which is used for scoring each option argument                independently, substituting only the option-related path conditions
+(line 14). Recall that each element of ArgD consists of a triple            can still substantially reduce the overall SMT-solving overhead. As
+(Arg, OB, CovOB), where Arg denotes an option argument, OB rep-             discussed in Section 4.4, this solver cost-reduction method using
+resents the total set of option-related branches associated with Arg,       ArgD reduced the overall number of solver calls by about 16.8%
+and CovOB indicates the set of option-related branches covered              across our benchmark suite.
+during each iteration (lines 5–16). When a new option argument
+Argnew is constructed, Algorithm 2 updates AllArgs as follows. First,       4     Experiments
+it collects all option arguments currently in ArgD as:                      In this section, we evaluate the efficiency of Orbis by addressing
+                 AllArgs = {Arg | (Arg, _, CovOB) ∈ ArgD}                   the following research questions:
+                                                                            (1) Branch Coverage: To what extent does integrating Orbis with
+If Argnew belongs to AllArgs, the algorithm updates the existing
+                                                                                four distinct state-of-the-art techniques improve OB coverage
+entry by extending its coverage set:
+                                                                                and total branch coverage?
+    (Argnew , OB, CovOB ∪ {CovOB𝑛𝑒𝑤 }) ∈ ArgD, CovOB𝑛𝑒𝑤 = OB ∩ B,           (2) Bug-finding Ability: How many unique crashes are detected
+                                                                                by integrating Orbis?
+where the intersection between OB and B denotes the covered
+                                                                            (3) Effectiveness of Stages: How does each stage of Orbis con-
+option-related branches set associated with Argnew . Conversely, if
+                                                                                tribute to performance improvement?
+Argnew does not exist in ArgD, Orbis adds a new element for Argnew :
+                                                                            (4) Generality: Is Orbis generally applicable across different sym-
+               ArgD = ArgD ∪ {(Argnew , OBArg, {OB ∩ B})}                       bolic executors?
+where OBArg denotes the union of option-related branches corre-             We conducted our experiments using KLEE-2.1 [5], a widely used
+sponding to each option in Argnew as:                                       symbolic executor. All experiments were performed on a system
+                                                                            with two Intel Xeon Gold 6230R processors and 256GB RAM.
+         OBArg = {b ∈ OB | (o ∈ Argnew ) ∧ ({o}, OB, _) ∈ ArgD}
+
+   Through this update, ArgD maintains accurate OB coverage in-             4.1    Experimental Settings
+formation, enabling Algorithm 2 to iteratively refine option argu-              Baselines. To evaluate the effectiveness of Orbis’s guidance,
+ments and the corresponding symbolic executor states. The process           we integrated it with KLEE and four state-of-the-art techniques,
+repeats until the time budget is exhausted, gradually converging            comparing the integrations against their standalone versions. These
+on the most effective option arguments and promising states.                techniques represent different methodological categories: search
+   Furthermore, Orbis leverages ArgD to reduce SMT solver in-               strategy (Learch) [22], state-pruning strategy (Homi) [10], con-
+vocations during symbolic execution. Unlike standard symbolic               straint solving strategy (AAQC) [42], and parameter tuning strat-
+execution (Algorithm 1), which invokes the solver whenever the              egy (SymTuner) [8]. Each enhances symbolic execution through
+state (stmt, M, Φ) reaches a halt statement, Orbis skips the solver         an independent approach and has shown superior performance
+call (the Solve function at line 10) under a specific condition: if there   over its own baselines. Learch is a state selection strategy that
+exist an option argument in ArgD that satisfy the path-condition Φ          prioritizes important states for exploration using learning-based
+at the halt point. In such cases, Algorithm 1 does not call the SMT         methods. In contrast, Homi is a state elimination strategy that ana-
+solver to generate a test-case but instead replaces Arg ′ at line 10        lyzes and excludes inefficient states, allowing the symbolic executor
+with one of those option arguments. To check whether an option              to focus on promising states. AAQC optimizes cache utilization to
+argument satisfies a path-condition, Orbis substitutes the symbolic         reduce SMT-solving overhead, enabling deeper state exploration.
+variables in Φ with the argument’s concrete values and evaluates the        SymTuner dynamically adjusts external parameters of symbolic
+concretized condition. If it evaluates to true, the option argument         execution to improve performance. We evaluated the effectiveness
+itself is generated as a test-case without SMT solving.                     of Orbis by comparing two settings for each baseline: (1) a pure
+Orbis: Guiding Symbolic Execution Techniques to Maximize Option-Related Branch Coverage                                              ASE ’26, October 12–16, 2026, Munich, Germany
+
+
+
+            Table 2: 15 programs used as benchmarks.                                            Table 3: The option-related branch coverage achieved by base-
+   Program     Opt  OB      B      Program Opt OB        B        Program   Opt OB        B     lines and their combination with Orbis.
+ xorriso-1.5.2 158 16,616 48,687   find-4.7.0 71   271 9,988   patch-2.7.6   65   224   6,221
+ sqlite-3.33.0  33 2,870 44,717    grep-3.4   81   371 8,283   objcopy-2.36 116   265   5,445                 KLEE [5]        Homi [10]      Learch [22]      AAQC [42]     SymTuner [8]
+                                                                                                 Program
+ gawk-5.1.0     54    533 17,859   diff-3.7   85 1,824 7,673   ptx-8.32      35   568   5,297              Pure Orbis       Pure Orbis      Pure Orbis      Pure Orbis      Pure Orbis
+ gcal-4.1      126    316 15,729   make-4.3   63    96 6,893   csplit-8.32   15    30   4,491    xorriso   131.6   427.4    147.8   424.4   160.2   441.6   125.2   453.6   179.0   439.2
+ objdump-2.36   46    335 11,975   du-8.32    44   380 6,611   ls-8.32       83 2,078   3,812    sqlite     35.4     86.2    37.8    86.8    40.4    86.8     4.0    93.6    51.8    91.6
+                                                                                                 gawk       22.4     96.4    23.4    87.2     7.0    84.2    11.0    90.4    25.8    74.0
+                                                                                                 gcal        0.0   181.4      0.0   174.0     0.0   186.2     0.0   181.2    50.6   169.4
+implementation without modifications, as publicly available (Pure),                              objdump    31.6     87.4     4.8    86.8    25.6    88.8    44.0    84.4    51.4    99.0
+                                                                                                 find       27.6   175.0     31.8   171.0    54.8   174.8    47.4   166.6    81.8   181.8
+and (2) an integration of Orbis with each technique (Orbis).                                     grep       25.2   153.6     28.0   115.8     0.0   176.2    28.8   156.0    41.4   183.6
+                                                                                                 diff       37.2   150.2     23.4   173.6    33.0   174.4    26.0   170.4    44.8   162.0
+    Benchmarks. Table 2 presents the 15 open-source C programs                                   make        7.6     65.0     0.0    62.0     3.0    67.2     0.0    64.2    29.6    64.4
+                                                                                                 du         20.8     68.8    19.8    82.0    14.6    86.0    15.4    86.4    32.4    94.8
+used in our evaluation, along with the number of options in each                                 patch      57.6   144.8     54.6   142.6    31.2   141.6    52.8   141.4    76.6   141.4
+program (Opt), the number of option-related branches targeted by                                 objcopy    25.8   204.2      3.0   203.8    11.8   212.0    48.2   230.6    61.8   216.8
+                                                                                                 ptx        11.2     52.2    16.6    52.0     9.4    54.0     4.4    52.0    19.0    58.0
+Orbis (OB), and the total number of branches (B). To ensure fairness,                            csplit      4.0     20.6     5.2    22.8     3.8    22.4     3.2    24.4     5.4    26.2
+                                                                                                 ls         94.4   234.8     77.6   230.2    46.2   229.0    27.6   223.8   121.0   214.6
+we carefully construct our benchmark suite. We first gathered all                                total     532.4 2,148.0    473.8 2,115.0   441.0 2,225.2   438.0 2,219.0   872.4 2,216.8
+programs used in the evaluation by the five baselines [5, 8, 10, 22, 42].
+From this set, we selected 15 programs as benchmarks that, on                                   in the number of covered OBs: KLEE (+303.5%), Homi (+346.4%),
+average, covered more than 5% of the total branches across the                                  Learch (+404.6%), AAQC (+406.6%), and SymTuner (+154.1%). No-
+five baselines. Programs below this threshold were excluded, as                                 tably, for objcopy, Orbis’s guidance enabled Homi to cover 66.9×
+baselines primarily covered error-handling functions rather than                                more OBs than Homi alone, marking the highest improvement.
+core functionalities. Table 2 shows that the number of options in                               Surprisingly, Orbis also enables techniques that originally fail to
+our 15 benchmarks ranges from 15 to 158 (10×), and the number of                                cover any OBs to generate test-cases that effectively increase OB
+option-related branches ranges from 30 to 8,080 (269×), ensuring a                              coverage and exercise core functionality code regions. For instance,
+diverse and representative benchmark set.                                                       in gcal, four techniques (except SymTuner) did not cover any OBs,
+                                                                                                indicating that they failed to generate a single valid option. With
+      Other Settings. For all experiments, we tested each baseline                              Orbis, however, these techniques covered an average of 180.7 OBs.
+with and without Orbis’s guidance on each benchmark using a                                     A similar tendency was observed in the make program, where Orbis
+24-hour budget, repeating the same experiment five times. We then                               guided Homi and AAQC to achieve 7.9× more OB coverage than the
+reported the average results, which indicate that our experiments                               average of the five techniques in their standalone versions (Pure).
+were conducted extensively. For instance, generating the coverage                                  The results in Table 3 were statistically significant. Across all 15
+results reported in Table 3 required 18,000 hours when using a                                  benchmark programs, the p-value between Pure and Orbis across
+single CPU core (i.e., 24 hours × 5 trials × 15 benchmarks × 5 base-                            the five baselines averaged 0.015, well below the 0.05 threshold,
+lines, each tested with and without Orbis). Additionally, to ensure                             according to the Mann-Whitney U test [32]. In particular, for our
+a fair comparison with Orbis, we evaluated baselines under both                                 benchmark suite, the average p-values between each of the five
+settings: (1) a single uninterrupted 24-hour run and (2) repeated                               baselines and Orbis were all lower than 0.05: KLEE (0.011), Learch
+shorter runs whose results were merged, matching the execution                                  (0.010), Homi (0.009), AAQC (0.010), and SymTuner (0.011).
+setting of Orbis. We reported the better-performing result for each
+baseline. The shorter budgets followed the same schedule as Algo-                                    Total Branch Coverage. Table 4 illustrates that by targeting
+rithm 2, starting from 120 seconds and doubling after each iteration                            option-related branches, Orbis ultimately increases total branch
+of the repeat-until loop until the total testing budget was exhausted.                          coverage across our benchmark suite. Compared to each pure tech-
+We also configured all baselines to potentially generate the same                               nique (Pure), Orbis achieved an average 112.1% increase in total
+command-line arguments as Orbis. Specifically, each baseline was                                branch coverage. Specifically, integrating Orbis led to an 101.2%
+configured to generate up to three symbolic arguments, each with                                increase for KLEE, 105.0% for Homi, 143.3% for Learch, 174.3% for
+a maximum length equal to that of the longest extracted option                                  AAQC, and 36.7% for SymTuner. These results show that Orbis is
+(i.e., -sym-arg max(len(options)) specified three times). Orbis                                 complementary to existing symbolic execution techniques despite
+used exactly the same -sym-arg configuration.                                                   their different underlying methodologies. For sqlite, integrating
+                                                                                                AAQC with Orbis yielded the highest improvement, achieving
+                                                                                                approximately 16× higher branch coverage than AAQC alone. Sta-
+4.2      Branch Coverage                                                                        tistical analysis using the Mann-Whitney U test also confirms sig-
+We evaluated the effectiveness of our approach using two metrics:                               nificant improvements in total branch coverage, with an average
+option-related branch coverage, which Orbis primarily targets,                                  p-value of 0.010 across all techniques. The average p-values for each
+and total branch coverage, a main objective of symbolic execution                               technique are: KLEE (0.009), Homi (0.008), Learch (0.008), AAQC
+techniques. We obtained branch coverage results using gcov [19], a                              (0.008), and SymTuner (0.015). All p-values are below 0.05.
+widely used code coverage measurement tool.                                                         Interestingly, integrating Orbis with each symbolic execution
+     Option-related Branch Coverage. Table 3 shows that inte-                                   technique ensures a certain level of branch coverage, even for bench-
+grating Orbis with symbolic execution techniques significantly in-                              marks that are inadequately tested when using the technique alone.
+creases option-related branch (OB) coverage across all benchmarks                               For certain benchmarks, each technique has limitations that prevent
+compared to their pure versions. On average, applying Orbis to                                  it from fully exploring the program, resulting in less than half of the
+five symbolic execution techniques resulted in a 323.0% increase                                coverage by the original KLEE (Pure). For example, AAQC alone
+ASE ’26, October 12–16, 2026, Munich, Germany                                                                                             Minjong Kim, Sungjae Hwang, and Sooyoung Cha
+
+
+
+Table 4: The total branch coverage achieved by baselines and                                   Table 6: Orbis’s efficiency in option-related branch targeting.
+their combination with Orbis.                                                                                    Orbis            Orbis-Extract                          Orbis              Orbis-Extract
+                                                                                               Program                                               Program
+                                                                                                          OB        B (Bug)       OB     B (Bug)                 OB         B (Bug)        OB       B (Bug)
+               KLEE [5]         Homi [10]       Learch [22]      AAQC [42]      SymTuner [8]
+ Program                                                                                       xorriso   427.4    10,372.8 (0)   382.8 7,549.4 (0)   make         65.0     3,253.0 (0)      62.6   2,811.8 (0)
+            Pure    Orbis    Pure    Orbis    Pure    Orbis    Pure   Orbis    Pure   Orbis
+                                                                                               sqlite     86.2    10,266.0 (3)    65.8 9,612.0 (2)   du           68.8     1,364.2 (0)      59.6   1,317.4 (0)
+ xorriso     2,474 10,373     2,625 10,626     3,040 10,624     2,139 10,665    3,257  8,818
+                                                                                               gawk       96.4     4,788.6 (1)    63.0 3,882.2 (0)   patch       144.8     1,511.4 (1)     123.8   1,317.6 (1)
+ sqlite      5,495 10,266     4,362 10,401     5,773 10,280       597  9,655    7,460 10,835
+                                                                                               gcal      181.4     6,739.4 (3)   170.4 6,425.2 (3)   objcopy     204.2     1,365.2 (0)     165.2   1,119.6 (0)
+ gawk        3,400   4,789    3,618   4,352    1,987   4,207    3,563  4,332    3,747  3,948
+ gcal        2,812   6,739    3,195   6,554    2,932   6,612    1,367  6,529    4,012  6,202   objdump    87.4     1,173.6 (0)    76.2   993.4 (0)   ptx          52.2     2,202.2 (0)      34.6   2,176.8 (0)
+ objdump       599   1,174      126     986      821   1,146      659  1,188    1,085  1,533   find      175.0     4,011.2 (1)   147.0 3,196.2 (1)   csplit       20.6     1,661.4 (0)      20.2   1,534.8 (0)
+ find        1,852   4,011    1,531   3,778    2,037   3,767    2,642  3,820    2,766  4,026   grep      153.6     4,067.8 (0)    93.6 3,916.2 (0)   ls          234.8     2,045.4 (0)     219.8   1,995.2 (0)
+ grep        2,534   4,068    2,299   3,990      337   4,162    2,490  3,996    3,482  4,064   diff      150.2     2,733.6 (0)   139.6 2,323.6 (0)   total     2,148.0    57,555.8 (9)   1,824.2 50,171.4 (7)
+ diff          975   2,734      853   2,731      929   2,616      846  2,544    2,046  2,212
+ make        2,226              959            1,063              959           2,957
+ du            923
+                     3,253
+                     1,364    1,058
+                                      2,134
+                                      1,300      666
+                                                       3,183
+                                                       1,325      588
+                                                                       2,491
+                                                                       1,308    1,157
+                                                                                       3,181
+                                                                                       1,385
+                                                                                               them, KLEE achieved the largest relative improvements, detecting
+ patch       1,247   1,511    1,043   1,278      173   1,367    1,271  1,428    1,446  1,580   4.5 times more bugs than their pure versions. Across all baselines,
+ objcopy       494   1,365      159     994      623     850    1,304  1,605    1,141  1,208
+ ptx         1,428   2,202    1,736   2,221    1,027   2,267      736  2,251    2,183  2,341   Orbis not only preserved all bugs detected by the pure techniques
+ csplit        790            1,584              762              590           1,691
+ ls          1,355
+                     1,661
+                     2,045    1,686
+                                      1,643
+                                      2,011      860
+                                                       1,578
+                                                       2,039      496
+                                                                       1,652
+                                                                       2,068    1,803
+                                                                                       1,744
+                                                                                       1,933
+                                                                                               but also uncovered additional ones. Notably, techniques with fewer
+ total      28,605 57,556    26,833 54,998    23,030 56,022    20,247 55,532   40,232 55,011   initial detections, such as KLEE, achieved the largest relative im-
+                                                                                               provement (2 → 9), while techniques with higher initial counts,
+Table 5: Number of bugs detected by the baselines and their                                    such as SymTuner, reached the highest absolute total (8 → 13). All
+combinations with Orbis.                                                                       discovered bugs were reported to the respective developers and
+               KLEE [5]       Homi [10]        Learch [22]      AAQC [42]      SymTuner [8]    were officially confirmed.
+ Program
+             Pure Orbis      Pure Orbis       Pure Orbis       Pure Orbis      Pure Orbis
+ sqlite         -       3       -       3         -      2        -       2       -       3
+ gawk           -       1       -       -         -       -       -       1       1       1    4.4       Effectiveness of Stages
+ gcal           2       3       1       3         5      6        1       3       4       6
+ find           -       1       1       1         1      1        1       1       2       2    In this section, we evaluate the effectiveness of the three stages in
+ patch          -       1       1       1         -      1        -       1       1       1
+ total          2       9       3       8         6     10        2       8       8     13     Orbis—Extract, Construct, and Guide—by comparing KLEE+Orbis
+                                                                                               with variants that exclude each stage on our benchmark suite:
+covered only 597 branches in sqlite, just 10.9% of what KLEE                                   Orbis-Extract, RandConst, and RandGuide. We further assess
+alone achieved. However, integrating Orbis with AAQC signifi-                                  the efficiency of the SMT-solver invocation reduction introduced
+cantly improved coverage, reaching 9,655 branches, nearly twice                                in the Update stage in KLEE+Orbis.
+as many as KLEE alone. Similar trends are observed in Learch
+                                                                                                   Efficiency of the Extract Stage. We evaluated the efficiency
+for grep, AAQC for make, and Homi for objdump and objcopy. In
+                                                                                               of the Extract Stage by comparing Orbis, which uses the option-
+conclusion, Orbis enables symbolic execution techniques, which
+                                                                                               related branches (OBs) extracted in this stage for guidance, with
+primarily cover error-handling functions on certain benchmarks,
+                                                                                               a variant of Orbis that omits this stage (Orbis-Extract). This
+to explore core functionalities, achieving higher branch coverage.
+                                                                                               variant instead employs the total branches (TotalB) for guidance.
+   Across all five baselines, higher option-related branch coverage
+                                                                                               Specifically, it replaced the set ArgD constructed at line 4 in Algo-
+consistently correlates with higher total branch coverage. Calculat-
+                                                                                               rithm 2 with the following ArgD ′ :
+ing the Pearson correlation coefficient between OB coverage and
+total branch coverage across all five baselines for each benchmark                             ArgD ′ = {(Arg 1, TotalB, CovB), (Arg 2, TotalB, CovB), · · · , (Arg𝑛 , TotalB, CovB)}
+revealed a strong correlation, averaging 0.902 across 15 bench-
+marks. Remarkably, the result on grep exhibited a correlation of                               where TotalB is the total number of branches in the target program
+0.990, indicating an almost perfect linear relationship. Furthermore,                          and CovB is the number of covered branches when using Arg. In
+all benchmarks showed a correlation of 0.75 or higher, confirm-                                other words, this variant targets option arguments by increasing
+ing a strong relationship between the two coverage metrics. These                              CovB rather than OB coverage, and initializes the starting state set
+results provide evidence that increasing option-related branch cov-                            using the seed inputs with high branch coverage.
+erage, as targeted by Orbis, ultimately leads to a higher total branch                            Table 6 shows that targeting option-related branches is effec-
+coverage, which is the primary goal of symbolic execution.                                     tive for exploring core functionality. Compared to Orbis-Extract,
+                                                                                               Orbis covered 17.8% more option-related branches, achieved 14.7%
+4.3        Bug-finding Ability                                                                 higher total branch coverage, and detected two additional bugs
+                                                                                               across 15 programs. Notably, Orbis attained even higher total
+Table 5 demonstrates the effectiveness of integrating Orbis with
+                                                                                               branch coverage than directly targeting all branches. This is be-
+symbolic execution techniques in bug detection. To derive these re-
+                                                                                               cause it forms the initial state set with promising states directly
+sults, we re-executed all test-cases generated by the five techniques
+                                                                                               related to targeted option arguments. In practice, Orbis also gen-
+both with and without Orbis, and collected those that triggered
+                                                                                               erated 27.8% more valid test-cases—those that terminate normally
+abnormal signals (e.g., segmentation faults) leading to process ter-
+                                                                                               without command errors—than Orbis-Extract.
+mination. Bug uniqueness was determined by the location of oc-
+currence, extracted from the “test*.err” files produced by KLEE. We                                Effectiveness of Construct and Guide Stages. We evalu-
+counted unique bugs that were detected at least once within the                                ated the effectiveness of Orbis’s two iterative stages—Construct
+24-hour budget across five trials for each technique and benchmark.                            and Guide—by comparing Orbis with four variants: RandConst,
+   On average, Orbis’s guidance enabled the five techniques to                                 FuzzConst, CitConst, and RandGuide. The first three target the
+detect 5.4 additional bugs across five benchmarks (sqlite, gawk,                               Construct stage, while the last targets the Guide stage. Specifically,
+gcal, find, and patch) compared to their pure versions. Among                                  RandConst replaces the Construct function in Algorithm 2 with a
+Orbis: Guiding Symbolic Execution Techniques to Maximize Option-Related Branch Coverage                                                                ASE ’26, October 12–16, 2026, Munich, Germany
+
+
+
+           Table 7: Impact of Construct stage in Orbis.                                                                    Table 8: Impact of Guide stage in Orbis.
+                   Orbis               RandConst               FuzzConst               CitConst                            Orbis              RandGuide                              Orbis               RandGuide
+ Program                                                                                                 Program                                                Program
+             OB       B (Bug)        OB      B (Bug)        OB       B (Bug)        OB      B (Bug)                 OB        B (Bug)       OB    B (Bug)                    OB         B (Bug)        OB      B (Bug)
+xorriso      427.4 10,372.8 (0)      394.0  8,176.8 (0)     360.4   8,558.0 (0)     171.4  2,396.8 (0)   xorriso   427.4    10,372.8 (0)   387.2 6,982.4 (0)    make          65.0     3,253.0 (0)      57.0  2,781.2 (0)
+sqlite        86.2 10,266.0 (3)       54.0  9,303.4 (1)      74.8   8,508.8 (1)      41.0  4,811.4 (0)   sqlite     86.2    10,266.0 (3)    54.4 9,386.0 (2)    du            68.8     1,364.2 (0)      40.4  1,216.0 (0)
+gawk          96.4   4,788.6 (1)      63.0  3,550.0 (0)      85.8   3,963.2 (1)      59.4  2,874.0 (0)   gawk       96.4     4,788.6 (1)    60.0 3,381.8 (0)    patch        144.8     1,511.4 (1)     118.6  1,167.8 (1)
+gcal         181.4   6,739.4 (3)     165.0  6,436.8 (2)     154.2   6,062.2 (2)     126.8  1,889.8 (1)   gcal      181.4     6,739.4 (3)   168.0 6,443.4 (2)    objcopy      204.2     1,365.2 (0)     155.6    726.6 (0)
+objdump       87.4   1,173.6 (0)      68.0    693.8 (0)      76.8   1,015.6 (0)      67.0    666.6 (0)   objdump    87.4     1,173.6 (0)    59.6   613.4 (0)    ptx           52.2     2,202.2 (0)      38.8  1,946.6 (0)
+find         175.0   4,011.2 (1)     143.8  3,238.8 (1)     137.2   3,484.4 (1)     149.4  3,196.8 (1)   find      175.0     4,011.2 (1)   162.8 3,647.0 (1)    csplit        20.6     1,661.4 (0)      20.2  1,484.8 (0)
+grep         153.6   4,067.8 (0)     125.8  3,735.6 (0)     139.8   3,784.0 (0)      94.6  2,488.8 (0)   grep      153.6     4,067.8 (0)    95.4 3,640.0 (0)    ls           234.8     2,045.4 (0)     216.8  1,963.2 (0)
+diff         150.2   2,733.6 (0)     132.4  1,534.6 (0)     135.2   2,065.4 (0)      86.4    431.4 (0)   diff      150.2     2,733.6 (0)   140.0 2,004.8 (0)    total      2,148.0    57,555.8 (9)   1,774.8 47,385.0 (6)
+make          65.0   3,253.0 (0)      59.8  2,682.0 (0)      56.2   2,951.0 (0)      49.2  1,920.0 (0)
+du            68.8   1,364.2 (0)      41.0  1,242.2 (0)      62.6   1,283.2 (0)      62.0  1,311.0 (0)
+patch        144.8   1,511.4 (1)     132.6  1,466.8 (1)     120.2   1,159.2 (1)      68.4    950.2 (1)    Table 9: Evaluation of Orbis’s solver-skipping approach.
+objcopy      204.2   1,365.2 (0)     158.8    781.8 (0)     154.2     815.2 (0)     149.2    694.4 (0)
+                                                                                                                                Orbis                        CallAll             SMT Skip      Hit Ratio    Saved Time
+ptx           52.2   2,202.2 (0)      35.4  1,973.6 (0)      46.8   2,094.0 (0)      45.0  1,693.2 (0)   Program
+                                                                                                                      OB           B        Bug      OB          B        Bug     (# calls)       (%)          (sec)
+csplit        20.6   1,661.4 (0)      18.0  1,449.0 (0)      17.6   1,478.8 (0)      16.2  1,237.2 (0)
+                                                                                                         xorriso      427.4     10,372.8      -      396.6     7,847.4      -     1,362,355        11.4%          1,789
+ls           234.8   2,045.4 (0)     210.2  1,983.4 (0)     228.2   1,987.2 (0)     152.6  1,780.0 (0)
+                                                                                                         sqlite        86.2     10,266.0      3       62.0     9,518.8      2        86,479        44.1%         27,278
+total      2,148.0 57,555.8 (9)    1,801.8 48,248.6 (5)   1,850.0 49,210.2 (6)    1,338.6 28,341.6 (3)   gawk          96.4      4,788.6      1       67.2     3,384.4      -       462,355        19.0%         10,422
+                                                                                                         gcal         181.4      6,739.4      3      168.6     6,577.6      3       435,430        15.2%         11,557
+naive version that randomly constructs option arguments from the                                         objdump       87.4      1,173.6      -       77.4     1,011.6      -     1,333,503        35.7%         27,190
+                                                                                                         find         175.0      4,011.2      1      163.8     3,705.4      1       160,856         6.9%          4,412
+extracted options. FuzzConst replaces the Construct function with                                        grep         153.6      4,067.8      -      114.2     3,655.2      -       477,565        18.1%         13,750
+                                                                                                         diff         150.2      2,733.6      -      127.4     1,680.8      -       695,607        16.3%         11,255
+the option-argument construction mechanism of ZigZagFuzz [26],                                           make          65.0      3,253.0      -       59.8     2,649.2      -       574,861        19.7%          9,945
+                                                                                                         du            68.8      1,364.2      -       52.0     1,316.0      -       523,461        14.9%         12,194
+a state-of-the-art program-option fuzzer. Similarly, CitConst re-                                        patch        144.8      1,511.4      1      129.2     1,388.0      1     1,218,105        18.0%         12,410
+                                                                                                         objcopy      204.2      1,365.2      -      159.0     1,127.4      -       975,411        18.7%         14,629
+places the Construct function with the option-argument construc-                                         ptx           52.2      2,202.2      -       34.8     1,800.0      -       389,418        15.4%         12,323
+                                                                                                         csplit                               -       20.4     1,511.2      -        52,624         8.3%          6,825
+tion mechanism of HSCA [29], a state-of-the-art combinatorial                                            ls
+                                                                                                                       20.6
+                                                                                                                      234.8
+                                                                                                                                 1,661.4
+                                                                                                                                 2,045.4      -      219.8     1,669.4      -       154,341        17.7%         12,126
+interaction testing (CIT) technique. Since both ZigZagFuzz and                                           total      2,148.0     57,555.8      9    1,852.2    48,842.4      7     3,840,978        16.3%        188,104
+
+HSCA are publicly available, we used their original implementa-                                          effectiveness is substantially more effective than either enabling all
+tions without modification. RandGuide modifies the Guide stage                                           extracted CLI options simultaneously or using individual options.
+by initializing the starting state set SP using randomly selected                                           For the Guide stage, Orbis achieved 21.0% higher OB coverage,
+inputs from the generated input set (TotalT , line 11 of Algorithm 2).                                   resulting in a 21.5% increase in total branch coverage and 50% more
+   Tables 7 and 8 show that both stages in Orbis are crucial for                                         bugs detected compared to RandGuide. Overall, these results indi-
+improving performance. For the Construct stage, Orbis achieved                                           cate the clear benefit of Orbis, which carefully constructs option
+19.2%, 16.1%, and 60.5% higher option-related branch coverage,                                           arguments in the Construct stage and efficiently initializes promis-
+19.3%, 17.0%, and 103.1% higher overall branch coverage, and de-                                         ing states in the Guide stage.
+tected four, three, and six additional unique bugs compared with
+RandConst, FuzzConst, and CitConst, respectively.                                                             Efficiency of Skipping Solver Calls. We also evaluated how
+   We investigated why Orbis notably outperformed CitConst.                                              Orbis’s efficiency is improved by the SMT-solver call reduction
+The key difference is their objective. As a state-of-the-art CIT                                         method introduced in the Update stage. Specifically, we compared
+technique, CitConst systematically exercises option combinations                                         Orbis with a variant (CallAll) that invokes the solver for every
+while minimizing the number of generated option arguments. Con-                                          halt statement. Table 9 shows that Orbis’s approach of generating
+sistent with this objective, it selected substantially more options per                                  test-cases without invoking the solver has a substantial impact on
+option argument than Orbis (37.4 on average, 9.4× more). When                                            performance. Compared to CallAll, Orbis achieved 16.0% higher
+applied to symbolic execution, however, these large option argu-                                         option-related branch coverage, 17.8% higher total branch coverage,
+ments often resulted in ineffective executions: 68.6% either achieved                                    and detected one additional bug each in sqlite and gawk. This
+zero branch coverage or terminated before exhausting the time                                            improvement arises from reducing the constraint-solving overhead
+budget, frequently due to conflicting or ineffective option com-                                         of symbolic execution. Empirically, over 360 hours of testing (24
+binations. Furthermore, CitConst does not prioritize previously                                          hours × 15 benchmarks), Orbis reduced solving cost for approxi-
+exercised combinations, even when they prove effective. Across                                           mately 8.9 million statements, corresponding to 16.8% of all halt
+the 15 programs, its option usage exhibited a lower average Gini                                         statements. In terms of time, this reduction saved about 188,000 sec-
+coefficient [18] than Orbis (0.072 vs. 0.269), indicating more uni-                                      onds, enabling an average of three additional hours of exploration
+form option usage rather than repeated reuse of effective option                                         per benchmark. Notably, for ls and grep, whose behaviors heavily
+arguments. In contrast, Orbis continuously evaluates the effective-                                      depend on directory structures and file contents, Orbis skipped
+ness of option arguments during symbolic execution and repeatedly                                        more than 150K and 470K SMT calls, respectively, while still improv-
+reuses those that prove effective in improving exploration.                                              ing branch coverage (ls: 1,669→2,045, grep: 3,655→4,067). These
+   We further compared Orbis+KLEE with KLEE using two simple                                             results demonstrate that Orbis can further optimize the guidance
+option-construction strategies. We defined two variants of KLEE:                                         of symbolic execution techniques toward maximizing OB coverage.
+(1) AllConst, KLEE configured with all CLI options extracted by
+the Extract stage, and (2) OneConst, which repeatedly starts sym-                                        4.5       Generality
+bolic execution with a single randomly selected option per iteration.                                    To evaluate the generality of Orbis, we integrated it into concolic
+Compared with AllConst and OneConst, respectively, Orbis cov-                                            testing [20, 38], a major variation of dynamic symbolic execution.
+ered 153.4% and 23.4% more branches and detected seven and three                                         Specifically, we incorporated Orbis with CREST [4], a widely used
+additional unique bugs across our benchmark suite. These results in-                                     concolic testing tool, and Chameleon [9], a state-of-the-art search
+dicate that constructing option arguments based on their observed                                        strategy built on top of CREST. For this evaluation, we used the four
+ASE ’26, October 12–16, 2026, Munich, Germany                                                                   Minjong Kim, Sungjae Hwang, and Sooyoung Cha
+
+
+
+                                                                           Table 10: Comparing Orbis+KLEE with option-configuring
+                                                                           techniques in fuzzing. Format: unique branches(bugs)
+                                                                           Program Orbis       Both ZigZagFuzz Orbis         Both OSmart Orbis            Both CarpetFuzz
+                                                                           xorriso  3,297(0) 7,076(0)   3,474(0) 8,505(0) 1,868(0)     874(0) 8,140(0) 2,233(0)      147(0)
+                                                                           sqlite   1,896(2) 8,370(1)   2,544(0) 7,701(2) 2,565(1)     772(0) 6,433(2) 3,833(1)       98(0)
+                                                                           gawk     1,045(1) 3,744(0)     682(0) 1,785(1) 3,003(0)     227(0) 2,229(1) 2,559(0)       81(0)
+                                                                           gcal       356(1) 6,384(2)   2,256(0) 5,237(3) 1,502(0)      50(0) 4,919(2) 1,820(1)        0(0)
+                                                                           objdump    300(0)    874(0)  5,968(1)    615(0)    559(0) 1,921(1)    329(0)    845(0)  3,538(1)
+                                                                           find     1,682(0) 2,329(1)     352(0) 2,779(1) 1,232(0)     189(0) 2,522(1) 1,489(0)       40(0)
+                                                                           grep       698(0) 3,369(0)     430(0) 1,457(0) 2,611(0)      70(0) 1,905(0) 2,162(0)       43(0)
+                                                                           diff       672(0) 2,062(0)     892(0) 1,909(0)     824(0)    48(0) 1,945(0)     789(0)     52(0)
+Figure 3: The efficiency of branch coverage and bug finding                make     1,320(0) 1,933(0)      48(0) 2,009(0) 1,244(0)      29(0) 1,778(0) 1,475(0)      102(0)
+                                                                           du         232(0) 1,132(0)      95(0)    547(0)    817(0)    51(0)    644(0)    720(0)     51(0)
+ability by concolic testing tools with and without Orbis.                  patch      457(0) 1,055(1)     968(0)    791(0)    720(1)   660(0)    829(0)    682(1)    420(0)
+                                                                           objcopy    762(0)    603(0)  1,589(0)    801(0)    564(0) 1,476(0)    877(0)    488(0)  1,516(0)
+                                                                           ptx        265(0) 1,938(0)     122(0) 1,008(0) 1,194(0)      46(0) 1,065(0) 1,137(0)       80(0)
+largest benchmark programs previously employed in Chameleon’s              csplit     292(0) 1,369(0)     625(0) 1,228(0)     433(0)    36(0) 1,125(0)     536(0)     26(0)
+                                                                           ls         121(0) 1,925(0)     148(0) 1,037(0) 1,008(0)      56(0) 1,566(0)     480(0)     17(0)
+evaluation: vim-5.7, gawk-3.0.3, grep-2.2, and sed-1.17. These pro-        total   13,395(4) 44,163(5) 20,193(1) 37,419(7) 20,144(2) 6,505(1) 36,306(6) 21,248(3)  6,211(1)
+grams contain 27, 16, 29, and 4 options, respectively. Orbis aims to
+guide concolic testing techniques to quickly reach option-related          When using KLEE alone, numerous states must be traversed before
+branches: vim (1,548 OBs), gawk (293 OBs), grep (278 OBs), and sed         reaching the states corresponding to the option “-p” (line 7), since
+(14 OBs). Integrating Orbis into a concolic testing engine corre-          the switch statement contains 50 cases. In contrast, Orbis-guided
+sponds to replacing the Execute procedure (Algorithm 1) with a             KLEE leveraged “-p” both as an option argument and as an initial
+concolic testing procedure [4, 9]. The main difference is that Algo-       promising state set, steering exploration directly toward relevant
+rithm 1 takes as input a promising state set SP initialized by multiple    states—those including the branch condition at line 7—rather than
+seed inputs, whereas these two concolic testing tools directly uti-        starting from line 1. Empirically, KLEE with Orbis generated the
+lize the seed inputs without explicit state initialization. To address     test-case “diff -p -0” in just 7.1 seconds. Here, “-p” is an option
+this, we modified the output of the Guide stage in Algorithm 2 to          argument constructed by the Construct stage, whereas “-0” is a
+provide the selected seed inputs instead of a promising state set.         symbolic argument generated by KLEE through SMT solving. In
+For the evaluation, we allocated a total testing budget of 24 hours        contrast, KLEE alone required 9,012.7 seconds to generate the entire
+per program, reporting the average results of five trials.                 argument “-p -0” symbolically—approximately 1,269× longer. Fur-
+   Figure 3 shows that Orbis improves total branch coverage and            thermore, thanks to the SMT-solving reduction method introduced
+bug-finding capability in concolic testing tools. On average, inte-        in the Update stage, Orbis reduced solver calls and generated this
+grating Orbis increased total branch coverage by 21.5% for CREST           test-case 7.91x faster than the Orbis variant without SMT skipping.
+and 7.6% for Chameleon. For uniquely covered branches, Orbis
+covered 10.9x and 5.4x more branches than the corresponding tools
+without Orbis. Orbis also enabled CREST and Chameleon to de-               4.7     Comparison with Fuzzing Techniques
+tect five and six bugs, respectively. The integrated versions detected
+                                                                           We compared KLEE+Orbis with three state-of-the-art fuzzing tech-
+all bugs found by their pure counterparts and additionally discov-
+                                                                           niques in testing program options—ZigZagFuzz [26], OSmart [45],
+ered two more bugs in vim and sed. These results demonstrate
+                                                                           and CarpetFuzz [44]—in branch coverage and bug-detection. For
+Orbis’s generality and its ability to consistently improve branch
+                                                                           this comparison, we used the publicly available implementations
+coverage and bug detection across diverse symbolic executors.
+                                                                           without modification. However, unlike Orbis, which operates fully
+                                                                           automatically, these fuzzers require manual intervention to func-
+4.6      Case Study                                                        tion effectively, including specifying available options and their
+To illustrate how Orbis guides symbolic execution to achieve higher        valid argument values (e.g., -e “abc|cd”) and preparing an initial
+total branch coverage, we conducted a case study on the diff               seed input for each program. For a fair comparison, we provided the
+program. Particularly, we analyzed an effective test-case (“diff -p -0”)   fuzzers with all information obtained from the Extract stage—i.e.,
+that covers 471 branches in a single execution, accounting for 48.3%       the available options and their valid argument values. In addition,
+of the total coverage achieved by KLEE within a 24-hour budget.            because these fuzzers require an initial seed input, we manually
+We then compared the average time required by KLEE with and                collected valid test cases from each target program’s documenta-
+without Orbis’s guidance to generate this test-case. The simplified        tion and selected as the initial seed the one covering the largest
+code snippet below illustrates how Orbis efficiently generates it:         number of OBs. Without such manual intervention, their perfor-
+                                                                           mance degrades substantially. Therefore, we provided the neces-
+ 1   int opt0 = -1; char style = "+";
+ 2   opt0 = getopt_long(argc, argv); /* Function for parsing options */
+                                                                           sary information for each program and evaluated all fuzzers on our
+ 3   /* ... Other branch conditions ... */                                 benchmark suite, running each fuzzer for 24 hours, repeated five
+ 4   switch (opt0) {
+ 5       case "a": /* Handle option "-a" */ break;                         times per benchmark, and reported the average results.
+ 6       /* ... Define other 48 case statements ... */                        Table 10 shows that Orbis explores a large number of branches
+ 7       case "p":
+ 8           if (style == "+") { /* Code unrelated to options */ }         that remain unreachable by state-of-the-art fuzzers and outperforms
+ 9           /* ... Other conditions ... */                                them in terms of bug-finding capability. Across 15 benchmarks,
+10           opt1 = getopt_long(argc, argv);
+11           if (opt1 == "0") {/* Handle option "-p -0" */}                Orbis exclusively covered 13,395, 37,419, and 36,306 branches that
+12   }
+                                                                           ZigZagFuzz, OSmart, and CarpetFuzz failed to reach, respec-
+                                                                           tively. In particular, among the 13,395 branches not covered by
+Orbis: Guiding Symbolic Execution Techniques to Maximize Option-Related Branch Coverage                          ASE ’26, October 12–16, 2026, Munich, Germany
+
+
+ZigZagFuzz, 92.1% remained unreachable even when its option-                         exploration toward OBs. Since Orbis is a complementary technique,
+configuration method replaced Orbis’s Construct stage (FuzzConst                     integrating it with existing approaches improves their performance.
+in Table 7), highlighting that these branches can only be reached
+                                                                                         Software Testing with Option Arguments. Our work re-
+with option configurations tailored to symbolic execution. In con-
+                                                                                     lates to software testing techniques that construct valid option
+trast, these fuzzers exclusively covered 20,193, 6,505, and 6,211
+                                                                                     arguments for target programs [22, 24–26, 40, 44, 45, 50], but dif-
+branches, primarily because they leverage diverse inputs generated
+                                                                                     fers in how option arguments are defined and utilized. Several
+by mutating manually provided seeds, while Orbis operates with-
+                                                                                     symbolic execution techniques [22, 24] manually define option
+out such manual seeds and relies on symbolic inputs. In terms of
+                                                                                     arguments for each program and concatenate them with gener-
+bug detection, Orbis detected four, seven, and six additional bugs
+                                                                                     ated inputs to enhance coverage. Some grey-box fuzzing tech-
+compared to ZigZagFuzz, OSmart, and CarpetFuzz, respectively,
+                                                                                     niques [25, 26, 40, 44, 45, 50] attempt to test a wide range of op-
+while missing only one bug in objdump.
+                                                                                     tion arguments by mutating options extracted from the program’s
+                                                                                     manual pages and source code. In contrast, Orbis automatically
+4.8    Threats to Validity                                                           constructs option arguments while interacting with a symbolic
+                                                                                     executor, requiring no prior knowledge. It further leverages these
+(1) In the Extract stage, Orbis identifies options solely from the
+                                                                                     arguments to initialize the symbolic executor states and reduce
+program’s help output and thus may miss hidden options not listed
+                                                                                     SMT-solver invocations, maximizing option-related coverage.
+there. However, our manual inspection shows that fewer than one
+hidden option exists per benchmark program on average (0.7 per                           Software Testing for Specific Code Regions. Our approach
+program). Moreover, even when manually incorporated, these op-                      aligns with techniques designed to reach specific code regions
+tions have negligible impacts, improving branch coverage by only                    within a program [2, 14, 16, 31, 33, 35, 36, 47, 48]. However, Orbis
+about 1%. Therefore, we adopt a cost-effective strategy that ex-                    differs in both the target regions and the methodology. For instance,
+tracts options exclusively from the help output. (2) Orbis identifies               directed symbolic execution [31] prioritizes code lines associated
+option-related branches (OBs) from (variable, value) dependencies                   with bugs (e.g., failing assertions) and quickly reaches them using
+in execution-trace differences. It does not explicitly consider indi-               specialized search heuristics. Oasis [14] and KATCH [33] focus on
+rect control dependencies that arise solely through execution reach-                covering newly added patch codes by leveraging heuristics based
+ability. For example, one option-controlled branch may determine                    on static and dynamic analysis. AFLGo [2] prioritizes user-defined
+whether a later, unrelated branch is reached, even though no option-                target regions using seeds with the shortest distance, while AFLS-
+specific (variable, value) dependency exists between them. While                    mart++ [35] targets hard-to-reach input chunks by delicately mutat-
+our results indicate that the extracted OBs effectively guide sym-                  ing the seed that can reach those chunks. Unlike these approaches,
+bolic execution, incorporating more precise control-dependence                      Orbis is the first symbolic execution technique that specifically tar-
+analysis could further improve performance. (3) We integrated                       gets option-related branches by automatically constructing option
+Orbis into two dynamic symbolic executors, KLEE and CREST,                          arguments and initializing the corresponding symbolic states.
+significantly improving their performance. However, they may not
+generalize to other symbolic execution engines [12, 21].                             6    Conclusion
+                                                                                    Recent advancements in symbolic execution have improved its abil-
+                                                                                    ity to uncover hard-to-reach bugs and code regions. However, these
+5     Related Work                                                                  techniques still struggle to explore option-related code regions,
+     Boosting Symbolic Execution. To our knowledge, Orbis                           which correspond to core program functionalities. Orbis addresses
+is the first technique to improve symbolic execution by guiding                     this limitation by automatically constructing effective option ar-
+it to reach option-related branches. Existing approaches improve                    guments and optimizing initial states, while reducing unnecessary
+symbolic execution through various methodologies [4, 8, 10, 11, 22–                 SMT solver invocations. Experimental results show that integrating
+24, 34, 39, 41, 42, 46, 49]. Search heuristics [4, 22, 41, 49] prioritize           Orbis with five advanced techniques yields significant gains in
+states to maximize code coverage and trigger bugs based on prede-                   branch coverage and bug detection beyond existing approaches.
+fined criteria, such as states containing less exercised subpaths [27]
+or states with the shortest distance to uncovered code regions [4].                  Acknowledgments
+Second, state-pruning strategies [3, 10, 11, 23] improve symbolic
+                                                                                    This work was supported by the National Research Foundation
+execution efficiency by eliminating redundant states using unique
+                                                                                    of Korea(NRF) grant funded by the Korea government(MSIT) (RS-
+criteria, such as states executing the same code blocks as previ-
+                                                                                    2026-25497428, RS-2026-25521371). This work was also supported
+ously explored ones [3], states that are likely to generate invalid
+                                                                                    by the Institute of Information & Communications Technology
+inputs [46], and states that fail to reach annotated bug locations [23].
+                                                                                    Planning & Evaluation (IITP) grant funded by the Korea govern-
+Third, constraint-solving methods [24, 34, 39, 42] focus on reduc-
+                                                                                    ment (MSIT) (2022-0-00688, 2024-00337703, 2024-00398745, No.RS-
+ing the computational cost of solving specific constraint types,
+                                                                                    2024-00438686, Development of software reliability improvement
+including array constraints [34] and floating-point constraints [28].
+                                                                                    technology through identification of abnormal open sources and
+Lastly, SymTuner [8] automatically tunes the external parameters
+                                                                                    automatic application of DevSecOps).
+of a symbolic executor (e.g., KLEE) from a manually specified pa-
+rameter space. In contrast, Orbis improves symbolic execution by                     Data Availability. Orbis is accessible at: https://doi.org/10.5281/
+constructing option arguments for the target program and guiding                     zenodo.21767392.
+ASE ’26, October 12–16, 2026, Munich, Germany                                                                               Minjong Kim, Sungjae Hwang, and Sooyoung Cha
+
+
+References                                                                                [23] Joxan Jaffar, Vijayaraghavan Murali, and Jorge A. Navas. 2013. Boosting Concolic
+ [1] Dirk Beyer and Thomas Lemberger. 2018. CPA-SymExec: efficient symbolic                    Testing via Interpolation. In Proceedings of the 9th Joint Meeting on Foundations
+     execution in CPAchecker. In Proceedings of the 33rd ACM/IEEE International                of Software Engineering (ESEC/FSE ’13). 48–58. doi:10.1145/2491411.2491425
+     Conference on Automated Software Engineering. 900–903. doi:10.1145/3238147.          [24] Timotej Kapus, Frank Busse, and Cristian Cadar. 2020. Pending constraints in
+     3240478                                                                                   symbolic execution for better exploration and seeding. In Proceedings of the 35th
+ [2] Marcel Böhme, Van-Thuan Pham, Manh-Dung Nguyen, and Abhik Roychoud-                       IEEE/ACM International Conference on Automated Software Engineering. 115–126.
+     hury. 2017. Directed greybox fuzzing. In Proceedings of the 2017 ACM SIGSAC               doi:10.1145/3324884.3416589
+     conference on computer and communications security. 2329–2344. doi:10.1145/          [25] Ahcheong Lee, Irfan Ariq, Yunho Kim, and Moonzoo Kim. 2022. POWER: Program
+     3133956.3134020                                                                           option-aware fuzzer for high bug detection ability. In 2022 IEEE Conference on
+ [3] Peter Boonstoppel, Cristian Cadar, and Dawson Engler. 2008. RWset: Attacking              Software Testing, Verification and Validation (ICST). IEEE, 220–231. doi:10.1109/
+     path explosion in constraint-based test generation. In International Conference           icst53961.2022.00032
+     on Tools and Algorithms for the Construction and Analysis of Systems (TACAS ’08).    [26] Ahcheong Lee, Youngseok Choi, Shin Hong, Yunho Kim, Kyutae Cho, and Moon-
+     351–366. doi:10.1007/978-3-540-78800-3_27                                                 zoo Kim. 2025. ZigZagFuzz: Interleaved Fuzzing of Program Options and Files.
+ [4] Jacob Burnim and Koushik Sen. 2008. Heuristics for Scalable Dynamic Test Gen-             ACM Transactions on Software Engineering and Methodology 34, 2 (2025), 1–31.
+     eration. In Proceedings of 23rd IEEE/ACM International Conference on Automated            doi:10.1145/3697014
+     Software Engineering (ASE ’08). 443–446. doi:10.1109/ASE.2008.69                     [27] You Li, Zhendong Su, Linzhang Wang, and Xuandong Li. 2013. Steering Symbolic
+ [5] Cristian Cadar, Daniel Dunbar, and Dawson Engler. 2008. KLEE: Unassisted and              Execution to Less Traveled Paths. In Proceedings of the 2013 ACM SIGPLAN
+     Automatic Generation of High-coverage Tests for Complex Systems Programs.                 International Conference on Object Oriented Programming Systems Languages, and
+     In Proceedings of the 8th USENIX Conference on Operating Systems Design and               Applications (OOPSLA ’13). 19–32. doi:10.1145/2544173.2509553
+     Implementation (OSDI ’08). 209–224.                                                  [28] Daniel Liew, Daniel Schemmel, Cristian Cadar, Alastair F Donaldson, Rafael
+ [6] Cristian Cadar and Dawson Engler. 2005. Execution Generated Test Cases:                   Zahl, and Klaus Wehrle. 2017. Floating-point symbolic execution: a case study
+     How to Make Systems Code Crash Itself. In Proceedings of the 12th International           in n-version programming. In 2017 32nd IEEE/ACM International Conference
+     Conference on Model Checking Software (SPIN’05). 2–23. doi:10.1007/11537328_2             on Automated Software Engineering (ASE). IEEE, 601–612. doi:10.1109/ase.2017.
+ [7] Sooyoung Cha, Seongjoon Hong, Jiseong Bak, Jingyoung Kim, Junhee Lee, and                 8115670
+     Hakjoo Oh. 2022. Enhancing Dynamic Symbolic Execution by Automatically               [29] Chuan Luo, Shuangyu Lyu, Wei Wu, Hongyu Zhang, Dianhui Chu, and Chunming
+     Learning Search Heuristics. IEEE Transactions on Software Engineering (2022),             Hu. 2025. Towards High-Strength Combinatorial Interaction Testing for Highly
+     3640–3663. doi:10.1109/TSE.2021.3101870                                                   Configurable Software Systems. In 2025 IEEE/ACM 47th International Conference
+ [8] Sooyoung Cha, Myungho Lee, Seokhyun Lee, and Hakjoo Oh. 2022. SymTuner:                   on Software Engineering (ICSE). IEEE Computer Society, 650–650. doi:10.1109/
+     Maximizing the Power of Symbolic Execution by Adaptively Tuning External                  ICSE55347.2025.00113
+     Parameters. In Proceedings of the 44th International Conference on Software Engi-    [30] Sicheng Luo, Hui Xu, Yanxiang Bi, Xin Wang, and Yangfan Zhou. 2021. Boosting
+     neering (ICSE ’22). 2068–2079. doi:10.1145/3510003.3510185                                symbolic execution via constraint solving time prediction (experience paper).
+ [9] Sooyoung Cha and Hakjoo Oh. 2019. Concolic Testing with Adaptively Changing               In Proceedings of the 30th ACM SIGSOFT International Symposium on Software
+     Search Heuristics. In Proceedings of the 2019 27th ACM Joint Meeting on European          Testing and Analysis. 336–347. doi:10.1145/3460319.3464813
+     Software Engineering Conference and Symposium on the Foundations of Software         [31] Kin-Keung Ma, Khoo Yit Phang, Jeffrey S Foster, and Michael Hicks. 2011. Directed
+     Engineering (ESEC/FSE ’19). 235–245. doi:10.1145/3338906.3338964                          symbolic execution. In Static Analysis: 18th International Symposium, SAS 2011,
+[10] Sooyoung Cha and Hakjoo Oh. 2020. Making Symbolic Execution Promising by                  Venice, Italy, September 14-16, 2011. Proceedings 18. 95–111. doi:10.1007/978-3-
+     Learning Aggressive State-Pruning Strategy. In The 28th ACM Joint European                642-23702-7_11
+     Software Engineering Conference and Symposium on the Foundations of Software         [32] Henry B Mann and Donald R Whitney. 1947. On a test of whether one of
+     Engineering (ESEC/FSE ’20). doi:10.1145/3368089.3409755                                   two random variables is stochastically larger than the other. The annals of
+[11] Ying-Shen Chen, Wei-Ning Chen, Che-Yu Wu, Hsu-Chun Hsiao, and Shih-Kun                    mathematical statistics (1947), 50–60. doi:10.1214/aoms/1177730491
+     Huang. 2018. Dynamic Path Pruning in Symbolic Execution. In 2018 IEEE Con-           [33] Paul Dan Marinescu and Cristian Cadar. 2013. KATCH: high-coverage testing of
+     ference on Dependable and Secure Computing (DSC). IEEE, 1–8. doi:10.1109/desec.           software patches. In Proceedings of the 2013 9th Joint Meeting on Foundations of
+     2018.8625128                                                                              Software Engineering (ESEC/FSE 2013). 235–245. doi:10.1145/2491411.2491438
+[12] Vitaly Chipounov, Volodymyr Kuznetsov, and George Candea. 2011. S2E: A               [34] David M Perry, Andrea Mattavelli, Xiangyu Zhang, and Cristian Cadar. 2017.
+     platform for in-vivo multi-path analysis of software systems. Acm Sigplan Notices         Accelerating array constraints in symbolic execution. In Proceedings of the 26th
+     46, 3 (2011), 265–278. doi:10.1145/1961295.1950396                                        ACM SIGSOFT International Symposium on Software Testing and Analysis. 68–78.
+[13] CREST. A concolic test generation tool for C. 2008. https://github.com/jburnim/           doi:10.1145/3092703.3092728
+     crest.                                                                               [35] Van-Thuan Pham. 2023. AFLSmart++: smarter greybox fuzzing. In 2023 IEEE/ACM
+[14] Olivier Crameri, Rekha Bachwani, Tim Brecht, Ricardo Bianchini, Dejan Kostic,             International Workshop on Search-Based and Fuzz Testing (SBFT). IEEE, 76–79.
+     and Willy Zwaenepoel. 2009. Oasis: Concolic Execution Driven by Test Suites and           doi:10.1109/sbft59156.2023.00023
+     Code Modifications. Technical Report. Technical Report LABOS-REPORT-2009-            [36] Van-Thuan Pham, Marcel Böhme, Andrew E Santosa, Alexandru Răzvan Căci-
+     002, EPFL.                                                                                ulescu, and Abhik Roychoudhury. 2019. Smart greybox fuzzing. IEEE Transactions
+[15] Leonardo De Moura and Nikolaj Bjørner. 2008. Z3: An efficient SMT solver. In              on Software Engineering 47, 9 (2019), 1980–1997. doi:10.1109/tse.2019.2941681
+     International conference on Tools and Algorithms for the Construction and Analysis   [37] Heinz Riener, Finn Haedicke, Stefan Frehse, Mathias Soeken, Daniel Große, Rolf
+     of Systems. Springer, 337–340. doi:10.1007/978-3-540-78800-3_24                           Drechsler, and Goerschwin Fey. 2017. metaSMT: focus on your application and
+[16] Peter Dinges and Gul Agha. 2014. Targeted test input generation using symbolic-           not on solver integration. International Journal on Software Tools for Technology
+     concrete backward execution. In Proceedings of the 29th ACM/IEEE International            Transfer 19, 5 (2017), 605–621. doi:10.1007/s10009-016-0426-1
+     Conference on Automated Software Engineering (ASE ’14). 31–36. doi:10.1145/          [38] Koushik Sen, Darko Marinov, and Gul Agha. 2005. CUTE: A Concolic Unit Testing
+     2642937.2642951                                                                           Engine for C. In Proceedings of the 10th European Software Engineering Conference
+[17] Vijay Ganesh and David L Dill. 2007. A decision procedure for bit-vectors and             Held Jointly with 13th ACM SIGSOFT International Symposium on Foundations of
+     arrays. In International conference on computer aided verification. Springer, 519–        Software Engineering (ESEC/FSE ’05). 263–272. doi:10.1145/1095430.1081750
+     531. doi:10.1007/978-3-540-73368-3_52                                                [39] Ziqi Shuai, Zhenbang Chen, Kelin Ma, Kunlin Liu, Yufeng Zhang, Jun Sun, and
+[18] Corrado Gini. 1921. Measurement of inequality of incomes. The economic journal            Ji Wang. 2024. Partial Solution Based Constraint Solving Cache in Symbolic
+     31, 121 (1921), 124–125. doi:10.2307/2223319                                              Execution. Proceedings of the ACM on Software Engineering 1, FSE (2024), 2493–
+[19] GNU Compiler Collection. 2025. GCC Gcov Manual. https://gcc.gnu.org/                      2514. doi:10.1145/3660817
+     onlinedocs/gcc/Gcov.html                                                             [40] Suhwan Song, Chengyu Song, Yeongjin Jang, and Byoungyoung Lee. 2020. CrFuzz:
+[20] Patrice Godefroid, Nils Klarlund, and Koushik Sen. 2005. DART: Directed Au-               Fuzzing multi-purpose programs through input validation. In Proceedings of
+     tomated Random Testing. In Proceedings of the 2005 ACM SIGPLAN Confer-                    the 28th ACM Joint Meeting on European Software Engineering Conference and
+     ence on Programming Language Design and Implementation (PLDI ’05). 213–223.               Symposium on the Foundations of Software Engineering. 690–700. doi:10.1145/
+     doi:10.1007/978-3-642-19237-1_4                                                           3368089.3409769
+[21] Patrice Godefroid, Michael Y. Levin, and David Molnar. 2012. SAGE: Whitebox          [41] Yue Sun, Guowei Yang, Shichao Lv, Zhi Li, and Limin Sun. 2024. Concrete
+     Fuzzing for Security Testing: SAGE Has Had a Remarkable Impact at Microsoft.              Constraint Guided Symbolic Execution. In Proceedings of the IEEE/ACM 46th
+     Queue (2012), 20–27. doi:10.1145/2093548.2093564                                          International Conference on Software Engineering. 1–12. doi:10.1145/3597503.
+[22] Jingxuan He, Gishor Sivanrupan, Petar Tsankov, and Martin Vechev. 2021.                   3639078
+     Learning to Explore Paths for Symbolic Execution. In Proceedings of the 2021         [42] David Trabish, Shachar Itzhaky, and Noam Rinetzky. 2021. Address-aware query
+     ACM SIGSAC Conference on Computer and Communications Security (CCS ’21).                  caching for symbolic execution. In 2021 14th IEEE Conference on Software Testing,
+     2526–2540. doi:10.1145/3460120.3484813                                                    Verification and Validation (ICST). IEEE, 116–126. doi:10.1109/icst49551.2021.00023
+Orbis: Guiding Symbolic Execution Techniques to Maximize Option-Related Branch Coverage                                    ASE ’26, October 12–16, 2026, Munich, Germany
+
+
+[43] David Trabish, Andrea Mattavelli, Noam Rinetzky, and Cristian Cadar. 2018.        [47] Jie Wu, Chengyu Zhang, and Geguang Pu. 2020. Reinforcement learning guided
+     Chopped symbolic execution. In Proceedings of the 40th International Conference        symbolic execution. In 2020 IEEE 27th International Conference on Software Analy-
+     on Software Engineering. 350–360. doi:10.1145/3180155.3180251                          sis, Evolution and Reengineering (SANER). IEEE, 662–663. doi:10.1109/saner48275.
+[44] Dawei Wang, Ying Li, Zhiyu Zhang, and Kai Chen. 2023. { CarpetFuzz } : Auto-           2020.9054815
+     matic program option constraint extraction from documentation for fuzzing. In     [48] Guowei Yang, Suzette Person, Neha Rungta, and Sarfraz Khurshid. 2014. Directed
+     32nd USENIX Security Symposium (USENIX Security 23). 1919–1936.                        incremental symbolic execution. ACM Transactions on Software Engineering and
+[45] Kelin Wang, Mengda Chen, Liang He, Purui Su, Yan Cai, Jiongyi Chen, Bin                Methodology (TOSEM) 24, 1 (2014), 1–42. doi:10.1145/2345156.1993558
+     Zhang, Chao Feng, and Chaojing Tang. 2024. OSmart: Whitebox Program Option        [49] Jaehan Yoon and Sooyoung Cha. 2024. FeatMaker: Automated Feature Engi-
+     Fuzzing. In Proceedings of the 2024 on ACM SIGSAC Conference on Computer and           neering for Search Strategy of Symbolic Execution. Proceedings of the ACM on
+     Communications Security. 705–719. doi:10.1145/3658644.3690228                          Software Engineering 1, FSE (2024), 2447–2468. doi:10.1145/3660815
+[46] E. Wong, L. Zhang, S. Wang, T. Liu, and L. Tan. 2015. DASE: Document-             [50] Zenong Zhang, George Klees, Eric Wang, Michael Hicks, and Shiyi Wei. 2023.
+     Assisted Symbolic Execution for Improving Automated Software Testing. In               Fuzzing configurations of program options. ACM Transactions on Software Engi-
+     2015 IEEE/ACM 37th IEEE International Conference on Software Engineering (ICSE         neering and Methodology 32, 2 (2023), 1–21. doi:10.14722/fuzzing.2022.23008
+     ’15). 620–631. doi:10.1109/icse.2015.78
+                                                                                       Received 2026-03-26; accepted 2026-06-18
+

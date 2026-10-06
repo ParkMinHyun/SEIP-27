@@ -1,6 +1,6 @@
 \begin{algorithm}[t]
-\caption{Shared Point Estimation}
-\label{alg:point-estimation}
+\caption{Shared Duration Predictor}
+\label{alg:shared-predictor}
 \footnotesize
 \renewcommand{\algorithmicrequire}{\textbf{Input:}}
 \renewcommand{\algorithmicensure}{\textbf{Output:}}
@@ -14,7 +14,7 @@
   \State \Return $\sum_{k\in\mathcal K}\hat b(k)\cdot\gamma$ \label{alg:pe:compute}
 \EndFunction
 \State
-\Procedure{UpdatePointEstimator}{$\mathcal K_i,p_i$}
+\Procedure{Update}{$\mathcal K_i,p_i$}
   \State $\gamma_{\mathrm{old}}\gets\gamma,\quad \mathit{ratios}\gets\emptyset$ \label{alg:pe:snapshot}
   \For{each workload key $k\in\mathcal K_i$ with $p_i(k)>0$} \label{alg:pe:loop}
     \If{$\hat b(k)>0$} \label{alg:pe:observed}

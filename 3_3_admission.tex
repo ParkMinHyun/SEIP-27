@@ -27,7 +27,7 @@ When the queue drains, both groups are enabled again.
 \smallskip\noindent\textbf{Upper-estimate calibration.}
 At draft sequence completion, \(\mathit{admission}.\textsc{CalibrateUpperEstimates}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:ad-calibrate}) calibrates the upper estimate \(U\) used in later decisions from observed stage overruns relative to their predictions.
 It forms a measured sequence \(\mathcal K\) from the stages with execution times \(p_i(k)\) in each remaining sequence \(\mathcal K_{i,j}\).
-If \(\mathcal K\) contains a stage with a prior timing measurement, the controller computes the residual factor using the predictions \(\hat p_i(k)\) retained before execution:
+If \(\mathcal K\) contains a previously measured stage, the controller computes the residual factor using the predictions \(\hat p_i(k)\) retained before execution:
 \begin{equation}
   \phi(\mathcal{K})
   =\frac{\sum_{k\in\mathcal{K}}\max\{\hat p_i(k),p_i(k)\}}

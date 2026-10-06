@@ -19,7 +19,7 @@ We induce memory pressure by running AnTuTu Benchmark~11.1.4 alongside the camer
 The 24MP condition denotes the requested capture mode; at overheat level~5 and above, the production camera stack falls back to 12MP.
 
 \smallskip\noindent\textbf{Run protocol.}
-Before each run, we force-stop and relaunch the camera application, resetting the process-local controller state and estimator history.
+Before each run, we force-stop and relaunch the camera application, resetting the process-local controller state.
 We reach each target starting level through repeated captures or idle cooling and begin the run when the device reports that level.
 Thermal state then evolves without external intervention for the rest of the run.
 A reproducible ADB loop issues each shutter input as soon as the application receives \texttt{captureAvailable}, saturating the exposed request rate.
