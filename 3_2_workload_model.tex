@@ -25,6 +25,4 @@ This ratio is the scale factor that would make that base duration match the curr
 It then divides each measured duration by the value of \(\gamma\) held before this update, so that the base duration does not double-count the runtime variation already represented by \(\gamma\).
 The resulting \(p_i(k)/\gamma\) is incorporated into that key's cumulative average \(\hat b(k)\).
 Finally, it replaces \(\gamma\) with the median of the \(p_i(k)/\hat b(k)\) ratios from the completed draft sequence.
-If no ratio is available, \(\gamma\) remains unchanged.
-The cumulative average dampens isolated spikes in a key's duration history.
-When multiple ratios are available, their median reduces the influence of a deviation confined to one stage.
+The cumulative average \(\hat b(k)\) dampens isolated spikes in a key's duration history, and setting \(\gamma\) to the median ratio across measured stages reduces the influence of a deviation confined to one stage.
