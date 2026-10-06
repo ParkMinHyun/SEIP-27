@@ -39,7 +39,7 @@
 \EndUpon
 \State
 \Upon{OnDraftSequenceCompleted}{$\mathcal K_i,C_i,p_i$}
-  \State $\mathit{predictor}.\Call{Update}{\mathcal K_i,p_i}$ \label{alg:ov:update}
+  \State $\mathit{predictor}.\Call{Update}{\mathcal K_i,p_i}$ \label{alg:ov:update} \Comment{Algorithm~\ref{alg:shared-predictor}}
   \State $\mathit{admission}.\Call{CalibrateUpperEstimates}{\mathcal K_i,p_i}$ \label{alg:ov:ad-calibrate}
   \State $\mathit{pacing}.\Call{RebaseBacklog}{\mathcal K_i,C_i}$ \label{alg:ov:pa-rebase}
 \EndUpon
