@@ -27,7 +27,7 @@ At the pacing decision time,
   \label{eq:backlog}
 \end{equation}
 
-The backlog \(\hat B_i\) does not yet include capture \(i\)'s draft work or that of capture \(i+1\), which the current callback enables.
+The backlog \(\hat B_i\) does not yet include draft work for capture \(i\) or capture \(i+1\), the next capture enabled by this callback.
 Pacing therefore reserves a duration \(\hat R\) for each.
 Let \(\mathcal K^{\mathrm{adm}}\) denote the configured sequence \(\mathcal K\) after removing optional work disabled by admission.
 Pacing computes the sequence reserve from the latest timing state as
@@ -41,7 +41,7 @@ Pacing computes the sequence reserve from the latest timing state as
 \end{equation}
 where \(C_\tau\) is the recency-weighted \(\tau\)-quantile of completed draft-sequence durations.
 The controller selects \(\tau\) from this duration history using the same ESS-based quantile rule as for the residual factors in Section~\ref{sec:admission}.
-With all configured stages enabled (\(\mathcal K^{\mathrm{adm}}=\mathcal K\)), pacing uses \(C_\tau\) as a conservative reserve, bounded below by \(\hat P(\mathcal K)\).
+With all configured stages enabled (\(\mathcal K^{\mathrm{adm}}=\mathcal K\)), pacing uses the larger of \(C_\tau\) and \(\hat P(\mathcal K)\) as its reserve.
 After admission disables optional work, pacing adds any positive historical headroom of \(C_\tau\) above \(\hat P(\mathcal K)\) to the point estimate based on \(\mathcal K^{\mathrm{adm}}\).
 
 \(T_{\mathrm{queue}}\) denotes the remaining timeout budget of the most recently enqueued capture.
@@ -60,18 +60,26 @@ It uses \(\hat P^{\mathrm{last}}\), the latest point estimate of \(\mathcal K^{\
   +\lceil\hat P^{\mathrm{last}}\rceil.
   \label{eq:clock-update}
 \end{equation}
-The \(\max\) term places the provisional work after both the existing drain forecast and the callback release time.
-Pacing records the stages represented by the extension so that their predicted cost can be revised at a later rebase.
+The \(\max\) term places the provisional work after the existing drain forecast and the callback release time.
+Pacing also adds capture \(i\) to \(\mathcal Q\), the set of captures whose pacing decisions have occurred but whose draft sequences have not yet started.
+A capture leaves \(\mathcal Q\) when its draft sequence starts.
 
 \smallskip\noindent\textbf{Backlog rebase.}
-Pacing rebases the backlog at each draft-sequence completion because provisional extensions use earlier predictions that can become stale as new durations are observed.
+Pacing rebases the backlog at each draft-sequence completion because provisional extensions use earlier point estimates that can become stale as new durations are observed and as admission disables optional work.
 After the shared predictor and admission update their states, \(\mathit{pacing}.\textsc{RebaseBacklog}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:pa-rebase}) refreshes the estimate used for future extensions.
-Using \(\mathcal K^{\mathrm{adm}}\) for the completed capture, it updates
-\[
-  \hat P^{\mathrm{last}}
-  =
-  \hat P(\mathcal K^{\mathrm{adm}}).
-\]
-Pacing then rebuilds \(\hat t_{\mathrm{drain}}\) from \(\mathit{now}\) by re-estimating the stages recorded for captures whose pacing decisions have occurred but whose draft sequences have not yet started.
-Rebase updates each provisional entry's predicted cost using its recorded stages and the predictor's latest duration estimates.
-Alongside this rebase, pacing adds the measured draft-sequence duration \(C_i\) to the history for \(C_\tau\), which informs the reserve for draft work not yet included in the backlog.
+Using the current admission state, pacing first sets \(\hat P^{\mathrm{last}}=\hat P(\mathcal K^{\mathrm{adm}})\).
+Pacing then rebuilds the drain forecast from the current time as
+\begin{equation}
+  \hat t_{\mathrm{drain}}
+  \gets
+  \mathit{now}
+  +\left\lceil
+    \lvert\mathcal Q\rvert\cdot\hat P(\mathcal K^{\mathrm{adm}})
+  \right\rceil.
+  \label{eq:clock-rebase}
+\end{equation}
+Every capture in \(\mathcal Q\) shares the configured sequence \(\mathcal K\), which cannot change until the draft queue drains.
+Pacing therefore estimates each with the current \(\mathcal K^{\mathrm{adm}}\); optional work disabled by admission remains disabled until the queue drains.
+Rebase occurs after a draft sequence completes and before the next starts.
+Since draft sequences execute serially, no draft sequence is in progress at that point.
+Finally, pacing adds the measured draft-sequence duration \(C_i\) to the history for \(C_\tau\), so the reserve for subsequent captures reflects observed durations.
