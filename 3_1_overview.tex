@@ -26,7 +26,7 @@ The original workflow excludes optional stages from \(\mathcal K_i\) at overheat
 Before each optional stage \(k_j\), \(\mathit{controller}.\textsc{DecideAdmission}\) compares the estimated duration of the remaining sequence \(\mathcal K_{i,j}=(k_j,\ldots,k_m)\) with the remaining timeout budget \(T_{i,j}\) (line~\ref{alg:ov:admission}).
 After the admitted stages execute, \textsf{CompleteDraftSequence} performs the mandatory encoding and saving, represented by the final key \(k_m\), to produce the draft image \(\mathit{draft}_i\) (line~\ref{alg:ov:publish}).
 
-Along with \(\mathit{draft}_i\), \textsf{CompleteDraftSequence} returns the measured durations \(p_i(k)\) of the stages in \(\mathcal K_i\) and the measured draft sequence duration \(C_i\).
+Along with \(\mathit{draft}_i\), \textsf{CompleteDraftSequence} returns the measured durations \(p_i(k)\) of the executed stages in \(\mathcal K_i\) and the measured draft sequence duration \(C_i\).
 At line~\ref{alg:ov:update}, \(\mathit{controller}.\textsc{Update}\) updates the shared predictor with \(p_i(k)\) and then updates admission and pacing using \(p_i(k)\) and \(C_i\), respectively.
 Pacing accounts for optional stages disabled by admission in the workload estimates used to determine callback delays.
 
