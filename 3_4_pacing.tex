@@ -5,7 +5,7 @@
 It extends this forecast after each decision and rebases it as draft sequences complete.
 
 \smallskip\noindent\textbf{Delay rule.}
-When the \texttt{captureAvailable} callback for capture \(i\) is ready for delivery, \(\mathit{pacing}.\textsc{DecideDelay}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:pacing}) computes the next-capture delay as
+When the \texttt{captureAvailable} callback for capture \(i\) is ready for delivery, \(\mathit{controller}.\textsc{DecidePacingDelay}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:pacing}) computes the next-capture delay as
 \begin{equation}
   \mathit{delay}_i
   =
@@ -66,7 +66,7 @@ A capture is pending from its pacing decision until its draft sequence starts; p
 
 \smallskip\noindent\textbf{Backlog rebase.}
 Pacing rebases the backlog at each draft-sequence completion because provisional extensions use earlier point estimates that can become stale as new durations are observed and as admission disables optional work.
-After the shared predictor and admission update their states, \(\mathit{pacing}.\textsc{Update}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:pa-rebase}) refreshes the estimate used for future extensions.
+After the shared predictor and admission update their states (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:update}), pacing refreshes the estimate used for future extensions.
 Using the current admission state, pacing first sets \(\hat P^{\mathrm{last}}=\hat P(\mathcal K^{\mathrm{adm}})\).
 Pacing then rebuilds the drain forecast from the current time as
 \begin{equation}

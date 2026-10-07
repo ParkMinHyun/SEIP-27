@@ -8,26 +8,22 @@
 \begin{algorithmic}[1]
 \Require Shutter inputs for captures $1,\ldots,N$
 \Ensure Draft images $\mathit{draft}_1,\ldots,\mathit{draft}_N$
-\State $\mathit{predictor}\gets\textsf{SharedDurationPredictor}()$
-\State $\mathit{admission}\gets\textsf{Admission}(\mathit{predictor})$
-\State $\mathit{pacing}\gets\textsf{Pacing}(\mathit{predictor})$
+\State $\mathit{controller}\gets\textsf{BudgetAwareDraftController}()$
 \State 
 \For{$i=1$ \textbf{to} $N$}
   \State $\mathit{timeout}_i\gets\mathit{now}+\textsc{TIMEOUT}$ \label{alg:ov:timeout}
-  \State $\mathit{delay}_i\gets\mathit{pacing}.\Call{DecideDelay()}{}$ \label{alg:ov:pacing}
+  \State $\mathit{delay}_i\gets\mathit{controller}.\Call{DecidePacingDelay()}{}$ \label{alg:ov:pacing}
   \State $\textsf{ScheduleCaptureAvailable}(i,\mathit{delay}_i)$ \label{alg:ov:notify}
   \State 
   \State $\mathcal K_i\gets\textsf{ConfigureDraftStages}(i)$ \label{alg:ov:configure}
   \For{each optional stage $k_j\in\mathcal K_i$}
     \State $T_{i,j}\gets\mathit{timeout}_i-\mathit{now}$
-    \If{$\mathit{admission}.\Call{DecideExecution}{\mathcal K_{i,j},T_{i,j}}=\textsc{admit}$} \label{alg:ov:admission}
+    \If{$\mathit{controller}.\Call{DecideAdmission}{\mathcal K_{i,j},T_{i,j}}=\textsc{admit}$} \label{alg:ov:admission}
       \State $\textsf{Execute}(k_j)$
     \EndIf
   \EndFor
   \State $(\mathit{draft}_i,p_i,C_i)\gets\textsf{CompleteDraftSequence}(i)$ \label{alg:ov:publish}
-  \State $\mathit{predictor}.\Call{Update}{\mathcal K_i,p_i}$ \label{alg:ov:update}
-  \State $\mathit{admission}.\Call{Update}{\mathcal K_i,p_i}$ \label{alg:ov:ad-calibrate}
-  \State $\mathit{pacing}.\Call{Update}{\mathcal K_i,C_i}$ \label{alg:ov:pa-rebase}
+  \State $\mathit{controller}.\Call{Update}{\mathcal K_i,p_i,C_i}$ \label{alg:ov:update}
 \EndFor
 \State \Return $(\mathit{draft}_1,\ldots,\mathit{draft}_N)$
 \end{algorithmic}

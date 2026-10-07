@@ -8,7 +8,7 @@ It compares this budget with the estimated duration of the entire remaining sequ
 \smallskip\noindent\textbf{Admission rule.}
 The point estimate \(\hat P(\mathcal K_{i,j})\) may underestimate the time needed to finish the remaining sequence.
 The controller therefore uses an empirical upper estimate \(U(\mathcal K_{i,j})\) of the remaining processing time for the budget comparison.
-\(\mathit{admission}.\textsc{DecideExecution}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:admission}) admits an optional stage \(k_j\) when
+\(\mathit{controller}.\textsc{DecideAdmission}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:admission}) admits an optional stage \(k_j\) when
 \begin{equation}
   U(\mathcal{K}_{i,j})\leq T_{i,j}
   \quad\text{or}\quad
@@ -25,7 +25,7 @@ This prevents the group's visual effects from appearing and disappearing across 
 When the queue drains, both groups are enabled again.
 
 \smallskip\noindent\textbf{Upper-estimate calibration.}
-At draft sequence completion, \(\mathit{admission}.\textsc{Update}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:ad-calibrate}) calibrates the upper estimate \(U\) used in later decisions from observed stage overruns relative to their predictions.
+At draft sequence completion, after the predictor update (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:update}), admission calibrates the upper estimate \(U\) used in later decisions from observed stage overruns relative to their predictions.
 It forms a measured sequence \(\mathcal K\) from the stages with execution times \(p_i(k)\) in each remaining sequence \(\mathcal K_{i,j}\).
 If \(\mathcal K\) contains a previously measured stage, the controller computes the residual factor using the predictions \(\hat p_i(k)\) retained before execution:
 \begin{equation}
