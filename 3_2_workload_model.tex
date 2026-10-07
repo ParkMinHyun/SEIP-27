@@ -9,7 +9,7 @@ Algorithm~\ref{alg:shared-predictor} shows how the predictor computes and update
 \smallskip\noindent\textbf{Point estimate.}
 The predictor models each stage duration as a key-specific base duration \(\hat b(k)\) scaled by a factor \(\gamma\) shared across keys.
 The base duration captures timing differences among stages and configurations, while \(\gamma\) provides a shared adjustment for changes in runtime conditions.
-At line~\ref{alg:pe:init}, Algorithm~\ref{alg:point-estimation} initializes every base duration to zero and \(\gamma\) to one.
+At line~\ref{alg:pe:init}, Algorithm~\ref{alg:shared-predictor} initializes every base duration to zero and \(\gamma\) to one.
 For a workload sequence \(\mathcal K\), \textsc{ComputePointEstimate} (line~\ref{alg:pe:compute}) returns the point estimate \(\hat P(\mathcal K)\), the sum of the predicted stage durations \(\hat p(k)\):
 \begin{equation}
   \hat P(\mathcal{K})
@@ -22,7 +22,7 @@ For a workload sequence \(\mathcal K\), \textsc{ComputePointEstimate} (line~\ref
 \smallskip\noindent\textbf{Online predictor update.}
 The online update keeps different histories for the two factors in Equation~\ref{eq:point-estimate}: \(\hat b(k)\) retains information across all past observations of its key, whereas \(\gamma\) is derived only from the latest completed draft sequence.
 \(\mathit{predictor}.\textsc{Update}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:update}) performs this update at each draft completion using the measured durations \(p_i(k)\) of the stages executed in capture \(i\).
-At line~\ref{alg:pe:snapshot} of Algorithm~\ref{alg:point-estimation}, it saves the value of \(\gamma\) held before this update as \(\gamma_{\mathrm{old}}\) and starts an empty multiset \(\mathit{ratios}\).
+At line~\ref{alg:pe:snapshot} of Algorithm~\ref{alg:shared-predictor}, it saves the value of \(\gamma\) held before this update as \(\gamma_{\mathrm{old}}\) and starts an empty multiset \(\mathit{ratios}\).
 Then, for each executed key (line~\ref{alg:pe:loop}), it adds \(p_i(k)/\hat b(k)\) to \(\mathit{ratios}\) if the key was observed in an earlier draft sequence (line~\ref{alg:pe:ratio}).
 Because the ratio is computed before line~\ref{alg:pe:base} updates \(\hat b(k)\), it compares the current measurement with the base duration estimated from prior observations.
 At line~\ref{alg:pe:base}, it incorporates \(p_i(k)/\gamma_{\mathrm{old}}\) into that key's cumulative average \(\hat b(k)\).
