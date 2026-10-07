@@ -4,44 +4,31 @@
 \footnotesize
 \renewcommand{\algorithmicrequire}{\textbf{Input:}}
 \renewcommand{\algorithmicensure}{\textbf{Output:}}
-\algdef{SE}[EVENT]{Upon}{EndUpon}[2]{\textbf{upon} \textsc{#1}(#2) \textbf{do}}{\textbf{end upon}}
-\algtext*{EndProcedure}\algtext*{EndUpon}\algtext*{EndIf}\algtext*{EndFor}
+\algtext*{EndIf}\algtext*{EndFor}
 \begin{algorithmic}[1]
-\Require User shutter input for capture $i$
+\Require Shutter inputs for captures $1,\ldots,N$
+\Ensure Draft images $\mathit{draft}_1,\ldots,\mathit{draft}_N$
 \State $\mathit{predictor}\gets\textsf{SharedDurationPredictor}()$
 \State $\mathit{admission}\gets\textsf{Admission}(\mathit{predictor})$
 \State $\mathit{pacing}\gets\textsf{Pacing}(\mathit{predictor})$
-\State
-\Procedure{Capture}{$i$}
-  \State $\mathit{timeout}_i\gets\mathit{now}+\textsc{TIMEOUT}$ \label{alg:ov:timeout} \Comment{retained per capture}
-  \State $\textsf{RequestCaptureBurst}(i)$ \label{alg:ov:request}
-\EndProcedure
-\State
-\Upon{OnCaptureAvailable}{$i$}
+\State 
+\For{$i=1$ \textbf{to} $N$}
+  \State $\mathit{timeout}_i\gets\mathit{now}+\textsc{TIMEOUT}$ \label{alg:ov:timeout}
   \State $\mathit{delay}_i\gets\mathit{pacing}.\Call{DecideDelay()}{}$ \label{alg:ov:pacing}
-  \State $\textsf{NotifyCaptureAvailable}(i)$ after $\mathit{delay}_i$ \Comment{enables capture $i+1$} \label{alg:ov:notify}
-\EndUpon
-\State
-\Upon{OnDraftFramesCollected}{$i,\mathit{frames}$}
-  \State $\mathit{draft}_i\gets\textsf{CreateDraftSequence}(i,\mathit{frames})$ \label{alg:ov:create}
-  \State $\textsf{Enqueue}(\mathit{draft}_i)$ \label{alg:ov:enqueue}
-\EndUpon
-\State
-\Upon{RunDraftSequence}{$\mathit{draft}_i$} \Comment{single worker, FIFO} \label{alg:ov:worker}
-  \State $\mathcal K_i\gets\textsf{ConfigureStages}(\mathit{draft}_i)$ \label{alg:ov:configure}
+  \State $\textsf{ScheduleCaptureAvailable}(i,\mathit{delay}_i)$ \label{alg:ov:notify}
+  \State 
+  \State $\mathcal K_i\gets\textsf{ConfigureDraftStages}(i)$ \label{alg:ov:configure}
   \For{each optional stage $k_j\in\mathcal K_i$}
     \State $T_{i,j}\gets\mathit{timeout}_i-\mathit{now}$
     \If{$\mathit{admission}.\Call{DecideExecution}{\mathcal K_{i,j},T_{i,j}}=\textsc{admit}$} \label{alg:ov:admission}
       \State $\textsf{Execute}(k_j)$
     \EndIf
   \EndFor
-  \State $\textsf{PublishDraftImage}(\mathit{draft}_i)$ \Comment{encoding and saving} \label{alg:ov:publish}
-\EndUpon
-\State
-\Upon{OnDraftSequenceCompleted}{$\mathcal K_i,C_i,p_i$}
-  \State $\mathit{predictor}.\Call{Update}{\mathcal K_i,p_i}$ \label{alg:ov:update} \Comment{Algorithm~\ref{alg:shared-predictor}}
-  \State $\mathit{admission}.\Call{CalibrateUpperEstimates}{\mathcal K_i,p_i}$ \label{alg:ov:ad-calibrate}
-  \State $\mathit{pacing}.\Call{RebaseBacklog}{\mathcal K_i,C_i}$ \label{alg:ov:pa-rebase}
-\EndUpon
+  \State $(\mathit{draft}_i,p_i,C_i)\gets\textsf{CompleteDraftSequence}(i)$ \label{alg:ov:publish}
+  \State $\mathit{predictor}.\Call{Update}{\mathcal K_i,p_i}$ \label{alg:ov:update}
+  \State $\mathit{admission}.\Call{Update}{\mathcal K_i,p_i}$ \label{alg:ov:ad-calibrate}
+  \State $\mathit{pacing}.\Call{Update}{\mathcal K_i,C_i}$ \label{alg:ov:pa-rebase}
+\EndFor
+\State \Return $(\mathit{draft}_1,\ldots,\mathit{draft}_N)$
 \end{algorithmic}
 \end{algorithm}
