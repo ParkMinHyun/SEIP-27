@@ -11,6 +11,7 @@
 \end{figure*}
 Figure~\ref{fig:controller-overview} illustrates how the \emph{Budget-Aware Draft Controller} coordinates optional-stage execution and capture arrivals to enable lightweight multi-frame composition in draft sequences under per-capture deadlines.
 The controller consists of \emph{Remaining-Sequence Admission} and \emph{Capture-Availability Pacing}, which both rely on a shared duration predictor.
+Both components use timing estimates derived from runtime observations within the current camera session, without requiring per-device timing tables or thermal-state thresholds.
 
 Algorithm~\ref{alg:overview} specifies where in the capture workflow the controller makes its decisions and updates its state.
 Given a shutter request for capture \(i\), \textsc{Capture} records its deadline \(\mathit{timeout}_i\) before requesting capture frames (lines~\ref{alg:ov:timeout}--\ref{alg:ov:request}).
