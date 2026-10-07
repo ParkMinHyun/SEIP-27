@@ -61,8 +61,8 @@ It uses \(\hat P^{\mathrm{last}}\), the latest point estimate of \(\mathcal K^{\
   \label{eq:clock-update}
 \end{equation}
 The \(\max\) term places the provisional work after the existing drain forecast and the callback release time.
-Pacing also adds capture \(i\) to \(\mathcal Q\), the set of captures whose pacing decisions have occurred but whose draft sequences have not yet started.
-A capture leaves \(\mathcal Q\) when its draft sequence starts.
+Pacing also increments \(N_{\mathrm{pend}}\), the number of pending captures, after each decision.
+A capture is pending from its pacing decision until its draft sequence starts; pacing then decrements the count.
 
 \smallskip\noindent\textbf{Backlog rebase.}
 Pacing rebases the backlog at each draft-sequence completion because provisional extensions use earlier point estimates that can become stale as new durations are observed and as admission disables optional work.
@@ -74,12 +74,12 @@ Pacing then rebuilds the drain forecast from the current time as
   \gets
   \mathit{now}
   +\left\lceil
-    \lvert\mathcal Q\rvert\cdot\hat P(\mathcal K^{\mathrm{adm}})
+    N_{\mathrm{pend}}\cdot\hat P(\mathcal K^{\mathrm{adm}})
   \right\rceil.
   \label{eq:clock-rebase}
 \end{equation}
-Every capture in \(\mathcal Q\) shares the configured sequence \(\mathcal K\), which cannot change until the draft queue drains.
-Pacing therefore estimates each with the current \(\mathcal K^{\mathrm{adm}}\); optional work disabled by admission remains disabled until the queue drains.
-Rebase occurs after a draft sequence completes and before the next starts.
-Since draft sequences execute serially, no draft sequence is in progress at that point.
+All pending captures share the configured sequence \(\mathcal K\), which cannot change until the draft queue drains, and optional work disabled by admission also remains disabled until then.
+Pacing therefore estimates each pending capture with the current \(\mathcal K^{\mathrm{adm}}\).
+Draft sequences execute serially, and rebase occurs before the next one starts.
+The rebuilt forecast therefore needs no term for an executing draft.
 Finally, pacing adds the measured draft-sequence duration \(C_i\) to the history for \(C_\tau\), so the reserve for subsequent captures reflects observed durations.
