@@ -34,23 +34,21 @@ Pacing computes the sequence reserve from the latest timing state as
 \begin{equation}
   \hat R
   =
-  \max\!\left(C_\tau,\hat P(\mathcal K)\right)
-  -
-  \left[
-    \hat P(\mathcal K)-\hat P(\mathcal K^{\mathrm{adm}})
-  \right],
+  \hat P(\mathcal K^{\mathrm{adm}})
+  +
+  \max\!\left(0,C_\tau-\hat P(\mathcal K)\right),
   \label{eq:reserve}
 \end{equation}
 where \(C_\tau\) is the recency-weighted \(\tau\)-quantile of completed draft-sequence durations.
 The controller selects \(\tau\) from this duration history using the same ESS-based quantile rule as for the residual factors in Section~\ref{sec:admission}.
-Because \(C_\tau\) can still reflect sequences measured before optional work was disabled, the subtraction removes the predicted cost of such disabled work.
-This adjustment removes only the modeled cost of disabled work while retaining historical headroom above the configured-sequence point estimate.
+With all configured stages enabled (\(\mathcal K^{\mathrm{adm}}=\mathcal K\)), pacing uses \(C_\tau\) as a conservative reserve, bounded below by \(\hat P(\mathcal K)\).
+After admission disables optional work, pacing adds any positive historical headroom of \(C_\tau\) above \(\hat P(\mathcal K)\) to the point estimate based on \(\mathcal K^{\mathrm{adm}}\).
 
 \(T_{\mathrm{queue}}\) denotes the remaining timeout budget of the most recently enqueued capture.
 At the pacing decision point, capture \(i+1\)'s timeout clock has not yet started; \(T_{\mathrm{queue}}\) therefore serves as a queue-level pressure reference rather than capture \(i+1\)'s feasibility deadline.
 Thus, \(\hat B_i+2\hat R-T_{\mathrm{queue}}\) measures the amount by which the projected draft work exceeds this queue-level budget.
-Finally, pacing uses only half of this excess to avoid converting the full excess into irreversible shot-to-shot latency; admission independently evaluates each capture at its optional-stage decisions.
-This split is a coordination heuristic, not an optimality claim.
+Finally, pacing delays callback delivery by only half of this excess to limit irreversible shot-to-shot latency, leaving workload reduction to admission.
+This heuristic split coordinates pacing and admission.
 
 \smallskip\noindent\textbf{Backlog extension.}
 Pacing provisionally extends \(\hat t_{\mathrm{drain}}\) after each decision so that a subsequent pacing decision accounts for capture \(i\) before its draft sequence enters the queue.
@@ -62,7 +60,7 @@ It uses \(\hat P^{\mathrm{last}}\), the latest point estimate of \(\mathcal K^{\
   +\lceil\hat P^{\mathrm{last}}\rceil.
   \label{eq:clock-update}
 \end{equation}
-The \(\max\) term places the provisional work after both the existing drain forecast and the callback release time; it does not constrain the actual draft start.
+The \(\max\) term places the provisional work after both the existing drain forecast and the callback release time.
 Pacing records the stages represented by the extension so that their predicted cost can be revised at a later rebase.
 
 \smallskip\noindent\textbf{Backlog rebase.}
@@ -75,6 +73,5 @@ Using \(\mathcal K^{\mathrm{adm}}\) for the completed capture, it updates
   \hat P(\mathcal K^{\mathrm{adm}}).
 \]
 Pacing then rebuilds \(\hat t_{\mathrm{drain}}\) from \(\mathit{now}\) by re-estimating the stages recorded for captures whose pacing decisions have occurred but whose draft sequences have not yet started.
-Re-estimating the recorded stages preserves the workload represented by each provisional entry; rebase updates its predicted cost rather than retroactively changing which stages it represents.
-Finally, pacing adds the measured draft sequence duration \(C_i\) to the duration history that determines \(C_\tau\) in Equation~\ref{eq:reserve}.
-When the draft queue drains, pacing clears these queue-scoped estimates and decision records while retaining this duration history and the shared predictor's estimates.
+Rebase updates each provisional entry's predicted cost using its recorded stages and the predictor's latest duration estimates.
+Alongside this rebase, pacing adds the measured draft-sequence duration \(C_i\) to the history for \(C_\tau\), which informs the reserve for draft work not yet included in the backlog.
