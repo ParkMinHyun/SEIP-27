@@ -1,10 +1,11 @@
 \subsection{Shared Duration Predictor}
 \label{sec:model}
-\input{figures/alg_shared_predictor.tex}
 The controller's \emph{shared duration predictor} provides the stage-duration estimates that both admission and pacing use.
 Because draft processing time varies with stage configuration and runtime conditions (Section~\ref{sec:guard-limit}), the predictor updates these estimates online from completed draft sequences.
 Admission applies them to the remaining sequence \(\mathcal K_{i,j}\), while pacing uses them to predict queued and upcoming draft work.
 Algorithm~\ref{alg:shared-predictor} shows how the predictor computes and updates these estimates.
+
+\input{figures/alg_shared_predictor.tex}
 
 \smallskip\noindent\textbf{Point estimate.}
 The predictor models each stage duration as a key-specific base duration \(\hat b(k)\) scaled by a factor \(\gamma\) shared across keys.
