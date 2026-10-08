@@ -3,11 +3,11 @@
 
 \smallskip\noindent\textbf{Evaluation scope.}
 We evaluated the controller on two devices in Portrait mode with a fixed scene, a 30-capture horizon, and an ADB shutter loop.
-Because the controller estimates durations from runtime observations rather than device- or condition-specific timing tables, its behavior depends less on these specific configurations.
-The ADB loop also issues requests faster than ordinary shooting, so our runs stress queueing more than typical use.
+Capture patterns vary across users, while our ADB loop saturates the exposed request rate to stress queueing.
+The controller estimates durations online without device- or condition-specific timing tables.
 Broader validation across devices, capture modes, and scenes remains future work.
 
 \smallskip\noindent\textbf{Cold start.}
-Both components rely on observed draft sequence durations, so the controller has no prior timing evidence before the first sequence completes.
-If that sequence runs unusually long while parallel captures continue to arrive, neither component yet has completed-duration observations with which to estimate the growing processing demand.
-We implemented warm-up data support, but left it disabled because no cold-start timeout was observed and maintaining the dataset would add storage and maintenance cost.
+Without warm-up data, both components lack duration measurements until the first draft sequence completes.
+If parallel captures continue arriving during an unusually long first draft sequence, queue pressure can grow before initial duration measurements are available.
+We left the implemented warm-up data support disabled: no cold-start timeout was observed in our evaluation, and maintaining the dataset would add storage and maintenance costs.
