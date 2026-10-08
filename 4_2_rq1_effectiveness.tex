@@ -5,26 +5,24 @@
 
 Across the 28 evaluated cells, the full controller completed every run without Capture Timeout while retaining optional-stage execution.
 Table~\ref{tab:rq1_controller_behavior} reports one cell for each combination of device, capture condition, and starting overheat level.
-We assess the full controller along three dimensions: deadline safety, stage execution, and pacing cost.
 The table reports ten analyzed runs per cell, with stage-execution and pacing-activation counts averaged over those runs.
-The \texttt{@5} and \texttt{@30} columns cover the first five and all 30 captures, respectively, and \(\mathit{delay}\)~P50 is the median positive applied delay over eligible transitions.
+The \texttt{@5} and \texttt{@30} columns cover the first five and all 30 captures, respectively; \(\mathit{delay}\)~P50 is the median of positive applied delays.
 
 \smallskip\noindent\textbf{Deadline safety.}
 All 280 controller runs completed all 30 captures without Capture Timeout.
-The \emph{Baseline} executes \(M\) and \(S\) on every capture with the thermal guard bypassed; the parenthesized value reports the earliest timeout capture in each cell.
+\emph{Baseline} enables \(M\) and \(S\) with admission and pacing disabled; parentheses report each cell's earliest timeout capture.
 Baseline completed only 55 of 280 runs and timed out in 26 of 28 cells, including all ten runs in 17 cells and as early as the third capture.
 These failures were not confined to high overheat levels: Baseline timed out in 14 of the 16 cells starting below level 4, where the static thermal guard would still allow optional stages.
 
 \smallskip\noindent\textbf{Stage execution.}
-The controller retained most optional-stage execution during the first five consecutive captures.
-Over the first five consecutive captures, \(M\) and \(S\) executed on at least 4.5 and 4.6 captures per run in every cell, and on all five in 23 of the 28 cells.
-In the twelve cells starting at overheat level 4 or higher, where the production guard would disable optional stages, \(M\) still executed on 5.2--22.2 of 30 captures per run.
-Within the same device and capture condition, stage execution generally decreased at higher starting overheat levels.
-Rather than disabling all optional stages at a fixed level, the controller adapted stage execution across thermal conditions.
+During the first five captures, the average execution counts per run were at least 4.5 for \(M\) and 4.6 for \(S\) in every cell; both executed on all five in 23 of the 28 cells.
+In the twelve cells starting at or above the guard's level-4 cutoff, \(M\) still executed on 5.2--22.2 of 30 captures per run on average.
+Over 30 captures, stage execution generally decreased at higher starting overheat levels within the same device and capture condition.
+Runtime admission adjusted optional-stage execution across these thermal conditions.
 
 \smallskip\noindent\textbf{Pacing cost.}
-Pacing was infrequent during the first five consecutive captures.
-It activated on none of the four eligible transitions in 14 cells and on at most 1.8 transitions per run in any cell.
+Pacing was inactive during the first five captures on both devices in the 12MP normal cells starting below level~4.
+It activated on none of the four eligible transitions in 14 cells and on at most 1.8 transitions per run on average in any cell.
 Across cells with pacing during the first five captures, \(\mathit{delay}\)~P50 reached a maximum of 737~ms, about 55\% of the corresponding delay with parallel capture disabled.
-Over all 30 captures, pacing activated on as many as 17.7 of the 29 eligible transitions per run, while \(\mathit{delay}\)~P50 remained at 127--538~ms in cells with positive delays.
+Over all 30 captures, pacing averaged up to 17.7 activations per run out of 29 eligible transitions, with \(\mathit{delay}\)~P50 of 127--538~ms in cells with pacing.
 Thus, pacing's responsiveness cost remained limited during early consecutive captures.
