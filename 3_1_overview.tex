@@ -43,9 +43,9 @@ With a fixed timeout duration,
   \mu_i=\mu_{i-1}+\delta_i-\pi_i .
   \label{eq:margin-recursion}
 \end{equation}
-When \(\pi_i>\delta_i\), deadline margin shrinks.
+When \(\pi_i>\delta_i\), the deadline margin shrinks.
 Repeated decreases can exhaust the deadline margin and cause a Capture Timeout.
 Admission can shorten \(\pi_i\) by skipping optional stages but cannot recover time already spent waiting.
 Pacing can lengthen \(\delta_{i+1}\) by delaying the next capture opportunity but cannot change work in progress.
 Stage-admission decisions affect optional work that has not yet started, while pacing regulates future capture opportunities.
-Retained optional work affects the workload estimates for subsequent pacing delays, so the controller coordinates admission and pacing to avoid exhausting the margin.
+Retained optional work affects workload estimates for later pacing delays, so the controller coordinates admission and pacing to avoid exhausting the margin.
