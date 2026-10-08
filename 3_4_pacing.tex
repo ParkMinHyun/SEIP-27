@@ -5,7 +5,8 @@
 It extends this forecast after each decision and rebases it as draft sequences complete.
 
 \smallskip\noindent\textbf{Delay rule.}
-When the \texttt{captureAvailable} callback for capture \(i\) is ready for delivery, \(\mathit{controller}.\textsc{DecidePacingDelay}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:pacing}) computes the callback delivery delay as
+When the \texttt{captureAvailable} callback for capture \(i\) is ready for delivery, \(\mathit{controller}.\textsc{DecidePacingDelay}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:pacing}) determines the callback delivery delay.
+This delay is given by the following rule, which yields zero in the initial state:
 \begin{equation}
   \mathit{delay}_i
   =
@@ -17,17 +18,21 @@ When the \texttt{captureAvailable} callback for capture \(i\) is ready for deliv
   \label{eq:pacing}
 \end{equation}
 
-Pacing maintains a predicted drain time \(\hat t_{\mathrm{drain}}\) by accumulating point estimates of draft work.
-At each pacing decision, the predicted backlog \(\hat B_i\) is
+First, the predicted backlog \(\hat B_i\) estimates the time needed to drain draft work from earlier captures.
+At each pacing decision, pacing computes this backlog as
 \begin{equation}
   \hat B_i
   =
-  \max\{0,\hat t_{\mathrm{drain}}-\mathit{now}\}.
+  \max\{0,\hat t_{\mathrm{drain}}-\mathit{now}\},
   \label{eq:backlog}
 \end{equation}
+where \(\hat t_{\mathrm{drain}}\) is the predicted drain time maintained by accumulating point estimates of draft work.
 
-The backlog \(\hat B_i\) does not yet include draft work for capture \(i\) or capture \(i+1\), the next capture enabled by this callback.
-Pacing therefore reserves a duration \(\hat R\) for each.
+Second, pacing uses a conservative duration reserve \(\hat R\) per capture to project the draft workload added by the current capture \(i\) and the next capture \(i+1\) enabled by this callback.
+Because \(\hat B_i\) does not yet include draft work for either capture, pacing adds \(\hat R\) for each, giving the projected workload \(\hat B_i+2\hat R\).
+
+Their draft sequences execute after the existing backlog and may encounter further thermal throttling.
+Pacing therefore augments the point estimate for the currently enabled stages with empirical headroom to account for possible increases in processing time.
 Let \(\mathcal K^{\mathrm{adm}}\) denote the subsequence of the configured sequence \(\mathcal K\) excluding optional work disabled by admission.
 Pacing computes the sequence reserve from the latest timing state as
 \begin{equation}
@@ -41,15 +46,19 @@ Pacing computes the sequence reserve from the latest timing state as
 where \(C_\tau\) is the recency-weighted \(\tau\)-quantile of completed draft-sequence durations.
 Pacing selects \(\tau\) from this duration history using the same quantile rule based on effective sample size as for the residual factors in Section~\ref{sec:admission}.
 With all configured stages enabled (\(\mathcal K^{\mathrm{adm}}=\mathcal K\)), pacing uses the larger of \(C_\tau\) and \(\hat P(\mathcal K)\) as its reserve.
-After admission disables optional work, pacing adds any positive excess of \(C_\tau\) over \(\hat P(\mathcal K)\) to the point estimate for \(\mathcal K^{\mathrm{adm}}\).
+After admission disables optional work, pacing adds the positive excess of \(C_\tau\) over \(\hat P(\mathcal K)\) as headroom to the point estimate \(\hat P(\mathcal K^{\mathrm{adm}})\).
 
-\(T_{\mathrm{queue}}\) denotes the remaining timeout budget of the most recently enqueued capture.
-At the pacing decision point, capture \(i+1\)'s timeout clock has not yet started; \(T_{\mathrm{queue}}\) therefore serves as a queue-level pressure reference rather than capture \(i+1\)'s feasibility deadline.
-The positive part of \(\hat B_i+2\hat R-T_{\mathrm{queue}}\) measures the projected workload excess over this queue-level budget.
-As a heuristic, pacing delays callback delivery by half of this positive excess to limit irreversible shot-to-shot latency, leaving workload reduction to admission.
+Third, \(T_{\mathrm{queue}}\) denotes the remaining timeout budget of the most recently enqueued capture.
+At the pacing decision point, capture \(i+1\)'s timeout clock has not yet started.
+\(T_{\mathrm{queue}}\) therefore serves as a queue-level pressure reference for the projected workload \(\hat B_i+2\hat R\).
+Pacing uses this pressure to limit queue growth, aiming to preserve time for capture \(i+1\)'s draft processing after acceptance.
+
+Finally, pacing sets the callback delivery delay to half of the projected workload excess over the queue-level budget.
+This heuristic aims to limit irreversible shot-to-shot latency, leaving workload reduction to admission.
 
 \smallskip\noindent\textbf{Backlog extension.}
-Pacing provisionally extends \(\hat t_{\mathrm{drain}}\) after each decision so that a subsequent pacing decision accounts for capture \(i\) before its draft sequence enters the queue.
+In the parallel capture workflow, a subsequent pacing decision may occur before capture \(i\)'s draft sequence is enqueued.
+Pacing therefore provisionally extends \(\hat t_{\mathrm{drain}}\) after each decision to include this work in subsequent delay calculations.
 It uses \(\hat P^{\mathrm{last}}\), the point estimate of \(\mathcal K^{\mathrm{adm}}\) retained from the latest completion update:
 \begin{equation}
   \hat t_{\mathrm{drain}}
@@ -58,13 +67,13 @@ It uses \(\hat P^{\mathrm{last}}\), the point estimate of \(\mathcal K^{\mathrm{
   +\lceil\hat P^{\mathrm{last}}\rceil.
   \label{eq:clock-update}
 \end{equation}
-The \(\max\) term bases this provisional forecast on the later of the existing drain forecast and callback delivery time.
-Pacing also increments \(N_{\mathrm{pend}}\), the number of pending captures, after each decision.
-A capture is pending from its pacing decision until its draft sequence starts; pacing then decrements the count.
+The \(\max\) term bases this provisional forecast on the later of the existing drain forecast and \(\mathit{now}+\mathit{delay}_i\), the callback delivery time.
+This keeps at least one draft sequence's predicted processing time in the provisional backlog when the next capture opportunity opens.
 
 \smallskip\noindent\textbf{Backlog rebase.}
 Pacing rebases the backlog at each draft completion because provisional extensions use earlier point estimates that can become stale as durations and admission state change.
-After the shared predictor and admission update their states (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:update}), pacing sets \(\hat P^{\mathrm{last}}=\hat P(\mathcal K^{\mathrm{adm}})\) for future extensions and rebuilds the drain forecast as
+After the shared predictor and admission update their states (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:update}), pacing first sets \(\hat P^{\mathrm{last}}=\hat P(\mathcal K^{\mathrm{adm}})\) for future extensions.
+It then rebuilds the drain forecast:
 \begin{equation}
   \hat t_{\mathrm{drain}}
   \gets
@@ -74,8 +83,9 @@ After the shared predictor and admission update their states (Algorithm~\ref{alg
   \right\rceil.
   \label{eq:clock-rebase}
 \end{equation}
-All pending captures share the configured sequence \(\mathcal K\), which cannot change until the draft queue drains, and optional work disabled by admission also remains disabled until then.
-Pacing therefore estimates each pending capture with the current \(\mathcal K^{\mathrm{adm}}\).
+Here, \(N_{\mathrm{pend}}\) is the number of captures whose pacing decisions have occurred but whose draft sequences have not yet started.
+Pacing increments this count after each pacing decision and decrements it when the corresponding draft sequence starts.
+All pending captures share the configured sequence \(\mathcal K\), which cannot change until the draft queue drains.
+Pacing estimates each pending capture's work using the current \(\mathcal K^{\mathrm{adm}}\).
 Draft sequences execute serially, and rebase occurs before the next one starts.
 The rebuilt forecast therefore needs no term for an executing draft.
-Finally, pacing adds the measured draft-sequence duration \(C_i\) to the history for \(C_\tau\), so the reserve for subsequent captures reflects observed durations.

@@ -10,6 +10,8 @@
 Figure~\ref{fig:controller-overview} illustrates how the \emph{Budget-Aware Draft Controller} coordinates optional-stage execution with capture arrivals.
 The controller combines \emph{Remaining-Sequence Admission}, which decides whether optional stages execute, with \emph{Capture-Availability Pacing}, which regulates the next capture opportunity.
 Both use a shared duration predictor updated from measured durations in the current camera session, without per-device timing tables.
+The controller is integrated at two existing points: before optional-stage execution and before \texttt{captureAvailable} delivery.
+This integration preserves the draft pipeline structure and the existing HAL and application interfaces.
 
 Algorithm~\ref{alg:overview} locates the controller's decisions and state updates within the capture workflow.
 At acceptance of request \(i\), the workflow sets \(\mathit{timeout}_i=\mathit{now}+\textsc{TIMEOUT}\), where \textsc{TIMEOUT} is the fixed Capture Timeout duration (line~\ref{alg:ov:timeout}).

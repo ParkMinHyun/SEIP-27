@@ -34,10 +34,11 @@ If \(\mathcal K\) contains a previously measured stage, admission computes the r
   \label{eq:residual-factor}
 \end{equation}
 The per-key maximum preserves each stage's overrun even when another stage finishes faster than predicted, ensuring \(\phi(\mathcal{K})\geq1\).
-Normalizing by the predicted duration makes the resulting factor comparable across remaining sequences.
+Normalizing by the total predicted duration expresses stage overruns as a relative correction, making factors comparable across sequences with different predicted durations.
 
-When a completion yields factors, admission multiplies the existing weights in all sequence-specific histories and the cross-sequence pool by \(0.90\).
-It then inserts one factor per distinct measured sequence into the corresponding history and the pool, each with unit weight.
+When a completion yields factors, admission multiplies all existing weights in the sequence-specific histories and the cross-sequence pool by \(0.90\).
+We selected this decay factor at the knee of the trade-off between the overrun rate and the magnitude of \(U\).
+Admission then inserts one factor per distinct measured sequence into the corresponding history and the pool, each with unit weight.
 Finally, it selects the weighted \(\tau\)-quantile of each history and of the pool as their residual factors \(\phi_\tau\).
 It determines \(\tau\) from the Kish effective sample size \(n_{\mathrm{eff}}\) of the current weights \(w_l\) in each history or the pool~\cite{kish-survey-sampling}:
 \[
@@ -49,8 +50,8 @@ It determines \(\tau\) from the Kish effective sample size \(n_{\mathrm{eff}}\) 
 This choice of \(\tau\) is motivated by the expected CDF position \(n/(n+1)\) of the maximum of \(n\) i.i.d. continuous samples~\cite{david-order-statistics}, with \(n_{\mathrm{eff}}\) substituting for the sample count.
 As the effective sample size grows, the selected quantile moves further into the observed upper tail.
 Setting \(\tau\) this way avoids a separately tuned target percentile, while recency weighting reduces the influence of older observations.
-We set the weight decay to 0.90 at the knee of the trade-off between overrun rate and the size of \(U\).
-Each admission decision uses the factor of the remaining sequence's history, the pool's factor if that history is empty, and \(\phi_\tau(\mathcal K)=1\) if both are empty.
+If the remaining sequence's history is nonempty, admission uses its residual factor.
+Otherwise, it uses the pool's factor; if the pool is also empty, it sets \(\phi_\tau(\mathcal K)=1\).
 Applying this factor to \(\hat P\) gives the upper estimate
 \begin{equation}
   U(\mathcal{K})
