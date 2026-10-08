@@ -8,16 +8,15 @@ For selected shot modes, post-processing is deferred until the user switches awa
 The draft image then remains the user-visible result throughout the foreground session, making its visual quality more important.
 In the draft sequence, Samsung has already deployed single-frame stages to narrow the draft--final visual gap and implemented lightweight multi-frame composition to reduce it further.
 
-However, Samsung has not deployed this feature on any device model because its added processing can violate the \emph{Capture Timeout}, a fixed deadline for producing each draft image.
+However, lightweight multi-frame composition has not been deployed on any device because its added processing can violate the \emph{Capture Timeout}, a fixed deadline for each draft image.
 A violation crashes the application by design and blocks the release.
-Parallel capture makes this risk worse.
-To shorten the shot-to-shot interval, it lets the application accept the next shutter input before the preceding draft image is produced.
-However, draft sequences still execute one at a time on a single draft worker, so later captures may have to wait for earlier draft sequences to finish.
-Each capture has its own timeout clock, which starts when its request is accepted.
+Parallel capture shortens the shot-to-shot interval by letting the application accept the next shutter input before the preceding draft image is produced.
+Yet draft sequences still execute one at a time on a single draft worker, so later captures may have to wait for earlier draft sequences to finish.
+Each capture's timeout clock starts when its request is accepted.
 Time spent executing the active draft sequence therefore consumes the timeout budgets of all active and queued captures.
 
 Samsung already uses a static thermal guard to mitigate timeout risk from the deployed single-frame stages.
-The guard skips the optional stages of the draft sequence whenever the device's overheat level is 4 or higher on a 0--6 scale.
+The guard omits optional stages when configuring the draft sequence at overheat level~4 or higher on a 0--6 scale.
 However, this cutoff alone cannot determine whether lightweight multi-frame composition is safe to execute.
 Indeed, in our motivating experiment with the guard bypassed, the earliest Capture Timeout varied with resolution, memory pressure, and enabled draft stages, even at the same starting overheat level.
 The overheat level reflects neither how much timeout budget a capture has left nor how much draft work remains.
@@ -29,13 +28,14 @@ These two levers correspond to workload control~\cite{approxdet-sensys,timecard-
 These controls must be coordinated because the optional work retained in the draft sequence affects how much delay is needed for the next capture.
 
 We therefore present the Budget-Aware Draft Controller.
-A major challenge is deciding how much time to reserve for draft workload under shrinking per-capture budgets: too little risks a Capture Timeout, whereas too much needlessly suppresses optional processing or prolongs shot-to-shot intervals, sacrificing draft image quality or capture responsiveness.
-\emph{Remaining-Sequence Admission} admits an optional stage when the capture's remaining timeout budget covers the estimated duration of the entire remaining draft sequence together with a safety margin calibrated from recent stage overruns.
-\emph{Capture-Availability Pacing} delays the next capture when the draft work predicted through that capture exceeds the remaining timeout budget.
+A major challenge is deciding how much time to reserve for draft work: too little risks a Capture Timeout, whereas too much needlessly suppresses optional processing or prolongs shot-to-shot intervals, sacrificing draft image quality or capture responsiveness.
+\emph{Remaining-Sequence Admission} admits an optional stage when the capture's remaining timeout budget covers an empirical upper duration estimate for the entire remaining draft sequence, calibrated from recent stage overruns.
+\emph{Capture-Availability Pacing} delays the next capture opportunity when projected draft workload exceeds the draft queue's remaining timeout budget.
+Both use a shared duration predictor updated from measured durations in the current camera session, without per-device timing tables.
 
 Across 28 conditions on two commercial devices, the controller completed all 280 runs without Capture Timeout, whereas unguarded execution of all optional stages timed out in 225 of 280 runs.
-Lightweight multi-frame composition ran on an average of at least 4.5 of the first five captures in every condition, even at overheat levels that would trigger the thermal guard.
-Under production-default 12MP configuration, pacing did not delay the first five captures at starting overheat levels below 4.
+Lightweight multi-frame composition ran on at least 4.5 of the first five captures per run on average in every condition, including those starting at or above the guard's cutoff.
+With production-default 12MP capture under normal memory conditions, pacing did not delay the first five captures at starting overheat levels below 4.
 Only the controller with both admission and pacing completed all captures on time in all three ablation conditions, while executing multi-frame composition 1.3--2.0 times as often as admission alone.
 The controller is undergoing release validation for a forthcoming Galaxy flagship line.
 
