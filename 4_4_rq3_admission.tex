@@ -1,33 +1,30 @@
 \subsection{RQ3: Admission Decision Quality}
 \label{sec:rq3}
 
-RQ3 evaluates admission decisions rather than deployed stage execution.
-We audited 3{,}746 decisions on the S26 Ultra under an always-admit configuration.
-Optional stages always executed with the watchdog suppressed; admission decisions were recorded but not enforced.
+To assess decision quality independently of runtime enforcement, we audited 3{,}746 decisions on the S26 Ultra under an always-admit configuration.
+Optional stages executed with the watchdog suppressed; admission decisions were recorded but not enforced.
 Each decision is thus scored against its realized outcome: feasible if its remaining sequence completed within the remaining timeout budget at that decision, and unsafe otherwise.
-Because no decision was enforced, every approach is scored on the same decisions and outcomes.
+Every approach is scored on the same decisions and realized outcomes.
 
 \smallskip\noindent\textbf{Decision accuracy.}
-Our approach balanced unsafe admits against feasible skips in the pooled audit (Table~\ref{tab:rq3_admission_audit}).
+Among the evaluated approaches, only ours kept both feasible-skip and unsafe-admit rates below 3\% in the pooled audit (Table~\ref{tab:rq3_admission_audit}).
 It admitted 97.3\% of feasible decisions, skipping 98 of 3{,}568 (2.7\%), while admitting only 5 of the 178 unsafe decisions (2.8\%).
 The naive approaches that sum the mean or maximum of each remaining stage's last three durations admitted 42 and 14 unsafe decisions, respectively.
-The naive approach using the maximum over all prior captures admitted four unsafe decisions but skipped 224 feasible decisions, 2.3 times as many as our approach.
-Our approach was the only evaluated approach with both error rates below 3\% overall.
+The naive approach summing each remaining stage's maximum prior duration admitted four unsafe decisions but skipped 224 feasible decisions, 2.3 times as many as our approach.
 
 \smallskip\noindent\textbf{Admission misses.}
 The five unsafe admits coincided with latency increases that were not captured by the decision-time estimates.
 Figure~\ref{fig:rq3_unsafe_spike_anatomy} compares the remaining-sequence latency and CPU time of these five decisions with those of the preceding capture.
 M1--M3 and S1--S2 label the multi-frame and single-frame decisions, respectively.
 For M1 and M2, latency rose to 2.32\(\times\) and 1.95\(\times\), whereas CPU time rose only to 1.41\(\times\) and 1.15\(\times\).
-The number of busy cores, measured as CPU time per unit of wall time, consequently fell to 0.60\(\times\) and 0.59\(\times\).
+The average number of busy cores, measured as CPU time per unit of wall time, consequently fell to 0.60\(\times\) and 0.59\(\times\).
 
 \smallskip\noindent\textbf{Safeguard replay.}
-In trace replay, the layered safeguards covered all five admission misses.
-The replay re-applied the safeguard logic to the recorded stage durations, budgets, upper estimates, and admission decisions.
+Trace replay of the layered safeguards covered all five misses using the recorded stage durations, budgets, upper estimates, and admission decisions.
 For M1 and M2, the admitted stage exceeded its watchdog budget, 1{,}460~ms against 1{,}202~ms and 1{,}648~ms against 889~ms, respectively, so fallback would trigger before the stage returned.
 For M3, the \(S\) decision later in the same capture would skip \(S\), reducing the remaining processing time.
 For S1 and S2, the \(M\) decision earlier in the same capture would skip \(M\), leaving more budget when execution reached \(S\).
-The replay therefore supports coverage of these five recorded misses, but does not establish end-to-end effectiveness when the safeguards are enforced during execution.
+These replay results do not establish end-to-end effectiveness with the safeguards enforced during execution.
 
 \input{tables/tab_rq3_admission_quality.tex}
 \input{figures/fig_rq3_unsafe_spike_anatomy.tex}
