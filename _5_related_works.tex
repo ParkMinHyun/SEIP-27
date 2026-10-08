@@ -3,24 +3,25 @@
 
 \smallskip\noindent\textbf{Mobile camera pipelines.}
 Mobile camera pipelines merge bursts of frames to improve the final image~\cite{hdrplus-burst-tog,handheld-superres-tog,lowlight-mobile-tog} and synthesize shallow depth of field for portrait photos~\cite{synthetic-dof-tog}.
-These works target final-image quality, whereas we decide when lightweight multi-frame composition can run for the draft image within its Capture Timeout.
+Our focus is when lightweight multi-frame composition can run in the draft sequence within its Capture Timeout.
 
 \smallskip\noindent\textbf{Workload control.}
 Our admission module relates to work that adapts per-input computation at run time under latency, resource, or thermal constraints.
-Imprecise computation splits a task into mandatory and optional parts and runs the optional part only when time permits~\cite{liu-imprecise-computation,shih-imprecise-siam}, much like our optional stages.
-Anytime algorithms, approximate computing, and adaptive inference likewise trade result quality for time or resources~\cite{zilberstein-anytime,loop-perforation-fse,apnet-rtss,branchynet-icpr,approxdet-sensys}, and Phoenix adapts on-device DNN inference to thermal throttling~\cite{phoenix-tecs}.
+Imprecise computation splits a task into mandatory and optional parts and runs the optional part only when time permits~\cite{liu-imprecise-computation,shih-imprecise-siam}.
+Anytime algorithms, approximate computing, and adaptive inference likewise trade result quality for time or resources~\cite{zilberstein-anytime,loop-perforation-fse,apnet-rtss,branchynet-icpr,approxdet-sensys}, and Phoenix adapts inference depth under thermal throttling~\cite{phoenix-tecs}.
 Content adaptation and brownout reduce per-request work under resource pressure~\cite{abdelzaher-content-adaptation,klein-brownout}, while Timecard uses the remaining end-to-end budget to adjust how much processing the current request receives~\cite{timecard-sosp}.
 In our pipeline, the workload-control lever is optional-stage admission for the current capture.
 
 \smallskip\noindent\textbf{Arrival control.}
 Our pacing module relates to systems that control request admission or release timing to limit queueing delay.
-Network senders pace packets to avoid queue buildup~\cite{tcp-pacing-infocom,bbr-queue}, and server systems admit, reject, or shed requests under overload~\cite{seda-sosp,dagor-socc,breakwater-osdi}.
-Real-time schedulers similarly regulate job releases by stretching task periods or skipping job instances~\cite{buttazzo-elastic-task,koren-skip-over}.
-Preemptive systems can instead interrupt running work to serve short or urgent requests~\cite{shinjuku-nsdi}.
-In our pipeline, the arrival-control lever is the release timing of the next capture: an issued capture must be served, and a running stage cannot be preempted.
+Network senders pace packets to limit bursts and queue buildup~\cite{tcp-pacing-infocom,bbr-queue}, and server systems admit, reject, or shed requests under overload~\cite{seda-sosp,dagor-socc,breakwater-osdi}.
+Real-time schedulers similarly regulate job load by stretching task periods or skipping job instances~\cite{buttazzo-elastic-task,koren-skip-over}.
+Preemptive systems can instead interrupt running work to serve short requests~\cite{shinjuku-nsdi}.
+In our pipeline, arrival control delays the next capture opportunity.
+Accepted captures cannot be rejected, and running stages cannot be preempted.
 
 \smallskip\noindent\textbf{Coordinating workload and arrivals.}
-Prior systems have combined the two control dimensions discussed above.
+Prior systems also combine workload and arrival control.
 Feedback-control systems regulate incoming load through request admission and adjust the service level of admitted requests from deadline-miss or response-time feedback~\cite{lu-feedback-control-edf,lu-feedback-control-scheduling,welsh-overload-control}.
 Control-theoretic self-adaptive software applies the same feedback principle to software parameters~\cite{filieri-selfadaptive-icse,shevtsov-control-tse}.
 QoS negotiation similarly reduces service quality to accept requests that might otherwise be rejected~\cite{abdelzaher-qos-negotiation}.
@@ -28,5 +29,6 @@ QoS negotiation similarly reduces service quality to accept requests that might 
 What differs in our capture pipeline is how the two controls are coupled under per-capture deadlines.
 A single Capture Timeout crashes the application and blocks the release, so deadline violations are not an acceptable operating regime.
 On the single draft worker, optional work admitted for one capture consumes the timeout budgets of captures queued behind it.
-Our controller therefore couples remaining-sequence admission for the current capture with pacing of the next capture's release to manage this deadline pressure across captures.
+Our controller therefore couples remaining-sequence admission for the current capture with pacing of the next capture opportunity.
 To our knowledge, this is the first work to combine per-capture remaining-budget stage admission with next-capture pacing in production camera software under a hard per-capture deadline.
+

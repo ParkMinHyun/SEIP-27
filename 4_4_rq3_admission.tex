@@ -24,7 +24,7 @@ Trace replay of the layered safeguards covered all five misses using the recorde
 For M1 and M2, the admitted stage exceeded its watchdog budget, 1{,}460~ms against 1{,}202~ms and 1{,}648~ms against 889~ms, respectively, so fallback would trigger before the stage returned.
 For M3, the \(S\) decision later in the same capture would skip \(S\), reducing the remaining processing time.
 For S1 and S2, the \(M\) decision earlier in the same capture would skip \(M\), leaving more budget when execution reached \(S\).
-These replay results do not establish end-to-end effectiveness with the safeguards enforced during execution.
+These replay results do not establish end-to-end effectiveness with the safeguards enforced at runtime.
 
 \input{tables/tab_rq3_admission_quality.tex}
 \input{figures/fig_rq3_unsafe_spike_anatomy.tex}
