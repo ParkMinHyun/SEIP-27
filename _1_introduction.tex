@@ -18,7 +18,7 @@ Time spent executing the active draft sequence therefore consumes the timeout bu
 Samsung already uses a static thermal guard to mitigate timeout risk from the deployed single-frame stages.
 The guard omits optional stages when configuring the draft sequence at overheat level~4 or higher on a 0--6 scale.
 However, this cutoff alone cannot determine whether lightweight multi-frame composition is safe to execute.
-Indeed, in our motivating experiment with the guard bypassed, the earliest Capture Timeout varied with resolution, memory pressure, and enabled draft stages, even at the same starting overheat level.
+In our motivating experiment with the guard bypassed, the earliest Capture Timeout varied with resolution, memory pressure, and enabled draft stages, even at the same starting overheat level.
 The overheat level reflects neither how much timeout budget a capture has left nor how much draft work remains.
 Deploying lightweight multi-frame composition therefore requires deciding at run time whether each capture's remaining draft work fits within the remaining timeout budget.
 
