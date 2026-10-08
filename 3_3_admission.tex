@@ -68,4 +68,6 @@ The watchdog therefore limits how long the draft sequence waits for that stage:
 \end{equation}
 where \(\mathcal{K}_{i,m}=(k_m)\), so \(U(\mathcal K_{i,m})\) reserves time for mandatory encoding and saving.
 If the watchdog expires, the draft pipeline falls back to encoding and saving the preserved original input.
+The stage runs on a separate thread, so the fallback can proceed while the stage keeps running.
+The resources held by the stage are released after it returns.
 Queued draft sequences also bypass optional processing until the queue drains, reducing the risk that an overrun propagates to subsequent captures.

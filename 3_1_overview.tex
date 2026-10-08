@@ -18,15 +18,16 @@ For each shutter input \(i\), the workflow sets the deadline \(\mathit{timeout}_
 When the \texttt{captureAvailable} callback is ready for delivery, \(\mathit{controller}.\textsc{DecidePacingDelay}\) computes \(\mathit{delay}_i\) from the backlog predicted by pacing and the draft queue's remaining timeout budget (line~\ref{alg:ov:pacing}).
 \textsf{ScheduleCaptureAvailable} schedules the callback for delivery after this delay, exposing the next capture opportunity \(i+1\) to the application (line~\ref{alg:ov:notify}).
 The original workflow instead delivers the callback immediately (\(\mathit{delay}_i=0\)).
-Although Algorithm~\ref{alg:overview} shows draft processing inline (lines~\ref{alg:ov:configure}--\ref{alg:ov:publish}), each draft sequence is enqueued for the single draft worker, which executes sequences in capture order (Section~\ref{sec:parallel-capture}).
-Draft processing therefore proceeds without waiting for \(\mathit{delay}_i\) and can overlap later captures.
+Algorithm~\ref{alg:overview} presents the control flow of each capture in logical order; it does not serialize captures in wall-clock time.
+Although it shows each draft sequence and its completion update inline (lines~\ref{alg:ov:configure}--\ref{alg:ov:update}), each draft sequence is enqueued for the single draft worker, which executes sequences in capture order (Section~\ref{sec:parallel-capture}).
+Draft processing therefore proceeds without waiting for \(\mathit{delay}_i\), and later captures can arrive before capture \(i\)'s draft sequence completes.
 
 At sequence start, \textsf{ConfigureDraftStages} produces the ordered workload sequence \(\mathcal K_i=(k_1,\ldots,k_m)\) (line~\ref{alg:ov:configure}), where each key identifies a stage and its configuration.
 The original workflow excludes optional stages from \(\mathcal K_i\) at overheat level~4 or higher; the controller can replace this fixed cutoff with runtime admission.
 Before each optional stage \(k_j\), \(\mathit{controller}.\textsc{DecideAdmission}\) compares the estimated duration of the remaining sequence \(\mathcal K_{i,j}=(k_j,\ldots,k_m)\) with the remaining timeout budget \(T_{i,j}\) (line~\ref{alg:ov:admission}).
 After the admitted stages execute, \textsf{CompleteDraftSequence} performs the mandatory encoding and saving, represented by the final key \(k_m\), to produce the draft image \(\mathit{draft}_i\) (line~\ref{alg:ov:publish}).
 
-Along with \(\mathit{draft}_i\), \textsf{CompleteDraftSequence} returns the measured durations \(p_i(k)\) of the executed stages in \(\mathcal K_i\) and the measured draft sequence duration \(C_i\).
+Along with \(\mathit{draft}_i\), \textsf{CompleteDraftSequence} returns the measured durations \(p_i(k)\) of the executed stages in \(\mathcal K_i\) and the draft sequence duration \(C_i\).
 At line~\ref{alg:ov:update}, \(\mathit{controller}.\textsc{Update}\) updates the shared predictor with \(p_i(k)\) and then updates admission and pacing using \(p_i(k)\) and \(C_i\), respectively.
 Pacing accounts for optional stages disabled by admission in the workload estimates used to determine callback delays.
 
