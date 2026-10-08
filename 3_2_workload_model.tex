@@ -1,6 +1,6 @@
 \subsection{Shared Duration Predictor}
 \label{sec:model}
-The controller's \emph{shared duration predictor} provides the stage-duration estimates that both admission and pacing use.
+The controller's \emph{shared duration predictor} provides stage-duration estimates for both admission and pacing.
 Because draft processing time varies with stage configuration and runtime conditions (Section~\ref{sec:guard-limit}), the predictor updates these estimates online from completed draft sequences.
 Admission applies them to the remaining sequence \(\mathcal K_{i,j}\), while pacing uses them to predict queued and upcoming draft work.
 Algorithm~\ref{alg:shared-predictor} shows how the predictor computes and updates these estimates.
@@ -22,8 +22,8 @@ For a workload sequence \(\mathcal K\), \textsc{ComputePointEstimate} (line~\ref
 
 \smallskip\noindent\textbf{Online predictor update.}
 The base duration \(\hat b(k)\) accumulates normalized measurements of its key, whereas \(\gamma\) reflects the latest available measurement-to-base ratios.
-At draft completion, \(\mathit{controller}.\textsc{Update}\) first updates the predictor using measured stage durations \(p_i(k)\).
-For each key with \(p_i(k)>0\), the predictor collects \(p_i(k)/\hat b(k)\) in \(\mathit{ratios}\) if \(\hat b(k)>0\), before updating the base duration (line~\ref{alg:pe:ratio}).
-It then incorporates \(p_i(k)/\gamma_{\mathrm{old}}\), where \(\gamma_{\mathrm{old}}\) is the pre-update scale, into the cumulative average \(\hat b(k)\) (line~\ref{alg:pe:base}).
-Finally, if \(\mathit{ratios}\) is nonempty, the predictor replaces \(\gamma\) with their median (line~\ref{alg:pe:gamma}).
+At draft completion, \(\mathit{controller}.\textsc{Update}\) first updates the predictor using measured stage durations \(p_i(k)\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:update}).
+For each key with \(p_i(k)>0\), the predictor collects \(p_i(k)/\hat b(k)\) in \(\mathit{ratios}\) if \(\hat b(k)>0\), before updating the base duration (Algorithm~\ref{alg:shared-predictor}, line~\ref{alg:pe:ratio}).
+It then incorporates \(p_i(k)/\gamma_{\mathrm{old}}\), where \(\gamma_{\mathrm{old}}\) is the pre-update scale, into the cumulative average \(\hat b(k)\) (Algorithm~\ref{alg:shared-predictor}, line~\ref{alg:pe:base}).
+Finally, if \(\mathit{ratios}\) is nonempty, the predictor replaces \(\gamma\) with their median (Algorithm~\ref{alg:shared-predictor}, line~\ref{alg:pe:gamma}).
 The cumulative average \(\hat b(k)\) dampens isolated spikes in a key's duration history, and when multiple ratios are available, their median limits the influence of a deviation confined to one stage.

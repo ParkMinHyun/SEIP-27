@@ -1,13 +1,12 @@
 \subsection{Remaining-Sequence Admission}
 \label{sec:admission}
 
-\emph{Admission} decides whether to execute or skip each optional stage, running it only when the draft sequence can still finish before its capture's Capture Timeout deadline.
-Because a capture's remaining timeout budget decreases while it waits for the draft worker and executes earlier stages, admission makes this decision immediately before each optional stage.
-It compares this budget with the estimated duration of the entire remaining sequence, including mandatory encoding and saving.
+Immediately before each optional stage, \emph{Admission} compares the capture's remaining timeout budget with the estimated duration of the entire remaining draft sequence, including mandatory encoding and saving.
+This timing accounts for the budget consumed by queueing and earlier stages.
 
 \smallskip\noindent\textbf{Admission rule.}
 The point estimate \(\hat P(\mathcal K_{i,j})\) may underestimate the time needed to finish the remaining sequence.
-The controller therefore uses an empirical upper estimate \(U(\mathcal K_{i,j})\) of the remaining processing time for the budget comparison.
+Admission therefore uses an empirical upper estimate \(U(\mathcal K_{i,j})\) of the remaining processing time for the budget comparison.
 \(\mathit{controller}.\textsc{DecideAdmission}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:admission}) admits an optional stage \(k_j\) when
 \begin{equation}
   U(\mathcal{K}_{i,j})\leq T_{i,j}
@@ -15,19 +14,19 @@ The controller therefore uses an empirical upper estimate \(U(\mathcal K_{i,j})\
   \hat P(\mathcal{K}_{i,j})=0.
   \label{eq:admission}
 \end{equation}
-When \(\hat P(\mathcal K_{i,j})=0\), the predictor has no prior timing measurement for any remaining stage, so the controller admits the optional stage to collect initial measurements.
-The controller assumes that each configuration can complete an isolated first capture within the Capture Timeout; a violation blocks release.
+When \(\hat P(\mathcal K_{i,j})=0\), the predictor has no prior timing measurements for the remaining enabled stages, so the optional stage is admitted to collect initial measurements.
+This rule assumes that each configuration can complete an isolated first capture within the Capture Timeout; a violation blocks release.
 
-The controller treats \(M\) and \(S\) as separate admission groups.
-Once an \(M\) or \(S\) stage is rejected, the controller disables optional stages in that group.
-Until the queue drains, the controller skips those stages and excludes them from subsequent estimates of the remaining processing time.
-This prevents the group's visual effects from appearing and disappearing across consecutive draft images.
+Admission treats \(M\) and \(S\) as separate groups.
+Once an \(M\) or \(S\) stage is rejected, admission disables the optional stages in that group.
+Until the draft queue drains, admission skips those stages and excludes them from subsequent \(\hat P\) and \(U\) estimates.
+This avoids repeatedly toggling the group's visual effects across consecutive draft images.
 When the queue drains, both groups are enabled again.
 
 \smallskip\noindent\textbf{Upper-estimate calibration.}
-At draft sequence completion, after the predictor update (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:update}), admission calibrates the upper estimate \(U\) used in later decisions from observed stage overruns relative to their predictions.
-It forms a measured sequence \(\mathcal K\) from the stages with execution times \(p_i(k)\) in each remaining sequence \(\mathcal K_{i,j}\).
-If \(\mathcal K\) contains a previously measured stage, the controller computes the residual factor using the predictions \(\hat p_i(k)\) retained before execution:
+After the shared predictor is updated at draft completion, admission calibrates \(U\) for later decisions from observed stage overruns.
+For each remaining sequence \(\mathcal K_{i,j}\), it forms a measured subsequence \(\mathcal K\) containing only executed stages (\(p_i(k)>0\)).
+If \(\mathcal K\) contains a previously measured stage, admission computes the residual factor using the stage-duration predictions \(\hat p_i(k)\) retained before execution:
 \begin{equation}
   \phi(\mathcal{K})
   =\frac{\sum_{k\in\mathcal{K}}\max\{\hat p_i(k),p_i(k)\}}
@@ -37,10 +36,10 @@ If \(\mathcal K\) contains a previously measured stage, the controller computes 
 The per-key maximum preserves each stage's overrun even when another stage finishes faster than predicted, ensuring \(\phi(\mathcal{K})\geq1\).
 Normalizing by the predicted duration makes the resulting factor comparable across remaining sequences.
 
-When a completion yields factors, the controller multiplies the existing weights in all sequence histories and the cross-sequence pool by \(0.90\).
+When a completion yields factors, admission multiplies the existing weights in all sequence-specific histories and the cross-sequence pool by \(0.90\).
 It then inserts one factor per distinct measured sequence into the corresponding history and the pool, each with unit weight.
 Finally, it selects the weighted \(\tau\)-quantile of each history and of the pool as their residual factors \(\phi_\tau\).
-It determines \(\tau\) from the Kish effective sample size \(n_{\mathrm{eff}}\) of the current weights \(w_l\) in each history~\cite{kish-survey-sampling}:
+It determines \(\tau\) from the Kish effective sample size \(n_{\mathrm{eff}}\) of the current weights \(w_l\) in each history or the pool~\cite{kish-survey-sampling}:
 \[
   n_{\mathrm{eff}}
   =\frac{(\sum_l w_l)^2}{\sum_l w_l^2},
@@ -50,8 +49,8 @@ It determines \(\tau\) from the Kish effective sample size \(n_{\mathrm{eff}}\) 
 This choice of \(\tau\) is motivated by the expected CDF position \(n/(n+1)\) of the maximum of \(n\) i.i.d. continuous samples~\cite{david-order-statistics}, with \(n_{\mathrm{eff}}\) substituting for the sample count.
 As the effective sample size grows, the selected quantile moves further into the observed upper tail.
 Setting \(\tau\) this way avoids a separately tuned target percentile, while recency weighting reduces the influence of older observations.
-We set the weight decay to 0.90, the knee of the overrun rate against the size of \(U\).
-At each admission decision, the controller uses the factor of the remaining sequence's history, the pool's factor if that history is empty, and \(\phi_\tau(\mathcal K)=1\) if both are empty.
+We set the weight decay to 0.90 at the knee of the trade-off between overrun rate and the size of \(U\).
+Each admission decision uses the factor of the remaining sequence's history, the pool's factor if that history is empty, and \(\phi_\tau(\mathcal K)=1\) if both are empty.
 Applying this factor to \(\hat P\) gives the upper estimate
 \begin{equation}
   U(\mathcal{K})
@@ -68,6 +67,6 @@ The watchdog therefore limits how long the draft sequence waits for that stage:
 \end{equation}
 where \(\mathcal{K}_{i,m}=(k_m)\), so \(U(\mathcal K_{i,m})\) reserves time for mandatory encoding and saving.
 If the watchdog expires, the draft pipeline falls back to encoding and saving the preserved original input.
-The stage runs on a separate thread, so the fallback can proceed while the stage keeps running.
+Fallback proceeds on a separate thread while the admitted stage continues running.
 The resources held by the stage are released after it returns.
 Queued draft sequences also bypass optional processing until the queue drains, reducing the risk that an overrun propagates to subsequent captures.
