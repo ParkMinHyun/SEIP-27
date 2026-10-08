@@ -5,7 +5,7 @@
 It extends this forecast after each decision and rebases it as draft sequences complete.
 
 \smallskip\noindent\textbf{Delay rule.}
-When the \texttt{captureAvailable} callback for capture \(i\) is ready for delivery, \(\mathit{controller}.\textsc{DecidePacingDelay}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:pacing}) computes the next-capture delay as
+When the \texttt{captureAvailable} callback for capture \(i\) is ready for delivery, \(\mathit{controller}.\textsc{DecidePacingDelay}\) (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:pacing}) computes the callback delivery delay as
 \begin{equation}
   \mathit{delay}_i
   =
@@ -17,9 +17,8 @@ When the \texttt{captureAvailable} callback for capture \(i\) is ready for deliv
   \label{eq:pacing}
 \end{equation}
 
-In Equation~\ref{eq:pacing}, \(\hat B_i\) denotes the processing-time backlog predicted by pacing.
-Pacing maintains \(\hat t_{\mathrm{drain}}\), the predicted drain time obtained by accumulating point estimates of the draft work in this backlog.
-At the pacing decision time,
+Pacing maintains a predicted drain time \(\hat t_{\mathrm{drain}}\) by accumulating point estimates of draft work.
+At each pacing decision, the predicted backlog \(\hat B_i\) is
 \begin{equation}
   \hat B_i
   =
@@ -29,7 +28,7 @@ At the pacing decision time,
 
 The backlog \(\hat B_i\) does not yet include draft work for capture \(i\) or capture \(i+1\), the next capture enabled by this callback.
 Pacing therefore reserves a duration \(\hat R\) for each.
-Let \(\mathcal K^{\mathrm{adm}}\) denote the configured sequence \(\mathcal K\) after removing optional work disabled by admission.
+Let \(\mathcal K^{\mathrm{adm}}\) denote the subsequence of the configured sequence \(\mathcal K\) excluding optional work disabled by admission.
 Pacing computes the sequence reserve from the latest timing state as
 \begin{equation}
   \hat R
@@ -40,19 +39,18 @@ Pacing computes the sequence reserve from the latest timing state as
   \label{eq:reserve}
 \end{equation}
 where \(C_\tau\) is the recency-weighted \(\tau\)-quantile of completed draft-sequence durations.
-The controller selects \(\tau\) from this duration history using the same ESS-based quantile rule as for the residual factors in Section~\ref{sec:admission}.
+Pacing selects \(\tau\) from this duration history using the same quantile rule based on effective sample size as for the residual factors in Section~\ref{sec:admission}.
 With all configured stages enabled (\(\mathcal K^{\mathrm{adm}}=\mathcal K\)), pacing uses the larger of \(C_\tau\) and \(\hat P(\mathcal K)\) as its reserve.
-After admission disables optional work, pacing adds any positive historical headroom of \(C_\tau\) above \(\hat P(\mathcal K)\) to the point estimate based on \(\mathcal K^{\mathrm{adm}}\).
+After admission disables optional work, pacing adds any positive excess of \(C_\tau\) over \(\hat P(\mathcal K)\) to the point estimate for \(\mathcal K^{\mathrm{adm}}\).
 
 \(T_{\mathrm{queue}}\) denotes the remaining timeout budget of the most recently enqueued capture.
 At the pacing decision point, capture \(i+1\)'s timeout clock has not yet started; \(T_{\mathrm{queue}}\) therefore serves as a queue-level pressure reference rather than capture \(i+1\)'s feasibility deadline.
-Thus, \(\hat B_i+2\hat R-T_{\mathrm{queue}}\) measures the amount by which the projected draft work exceeds this queue-level budget.
-Finally, pacing delays callback delivery by only half of this excess to limit irreversible shot-to-shot latency, leaving workload reduction to admission.
-This heuristic split coordinates pacing and admission.
+The positive part of \(\hat B_i+2\hat R-T_{\mathrm{queue}}\) measures the projected workload excess over this queue-level budget.
+As a heuristic, pacing delays callback delivery by half of this positive excess to limit irreversible shot-to-shot latency, leaving workload reduction to admission.
 
 \smallskip\noindent\textbf{Backlog extension.}
 Pacing provisionally extends \(\hat t_{\mathrm{drain}}\) after each decision so that a subsequent pacing decision accounts for capture \(i\) before its draft sequence enters the queue.
-It uses \(\hat P^{\mathrm{last}}\), the latest point estimate of \(\mathcal K^{\mathrm{adm}}\):
+It uses \(\hat P^{\mathrm{last}}\), the point estimate of \(\mathcal K^{\mathrm{adm}}\) retained from the latest completion update:
 \begin{equation}
   \hat t_{\mathrm{drain}}
   \gets
@@ -60,15 +58,13 @@ It uses \(\hat P^{\mathrm{last}}\), the latest point estimate of \(\mathcal K^{\
   +\lceil\hat P^{\mathrm{last}}\rceil.
   \label{eq:clock-update}
 \end{equation}
-The \(\max\) term places the provisional work after the existing drain forecast and the callback release time.
+The \(\max\) term bases this provisional forecast on the later of the existing drain forecast and callback delivery time.
 Pacing also increments \(N_{\mathrm{pend}}\), the number of pending captures, after each decision.
 A capture is pending from its pacing decision until its draft sequence starts; pacing then decrements the count.
 
 \smallskip\noindent\textbf{Backlog rebase.}
-Pacing rebases the backlog at each draft-sequence completion because provisional extensions use earlier point estimates that can become stale as new durations are observed and as admission disables optional work.
-After the shared predictor and admission update their states (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:update}), pacing refreshes the estimate used for future extensions.
-Using the current admission state, pacing first sets \(\hat P^{\mathrm{last}}=\hat P(\mathcal K^{\mathrm{adm}})\).
-Pacing then rebuilds the drain forecast from the current time as
+Pacing rebases the backlog at each draft completion because provisional extensions use earlier point estimates that can become stale as durations and admission state change.
+After the shared predictor and admission update their states (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:update}), pacing sets \(\hat P^{\mathrm{last}}=\hat P(\mathcal K^{\mathrm{adm}})\) for future extensions and rebuilds the drain forecast as
 \begin{equation}
   \hat t_{\mathrm{drain}}
   \gets
