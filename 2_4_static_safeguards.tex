@@ -6,7 +6,7 @@ The goal is to enable lightweight multi-frame composition under parallel capture
 Samsung's overheat level is an ordinal thermal indicator on a 0--6 scale, where larger values denote stronger throttling.
 During pre-release validation, throttling at level 4 delayed a single-frame draft stage and caused a Capture Timeout.
 The failure recurred despite optimization, so Samsung introduced a thermal guard that skips optional stages at level 4 or higher.
-Because the draft sequence is implemented in framework code shared across device models, the same cutoff applies to all supported models.
+Because the draft sequence is implemented in framework shared across device models, the same cutoff applies to all supported models.
 
 The overheat level does not indicate a capture's waiting time or remaining draft work.
 The guard may therefore skip optional stages even when enough time remains to complete the draft sequence.
@@ -20,7 +20,7 @@ Both \(M\) alone and \(M+S\) retain the same mandatory encoding and saving stage
 We tested 12MP and 24MP capture under normal memory conditions and under memory pressure.
 For each condition in Table~\ref{tab:timeout_index}, we ran ten trials of up to 30 consecutive captures.
 We chose 30 captures to extend testing beyond the earlier level-4 validation failure near the 20th consecutive capture.
-The table reports the earliest timeout capture index across the ten trials, grouped by starting overheat level; a dash denotes no timeout within 30 captures.
+The table reports the earliest timeout capture index across the ten trials, grouped by starting overheat level.
 
 \input{tables/tab_timeout_index.tex}
 
