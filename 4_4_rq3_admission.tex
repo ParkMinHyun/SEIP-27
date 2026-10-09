@@ -1,13 +1,13 @@
 \subsection{RQ3: Admission Decision Quality}
 \label{sec:rq3}
 
+Table~\ref{tab:rq3_admission_audit} compares our approach with naive approaches on the same audited decisions.
 To assess decision quality independently of runtime enforcement, we audited 3{,}746 decisions on the S26 Ultra under an always-admit configuration.
 Optional stages executed with the watchdog suppressed; admission decisions were recorded but not enforced.
 Each decision is thus scored against its realized outcome: feasible if its remaining sequence completed within the remaining timeout budget at that decision, and unsafe otherwise.
-Every approach is scored on the same decisions.
 
 \smallskip\noindent\textbf{Decision accuracy.}
-Among the evaluated approaches, only ours kept both feasible-skip and unsafe-admit rates below 3\% in the pooled audit (Table~\ref{tab:rq3_admission_audit}).
+Among the evaluated approaches, only ours kept both feasible-skip and unsafe-admit rates below 3\% in the pooled audit.
 It admitted 97.3\% of feasible decisions, skipping 98 of 3{,}568 (2.7\%), while admitting only 5 of the 178 unsafe decisions (2.8\%).
 The naive approaches that sum the mean or maximum of each remaining stage's last three durations admitted 42 and 14 unsafe decisions, respectively.
 The naive approach summing each remaining stage's maximum prior duration admitted four unsafe decisions but skipped 224 feasible decisions, 2.3 times as many as our approach.
@@ -17,10 +17,10 @@ The five unsafe admits coincided with latency increases not captured by the deci
 Figure~\ref{fig:rq3_unsafe_spike_anatomy} compares the remaining-sequence latency and CPU time of these five decisions with those of the preceding capture.
 M1--M3 and S1--S2 label the multi-frame and single-frame decisions, respectively.
 For M1 and M2, latency rose to 2.32\(\times\) and 1.95\(\times\), whereas CPU time rose only to 1.41\(\times\) and 1.15\(\times\).
-The average number of busy cores, measured as CPU time per unit of wall time, consequently fell to 0.60\(\times\) and 0.59\(\times\).
+The average number of busy cores, calculated as CPU time divided by latency, consequently fell to 0.60\(\times\) and 0.59\(\times\).
 
 \smallskip\noindent\textbf{Safeguard replay.}
-Trace replay of the layered safeguards covered all five misses using the recorded stage durations, budgets, upper estimates, and admission decisions.
+Trace replay identified a safeguard response for all five unsafe admits using the recorded stage durations, budgets, upper estimates, and admission decisions.
 For M1 and M2, the admitted stage exceeded its watchdog budget, 1{,}460~ms against 1{,}202~ms and 1{,}648~ms against 889~ms, respectively, so fallback would trigger before the stage returned.
 For M3, the \(S\) decision later in the same capture would skip \(S\), reducing the remaining processing time.
 For S1 and S2, the \(M\) decision earlier in the same capture would skip \(M\), leaving more budget when execution reached \(S\).
