@@ -14,8 +14,8 @@ In our pipeline, the workload-control lever is optional-stage admission for the 
 
 \smallskip\noindent\textbf{Arrival control.}
 Our pacing module relates to systems that control request admission or release timing to limit queueing delay.
-Network senders pace packets to limit bursts and queue buildup~\cite{tcp-pacing-infocom,bbr-queue}, and server systems admit, reject, or shed requests under overload~\cite{seda-sosp,dagor-socc,breakwater-osdi}.
-Real-time schedulers similarly regulate job load by stretching task periods or skipping job instances~\cite{buttazzo-elastic-task,koren-skip-over}.
+Network senders pace packets to limit bursts and queue buildup~\cite{tcp-pacing-infocom,bbr-queue}, and servers admit, reject, or shed requests under overload~\cite{seda-sosp,dagor-socc,breakwater-osdi}.
+Real-time schedulers regulate job load by stretching task periods or skipping jobs~\cite{buttazzo-elastic-task,koren-skip-over}.
 Preemptive systems can instead interrupt running work to serve short requests~\cite{shinjuku-nsdi}.
 In our pipeline, arrival control delays the next capture opportunity.
 Accepted captures cannot be rejected, and running stages cannot be preempted.
@@ -24,7 +24,7 @@ Accepted captures cannot be rejected, and running stages cannot be preempted.
 Prior systems also combine workload and arrival control.
 Feedback-control systems regulate incoming load through request admission and adjust the service level of admitted requests from deadline-miss or response-time feedback~\cite{lu-feedback-control-edf,lu-feedback-control-scheduling,welsh-overload-control}.
 Control-theoretic self-adaptive software applies the same feedback principle to software parameters~\cite{filieri-selfadaptive-icse,shevtsov-control-tse}.
-QoS negotiation similarly reduces service quality to accept requests that might otherwise be rejected~\cite{abdelzaher-qos-negotiation}.
+QoS negotiation reduces service quality to accept requests that might otherwise be rejected~\cite{abdelzaher-qos-negotiation}.
 
 What differs in our capture pipeline is how the two controls are coupled under per-capture deadlines.
 A single Capture Timeout crashes the application and blocks the release, so deadline violations are not an acceptable operating regime.

@@ -44,7 +44,7 @@ Pacing computes the sequence reserve from the latest timing state as
   \label{eq:reserve}
 \end{equation}
 where \(C_\tau\) is the recency-weighted \(\tau\)-quantile of completed draft-sequence durations.
-Pacing selects \(\tau\) from this duration history using the same quantile rule based on effective sample size as for the residual factors in Section~\ref{sec:admission}.
+Pacing applies the same recency weighting and selects \(\tau\) using the same effective-sample-size-based rule as admission does for residual factors in Section~\ref{sec:admission}.
 With all configured stages enabled (\(\mathcal K^{\mathrm{adm}}=\mathcal K\)), pacing uses the larger of \(C_\tau\) and \(\hat P(\mathcal K)\) as its reserve.
 After admission disables optional work, pacing adds the positive excess of \(C_\tau\) over \(\hat P(\mathcal K)\) as headroom to the point estimate \(\hat P(\mathcal K^{\mathrm{adm}})\).
 
