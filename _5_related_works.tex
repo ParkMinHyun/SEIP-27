@@ -3,12 +3,14 @@
 
 \smallskip\noindent\textbf{Mobile camera pipelines.}
 Mobile camera pipelines merge bursts of frames to improve the final image~\cite{hdrplus-burst-tog,handheld-superres-tog,lowlight-mobile-tog} and synthesize shallow depth of field for portrait photos~\cite{synthetic-dof-tog}.
-We address the runtime control needed to deploy lightweight multi-frame composition in a commercial camera's draft sequence within the Capture Timeout budget.
+We complement these methods with the runtime control needed to deploy lightweight multi-frame composition in Samsung camera's draft sequence within the Capture Timeout budget.
 
 \smallskip\noindent\textbf{Workload control.}
-Workload control adapts per-input computation under latency, resource, or thermal constraints~\cite{zilberstein-anytime,loop-perforation-fse,apnet-rtss,branchynet-icpr,approxdet-sensys,phoenix-tecs}, including reductions in per-request work under overload~\cite{abdelzaher-content-adaptation,klein-brownout}.
+Workload control adapts the amount of computation under latency, resource, or thermal constraints~\cite{zilberstein-anytime,loop-perforation-fse,apnet-rtss,branchynet-icpr,approxdet-sensys,phoenix-tecs}, including reductions in per-request work under overload~\cite{abdelzaher-content-adaptation,klein-brownout}.
+Android also reports thermal status and forecasts thermal headroom so that applications can adjust their workload~\cite{android-adpf-thermal}.
+These signals do not directly indicate a capture's remaining timeout budget or queued draft work.
 Imprecise computation separates mandatory and optional work, executing optional work when time permits~\cite{liu-imprecise-computation,shih-imprecise-siam}.
-Timecard provides elapsed time and predicted downstream delay so a server can determine the current request's processing budget within an end-to-end delay target~\cite{timecard-sosp}.
+Timecard helps servers determine a request's processing budget from elapsed time and predicted downstream delay~\cite{timecard-sosp}.
 Remaining-sequence admission applies this budget-aware principle before each optional draft stage.
 To meet the hard Capture Timeout deadline, it compares the remaining budget with an empirical upper duration estimate for the entire remaining sequence, including mandatory encoding and saving.
 
@@ -17,8 +19,8 @@ Arrival control limits queue growth by regulating request release or admission.
 Network senders pace packets to limit bursts and queue buildup~\cite{tcp-pacing-infocom,bbr-queue}, while servers throttle arrivals or shed requests under overload~\cite{seda-sosp,dagor-socc,breakwater-osdi}.
 Real-time schedulers stretch task periods or skip jobs~\cite{buttazzo-elastic-task,koren-skip-over}.
 Other servers reduce queueing delay by preempting long-running requests~\cite{shinjuku-nsdi}.
-In our pipeline, accepted captures cannot be rejected and running stages cannot be preempted.
-Pacing therefore delays the next capture opportunity only when projected draft workload exceeds the draft queue's remaining timeout budget.
+In our capture pipeline, accepted captures cannot be rejected and running stages cannot be preempted.
+Pacing delays the next capture opportunity only when projected draft workload exceeds the draft queue's remaining timeout budget.
 
 \smallskip\noindent\textbf{Coordinating workload and arrivals.}
 Prior systems combine workload and arrival control.
@@ -27,7 +29,7 @@ Server overload control adjusts admission and service quality against percentile
 QoS negotiation reduces service quality to admit requests while maintaining real-time guarantees~\cite{abdelzaher-qos-negotiation}.
 Video analytics systems jointly adapt frame sampling rates and per-frame processing configurations to balance accuracy against resource limits~\cite{chameleon-sigcomm,videostorm-nsdi}.
 
-In our capture pipeline, admission controls optional-stage execution within accepted captures, which cannot be rejected or dropped.
+In our capture pipeline, admission controls optional-stage execution within accepted captures.
 A single Capture Timeout crashes the application, so deadline misses cannot serve as routine control feedback.
 Our controller coordinates remaining-sequence admission and capture-availability pacing, which are coupled through the single draft worker.
 Admission determines the optional work included in pacing's forecasts, and pacing can reduce subsequent captures' queueing time and preserve their remaining budgets for admission.
