@@ -6,6 +6,9 @@ To assess decision quality independently of runtime enforcement, we audited 3{,}
 Optional stages executed with the watchdog suppressed; admission decisions were recorded but not enforced.
 Each decision is thus scored against its realized outcome: feasible if its remaining sequence completed within the remaining timeout budget at that decision, and unsafe otherwise.
 
+\input{tables/tab_rq3_admission_quality.tex}
+\input{figures/fig_rq3_unsafe_spike_anatomy.tex}
+
 \smallskip\noindent\textbf{Decision accuracy.}
 Among the evaluated approaches, only ours kept both feasible-skip and unsafe-admit rates below 3\% in the pooled audit.
 It admitted 97.3\% of feasible decisions, skipping 98 of 3{,}568 (2.7\%), while admitting only 5 of the 178 unsafe decisions (2.8\%).
@@ -26,5 +29,3 @@ For M3, the \(S\) decision later in the same capture would skip \(S\), reducing 
 For S1 and S2, the \(M\) decision earlier in the same capture would skip \(M\), leaving more budget when execution reached \(S\).
 This replay does not establish end-to-end effectiveness with runtime-enforced safeguards.
 
-\input{tables/tab_rq3_admission_quality.tex}
-\input{figures/fig_rq3_unsafe_spike_anatomy.tex}
