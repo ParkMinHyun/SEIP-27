@@ -2,10 +2,10 @@
 \label{sec:threats}
 
 \smallskip\noindent\textbf{Evaluation scope.}
-We evaluated the controller on two devices in Portrait mode with a fixed scene, a 30-capture horizon, and an ADB shutter loop.
-Capture patterns vary across users, while our ADB loop saturates the exposed request rate to stress queueing.
-The controller estimates durations online without device- or condition-specific timing tables.
-Broader validation across devices, capture modes, and scenes remains future work.
+Our evaluation is limited to Portrait mode on two commercial devices with different SoCs, using a fixed scene and a 30-capture horizon.
+The ADB loop saturates the exposed request rate to stress queueing, so pacing activation and delay may differ under intermittent user capture.
+Online duration estimation avoids device- or condition-specific timing tables, but broader validation is needed across devices, camera and shot modes, scenes, and longer capture runs.
+We quantify optional-stage retention through stage execution and pacing cost through applied delay; these metrics do not directly assess image quality or perceived responsiveness.
 
 \smallskip\noindent\textbf{Cold start.}
 Without warm-up data, both components lack duration measurements until the first draft sequence completes.

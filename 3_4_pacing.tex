@@ -67,13 +67,12 @@ It uses \(\hat P^{\mathrm{last}}\), the point estimate of \(\mathcal K^{\mathrm{
   +\lceil\hat P^{\mathrm{last}}\rceil.
   \label{eq:clock-update}
 \end{equation}
-The \(\max\) term bases this provisional forecast on the later of the existing drain forecast and \(\mathit{now}+\mathit{delay}_i\), the callback delivery time.
+The \(\max\) term anchors this provisional forecast to the later of the existing drain forecast and \(\mathit{now}+\mathit{delay}_i\), the callback delivery time.
 This keeps at least one draft sequence's predicted processing time in the provisional backlog when the next capture opportunity opens.
 
 \smallskip\noindent\textbf{Backlog rebase.}
 Pacing rebases the backlog at each draft completion because provisional extensions use earlier point estimates that can become stale as durations and admission state change.
-After the shared predictor and admission update their states (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:update}), pacing first sets \(\hat P^{\mathrm{last}}=\hat P(\mathcal K^{\mathrm{adm}})\) for future extensions.
-It then rebuilds the drain forecast:
+After the shared predictor and admission update their states (Algorithm~\ref{alg:overview}, line~\ref{alg:ov:update}), pacing re-anchors the drain forecast at \(\mathit{now}\):
 \begin{equation}
   \hat t_{\mathrm{drain}}
   \gets
@@ -86,6 +85,4 @@ It then rebuilds the drain forecast:
 Here, \(N_{\mathrm{pend}}\) is the number of captures whose pacing decisions have occurred but whose draft sequences have not yet started.
 Pacing increments this count after each pacing decision and decrements it when the corresponding draft sequence starts.
 All pending captures share the configured sequence \(\mathcal K\), which cannot change until the draft queue drains.
-Pacing estimates each pending capture's work using the current \(\mathcal K^{\mathrm{adm}}\).
-Draft sequences execute serially, and rebase occurs before the next one starts.
-The rebuilt forecast therefore needs no term for an executing draft.
+Rebase therefore refreshes the forecast for all pending captures using the latest duration estimates and admission state.
