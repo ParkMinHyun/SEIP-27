@@ -27,7 +27,7 @@ Server overload control adjusts admission and service quality against percentile
 QoS negotiation reduces service quality to admit requests while maintaining real-time guarantees~\cite{abdelzaher-qos-negotiation}.
 Video analytics systems jointly adapt frame sampling rates and per-frame processing configurations to balance accuracy against resource limits~\cite{chameleon-sigcomm,videostorm-nsdi}.
 
-Unlike prior systems, our camera pipeline cannot reject user-triggered captures or use deadline misses as routine feedback, as a single Capture Timeout crashes the application.
+Unlike prior systems, our camera pipeline cannot reject user-triggered captures or use deadline misses as routine feedback.
 The single draft worker also couples workload and arrival control: optional work admitted for one capture can delay subsequent captures and shrink their remaining budgets.
 Our controller therefore coordinates remaining-sequence admission and capture-availability pacing.
 Admission determines the optional work included in pacing's forecasts, and pacing can reduce subsequent captures' queueing time and preserves more budget for optional stage execution.
